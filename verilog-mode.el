@@ -3216,7 +3216,7 @@ type.  Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
   (interactive)
   (let ((nesting (verilog-calc-1)))
     (message "You are at nesting %s" nesting)))
-)
+
 (defun verilog-calc-1 ()
   (catch 'nesting
     (while (verilog-re-search-backward verilog-indent-re nil 'move)
