@@ -26,7 +26,7 @@
 
 ;;; Commentary:
 
-;;; This mode borrows heavily from the pascal-mode and the cc-mode of emacs
+;;; This mode borrows heavily from the Pascal-mode and the cc-mode of emacs
 
 ;;; USAGE
 ;;; =====
@@ -36,8 +36,13 @@
 ;;; may also get online help describing various functions by: C-h f
 ;;; <Name of function you want described>
 
-;;; To set up automatic verilog mode, put this file in your load path,
-;;; and include stuff like this in your .emacs:
+;;; You can get step by step help in installing this file by going to
+;;; <http://www.silicon-sorcery.com/emacs_install.html>
+
+;;; The short list of installation instructions are: To set up
+;;; automatic verilog mode, put this file in your load path, and put
+;;; the following in code (please un comment it first!) in your
+;;; .emacs, or in your site's site-load.el
 
 ; (autoload 'verilog-mode "verilog-mode" "Verilog mode" t )
 ; (setq auto-mode-alist (cons  '("\\.v\\'" . verilog-mode) auto-mode-alist))
@@ -45,25 +50,30 @@
 
 ;;; If you want to customize Verilog mode to fit your needs better,
 ;;; you may add these lines (the values of the variables presented
-;;; here are the defaults):
+;;; here are the defaults). Note also that if you use an emacs that
+;;; supports custom, it's probably better to use the custom menu to
+;;; edit these.
 ;;;
-;;; ;; User customization for Verilog mode
-;;; (setq verilog-indent-level             3
-;;;       verilog-indent-level-module      3
-;;;       verilog-indent-level-declaration 3
-;;;       verilog-indent-level-behavorial  3
-;;;       verilog-case-indent              2
-;;;       verilog-auto-newline             t
-;;;       verilog-auto-indent-on-newline   t
-;;;       verilog-tab-always-indent        t
-;;;       verilog-auto-endcomments         t
-;;;       verilog-minimum-comment-distance 40
-;;;       verilog-indent-begin-after-if    t
-;;;       verilog-auto-lineup              '(all))
+; ;; User customization for Verilog mode
+; (setq verilog-indent-level             3
+;       verilog-indent-level-module      3
+;       verilog-indent-level-declaration 3
+;       verilog-indent-level-behavioral  3
+;       verilog-case-indent              2
+;       verilog-auto-newline             t
+;       verilog-auto-indent-on-newline   t
+;       verilog-tab-always-indent        t
+;       verilog-auto-endcomments         t
+;       verilog-minimum-comment-distance 40
+;       verilog-indent-begin-after-if    t
+;       verilog-auto-lineup              '(all))
 
-;;; KNOWN BUGS / BUGREPORTS
-;;; ======================= This is beta code, and likely has
-;;; bugs. Please report any and all bugs to me at mac@verilog.com.
+;;; KNOWN BUGS / BUG REPORTS
+;;; ======================= 
+'
+;;; This is beta code, and likely has bugs. Please report any and all
+;;; bugs to me at verilog-mode-bugs@verilog.com.  Use
+;;; verilog-submit-bug-report to submit a report.
 ;; 
 ;;; Code:
 
@@ -86,7 +96,7 @@
     (defmacro defgroup (&rest args)
       nil)
     (defmacro customize (&rest args)
-      (message "Sorry, Customise is not available with this version of emacs"))
+      (message "Sorry, Customize is not available with this version of emacs"))
     (defmacro defcustom (var value doc &rest args) 
       (` (defvar (, var) (, value) (, doc))))))
 
@@ -97,7 +107,7 @@
   )
 
 (defgroup verilog-mode nil
-  "Faciliates easy editing of Verilog source text"
+  "Facilitates easy editing of Verilog source text"
   :group 'languages)
       
 (defcustom verilog-indent-level 3
@@ -121,7 +131,7 @@
   :type 'integer 
   )
 
-(defcustom verilog-indent-level-behavorial 3
+(defcustom verilog-indent-level-behavioral 3
   "*Absolute indentation of first begin in a task or function block
     Set to 0 to get such code to start at the left side of the screen."
   :group 'verilog-mode
@@ -153,7 +163,7 @@
   )
 
 (defcustom verilog-tab-always-indent t
-  "*Non-nil means TAB in Verilog mode should always reindent the
+  "*Non-nil means TAB in Verilog mode should always re-indent the
   current line, regardless of where in the line point is when the TAB
   command is used."
   :group 'verilog-mode
@@ -176,7 +186,7 @@
 (defcustom verilog-minimum-comment-distance 40
   "*Minimum distance between begin and end required before a comment
   will be inserted.  Setting this variable to zero results in every
-  end aquiring a comment; the default avoids too many redundanet
+  end acquiring a comment; the default avoids too many redundant
   comments in tight quarters"
   :group 'verilog-mode
   :type 'integer 
@@ -187,7 +197,7 @@
 Elements can be of type: 'declaration' or 'case', which will do auto
 lineup in declarations or case-statements respectively. The word 'all'
 will do all lineups. '(case declaration) for instance will do lineup
-in case-statements and parameterlist, while '(all) will do all
+in case-statements and parameter list, while '(all) will do all
 lineups."
   )
 
@@ -198,16 +208,15 @@ lineups."
   '(
     ;;
    ("^\\s-*\\(function\\|task\\|module\\|macromodule\\|primitive\\)\\>"  
-    1 font-lock-keyword-face) 
+    1 'font-lock-keyword-face) 
    ("^\\s-*\\(function\\|task\\|module\\|macromodule\\|primitive\\)\\>\\s-*\\(\\sw+\\)"  
-    2 font-lock-function-name-face nil t)
-   ("\\\\\\s-*" 0 'font-lock-function-name-face)  
-   ("\\(@\\)\\|\\(#\\s-*\\(\\(\[0-9\]+\\('[hdxbo][0-9_xz]*\\)?\\)\\|\\((\[^)\]*)\\|\\sw+\\)\\)\\)" 0 font-lock-type-face)
-   ("\\(`\\s-*[A-Za-z][A-Za-z0-9_]*\\)"  0 font-lock-type-face)  
+    2 'font-lock-function-name-face nil t)
+   ("\\(\\\\\\S-*\s-\\)\\|\\(`\\s-*[A-Za-z][A-Za-z0-9_]*\\)" 0 'font-lock-function-name-face)
+   ("\\(@\\)\\|\\(#\\s-*\\(\\(\[0-9\]+\\('[hdxbo][0-9_xz]*\\)?\\)\\|\\((\[^)\]*)\\|\\sw+\\)\\)\\)" 0 'font-lock-type-face)
    ("\\<\\(in\\(teger\\|put\\|out\\)\\|parameter\\|defparam\\|output\\|supply[01]?\\|event\\|tri\\(0\\|1\\|reg\\|and\\|or\\)?\\|w\\(ire\\|or\\|and\\)\\|time\\|re\\(al\\(time\\)?\\|g\\)\\)\\>" 
-    0 font-lock-type-face)  
+    0 'font-lock-type-face)  
    ("\\(\\$[a-zA-Z][a-zA-Z0-9_\\$]*\\)\\|\\(\\<\\(begin\\|case[xz]?\\|end\\(case\\|function\\|task\\|module\\|table\\|primitive\\|specify\\)?\\|a\\(ssign\\|lways\\)\\|default\\|initial\\|table\\|\\(pos\\|neg\\)edge\\|else\\|for\\(ever\\|k\\)?\\|join\\|if\\|repeat\\|then\\|while\\|specify\\)\\>\\)" 
-     0 font-lock-keyword-face)
+     0 'font-lock-keyword-face)
    )
 )
 
@@ -268,10 +277,9 @@ lineups."
   (define-key verilog-mode-map "\M-\t"    'verilog-complete-word)
   (define-key verilog-mode-map "\M-?"     'verilog-show-completions)
   (define-key verilog-mode-map "\M-\C-h"  'verilog-mark-defun)
-  (define-key verilog-mode-map "\C-c\C-b" 'verilog-insert-block)
-  (define-key verilog-mode-map "\C-cb"    'verilog-label-be)
-  (define-key verilog-mode-map "\C-ci"    'verilog-pretty-declarations)
-  (define-key verilog-mode-map "\C-cC-b"  'verilog-submit-bug-report)
+  (define-key verilog-mode-map "\C-c\C-r" 'verilog-label-be)
+  (define-key verilog-mode-map "\C-c\C-i" 'verilog-pretty-declarations)
+  (define-key verilog-mode-map "\C-c\C-b" 'verilog-submit-bug-report)
   (define-key verilog-mode-map "\M-*"     'verilog-star-comment)
   (define-key verilog-mode-map "\C-c\C-c" 'verilog-comment-region)
   (define-key verilog-mode-map "\C-c\C-u" 'verilog-uncomment-region)
@@ -412,14 +420,17 @@ lineups."
   (concat verilog-defun-re "\\|" verilog-end-defun-re))
 (defconst verilog-directive-re
   ;;   "`else" "`ifdef" "`endif" "`define" "`undef" "`include"
-  "\\(\\<`\\(define\\>\\|e\\(lse\\>\\|ndif\\>\\)\\|i\\(fdef\\>\\|nclude\\>\\)\\|undef\\>\\)\\)")
+  "`\\(define\\>\\|e\\(lse\\>\\|ndif\\>\\)\\|i\\(fdef\\>\\|nclude\\>\\)\\|undef\\>\\|timescale\\)")
+(defconst verilog-directive-re-1
+  ;;   "`else" "`ifdef" "`endif" "`define" "`undef" "`include"
+       (concat "[ \t]*"  verilog-directive-re))
 (defconst verilog-autoindent-lines-re
   ;; "macromodule" "module" "primitive" "end" "endcase" "endfunction"
   ;; "endtask" "endmodule" "endprimitive" "endspecify" "endtable" "join" 
   ;; "begin" "else" "`else" "`ifdef" "`endif" "`define" "`undef" "`include"
-  "\\(\\<\\(`\\(define\\>\\|e\\(lse\\>\\|ndif\\>\\)\\|i\\(fdef\\>\\|nclude\\>\\)\\|undef\\>\\)\\|begin\\>\\|e\\(lse\\>\\|nd\\(\\>\\|case\\>\\|function\\>\\|module\\>\\|primitive\\>\\|specify\\>\\|ta\\(ble\\>\\|sk\\>\\)\\)\\)\\|join\\>\\|m\\(acromodule\\>\\|odule\\>\\)\\|primitive\\>\\)\\)")
+  "\\(\\(`\\(define\\>\\|e\\(lse\\>\\|ndif\\>\\)\\|i\\(fdef\\>\\|nclude\\>\\)\\|undef\\>\\)\\)\\|\\(\\<begin\\>\\|e\\(lse\\>\\|nd\\(\\>\\|case\\>\\|function\\>\\|module\\>\\|primitive\\>\\|specify\\>\\|ta\\(ble\\>\\|sk\\>\\)\\)\\)\\|join\\>\\|m\\(acromodule\\>\\|odule\\>\\)\\|primitive\\>\\)\\)")
 
-(defconst verilog-behavorial-block-beg-re
+(defconst verilog-behavioral-block-beg-re
   "\\(\\<initial\\>\\|\\<always\\>\\|\\<function\\>\\|\\<task\\>\\)")
 (defconst verilog-indent-reg 
   (concat 
@@ -440,7 +451,7 @@ lineups."
 (defconst verilog-cpp-level-re 
  ;;"endmodule" "endprimitive"
   "\\(\\<end\\(module\\>\\|primitive\\>\\)\\)")
-(defconst verilog-behavorial-level-re
+(defconst verilog-behavioral-level-re
   ;; "function" "task"
   "\\(\\<\\(function\\>\\|task\\>\\)\\)")
 (defconst verilog-complete-reg
@@ -855,7 +866,7 @@ Variables controlling indentation/edit style:
  verilog-indent-level-declaration    (default 3)
     Indentation of declarations with respect to containing block. 
     Set to 0 to get them list right under containing block.
- verilog-indent-level-behavorial    (default 3)
+ verilog-indent-level-behavioral    (default 3)
     Indentation of first begin in a task or function block
     Set to 0 to get such code to linedup underneath the task or function keyword
  verilog-cexp-indent            (default 1)
@@ -1065,8 +1076,7 @@ Other useful functions are:
   (insert last-command-char)
   (if (save-excursion 
 	(beginning-of-line) 
-	(looking-at 
-"^[ \t]*\`\\(\\<ifdef\\>\\|\\\<else\\>\\|\\<endif\\>\\|\\<define\\>\\)"))
+	(looking-at verilog-directive-re-1))
       (save-excursion (beginning-of-line)
 		      (delete-horizontal-space))))
 
@@ -1085,12 +1095,12 @@ Other useful functions are:
 		  (setq state (car type))
 		  (cond
 		   ((eq state 'block)
-		    (if (looking-at verilog-behavorial-block-beg-re )
+		    (if (looking-at verilog-behavioral-block-beg-re )
 			(error 
 			 (concat 
 			  "The reserved word \""
 			  (buffer-substring (match-beginning 0) (match-end 0))
-			  "\" must be at the behavorial level!"))))
+			  "\" must be at the behavioral level!"))))
 		   ))
 		(back-to-indentation)
 		(point))))
@@ -1487,7 +1497,7 @@ Insert `// NAME ' if this line ends a module or primitive named NAME."
 	    (not (save-excursion
 		   (end-of-line)
 		   (search-backward "//" (verilog-get-beg-of-line) t)))))
-      (let ( (reg "\\(`else\\)\\|\\(`ifdef\\)\\|\\(`endif\\)")
+      (let ( (reg "\\(`else\\>\\)\\|\\(`ifdef\\>\\)\\|\\(`endif\\>\\)")
 	     (nest 1)
 	     b e 
 	     (else (if (match-end 2)
@@ -1841,7 +1851,7 @@ Insert `// NAME ' if this line ends a module or primitive named NAME."
     (defun       . verilog-indent-level-module)
     (declaration . verilog-indent-level-declaration)
     (tf          . verilog-indent-level)
-    (behavorial  . (+ verilog-indent-level-behavorial verilog-indent-level-module))
+    (behavioral  . (+ verilog-indent-level-behavioral verilog-indent-level-module))
     (statement   . ind)
     (cpp         . 0)
     (comment     . (verilog-indent-comment))
@@ -2010,8 +2020,8 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
        ((looking-at verilog-cpp-level-re)
 	(throw 'nesting 'cpp))
 
-       ((looking-at verilog-behavorial-level-re)
-	(throw 'nesting 'behavorial))
+       ((looking-at verilog-behavioral-level-re)
+	(throw 'nesting 'behavioral))
 			
        ((bobp) 
 	(throw 'nesting 'cpp))
@@ -2270,7 +2280,7 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 	      (forward-comment (-(buffer-size)))
 	      (save-excursion
 		(beginning-of-line)
-		(if (looking-at "[ \t]*\\(`define\\)\\|\\(`ifdef\\)\\|\\(`else\\)\\|\\(`endif\\)\\|\\(`timescale\\)\\|\\(`include\\)")
+		(if (looking-at verilog-directive-re-1)
 		    (setq jump t)
 		  (setq jump nil)))
 	      (if jump
@@ -2303,7 +2313,7 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 	      (forward-comment (buffer-size))
 	      (save-excursion
 		(beginning-of-line)
-		(if (looking-at "[ \t]*\\(`define\\)\\|\\(`ifdef\\)\\|\\(`else\\)\\|\\(`endif\\)\\|\\(`timescale\\)")
+		(if (looking-at verilog-directive-re-1)
 		    (setq jump t)))
 	      (if jump
 		  (beginning-of-line 2))
@@ -2824,7 +2834,7 @@ will be completed runtime and should not be added to this list.")
 
 (defvar verilog-block-keywords
   '("begin" "fork" "join" "case" "end" "if" "else" "for" "while" "repeat")
-  "*Keywords to complete when standing at first word of a line in behavorial scope.
+  "*Keywords to complete when standing at first word of a line in behavioral scope.
 \(eg. begin, if, then, else, for, fork.)
 The procedures and variables defined within the Verilog program
 will be completed runtime and should not be added to this list.")
@@ -2838,7 +2848,7 @@ will be completed runtime and should not be added to this list.")
 
 (defvar verilog-case-keywords
   '("begin" "fork" "join" "case" "end" "endcase" "if" "else" "for" "repeat")
-  "*Keywords to complete when standing at first word of a line in behavorial scope.
+  "*Keywords to complete when standing at first word of a line in behavioral scope.
 \(eg. begin, if, then, else, for, fork.)
 The procedures and variables defined within the Verilog program
 will be completed runtime and should not be added to this list.")
@@ -3274,7 +3284,7 @@ The default is a name found in the buffer around point."
      '(verilog-indent-level 
        verilog-indent-level-module 
        verilog-indent-level-declaration
-       verilog-indent-level-behavorial 
+       verilog-indent-level-behavioral 
        verilog-case-indent 
        verilog-auto-newline 
        verilog-auto-indent-on-newline 
