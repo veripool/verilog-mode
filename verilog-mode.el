@@ -115,6 +115,9 @@
           (require 'easymenu)
         (error nil))
       (condition-case nil
+	  (load "skeleton") ;; bug in 19.28 through 19.30 skeleton.el, not provided.
+        (error nil))
+      (condition-case nil
           (if (fboundp 'when)
 	      nil ;; fab
 	    (defmacro when (var &rest body)
@@ -2939,7 +2942,7 @@ from endcase to matching case, and so on."
 		     (= snest nest))
 		(setq reg sreg)))
 	   ((match-end 2) ; end
-b	    (setq nest (1+ nest)))
+	    (setq nest (1+ nest)))
 	   ((match-end 3)
 	    ;; endcase, jump to case
 	    (setq snest nest)
@@ -2969,7 +2972,7 @@ Set point to where line starts"
 			  (skip-chars-backward " \t")
 			  (not (bolp))))
 	    (setq continued (verilog-backward-token))
-n	    ) ;; while
+	    ) ;; while
 	    ))
       (setq continued nil))
     continued))
@@ -3002,7 +3005,7 @@ n	    ) ;; while
 		     (save-excursion
 		       (verilog-backward-token)
 		       (not (looking-at "\\<\\(always\\|initial\\|while\\)\\>"))))
-n	    nil))
+	    nil))
 	 ))))
 	 
    (;-- any of begin|initial|while are complete statements; 'begin : foo' is also complete
@@ -6506,6 +6509,360 @@ Wilson Snyder (wsnyder@wsnyder.org)"
       ;; Restore font-lock
       (when fontlocked (font-lock-mode t))
       )))
+
+
+;; 
+;; Skeleton based code insertion
+;;
+(defvar verilog-template-map nil
+  "Keymap used in Verilog mode for smart template operations.")
+
+(let ((verilog-mp (make-sparse-keymap)))
+  (define-key verilog-mp "a" 'verilog-sk-always)
+  (define-key verilog-mp "b" 'verilog-sk-begin)
+  (define-key verilog-mp "c" 'verilog-sk-case)
+  (define-key verilog-mp "e" 'verilog-sk-else)
+  (define-key verilog-mp "f" 'verilog-sk-for)
+  (define-key verilog-mp "g" 'verilog-sk-generate)
+  (define-key verilog-mp "h" 'verilog-sk-header)
+  (define-key verilog-mp "i" 'verilog-sk-initial)
+  (define-key verilog-mp "j" 'verilog-sk-fork)
+  (define-key verilog-mp "m" 'verilog-sk-module)
+  (define-key verilog-mp "p" 'verilog-sk-primitive)
+  (define-key verilog-mp "r" 'verilog-sk-repeat)
+  (define-key verilog-mp "s" 'verilog-sk-specify)
+  (define-key verilog-mp "t" 'verilog-sk-task)
+  (define-key verilog-mp "w" 'verilog-sk-while)
+  (define-key verilog-mp "x" 'verilog-sk-casex)
+  (define-key verilog-mp "z" 'verilog-sk-casez)
+  (define-key verilog-mp "?" 'verilog-sk-if)
+  (define-key verilog-mp ":" 'verilog-sk-else-if)
+  (define-key verilog-mp "/" 'verilog-sk-comment)
+  (define-key verilog-mp "A" 'verilog-sk-assign)
+  (define-key verilog-mp "F" 'verilog-sk-function)
+  (define-key verilog-mp "I" 'verilog-sk-input)
+  (define-key verilog-mp "O" 'verilog-sk-output)
+  (define-key verilog-mp "=" 'verilog-sk-inout)
+  (define-key verilog-mp "W" 'verilog-sk-wire)
+  (define-key verilog-mp "R" 'verilog-sk-reg)
+  (setq verilog-template-map verilog-mp))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Place the templates into Verilog Mode.  They may be inserted under any key.
+;; C-c C-t will be the default.  If you use templates alot, you
+;; may want to consider moving the binding to another key in your .emacs
+;; file.  Be sure to (require 'verilog-stmt) first.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;(define-key verilog-mode-map "\C-ct" verilog-template-map)
+(define-key verilog-mode-map "\C-c\C-t" verilog-template-map)
+
+;;; ---- statement skeletons ------------------------------------------
+
+(define-skeleton verilog-sk-prompt-condition
+  "Prompt for the loop condition."
+  "[condition]: " str )
+
+(define-skeleton verilog-sk-prompt-init
+  "Prompt for the loop init statement."
+  "[initial statement]: " str )
+
+(define-skeleton verilog-sk-prompt-inc
+  "Prompt for the loop increment statement."
+  "[increment statement]: " str )
+
+(define-skeleton verilog-sk-prompt-name
+  "Prompt for the name of something."
+  "[name]: " str)
+
+(define-skeleton verilog-sk-prompt-output
+  "Prompt for the name of something."
+  "output: " str)
+
+(define-skeleton verilog-sk-prompt-msb
+  "Prompt for least signifgant bit specification."
+  "msb:" str & ?: & (verilog-sk-prompt-lsb) | -1 )
+
+(define-skeleton verilog-sk-prompt-lsb
+  "Prompt for least signifgant bit specification."
+  "lsb:" str )
+
+(defvar verilog-sk-p nil)
+(define-skeleton verilog-sk-prompt-width
+  "Prompt for a width specification."
+  () 
+  (progn (setq verilog-sk-p (point)) nil)
+  (verilog-sk-prompt-msb) 
+  (if (> (point) verilog-sk-p) "] " " "))
+
+(defun verilog-sk-header ()
+  "Insert a descriptive header at the top of the file."
+  (interactive "*")
+  (save-excursion
+    (goto-char (point-min))
+    (if (fboundp 'make-header)
+	(make-header)
+      (verilog-sk-header-tmpl))))
+
+(define-skeleton verilog-sk-header-tmpl
+  "Insert a comment block containing the module title, author, etc."
+  "[Description]: "
+  "//                              -*- Mode: Verilog -*-"
+  "\n// Filename        : " (buffer-name)
+  "\n// Description     : " str
+  "\n// Author          : " (user-full-name) 
+  "\n// Created On      : " (current-time-string)
+  "\n// Last Modified By: ."
+  "\n// Last Modified On: ."
+  "\n// Update Count    : 0"
+  "\n// Status          : Unknown, Use with caution!"
+  "\n")
+
+(define-skeleton verilog-sk-module
+  "Insert a module definition."
+  ()
+  > "module " (verilog-sk-prompt-name) " (/*AUTOARG*/ ) ;" \n
+  > _ \n
+  > (- verilog-indent-level-behavioral) "endmodule" (progn (electric-verilog-terminate-line) nil))
+  >)
+
+(define-skeleton verilog-sk-primitive
+  "Insert a task definition."
+  ()
+  > "primitive " (verilog-sk-prompt-name) " ( " (verilog-sk-prompt-output) ("input:" ", " str ) " );"\n
+  > _ \n
+  > (- verilog-indent-level-behavioral) "endprimitive" (progn (electric-verilog-terminate-line) nil))
+  >)
+
+(define-skeleton verilog-sk-task
+  "Insert a task definition."
+  ()
+  > "task " (verilog-sk-prompt-name) & ?; \n
+  > _ \n
+  > "begin" \n 
+  > \n 
+  > (- verilog-indent-level-behavioral) "end" \n 
+  > (- verilog-indent-level-behavioral) "endtask" (progn (electric-verilog-terminate-line) nil))
+  >)
+
+(define-skeleton verilog-sk-function
+  "Insert a function definition."
+  ()
+  > "function [" (verilog-sk-prompt-width) | -1 (verilog-sk-prompt-name) ?; \n
+  > _ \n
+  > "begin" \n 
+  > \n 
+  > (- verilog-indent-level-behavioral) "end" \n 
+  > (- verilog-indent-level-behavioral) "endfunction" (progn (electric-verilog-terminate-line) nil))
+  >)
+
+(define-skeleton verilog-sk-always
+  "Insert always block.  Uses the minibuffer to prompt
+for sensitivity list."
+  ()
+  > "always @ ( /*AUTOSENSE*/ ) begin\n" 
+  > _ \n
+  > (- verilog-indent-level-behavioral) "end" \n >
+)
+
+(define-skeleton verilog-sk-initial
+  "Insert an initial block."
+  ()
+  > "initial begin\n" 
+  > _ \n
+  > (- verilog-indent-level-behavioral) "end" \n > )
+
+(define-skeleton verilog-sk-specify
+  "Insert specify block.  "
+  ()
+  > "specify\n" 
+  > _ \n
+  > (- verilog-indent-level-behavioral) "endspecify" \n > )
+
+(define-skeleton verilog-sk-generate
+  "Insert generate block.  "
+  ()
+  > "generate\n" 
+  > _ \n
+  > (- verilog-indent-level-behavioral) "endgenerate" \n > )
+
+(define-skeleton verilog-sk-begin
+  "Insert begin end block.  Uses the minibuffer to prompt for name"
+  ()
+  > "begin" (verilog-sk-prompt-name) \n
+  > _ \n
+  > (- verilog-indent-level-behavioral) "end" 
+)
+
+(define-skeleton verilog-sk-fork
+  "Insert an fork join block."
+  ()
+  > "fork\n" 
+  > "begin" \n
+  > _ \n
+  > (- verilog-indent-level-behavioral) "end" \n 
+  > "begin" \n
+  > \n
+  > (- verilog-indent-level-behavioral) "end" \n 
+  > (- verilog-indent-level-behavioral) "join" \n 
+  > )
+
+
+(define-skeleton verilog-sk-case
+  "Build skeleton case statement, prompting for the selector expression,
+and the case items."
+  "[selector expression]: "
+  > "case (" str ") " \n
+  > ("case selector: " str ": begin" \n > _ \n > (- verilog-indent-level-behavioral) "end" \n )
+  resume: >  (- verilog-case-indent) "endcase" (progn (electric-verilog-terminate-line) nil))
+
+
+(define-skeleton verilog-sk-casex
+  "Build skeleton casex statement, prompting for the selector expression,
+and the case items."
+  "[selector expression]: "
+  > "casex (" str ") " \n
+  > ("case selector: " str ": begin" \n > _ \n > (- verilog-indent-level-behavioral) "end" \n )
+  resume: >  (- verilog-case-indent) "endcase" (progn (electric-verilog-terminate-line) nil))
+
+
+(define-skeleton verilog-sk-casez
+  "Build skeleton casez statement, prompting for the selector expression,
+and the case items."
+  "[selector expression]: "
+  > "casez (" str ") " \n
+  > ("case selector: " str ": begin" \n > _ \n > (- verilog-indent-level-behavioral) "end" \n )
+  resume: >  (- verilog-case-indent) "endcase" (progn (electric-verilog-terminate-line) nil))
+
+
+(define-skeleton verilog-sk-if
+  "Insert a skeleton if statement."
+  > "if (" (verilog-sk-prompt-condition) & ")" " begin" \n
+  > _ \n
+  > (- verilog-indent-level-behavioral) "end " \n )
+
+(define-skeleton verilog-sk-else-if
+  "Insert a skeleton else if statement."
+  > (verilog-indent-line) "else if (" 
+  (progn (setq verilog-sk-p (point)) nil) (verilog-sk-prompt-condition) (if (> (point) verilog-sk-p) ") " -1 ) & " begin" \n 
+  > _ \n 
+  > "end" (progn (electric-verilog-terminate-line) nil))
+
+(define-skeleton verilog-sk-datadef
+  "Common routine to get data definition"
+  ()
+  (verilog-sk-prompt-width) | -1 ("name (RET to end):" str ", ") -2 ";" \n)
+
+(define-skeleton verilog-sk-input
+  "Insert an input definition."
+  ()
+  > "input  [" (verilog-sk-datadef))
+
+(define-skeleton verilog-sk-output
+  "Insert an output definition."
+  ()
+  > "output [" (verilog-sk-datadef))
+
+(define-skeleton verilog-sk-inout
+  "Insert an inout definition."
+  ()
+  > "inout  [" (verilog-sk-datadef))
+
+(define-skeleton verilog-sk-reg
+  "Insert a reg definition."
+  ()
+  > "reg    [" (verilog-sk-datadef))
+
+(define-skeleton verilog-sk-wire
+  "Insert a wire definition."
+  ()
+  > "wire   [" (verilog-sk-datadef))
+
+(define-skeleton verilog-sk-assign
+  "Insert a skeleton assign statement."
+  ()
+  > "assign " (verilog-sk-prompt-name) " = " _ ";" \n)
+
+(define-skeleton verilog-sk-while
+  "Insert a skeleton while loop statement."
+  ()
+  > "while ("  (verilog-sk-prompt-condition)  ") begin" \n
+  > _ \n
+  > (- verilog-indent-level-behavioral) "end " (progn (electric-verilog-terminate-line) nil))
+
+(define-skeleton verilog-sk-repeat
+  "Insert a skeleton repeat loop statement."
+  ()
+  > "repeat ("  (verilog-sk-prompt-condition)  ") begin" \n
+  > _ \n
+  > (- verilog-indent-level-behavioral) "end " (progn (electric-verilog-terminate-line) nil))
+
+(define-skeleton verilog-sk-for
+  "Insert a skeleton while loop statement."
+  ()
+  > "for ("  
+  (verilog-sk-prompt-init) "; "
+  (verilog-sk-prompt-condition) "; "
+  (verilog-sk-prompt-inc) 
+  ") begin" \n
+  > _ \n
+  > (- verilog-indent-level-behavioral) "end " (progn (electric-verilog-terminate-line) nil))
+
+(define-skeleton verilog-sk-comment
+  "Inserts three comment lines, making a display comment."
+  ()
+  > "/*\n" 
+  > "* " _ \n
+  > "*/")
+
+;; ---- add menu 'Statements' in Verilog mode (MH)
+(defun verilog-add-statement-menu ()
+  "Adds the menu 'Statements' to the menu bar in Verilog mode."
+  (easy-menu-define verilog-stmt-menu verilog-mode-map
+		    "Menu for statement templates in Verilog."
+		    '("Statements"
+;		      ["-------" nil nil]
+		      ["header" (verilog-sk-header) t]
+		      ["comment" (verilog-sk-comment) t]
+		      ["-------" nil nil]
+		      ["module" (verilog-sk-module) t]
+		      ["primitive" (verilog-sk-primitive) t]
+		      ["-------" nil nil]
+		      ["input" (verilog-sk-input) t]
+		      ["output" (verilog-sk-output) t]
+		      ["inout" (verilog-sk-inout) t]
+		      ["wire" (verilog-sk-wire) t]
+		      ["reg" (verilog-sk-reg) t]
+		      ["-------" nil nil]
+		      ["initial" (verilog-sk-initial) t]
+		      ["always" (verilog-sk-always) t]
+		      ["function" (verilog-sk-function) t]
+		      ["task" (verilog-sk-task) t]
+		      ["specify" (verilog-sk-specify) t]
+		      ["generate" (verilog-sk-generate) t]
+		      ["-------" nil nil]
+		      ["begin" (verilog-sk-begin) t]
+		      ["if" (verilog-sk-if) t]
+		      ["else (if)" (verilog-sk-else-if) t]
+		      ["for" (verilog-sk-for) t]
+		      ["while" (verilog-sk-while) t]
+		      ["repeat" (verilog-sk-repeat) t]
+		      ["case" (verilog-sk-case) t]
+		      ["casex" (verilog-sk-casex) t]
+		      ["casez" (verilog-sk-casez) t]
+		      ["-----" nil nil]
+		      ))
+    (if (verilog-xemacs) 
+	(progn
+	  (easy-menu-add verilog-stmt-menu)
+	  (setq mode-popup-menu (cons "Verilog Mode" verilog-stmt-menu)))))
+
+(add-hook 'verilog-mode-hook 'verilog-add-statement-menu)
+(add-hook 'verilog-mode-hook '(lambda ()
+				(setq skeleton-further-elements 
+				      '((< '(backward-delete-char-untabify
+					     (min verilog-indent (current-column))))))
+				))
+
 
 
 ;;
