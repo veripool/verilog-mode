@@ -10,48 +10,47 @@
 | -->>> If you can't decode this file, fetch a copy from  <<<--  |
 |  ftp://www.surefirev.com/pub/Verilog-mode/verilog-mode.el      |
 +----------------------------------------------------------------+
+			----------------
+General News:
 
-Company  News:
+During _some_ of the time I am not enhancing the verilog mode :-), I
+serve as the Senior VP of Simulation at Verisity Design
+<http://www.verisity.com>, the home of SpeXsim, a native code compiles
+simulator which supports Verilog, VHDL, SystemC and Specman execution
+all with a direct kernel interface; and supports execution on
+workstations running Solaris or Linux and running on our hardware
+accelerators (Xcite, Xtreme and Xtreme Server).
 
-	There are still a few more opportunities for you to help
-	build better verification tools.
-
-	We have some great openings worldwide at Verisity, both in the
-	development of tools for Verification, and in helping
-	customers use these tools effectively.  If you have _any_
-	interest, please drop me an email. (mac@verilog.com, or
-	mac@verilog.com; or send directly to jobs@verisity.com)
+We have openings for developers, application engineers and for
+customers; if interested, send me an email at <mac@verilog.com>
 
 Now back to the verilog-mode:
 
 Major changes: 
 
-1) The AUTO mode gained some new enhancements, many as suggested (and
+1) Beginning of support for System Verilog!
+
+2) The AUTO mode gained some new enhancements, many as suggested (and
 contributed) by users.  As always, more is forthcoming.
 
-2) Users of the AUTOs in Verilog that are also using SystemC may be
+3) Users of the AUTOs in Verilog that are also using SystemC may be
 interested in Wilson Snyder's publicly licensed SystemPerl package,
 which brings AUTOs and several other features to SystemC.  See
 http://www.veripool.org
 
-3) I now send this file as a mime encoded attachement.  If
+4) I now send this file as a mime encoded attachement.  If
 you have problems decoding the file, search for the program mmencode.
 I include a link to mmencode for various operating systems on the page 
 <http://www.verilog.com/emacs_install.html>
 
-4) This version has much more support for working with verilog Lint
-programs; allowing easy stepping through the source code for which the
-lint tool is pointing out problems; and simple key stroke to tell the
-tool to ignore the error/warning.
-
-To install this file, go to
+To learn more on installing this file, go to
 
 <http://www.verilog.com/emacs_install.html>
 
 and read the directions.
 
-If you have  any problems with  the  file, feel  from to send  mail to
-verilog-mode-bugs\@verilog.com and your  mail will be entered in  our
+If you have any problems with the file, feel free to send mail to
+verilog-mode-bugs\@verilog.com and your mail will be entered in our
 bug tracking system.
 
 Please keep an eye on our web page <http://www.verisity.com> as
