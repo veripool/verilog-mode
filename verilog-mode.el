@@ -791,14 +791,6 @@ supported list, along with the values for this variable:
 
 (defvar verilog-mode-syntax-table nil
   "Syntax table used in verilog-mode buffers.")
-(if verilog-mode-syntax-table
-    ()
-  (setq verilog-mode-syntax-table (make-syntax-table))
-  (verilog-populate-syntax-table verilog-mode-syntax-table)
-  ;; add extra comment syntax
-  (verilog-setup-dual-comments verilog-mode-syntax-table)
-  )
-
 (defvar verilog-font-lock-keywords nil
   "keyword highlighting used in verilog-mode buffers.")
 (defvar verilog-font-lock-keywords-1 nil
@@ -1164,6 +1156,10 @@ Other useful functions are:
   (setq major-mode 'verilog-mode)
   (setq mode-name "Verilog")
   (setq local-abbrev-table verilog-mode-abbrev-table)
+  (setq verilog-mode-syntax-table (make-syntax-table))
+  (verilog-populate-syntax-table verilog-mode-syntax-table)
+  ;; add extra comment syntax
+  (verilog-setup-dual-comments verilog-mode-syntax-table)
   (set-syntax-table verilog-mode-syntax-table)
   (make-local-variable 'indent-line-function)
   (setq indent-line-function 'verilog-indent-line-relative)
@@ -1269,7 +1265,8 @@ Other useful functions are:
   "Insert `;' character and reindent the line."
   (interactive)
   (insert last-command-char)
-  (if (verilog-in-comment-or-string-p)
+  (if (or (verilog-in-comment-or-string-p)
+	  (verilog-in-escaped-name-p))
       () 
     (save-excursion
       (beginning-of-line)
@@ -2725,6 +2722,17 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 	(save-excursion
 	  (parse-partial-sexp (point-min) (point)))))
    (or (nth 3 state) (nth 4 state) (nth 7 state))) ; Inside string or comment
+ )
+
+(defun verilog-in-escaped-name-p ()
+ "Return true if in an escaped name"
+ (save-excursion
+   (backward-char)
+   (skip-chars-backward "^ \t\n")
+   (if (= (char-after) ?\\ )
+       t
+     nil)
+   )
  )
 
 (defun verilog-in-star-comment-p ()
@@ -4244,7 +4252,7 @@ Note these are only read when the file is first visited, you must use
 (defun verilog-read-signals ()
   "Return a simple list of all possible signals in the file, overly aggressive but
 fast.  Some macros and such are also found and included.  For dinotrace.el"
-  (let (sigs-all)
+  (let (sigs-all keywd)
     (progn;save-excursion
       (goto-char (point-min))
       (while (re-search-forward "[\"/a-zA-Z_]" nil t)
