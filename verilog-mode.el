@@ -387,7 +387,7 @@ comments in tight quarters"
 	; SureLint
     ("[^\n]*\\[\\([^:]+\\):\\([0-9]+\\)\\]" 1 2)
 	; Most SureFire tools
-    ("\\(WARNING\\|ERROR\\): \\([^,]+\\), line \\([0-9]+\\):" 2 3 )
+    ("\\(WARNING\\|ERROR\\|INFO\\)[^:]*: \\([^,]+\\), line \\([0-9]+\\):" 2 3 )
     ("\
 \\([a-zA-Z]?:?[^:( \t\n]+\\)[:(][ \t]*\\([0-9]+\\)\\([) \t]\\|\
 :\\([^0-9\n]\\|\\([0-9]+:\\)\\)\\)" 1 2 5)
@@ -2214,8 +2214,8 @@ Insert `// NAME ' if this line ends a module or primitive named NAME."
 			  (insert str)
 			  (ding 't)
 			  )
-		      (let ( sp
-			    (lim (save-excursion (verilog-beg-of-defun) (point)))
+		      (let ((lim 
+			     (save-excursion (verilog-beg-of-defun) (point)))
 			    (here (point))
 			    )
 			(cond
@@ -2252,7 +2252,6 @@ Insert `// NAME ' if this line ends a module or primitive named NAME."
 			      (match-end 2)
 			      (setq err nil)
 			      (save-excursion
-;				(goto-char sp)
 				(if (and (verilog-continued-line)
 					 (looking-at "\\<repeat\\>\\|\\<wait\\>\\|\\<always\\>"))
 				    (progn
