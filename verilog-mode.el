@@ -9,6 +9,10 @@
 ;; IEEE 1364 Verilog standards committee Chairman
 ;; (SureFire and Verisity merged October 1999)
 ;;      http://www.verisity.com
+;;
+;; (Verisity and Cadence are merging in 2005; likely in a misguided
+;;      attempt by Cadence to gain added influence over this Verilog-mode... :-)
+;;
 ;; AUTO features, signal, modsig; by: Wilson Snyder
 ;;	(wsnyder@wsnyder.org)
 ;;	http://www.veripool.org
@@ -658,7 +662,7 @@ If set will become buffer local.")
   (define-key verilog-mode-map ";"        'electric-verilog-semi)
   (define-key verilog-mode-map [(control 59)]    'electric-verilog-semi-with-comment)
   (define-key verilog-mode-map ":"        'electric-verilog-colon)
-  (define-key verilog-mode-map "="        'electric-verilog-equal)
+  ;;(define-key verilog-mode-map "="        'electric-verilog-equal)
   (define-key verilog-mode-map "\`"       'electric-verilog-tick)
   (define-key verilog-mode-map "\t"       'electric-verilog-tab)
   (define-key verilog-mode-map "\r"       'electric-verilog-terminate-line)
@@ -984,9 +988,9 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
 (defconst verilog-zero-indent-re
   (concat verilog-defun-re "\\|" verilog-end-defun-re))
 
-(defconst verilog-behavioral-block-beg-re
-  (concat "\\(\\<initial\\>\\|\\<final\\>\\|\\<always\\>\\|\\<always_comb\\>\\|\\<always_ff\\>\\|"
-	  "\\<always_latch\\>\\|\\<function\\>\\|\\<task\\>\\)"))
+;;(defconst verilog-behavioral-block-beg-re
+;;  (concat "\\(\\<initial\\>\\|\\<final\\>\\|\\<always\\>\\|\\<always_comb\\>\\|\\<always_ff\\>\\|"
+;;	  "\\<always_latch\\>\\|\\<function\\>\\|\\<task\\>\\)"))
 (defconst verilog-indent-reg
   (concat
    "\\(\\<begin\\>\\|\\<case[xz]?\\>\\|\\<specify\\>\\|\\<fork\\>\\|\\<table\\>\\)\\|"
@@ -1009,7 +1013,7 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
 
 (defconst verilog-defun-level-re
   ;; "module" "macromodule" "primitive" "initial" "final" "always" "always_comb" "always_ff" "always_latch" "endtask" "endfunction"
-  "\\(\\<\\(always\\(_latch\\|_ff\\|_comb\\)?\\>\\|end\\(function\\>\\|task\\>\\)\\|final\\|initial\\>\\|m\\(acromodule\\>\\|odule\\>\\)\\|primitive\\>\\|interface\\>\\|package\\>\\)\\)")
+  "\\(end\\(function\\>\\|task\\>\\)\\|final\\|initial\\>\\|m\\(acromodule\\>\\|odule\\>\\)\\|primitive\\>\\|interface\\>\\|package\\>\\)")
 (defconst verilog-cpp-level-re
  ;;"endmodule" "endprimitive"
   "\\(\\<end\\(module\\>\\|primitive\\>\\|interface\\>\\|package\\>\\)\\)")
@@ -1259,7 +1263,7 @@ See also `verilog-font-lock-extra-types'.")
   verilog-font-lock-p1800-face
   'verilog-font-lock-p1800-face
   "Font to use for p1800 keywords")
-(defface verilog-font-p1800-face
+(defface verilog-font-lock-p1800-face
   '((((class color)
       (background light))
      (:foreground "DarkOrange3" :bold t ))
@@ -1344,7 +1348,7 @@ See also `verilog-font-lock-extra-types'.")
 	       'font-lock-type-face)
 	 ;; Fontify IEEE-P1800 keywords
 	 (cons (concat "\\<\\(" verilog-p1800-keywords "\\)\\>")
-	       'verilog-font-p1800-face)
+	       'verilog-font-lock-p1800-face)
 
 	 ))
 
@@ -1978,15 +1982,15 @@ With optional ARG, remove existing end of line comments."
 ;;      (verilog-indent-line))
     ))
 
-(defun electric-verilog-equal ()
-  "Insert `=', and do indentation if within block."
-  (interactive)
-  (insert last-command-char)
+;;(defun electric-verilog-equal ()
+;;  "Insert `=', and do indentation if within block."
+;;  (interactive)
+;;  (insert last-command-char)
 ;; Could auto line up expressions, but not yet
 ;;  (if (eq (car (verilog-calculate-indent)) 'block)
 ;;      (let ((verilog-tab-always-indent nil))
 ;;	(verilog-indent-command)))
-  )
+;;  )
 
 (defun electric-verilog-tick ()
   "Insert back-tick, and indent to column 0 if this is a CPP directive."
@@ -2011,19 +2015,7 @@ With optional ARG, remove existing end of line comments."
 	      (save-excursion
 		(beginning-of-line)
 		(skip-chars-forward " \t")
-		(let (type state )
-		  (setq type (verilog-indent-line))
-		  (setq state (car type))
-		  (cond
-		   ((eq state 'block)
-		    (if (looking-at verilog-behavioral-block-beg-re )
-			(error
-			 (concat
-			  (verilog-point-text)
-			  ": The reserved word \""
-			  (buffer-substring (match-beginning 0) (match-end 0))
-			  "\" must be at the behavioral level!"))))
-		   ))
+		(verilog-indent-line)
 		(back-to-indentation)
 		(point))))
         (if (< (point) boi-point)
@@ -3220,7 +3212,11 @@ type.  Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 	  (t
 	   (list type (verilog-indent-level)))))
       )))
-
+(defun verilog-wai ()
+  (interactive)
+  (let ((nesting (verilog-calc-1)))
+    (message "You are at nesting %s" nesting)))
+)
 (defun verilog-calc-1 ()
   (catch 'nesting
     (while (verilog-re-search-backward verilog-indent-re nil 'move)
