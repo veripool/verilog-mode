@@ -535,12 +535,17 @@ format (e.g. 09/17/1997) is not supported.")
 
 ;; compilation program
 (defun verilog-compile ()
-  "function to compile verilog"
+  "function to compile verilog. Can be the path and arguments for your
+Verilog simulator: \"vcs -p123 -O\"
+or a string like \"(cd /tmp; surecov %s)\".
+In the former case, the path to the current buffer is concat'ed to the 
+value of verilog-compiler; in the later, the path to the current buffer is substituted for the %s "
   (or (file-exists-p "makefile") (file-exists-p "Makefile")
       (progn (make-local-variable 'compile-command)
 	     (setq compile-command
-		   (concat verilog-compiler
-			   (or buffer-file-name ""))))))
+		   (if (string-match "%s" verilog-compiler)
+		       (format verilog-compiler (or buffer-file-name ""))
+		     (concat verilog-compiler (or buffer-file-name "")))))))
 
   
 (add-hook 'verilog-mode-hook 'verilog-compile)
@@ -5001,11 +5006,15 @@ Typing \\[verilog-auto] will make this into:
       (indent-to verilog-indent-level-declaration)
       )))
 
+(defun verilog-auto-inst-port-map (port-st)
+  nil)
+
 (defun verilog-auto-inst-port (port-st indent-pt tpl-list tpl-num)
   "Print out a instantiation connection for this port.  @ are instantiation numbers.
 @\"(expression @)\" are evaluated, with @ as a variable."
   (let* ((port (car port-st))
-	 (tpl-ass (assoc port tpl-list))
+	 (tpl-ass (or (assoc port tpl-list)
+		      (verilog-auto-inst-port-map port-st)))
 	 (tpl-net (concat port (nth 1 port-st))))
     (cond (tpl-ass
 	   (setq tpl-net (nth 1 tpl-ass))
