@@ -378,7 +378,7 @@ too many redundanet comments in tight quarters")
     "\\(@\\)\\|\\(#\[ \t\]*\\(\\(\[0-9\]+\\('[hdxbo][0-9_xz]*\\)?\\)\\|\\((\[^)\]*)\\)\\)\\)"
     0 font-lock-type-face)
    ("\\(`[ \t]*[A-Za-z][A-Za-z0-9_]*\\)"  0 font-lock-type-face)  
-    ("\\<\\(in\\(teger\\|put\\|out\\)\\|parameter\\|output\\|supply[01]?\\|event\\|tri\\(0\\|1\\|reg\\|and\\|or\\)?\\|w\\(ire\\|or\\|and\\)\\|time\\|re\\(al\\(time\\)?\\|g\\)\\)\\>" 
+    ("\\<\\(in\\(teger\\|put\\|out\\)\\|parameter\\|defparam\\|output\\|supply[01]?\\|event\\|tri\\(0\\|1\\|reg\\|and\\|or\\)?\\|w\\(ire\\|or\\|and\\)\\|time\\|re\\(al\\(time\\)?\\|g\\)\\)\\>" 
      0 font-lock-type-face)  
     ("\\(\\$[a-zA-Z][a-zA-Z0-9_\\$]*\\)\\|\\(\\<\\(begin\\|case[xz]?\\|end\\(case\\|function\\|task\\|module\\|table\\|primitive\\|specify\\)?\\|a\\(ssign\\|lways\\)\\|initial\\|table\\|\\(pos\\|neg\\)edge\\|else\\|for\\(ever\\|k\\)?\\|join\\|if\\|repeat\\|then\\|while\\|specify\\)\\>\\)" 
      0 font-lock-keyword-face)
@@ -392,7 +392,7 @@ too many redundanet comments in tight quarters")
      2 font-lock-function-name-face nil t)
     ("\\(\\\\[^ \t]*\\)\\|\\(`[ \t]*[A-Za-z][A-Za-z0-9_]*\\)" 0 font-lock-function-name-face)
     ("[@#]" . font-lock-type-face)
-    ("\\<\\(in\\(teger\\|put\\|out\\)\\|parameter\\|output\\|supply[01]?\\|event\\|tri\\(0\\|1\\|reg\\|and\\|or\\)?\\|w\\(ire\\|or\\|and\\)\\|time\\|re\\(al\\(time\\)?\\|g\\)\\)\\>" 
+    ("\\<\\(in\\(teger\\|put\\|out\\)\\|parameter\\|defparam\\|output\\|supply[01]?\\|event\\|tri\\(0\\|1\\|reg\\|and\\|or\\)?\\|w\\(ire\\|or\\|and\\)\\|time\\|re\\(al\\(time\\)?\\|g\\)\\)\\>" 
      0 font-lock-type-face)
     ("\\(\\$[a-zA-Z][a-zA-Z0-9_\\$]*\\)\\|\\(\\<\\(begin\\|case[xz]?\\|end\\(case\\|function\\|task\\|module\\|table\\|primitive\\|specify\\)?\\|a\\(ssign\\|lways\\)\\|initial\\|table\\|\\(pos\\|neg\\)edge\\|else\\|for\\(ever\\|k\\)?\\|join\\|if\\|repeat\\|then\\|while\\|specify\\)\\>\\)" . font-lock-keyword-face)
     )
@@ -465,7 +465,7 @@ too many redundanet comments in tight quarters")
 (defconst verilog-end-block-re-1 "\\(\\<end\\>\\)\\|\\(\\<endcase\\>\\)\\|\\(\\<join\\>\\)\\|\\(\\<endtable\\>\\)\\|\\(\\<endspecify\\>\\)\\|\\(\\<endfunction\\>\\)\\|\\(\\<endtask\\>\\)")
 (defconst verilog-declaration-re 
   (concat "\\(\\<in\\(put\\|out\\|teger\\)\\>\\|"
-	  "\\<parameter\\>\\|\\<output\\>\\|\\<event\\>\\|"
+	  "\\<parameter\\>\\|\\<defparam\\>\\|\\<output\\>\\|\\<event\\>\\|"
 	  "\\<re\\(al\\|g\\|altime\\)\\>\\|"
 	  "\\<time\\>\\|\\<tri\\(0\\|1\\|and\\|or\\|reg\\)?\\>\\|"
 	  "\\<supply[01]\\>\\|\\<w\\(and\\|or\\|ire\\)\\>\\)"))
@@ -1343,18 +1343,10 @@ With argument, first kill any existing labels."
 			    (goto-char (match-end 1))
 			    (verilog-forward-ws&directives)
 			    (if (looking-at "(")
-				(let ((par 1))
-				  (forward-char 1)
-				  (while (and (/= par 0) 
-					      (verilog-re-search-forward "\\((\\)\\|\\()\\)" nil 'move))
-				    (cond
-				     ((match-end 1)
-				      (setq par (1+ par)))
-				     ((match-end 2)
-				      (setq par (1- par)))))
+				(progn
+				  (forward-sexp)
 				  (verilog-forward-ws&directives)
-				  )
-			      )
+				  ))
 			    (point))
 			   (t
 			    (goto-char (match-end 0))
@@ -1366,7 +1358,7 @@ With argument, first kill any existing labels."
 		    )
 		)
 	  (setq str (buffer-substring b e))
-	  (if (setq e (string-match "\\(\n\\)\\|\\(//\\)\\|\\(/\\*\\)" str))
+	  (if (setq e (string-match "[ \t]*\\(\\(\n\\)\\|\\(//\\)\\|\\(/\\*\\)\\)" str))
 	      (setq str (concat (substring str 0 e) "...")))
 	  str)
       'nil)
@@ -1475,9 +1467,9 @@ Insert `// NAME ' if this line ends a module or primitive named NAME."
 		    (if (match-end 0)
 			(progn
 			  (goto-char (match-end 1))
-			  (setq str (verilog-get-expr))
-			  (setq err nil)
-			  (setq str (concat "_case " str)))))
+			  (setq str (concat (buffer-substring (match-beginning 1) (match-end 1))
+					    (verilog-get-expr)))
+			  (setq err nil))))
 		  (end-of-line)
 		  (if kill-existing-comment
 		      (kill-existing-comment))
@@ -1680,8 +1672,9 @@ Insert `// NAME ' if this line ends a module or primitive named NAME."
 (defun verilog-get-expr()
   "Grab expression at point, e.g, case ( a | b & (c ^d))"
   (let* ((b (progn 
-	     (skip-chars-forward " \t")
-	     (point)))
+	      (verilog-forward-syntactic-ws)
+	      (skip-chars-forward " \t")
+	      (point)))
 	 (e (let ((par 1)) 
 	      (cond
 	       ((looking-at "(")
@@ -1713,7 +1706,7 @@ Insert `// NAME ' if this line ends a module or primitive named NAME."
 		(point)
 		))))
 	 (str (buffer-substring b e)))
-    (if (setq e (string-match "\n" str))
+    (if (setq e (string-match "[ \t]*\\(\\(\n\\)\\|\\(//\\)\\|\\(/\\*\\)\\)" str))
 	(setq str (concat (substring str 0 e) "...")))
     str)
   )
@@ -2310,29 +2303,26 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
       (let ((here (point)))
 	(if (progn (verilog-backward-syntactic-ws)
 		   (= (preceding-char) ?\,))
-	    (let* ( st fst
+	    (let* ( fst
 		    (column 
 		     (save-excursion
 		       (backward-char 1)
-		       (setq st (point))
 		       (verilog-beg-of-statement)
 		       (setq fst (point))
-		       (forward-word 1)
-		       (if (or
-			    (= st (point))
-			    (= (following-char) ?\,))
-			   (;; we have a single word
-			    goto-char fst)
-			 (progn ;; we have multiple words
-			   (skip-chars-forward " \t")
-			   (if (= (following-char) ?\[)
-			       (progn
-				 (forward-char 1)
-				 (backward-up-list -1)
-				 (skip-chars-forward " \t")
-				 )
+		       (if (looking-at verilog-declaration-re)
+			   (progn ;; we have multiple words
+			     (goto-char (match-end 0))
+			     (skip-chars-forward " \t")
+			     (if (= (following-char) ?\[)
+				 (progn
+				   (forward-char 1)
+				   (backward-up-list -1)
+				   (skip-chars-forward " \t")
+				   )
+			       )
 			     )
-			   )
+			 (;; we have a single word
+			  goto-char fst)
 			 )
 		       (current-column)
 		       )
@@ -2598,7 +2588,7 @@ it displays a list of all possible completions.")
 
 
 (defvar verilog-type-keywords
-  '("buf" "bufif0" "bufif1" "cmos" "inout" "input"
+  '("buf" "bufif0" "bufif1" "cmos" "defparam" "inout" "input"
     "integer" "nand" "nmos" "nor" "not" "notif0" "notif1" "or" "output" "parameter"
     "pmos" "pull0" "pull1" "pullup" "rcmos" "real" "realtime" "reg" "rnmos" "rpmos" "rtran"
     "rtranif0" "rtranif1" "time" "tran" "tranif0" "tranif1" "tri" "tri0" "tri1"
