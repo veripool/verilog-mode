@@ -1,4 +1,6 @@
 ;;; verilog-mode.el --- major mode for editing verilog source in Emacs
+;;
+;; $Header$
 
 ;; Copyright (C) 1996 Free Software Foundation, Inc.
 
@@ -55,11 +57,13 @@
 ;;; This is beta code, and likely has bugs. Please report any and all
 ;;; bugs to me at mac@verilog.com.
 ;; 
-;; $Header$
 ;; $Log$
-;; Revision 1.98  1996/01/26 00:27:25  mac
-;; missing )
+;; Revision 1.99  1996/02/15 17:14:23  mac
+;; Made work with Xemacs. provided verilog-mode. small clean up in regexps
 ;;
+; Revision 1.98  1996/01/26  00:27:25  mac
+; missing )
+;
 ; Revision 1.97  1996/01/25  21:39:47  mac
 ; 1) major change is smart auto-end-comments. (Thanks to
 ;    Nadim.Saeed@amd.com for the suggestion) Basically, much like I was
@@ -174,6 +178,8 @@
 ;
 ;;; Code:
 
+(provide 'verilog-mode)
+
 (defconst verilog-mode-version "$$Revision$$"
   "Version of this verilog mode.")
 
@@ -233,7 +239,7 @@
 (defconst verilog-zero-indent-re 
   (concat verilog-defun-re "\\|" verilog-end-defun-re))
 (defconst verilog-autoindent-lines-re
-  "\\<\\(\\(macro\\)?module\\|primitive\\|end\\(case\\|function\\|task\\|module\\|\\)\\|join\\|begin\\|else\\)\\>")
+  "\\<\\(\\(macro\\)?module\\|primitive\\|end\\(case\\|function\\|task\\|module\\|\\)\\|join\\|begin\\|else\\)\\>\\|`\\(else\\|ifdef\\|endif\\)\\>")
 (defconst verilog-indent-reg 
   (concat "\\(\\<begin\\>\\|\\<case[xz]?\\>\\|\\<fork\\>\\)\\|"
 	  "\\(\\<end\\>\\|\\<join\\>\\|\\<endcase\\>\\)\\|" 
@@ -262,7 +268,7 @@
   (interactive)
   (cond (window-system
 	 (require 'font-lock)
-	 (copy-face 'default font-lock-keyword-face)
+	 (copy-face 'default 'font-lock-keyword-face)
 	 (add-hook 'verilog-mode-hook 'font-lock-mode)))
   (progn
     (if (string-match "XEmacs\\|Lucid" emacs-version)
@@ -294,16 +300,16 @@
 ;	  (make-face-bold font-lock-keyword-face)
 	  (if (eq verilog-background-mode 'dark)
 	      (progn
-		(set-face-foreground font-lock-keyword-face     "tan")
-		(set-face-foreground font-lock-function-name-face "red") 
-		(set-face-foreground font-lock-type-face        "#efc80c") ; yellow
-		(set-face-foreground font-lock-string-face      "lightskyblue1")
+		(set-face-foreground 'font-lock-keyword-face     "tan")
+		(set-face-foreground 'font-lock-function-name-face "red") 
+		(set-face-foreground 'font-lock-type-face        "#efc80c") ; yellow
+		(set-face-foreground 'font-lock-string-face      "lightskyblue1")
 		)
 	    (progn
-	      (set-face-foreground font-lock-keyword-face     "indianred")
-	      (set-face-foreground font-lock-function-name-face "DarkGreen") 
-	      (set-face-foreground font-lock-type-face        "#003800")
-	      (set-face-foreground font-lock-string-face      "RoyalBlue")
+	      (set-face-foreground 'font-lock-keyword-face     "indianred")
+	      (set-face-foreground 'font-lock-function-name-face "DarkGreen") 
+	      (set-face-foreground 'font-lock-type-face        "#003800")
+	      (set-face-foreground 'font-lock-string-face      "RoyalBlue")
 	      )
 	    )))))))
 
@@ -459,21 +465,6 @@ supported list, along with the values for this variable:
    "\\<\\(begin\\|case[xz]?\\|end\\(case\\|function\\|task\\|module\\)?\\|a\\(ssign\\|lways\\)\\|initial\\|\\(pos\\|neg\\)edge\\|else\\|for\\(ever\\|k\\)?\\|join\\|if\\|repeat\\|then\\|while\\)\\>"
    )
   "Additional expressions to highlight in Verilog mode.")
-
-(setq verilog-font-lock-keywords 
-  '(
-   ("^[ \t]*\\(function\\|task\\|module\\|macromodule\\)\\>[ \t]*"  1 font-lock-keyword-face) 
-   ("^[ \t]*\\(function\\|task\\|module\\|macromodule\\)\\>[ \t]*\\(\\sw+\\)"  2 font-lock-function-name-face nil t)
-   "\\$[a-zA-Z][a-zA-Z0-9_\\$]*"
-   ("#\[ \t\]*\[0-9\]*" .  font-lock-type-face)
-   ("#\[ \t\]*(\[^)\]*)" .  font-lock-type-face)
-   ("@" .  font-lock-type-face)   
-   ("\\\\[^ \t]*" .  font-lock-function-name-face)
-   ("`[ \t]*[A-Za-z][A-Za-z0-9_]*" .  font-lock-type-face)
-   ("\\<\\(in\\(teger\\|put\\|out\\)\\|output\\|event\\|tri1\\|tri0\\|\\|wire\\|re\\(al\\|g\\)\\)\\>" . font-lock-type-face)
-   "\\<\\(begin\\|case[xz]?\\|end\\(case\\|function\\|task\\|module\\)?\\|a\\(ssign\\|lways\\)\\|initial\\|\\(pos\\|neg\\)edge\\|else\\|for\\(ever\\|k\\)?\\|join\\|if\\|repeat\\|then\\|while\\)\\>"
-   ))
-
 
 (defvar verilog-indent-level 3
   "*Indentation of Verilog statements with respect to containing block.")
@@ -1686,8 +1677,9 @@ column number the line should be indented to."
   )
 
 
-(defun verilog-indent-declaration (type &optional arg start end)
+(defun verilog-indent-declaration (&optional arg start end)
   "Indent current lines as declaration, lining up the variable names"
+  (interactive)
   (let ((pos (point-marker))
 	state
 	(lim (save-excursion (progn (end-of-line) (point-marker))))
@@ -1697,7 +1689,7 @@ column number the line should be indented to."
       (progn
 	(beginning-of-line)
 	(delete-horizontal-space)
-	(indent-to (eval (cdr (assoc type verilog-indent-alist))))
+	(indent-to (eval (cdr (assoc 'declaration verilog-indent-alist))))
 	(let ((pos (point-marker))
 	      (state)
 	      (stpos (if start start
