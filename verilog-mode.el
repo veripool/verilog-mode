@@ -292,20 +292,26 @@ idea."
   :type '(repeat directory)
   )
 
+(defcustom verilog-auto-sense-include-inputs nil
+  "*If true, AUTOSENSE should include in the sensitivity list
+input signals that are also output signals in the same block."
+  :type 'boolean
+  :group 'verilog-mode)
+
 (defcustom verilog-mode-hook nil
   "*Hook (List of functions) run after verilog mode is loaded."
   :type 'hook
-  :group 'verilog)
+  :group 'verilog-mode)
 
 (defcustom verilog-before-auto-hook nil
   "*Hook run before verilog-mode updates AUTOs."
   :type 'hook
-  :group 'verilog)
+  :group 'verilog-mode)
 
 (defcustom verilog-auto-hook nil
   "*Hook run after verilog-mode updates AUTOs."
   :type 'hook
-  :group 'verilog)
+  :group 'verilog-mode)
 
 (defvar verilog-auto-lineup '(all) 
   "*List of contexts where auto lineup of :'s or ='s should be done.
@@ -3825,26 +3831,27 @@ busses combined.  For example A[2] and A[1] become A[2:1]."
   "Return module_name when point is inside instantiation"
   (save-excursion
     (search-backward "(")
-    (verilog-re-search-backward-quick "\\b[a-zA-Z0-9'_\$]" nil nil)
+    (verilog-re-search-backward-quick "\\b[a-zA-Z0-9`_\$]" nil nil)
     (skip-chars-backward "a-zA-Z0-9'_$")
-    (verilog-re-search-backward-quick "\\b[a-zA-Z0-9'_\$]" nil nil)
+    (verilog-re-search-backward-quick "\\b[a-zA-Z0-9`_\$]" nil nil)
     (skip-chars-backward "a-zA-Z0-9'_$")
-    (looking-at "[a-zA-Z0-9'_\$]+")
+    (looking-at "[a-zA-Z0-9`_\$]+")
     (match-string 0)))
 
 (defun verilog-read-inst-name ()
   "Return instance_name when point is inside instantiation"
   (save-excursion
     (search-backward "(")
-    (verilog-re-search-backward-quick "\\b[a-zA-Z0-9'_\$]" nil nil)
+    (verilog-re-search-backward-quick "\\b[a-zA-Z0-9`_\$]" nil nil)
     (skip-chars-backward "a-zA-Z0-9'_$")
-    (looking-at "[a-zA-Z0-9'_\$]+")
+    (looking-at "[a-zA-Z0-9`_\$]+")
     (match-string 0)))
 
 (defun verilog-read-decls ()
   "Return a array of [outputs inouts inputs wire reg assign const] used in the current
 module that the point is over."
   (let ((end-mod-point (or (verilog-get-end-of-defun t) (point-max)))
+	(functask 0)
 	sigs-in sigs-out sigs-inout sigs-wire sigs-reg sigs-assign sigs-const
 	vec expect-signal keywd newsig)
     (save-excursion
@@ -3856,6 +3863,8 @@ module that the point is over."
 	  (search-forward "\n"))
 	 ((looking-at "/\\*")
 	  (search-forward "*/"))
+	 ((looking-at "\"")
+	  (re-search-forward "[^\\]\""))
 	 ((looking-at "[;=]")
 	  (setq vec nil expect-signal nil newsig nil)
 	  (forward-char 1))
@@ -3866,7 +3875,7 @@ module that the point is over."
 		(t ;; Bit width
 		 (setq vec (verilog-string-replace-matches 
 			    "\\s-+" "" nil nil (match-string 1))))))
-	 ((looking-at "\\s-*\\([a-zA-Z0-9'_$]+\\)")
+	 ((looking-at "\\s-*\\([a-zA-Z0-9`_$]+\\)")
 	  (goto-char (match-end 0))
 	  (setq keywd (match-string 1))
 	  (cond ((equal keywd "input")
@@ -3885,7 +3894,14 @@ module that the point is over."
 		     (equal keywd "supply1")
 		     (equal keywd "supply"))
 		 (setq expect-signal 'sigs-const))
-		(expect-signal
+		((or (equal keywd "function")
+		     (equal keywd "task"))
+		 (setq functask (1+ functask)))
+		((or (equal keywd "endfunction")
+		     (equal keywd "endtask"))
+		 (setq functask (1- functask)))
+		((and expect-signal
+		      (eq functask 0))
 		 ;; Add new signal to expect-signal's variable 
 		 (setq newsig (list keywd vec nil nil))
 		 (set expect-signal (cons newsig
@@ -3973,6 +3989,8 @@ always block that the point is over."
 	  (search-forward "\n"))
 	 ((looking-at "/\\*")
 	  (search-forward "*/"))
+	 ((looking-at "\"")
+	  (re-search-forward "[^\\]\""))
 	 ;; Comma end-statement
 	 ((looking-at ";")
 	  (setq next-is 'value rvalue nil)
@@ -4014,7 +4032,7 @@ always block that the point is over."
 	  (setq ends (+ ends 1))
 	  (setq next-is 'value rvalue nil)
 	  (skip-syntax-forward "w_"))
-	 ((string-match "^[a-zA-Z_]" keywd)	;; not exactly word constituant
+	 ((string-match "^[`a-zA-Z_]" keywd)	;; not exactly word constituant
 	  (cond ((and (eq next-is 'value)
 		      (not (assoc keywd (if rvalue sigs-in sigs-out)))
 		      (not (member keywd verilog-keywords)))
@@ -4046,7 +4064,7 @@ module that the point is over."
 		     ))
 	  (forward-line 1))
 	(beginning-of-line)
-	(if (looking-at "^\\s-*\\([a-z0-9'_$]+\\)\\s-+\\([a-z0-9'_$]+\\)\\s-*(")
+	(if (looking-at "^\\s-*\\([a-z0-9`_$]+\\)\\s-+\\([a-z0-9`_$]+\\)\\s-*(")
 	    ;;(if (looking-at "^\\(.+\\)$")
 	    (let ((module (match-string 1))
 		  (instant (match-string 2)))
@@ -4078,7 +4096,7 @@ found returns the signal name connections.  Return nil or list of
 				(point)))
 	     ;;
 	     (while (< (point) tpl-end-pt)
-	       (when (looking-at "\\s-*\\.\\([a-zA-Z0-9'_$]+\\)\\s-*(\\(.+\\))\\s-*\\()\\s-*;\\|,\\)")
+	       (when (looking-at "\\s-*\\.\\([a-zA-Z0-9`_$]+\\)\\s-*(\\(.+\\))\\s-*\\()\\s-*;\\|,\\)")
 		 (setq tpl-list (cons
 				 (list
 				  (match-string 1)
@@ -4896,9 +4914,6 @@ Typing \\[verilog-auto] will make this into:
       (insert "// End of automatics\n")
       )))
 
-(defvar verilog-auto-sense-no-inputs nil "T if AUTOSENSE should eliminate
-inputs that are also outputs from the sensitivity lists.")
-
 (defun verilog-auto-sense ()
   "Replace the always (/*autosense*/) sensitivity list with one
 automatically derived from all inputs declared in the always statement.
@@ -4910,6 +4925,7 @@ Limitiations:
   The end of a always is considered to be a ; unless a begin/end is used.
   This is wrong for \"always if foo else bar\", so use begin/end pairs
   after always!
+
   Verilog does not allow memories (multidimensional arrays) in sensitivity
   lists.  AUTOSENSE will thus exclude them, and add a /*memory or*/ comment.
 
@@ -4938,7 +4954,7 @@ Typing \\[verilog-auto] will make this into:
       ;; Read signals in always, eliminate outputs from sense list
       (setq sigss (verilog-read-always-signals))
       (setq sig-list (verilog-signals-not-in (nth 0 sigss)
-					     (append (and verilog-auto-sense-no-inputs (nth 1 sigss))
+					     (append (and (not verilog-auto-sense-include-inputs) (nth 1 sigss))
 						     (verilog-modi-get-consts modi))
 					     ))
       (when sig-memories
