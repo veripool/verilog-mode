@@ -142,6 +142,12 @@
 	      nil ;; great
 	    (defmacro zmacs-activate-region (&rest args) nil))
 	(error nil))
+      (condition-case nil
+	  (if (fboundp 'char-before)
+	      nil ;; great
+	    (defmacro char-before (&rest body)
+	      (` (char-after (1- (point))))))
+	(error nil))
       ;; Requires to define variables that would be "free" warnings
       (condition-case nil
 	  (require 'font-lock)
@@ -924,8 +930,8 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
   ;; "function" "task"
   "\\(\\<\\(function\\>\\|task\\>\\)\\)")
 (defconst verilog-complete-reg
-  ;; "always" "initial" "repeat" "case" "casex" "casez" "while" "if" "for" "forever" "else"
-  "\\<\\(always\\|case\\(\\|[xz]\\)\\|begin\\|else\\|generate\\|for\\(\\|ever\\)\\|i\\(f\\|nitial\\)\\|repeat\\|while\\)\\>")
+  ;; "always" "initial" "repeat" "case" "casex" "casez" "while" "if" "for" "forever" "else" "parameter"
+  "\\<\\(always\\|case\\(\\|[xz]\\)\\|begin\\|else\\|generate\\|for\\(\\|ever\\)\\|i\\(f\\|nitial\\)\\|parameter\\|repeat\\|while\\)\\>")
 (defconst verilog-end-statement-re
   (concat "\\(" verilog-beg-block-re "\\)\\|\\("
 	  verilog-end-block-re "\\)"))
