@@ -1,46 +1,57 @@
--------------------------------------------------------------------
++----------------------------------------------------------------+
+|  To stop getting these messages send email like the following: |
+|                                                                |
+|  To: <majordomo@webnexus.com>                                  |
+|  Subject:                                                      |
+|                                                                |
+|  unsubscribe verilog-mode-list me@mycompany.com                |
+|                                                                |
++----------------------------------------------------------------+
+| -->>> If you can't decode this file, fetch a copy from  <<<--  |
+|  ftp://www.surefirev.com/pub/Verilog-mode/verilog-mode.el      |
++----------------------------------------------------------------+
 
-Company  News:  Verisity is having  its   Verisity Users Group meeting
-April 12th and 13th in  Mountain View, California.  To  sign up, go to
-the  web  site <http://www.verisity.com>;  or   contact us directly at
-1-650-934-6800
+Company  News:
+
+	There are still a few more opportunities for you to help
+	build better verification tools.
+
+	We have some great openings worldwide at Verisity, both in the
+	development of tools for Verification, and in helping
+	customers use these tools effectively.  If you have _any_
+	interest, please drop me an email. (mac@verilog.com, or
+	mac@verilog.com; or send directly to jobs@verisity.com)
 
 Now back to the verilog-mode:
 
-This minor release adds enhanced highlighting, especially the ability
-to gray out code that is turned off by things like translate_off
-directives.
+Major changes: 
 
-The major new recent feature is a 'verilog cockpit' that allows you to
-select your   'Compliation  Action'.   Basically, you   select 'Choose
-Compilation Action',  the  first item   in the Verilog  menu  bar, and
-select Lint, Coverage, Simulation or Compilation as your action.
+1) The AUTO mode gained some new enhancements, many as suggested (and
+contributed) by users.  As always, more is forthcoming.
 
-Then M-x compile will perform that action, and M-x next-error will
-allow you to step through any errors.  Select 'Customise Verilog Mode'
-from the same menu bar to customize the default choices for your
-environment.
+2) Users of the AUTOs in Verilog that are also using SystemC may be
+interested in Wilson Snyder's publicly licensed SystemPerl package,
+which brings AUTOs and several other features to SystemC.  See
+http://www.veripool.org
 
-The addition of this  feature is no   accident; we have just  released
-SureLint 1.1.   This  tool _statically_  finds races  in  your design,
-finds unused code, automatically  finds  FSMs and diagnoses  them  for
-reachability, as well as performing  the  standard lint checks.   Call
-now for a demo!
+3) I now send this file as a mime encoded attachement.  If
+you have problems decoding the file, search for the program mmencode.
+I include a link to mmencode for various operating systems on the page 
+<http://www.verilog.com/emacs_install.html>
 
-The major  version 3 feature (hence the  new major release  number) is
-AUTO, from  Wilson  Snyder, wsnyder\@wsnyder.org.  AUTO  provides  a
-rich  set of     capabilities for  automatically    generating   input
-declarations, or sensitivity lists.  To learn  more, install the file,
-and pull down the Verilog Menu bar, and select Help
+4) This version has much more support for working with verilog Lint
+programs; allowing easy stepping through the source code for which the
+lint tool is pointing out problems; and simple key stroke to tell the
+tool to ignore the error/warning.
 
 To install this file, go to
 
-<http://www.surefirev.com/emacs_install.html>
+<http://www.verilog.com/emacs_install.html>
 
 and read the directions.
 
 If you have  any problems with  the  file, feel  from to send  mail to
-verilog-mode-bugs\@surefirev.com and your  mail will be entered in  our
+verilog-mode-bugs\@verilog.com and your  mail will be entered in  our
 bug tracking system.
 
 Please keep an eye on our web page <http://www.verisity.com> as
