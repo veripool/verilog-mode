@@ -2111,7 +2111,7 @@ Insert `// NAME ' if this line ends a module or primitive named NAME."
 			  (kill-existing-comment))
 		      (delete-horizontal-space)
 		      (if (or err
-			      (> (- here there) verilog-minimum-comment-distance))
+			      (> (count-lines here there) verilog-minimum-comment-distance))
 			  (insert str))
 		      (if err (ding 't))
 		      )
@@ -2395,7 +2395,10 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 			   (if (and begin
 				    (not verilog-indent-begin-after-if)
 				    (looking-at verilog-no-indent-begin-re))
-			       (throw 'nesting 'statement)
+			       (progn
+				 (beginning-of-line)
+				 (skip-chars-forward " \t") 
+				 (throw 'nesting 'statement))
 			     (progn
 			       (throw 'nesting 'cexp)
 			       )
