@@ -1231,8 +1231,9 @@ Insert `// NAME ' if this line ends a module or primitive named NAME."
 			  (setq err nil)
 			  (setq str (concat " // block: " str )))
 			 
-			 ((verilog-in-case-region-p) ;-- handle case item differently
-			  (setq str (verilog-backward-case-item lim))
+			 ((and
+			   (verilog-in-case-region-p) ;-- handle case item differently
+			   (setq str (verilog-backward-case-item lim)))
 			  (setq err nil)
 			  (setq str (concat " // case: " str ))
 			  )
