@@ -194,10 +194,10 @@
   "Facilitates easy editing of Verilog source text"
   :group 'languages)
 
-(defgroup verilog-mode-fonts nil
-  "Facilitates easy customization fonts used in Verilog source text"
-  :link '(customize-apropos "font-lock-*" 'faces)
-  :group 'verilog-mode)
+; (defgroup verilog-mode-fonts nil
+;   "Facilitates easy customization fonts used in Verilog source text"
+;   :link '(customize-apropos "font-lock-*" 'faces)
+;  :group 'verilog-mode)
 
 (defgroup verilog-mode-indent nil
   "Customize indentation of verilog source text"
