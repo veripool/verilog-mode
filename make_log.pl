@@ -1,6 +1,8 @@
 #!/usr/local/bin/perl
-unlink("verilog-mode.el.gz", "uu", "log");
-system("gzip -c9 verilog-mode.el | uuencode verilog-mode.el.gz > uu");
+
+unlink("log");
+$attach_name = "verilog-mode.el.gz";
+$encoded_data = `gzip -c9 verilog-mode.el | mmencode `;
 system("cvs log verilog-mode.el > log");
 open(LOG,"<log");
 while(<LOG>) {
@@ -18,9 +20,22 @@ $rev
 X
 close(O);
 
-open(O,">uuencoded_verilog-mode");
-print O "-------------------------------------------------------------------\n";
-print O "|         Here is version $rev of verilog-mode for emacs!         |\n";
+open(O,">mmencoded_verilog-mode");
+print O <<"XX";
+MIME-version: 1.0
+Content-type: multipart/mixed; boundary="Message-Boundary"
+Content-transfer-encoding: 7BIT
+X-attachments: verilog-mode.el.gz
+
+--Message-Boundary
+Content-type: text/plain; charset=US-ASCII
+Content-transfer-encoding: 7BIT
+Content-description: Mail message body
+
+
++----------------------------------------------------------------+
+|         Here is version $rev of verilog-mode for emacs!        |
+XX
 open(IO, "<README");
 while (<IO>){
   print O $_;
@@ -36,11 +51,15 @@ while(<LOG>) {
   print C $_;
 }
 close(LOG);
-print O "\n\n";
-open(U,"<uu");
-while(<U>) {
-  print O $_;
-}
-close(U);
+print O <<"XX";
+
+--Message-Boundary
+Content-type: application/octet-stream; name="$attach_name"
+Content-Transfer-Encoding: base64
+Content-disposition: attachment; filename="$attach_name"
+
+$encoded_data
+--Message-Boundary--
+XX
 close(O);
-unlink("verilog-mode.el.gz", "uu", "log");
+unlink("log");
