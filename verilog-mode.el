@@ -794,7 +794,7 @@ compilation-error-regexp-alist.  This allows \\[next-error] to find the errors."
 	      "assign" "defparam" "event" "inout" "input" "integer" "output"
 	      "parameter" "real" "realtime" "reg" "supply" "supply0" "supply1"
 	      "time" "tri" "tri0" "tri1" "triand" "trior" "trireg" "wand" "wire"
-	      "wor") t)
+	      "wor") t t)
 	    "\\>")))
 (defconst verilog-range-re "\\[[^]]*\\]")
 (defconst verilog-macroexp-re "`\\sw+")
@@ -820,11 +820,24 @@ compilation-error-regexp-alist.  This allows \\[next-error] to find the errors."
 (defconst verilog-zero-indent-re
   (concat verilog-defun-re "\\|" verilog-end-defun-re))
 (defconst verilog-directive-re
-  ;;   "`else" "`ifdef" "`endif" "`define" "`undef" "`include" "`timescale" "`protect" "`endprotect
-  "`\\(define\\>\\|e\\(lse\\>\\|nd\\(if\\|protect\\)\\>\\)\\|i\\(fdef\\>\\|nclude\\>\\)\\|protect\\|undef\\>\\|time_?scale\\)")
+  ;; "`case" "`default" "`define" "`define" "`else" "`endfor" "`endif"
+  ;; "`endprotect" "`endswitch" "`endwhile" "`for" "`format" "`if" "`ifdef"
+  ;; "`ifndef" "`include" "`let" "`protect" "`switch" "`timescale"
+  ;; "`time_scale" "`undef" "`while"
+  "\\<`\\(case\\|def\\(ault\\|ine\\(\\)?\\)\\|e\\(lse\\|nd\\(for\\|if\\|protect\\|switch\\|while\\)\\)\\|for\\(mat\\)?\\|i\\(f\\(def\\|ndef\\)?\\|nclude\\)\\|let\\|protect\\|switch\\|time\\(_scale\\|scale\\)\\|undef\\|while\\)\\>")
+
+(defconst verilog-directive-begin
+  "\\<`\\(for\\|i\\(f\\|fdef\\|fndef\\)\\|switch\\|while\\)\\>")
+
+(defconst verilog-directive-middle
+  "\\<`\\(else\\|default\\|case\\)\\>")
+
+(defconst verilog-directive-end
+  "`\\(endfor\\|endif\\|endswitch\\|endwhile\\)\\>")
+
 (defconst verilog-directive-re-1
-  ;;   "`else" "`ifdef" "`endif" "`define" "`undef" "`include"
-       (concat "[ \t]*"  verilog-directive-re))
+  (concat "[ \t]*"  verilog-directive-re))
+
 (defconst verilog-autoindent-lines-re
   ;; "macromodule" "module" "primitive" "end" "endcase" "endfunction"
   ;; "endtask" "endmodule" "endprimitive" "endspecify" "endtable" "join"
@@ -1065,10 +1078,10 @@ See also `verilog-font-lock-extra-types'.")
 (defface verilog-font-lock-translate-off-face
   '((((class color) 
       (background light)) 
-     (:background "gray90" :italic t :foreground "gray80"))
+     (:background "gray90" :italic t ))
     (((class color) 
       (background dark)) 
-     (:background "gray10" :italic t :foreground "gray20"))
+     (:background "gray10" :italic t ))
     (((class grayscale) (background light))
      (:foreground "DimGray" :italic t))
     (((class grayscale) (background dark))
@@ -1089,12 +1102,12 @@ See also `verilog-font-lock-extra-types'.")
 	   '("defparam" "event" "inout" "input" "integer" "output" "parameter"
 	     "real" "realtime" "reg" "signed" "supply" "supply0" "supply1" "time"
 	     "tri" "tri0" "tri1" "triand" "trior" "trireg" "vectored" "wand" "wire"
-	     "wor" ))))
+	     "wor" ) nil t )))
 
        (verilog-pragma-keywords
 	(eval-when-compile
 	  (verilog-regexp-opt
-	   '("surefire" "synopsys" "rtl_synthesis" "verilint" ))))
+	   '("surefire" "synopsys" "rtl_synthesis" "verilint" ) nil t)))
 
        (verilog-keywords
 	(eval-when-compile
@@ -1104,7 +1117,7 @@ See also `verilog-font-lock-extra-types'.")
 	      "endprimitive" "endspecify" "endtable" "endtask" "for" "force"
 	      "forever" "fork" "function" "if" "initial" "join" "macromodule"
 	      "module" "negedge" "posedge" "primitive" "repeat" "release" "specify"
-	      "table" "task" "wait" "while" )))))
+	      "table" "task" "wait" "while" ) nil t ))))
        
   (setq verilog-font-lock-keywords
 	(list
@@ -2225,6 +2238,12 @@ area.  See also `verilog-comment-region'."
     )
   )
 
+(defconst verilog-directive-nest-re
+  (concat "\\(`else\\>\\)\\|"
+	  "\\(`endif\\>\\)\\|"
+	  "\\(`if\\>\\)\\|"
+	  "\\(`ifdef\\>\\)\\|"
+	  "\\(`ifndef\\>\\)"))
 (defun verilog-set-auto-endcomments (indent-str kill-existing-comment)
   "Insert `// case: 7 ' or `// NAME ' on this line if appropriate.
 Insert `// case expr ' if this line ends a case block.
@@ -2239,13 +2258,11 @@ Insert `// NAME ' if this line ends a module or primitive named NAME."
 	    (not (save-excursion
 		   (end-of-line)
 		   (search-backward "//" (verilog-get-beg-of-line) t)))))
-      (let ( (reg "\\(`else\\>\\)\\|\\(`ifdef\\>\\)\\|\\(`endif\\>\\)")
-	     (nest 1)
-	     b e
-	     (else (if (match-end 2)
-		       1
-		     0))
-	     )
+      (let ( 
+	    (nest 1) b e 
+	    m
+	    (else (if (match-end 2) "!" " "))
+	    )
 	(end-of-line)
 	(if kill-existing-comment
 	    (kill-existing-comment))
@@ -2253,34 +2270,38 @@ Insert `// NAME ' if this line ends a module or primitive named NAME."
 	(save-excursion
 	  (backward-sexp 1)
 	  (while (and (/= nest 0)
-		      (verilog-re-search-backward reg nil 'move))
+		      (verilog-re-search-backward verilog-directive-nest-re nil 'move))
 	    (cond
 	     ((match-end 1) ; `else
-	      (if (= nest 1)
-		  (setq else 1)))
-	     ((match-end 2) ; `ifdef
-	      (setq nest (1- nest)))
-	     ((match-end 3) ; `endif
+	      (if (= nest 1) 
+		  (setq else "!")))
+	     ((match-end 2) ; `endif
 	      (setq nest (1+ nest)))
+	     ((match-end 3) ; `if
+	      (setq nest (1- nest)))
+	     ((match-end 4) ; `ifdef
+	      (setq nest (1- nest)))
+	     ((match-end 5) ; `ifndef
+	      (setq nest (1- nest)))
 	     ))
 	  (if (match-end 0)
-	      (setq b (progn
-			(skip-chars-forward "^ \t")
-			(verilog-forward-syntactic-ws)
-			(point))
-		    e (progn
-			(skip-chars-forward "a-zA-Z0-9_")
-			(point)
-			))))
+	      (setq 
+	       m (buffer-substring 
+		  (match-beginning 0)
+		  (match-end 0))
+	       b (progn
+		   (skip-chars-forward "^ \t")
+		   (verilog-forward-syntactic-ws)
+		   (point))
+	       e (progn
+		   (skip-chars-forward "a-zA-Z0-9_")
+		   (point)
+		   ))))
 	(if b
 	    (if (> (count-lines (point) b) verilog-minimum-comment-distance)
-		(insert (concat (if
-				    (= else 0)
-				    " // ifdef "
-				  " // !ifdef ")
-				(buffer-substring b e))))
+		(insert (concat " // " else m " " (buffer-substring b e))))
 	  (progn
-	    (insert " // unmatched `endif")
+	    (insert " // unmatched `else or `endif")
 	    (ding 't))
 	  )))
 
@@ -2941,30 +2962,35 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 For speed, the searcher looks at the last directive, not the indent
 of the appropriate enclosing block."
   (let ((base -1)	;; Indent of the line that determines our indentation
-	(ind 0))	;; Relative offset caused by other directives (like `endif on same line as `else)
+	(ind 0)	        ;; Relative offset caused by other directives (like `endif on same line as `else)
+	)
     ;; Start at current location, scan back for another directive
+
     (save-excursion
       (beginning-of-line)
       (while (and (< base 0)
 		  (verilog-re-search-backward verilog-directive-re nil t))
 	(cond ((save-excursion (skip-chars-backward " \t") (bolp))
-	       (setq base (current-indentation))))
-	(cond ((and (looking-at "`endif") (< base 0))  ;; Only matters when not at BOL
+	       (setq base (current-indentation))
+	       ))
+	(cond ((and (looking-at verilog-directive-end) (< base 0))  ;; Only matters when not at BOL
 	       (setq ind (- ind verilog-indent-level-directive)))
-	      ((and (looking-at "`else") (>= base 0))  ;; Only matters when at BOL
+	      ((and (looking-at verilog-directive-middle) (>= base 0))  ;; Only matters when at BOL
 	       (setq ind (+ ind verilog-indent-level-directive)))
-	      ((looking-at "`if")
+	      ((looking-at verilog-directive-begin)
 	       (setq ind (+ ind verilog-indent-level-directive)))))
       ;; Adjust indent to starting indent of critical line
       (setq ind (max 0 (+ ind base))))
-    ;; Adjust else's in a bit
+ 
     (save-excursion
       (beginning-of-line)
       (skip-chars-forward " \t")
-      (cond ((or (looking-at "`else")
-		 (looking-at "`endif"))
+      (cond ((or (looking-at verilog-directive-middle)
+		 (looking-at verilog-directive-end))
 	     (setq ind (max 0 (- ind verilog-indent-level-directive))))))
-    ind))
+   ind
+    ))
+
 
 (defun verilog-leap-to-case-head () ""
   (let ((nest 1))
@@ -3188,9 +3214,8 @@ of the appropriate enclosing block."
   ;; Backward skip over syntactic whitespace and compiler directives for Emacs 19.
   (save-restriction
     (let* ((lim (or lim (point-min)))
-	   (here lim)
-	   jump
-	   )
+	   (here lim) 
+	   (p nil) )
       (if (< lim (point))
 	  (progn
 	    (let ((state
@@ -3207,13 +3232,17 @@ of the appropriate enclosing block."
 	    (while (/= here (point))
 	      (setq here (point))
 	      (forward-comment (-(buffer-size)))
-	      (save-excursion
-		(beginning-of-line)
-		(if (looking-at verilog-directive-re-1)
-		    (setq jump t)
-		  (setq jump nil)))
-	      (if jump
-		  (beginning-of-line))
+	      (setq p 
+		    (save-excursion
+		      (beginning-of-line)
+		      (cond
+		       ((verilog-within-translate-off)
+			(verilog-back-to-start-translate-off (point-min)))
+		       ((looking-at verilog-directive-re-1)
+			(point))
+		       (t
+			nil))))
+	      (if p (goto-char p))
 	      )))
       )))
 
@@ -3741,7 +3770,7 @@ Do not count named blocks or case-statements."
 		      (just-one-space)
 		      (indent-to ind)
 		      )
-		  (if (/= p ind)
+		  (if (/= (current-column) ind)
 		      (progn
 			(just-one-space)
 			(indent-to ind))
@@ -3759,7 +3788,7 @@ Do not count named blocks or case-statements."
 			(just-one-space)
 			(indent-to ind)
 			)
-		    (if (/= p ind)
+		    (if (/= (current-column) ind)
 			(progn
 			  (just-one-space)
 			  (indent-to ind))
@@ -4330,6 +4359,13 @@ and verilog-library-extensions."
 (defun verilog-start-translate-off (limit)
   "Return point before translate-off directive if before LIMIT, else nil."
   (when (re-search-forward
+	  (concat "//\\s-*.*\\s-*" verilog-directive-regexp "off")
+	  limit t)
+    (match-beginning 0)))
+
+(defun verilog-back-to-start-translate-off (limit)
+  "Return point before translate-off directive if before LIMIT, else nil."
+  (when (re-search-backward
 	  (concat "//\\s-*.*\\s-*" verilog-directive-regexp "off")
 	  limit t)
     (match-beginning 0)))
