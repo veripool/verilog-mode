@@ -127,17 +127,30 @@
 	(defmacro defcustom (var value doc &rest args) 
 	  (` (defvar (, var) (, value) (, doc))))
 	)
+      (if (and (featurep 'custom) (fboundp 'customize-group))
+	  nil ;; We've got what we needed
+	;; We have an intermediate custom-library, hack around it!
+	(defmacro customize-group (var &rest args) 
+	  (`(customize (, var) )))
+	)
+      
       ))
 
 (defun verilog-customize ()
   "Link to customize screen for Verilog"
   (interactive)
-  (customize 'verilog-mode)
+  (customize-group 'verilog-mode)
   )
 
 (defgroup verilog-mode nil
   "Facilitates easy editing of Verilog source text"
   :group 'languages)
+
+(defcustom verilog-compiler "vcs "
+  "*Program and arguments to use to compile/run/lint verilog source."
+  :type 'string 
+  :group 'verilog-mode
+  )
       
 (defcustom verilog-indent-level 3
   "*Indentation of Verilog statements with respect to containing block."
@@ -246,7 +259,7 @@ lineups."
 ; "if" "wait" "else" "fork" "join" "for" "while" "repeat" "forever" "posedge" "negedge"
 ; "primitive" "endprimitive" "specify" "endspecify" "table" "endtable" 
 ; "function" "endfunction" "task" "endtask" "module" "macromodule""endmodule"
- ("\\<\\$[a-zA-Z][a-zA-Z0-9_\\$]*\\|\\(a\\(lways\\|ssign\\)\\|begin\\|case\\(\\|[xz]\\)\\|default\\|e\\(lse\\|nd\\(\\|case\\|function\\|module\\|primitive\\|specify\\|ta\\(ble\\|sk\\)\\)\\)\\|f\\(or\\(\\|ce\\|ever\\|k\\)\\|unction\\)\\|i\\(f\\|nitial\\)\\|join\\|m\\(acromodule\\|odule\\)\\|negedge\\|p\\(osedge\\|rimitive\\)\\|repeat\\|specify\\|ta\\(ble\\|sk\\)\\|w\\(ait\\|hile\\)\\)\\>" 0 'font-lock-keyword-face)
+ ("\\<\\(\\$[a-zA-Z][a-zA-Z0-9_\\$]*\\|\\(a\\(lways\\|ssign\\)\\|begin\\|case\\(\\|[xz]\\)\\|\\(de\\(fault\\|assign\\)\\)\\|e\\(lse\\|nd\\(\\|case\\|function\\|module\\|primitive\\|specify\\|ta\\(ble\\|sk\\)\\)\\)\\|f\\(or\\(\\|ce\\|ever\\|k\\)\\|unction\\)\\|i\\(f\\|nitial\\)\\|join\\|m\\(acromodule\\|odule\\)\\|negedge\\|p\\(osedge\\|rimitive\\)\\|repeat\\|specify\\|ta\\(ble\\|sk\\)\\|w\\(ait\\|hile\\)\\)\\)\\>" 0 'font-lock-keyword-face)
 
    )
 )
@@ -264,7 +277,7 @@ lineups."
 ; "if" "wait" "else" "fork" "join" "for" "while" "repeat" "forever" "posedge" "negedge"
 ; "primitive" "endprimitive" "specify" "endspecify" "table" "endtable" 
 ; "function" "endfunction" "task" "endtask" "module" "macromodule""endmodule"
-   ("\\<\\$[a-zA-Z][a-zA-Z0-9_\\$]*\\|\\(a\\(lways\\|ssign\\)\\|begin\\|case\\(\\|[xz]\\)\\|default\\|e\\(lse\\|nd\\(\\|case\\|function\\|module\\|primitive\\|specify\\|ta\\(ble\\|sk\\)\\)\\)\\|f\\(or\\(\\|ce\\|ever\\|k\\)\\|unction\\)\\|i\\(f\\|nitial\\)\\|join\\|m\\(acromodule\\|odule\\)\\|negedge\\|p\\(osedge\\|rimitive\\)\\|repeat\\|specify\\|ta\\(ble\\|sk\\)\\|w\\(ait\\|hile\\)\\)\\>" 0 font-lock-keyword-face)
+   ("\\<\\$[a-zA-Z][a-zA-Z0-9_\\$]*\\|\\(a\\(lways\\|ssign\\)\\|begin\\|case\\(\\|[xz]\\)\\|\\(de\\(fault\\|assign\\)\\)\\|e\\(lse\\|nd\\(\\|case\\|function\\|module\\|primitive\\|specify\\|ta\\(ble\\|sk\\)\\)\\)\\|f\\(or\\(\\|ce\\|ever\\|k\\)\\|unction\\)\\|i\\(f\\|nitial\\)\\|join\\|m\\(acromodule\\|odule\\)\\|negedge\\|p\\(osedge\\|rimitive\\)\\|repeat\\|specify\\|ta\\(ble\\|sk\\)\\|w\\(ait\\|hile\\)\\)\\>" 0 font-lock-keyword-face)
     )
 )
 
@@ -364,7 +377,17 @@ lineups."
 
 (define-abbrev-table 'verilog-mode-abbrev-table ())
 
-  
+;; compilation program
+(defun verilog-compile ()
+  "function to compile verilog"
+  (or (file-exists-p "makefile") (file-exists-p "Makefile")
+      (progn (make-local-variable 'compile-command)
+	     (setq compile-command
+		   (concat verilog-compiler
+			   buffer-file-name)))))
+
+(add-hook 'verilog-mode-hook 'verilog-compile)
+
 ;;;
 ;;; Regular expressions used to calculate indent, etc.
 ;;;
@@ -605,6 +628,7 @@ supported list, along with the values for this variable:
   (modify-syntax-entry ?> "." table)
   (modify-syntax-entry ?& "." table)
   (modify-syntax-entry ?| "." table)
+  (modify-syntax-entry ?` "w" table)
   (modify-syntax-entry ?_ "w" table)
   (modify-syntax-entry ?\' "." table)
 )
@@ -1010,8 +1034,7 @@ Other useful functions are:
       )
      ((nth 4 state)			; Inside any comment (hence /**/)
       (newline)
-      (beginning-of-line)
-      (verilog-indent-comment t)
+      (verilog-more-comment)
       )
      ((eolp)
        ;; First, check if current line should be indented
@@ -1420,6 +1443,28 @@ area.  See also `verilog-comment-region'."
       nil)
     )
   )
+(defun verilog-in-fork-region-p ()
+  "Return true if between a fork and join"
+  (interactive)
+  (let 
+      ( (lim (save-excursion (verilog-beg-of-defun)  (point)))
+	(nest 1)
+	)
+    (save-excursion
+      (while (and 
+	      (/= nest 0)
+	      (verilog-re-search-backward "\\<\\(fork\\)\\|\\(join\\)\\>" lim 'move)
+	      (cond 
+	       ((match-end 1) ; fork
+		(setq nest (1- nest)))
+	       ((match-end 2) ; join
+		(setq nest (1+ nest)))
+	       )
+	      )
+	)
+      )
+    (= nest 0) )				; return nest
+  )
 (defun verilog-backward-case-item (lim)
   "Skip backward to nearest enclosing case item"
   (interactive)
@@ -1756,6 +1801,9 @@ Insert `// NAME ' if this line ends a module or primitive named NAME."
 			    (setq err nil)
 			    (setq str (concat " // case: " str ))
 			    )
+			   ((verilog-in-fork-region-p)
+			    (setq err nil)
+			    (setq str " // fork branch" )) 
 			   )
 			  )
 			 )
@@ -1885,7 +1933,7 @@ Insert `// NAME ' if this line ends a module or primitive named NAME."
     (behavioral  . (+ verilog-indent-level-behavioral verilog-indent-level-module))
     (statement   . ind)
     (cpp         . 0)
-    (comment     . (verilog-indent-comment))
+    (comment     . (verilog-comment-indent))
     (unknown     . 3) 
     (string      . 0)))
 
@@ -2499,7 +2547,7 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 		  (column 
 		   (save-excursion
 		     (backward-char 1)
-		     (verilog-beg-of-statement)
+		     (verilog-beg-of-statement-1)
 		     (setq fst (point))
 		     (if (looking-at verilog-declaration-re)
 			 (progn ;; we have multiple words
@@ -2618,17 +2666,15 @@ Do not count named blocks or case-statements."
      (t
       (current-column)))))
 
-(defun verilog-indent-comment (&optional arg)
-  "Indent current line as comment.
-If optional arg is non-nil, just return the
-column number the line should be indented to."
+(defun verilog-indent-comment ()
+  "Indent current line as comment."
   (let* ((stcol 
 	  (cond 
 	   ((verilog-in-star-comment-p)
 	    (save-excursion
 	      (re-search-backward "/\\*" nil t)
 	      (1+(current-column))))
-	   ( comment-column
+	   (comment-column
 	     comment-column )
 	   (t
 	    (save-excursion
@@ -2636,13 +2682,55 @@ column number the line should be indented to."
 	      (current-column)))
 	   )
 	  ))
-    (if arg 
-	(progn
-	  (delete-horizontal-space)
-	  (indent-to stcol))
-      stcol
+    (delete-horizontal-space)
+    (indent-to stcol)
+    stcol)
+  )
+(defun verilog-more-comment (&optional arg)
+  "Make more comment lines like the previous "
+  (let* ((star 0)
+	 (stcol 
+	  (cond 
+	   ((verilog-in-star-comment-p)
+	    (save-excursion
+	      (setq star 1)
+	      (re-search-backward "/\\*" nil t)
+	      (1+(current-column))))
+	   (comment-column
+	    comment-column )
+	   (t
+	    (save-excursion
+	      (re-search-backward "//" nil t)
+	      (current-column)))
+	   )
+	  ))
+    (progn
+      (indent-to stcol)
+      (if (and star 
+	       (save-excursion
+		 (forward-line -1)
+		 (skip-chars-forward " \t")
+		 (looking-at "\*")
+		 )
+	       )
+	  (insert "* "))
       )
     )
+  )
+(defun verilog-comment-indent (&optional arg)
+  "return the column number the line should be indented to."
+  (cond 
+   ((verilog-in-star-comment-p)
+    (save-excursion
+      (re-search-backward "/\\*" nil t)
+      (1+(current-column))))
+   ( comment-column
+     comment-column )
+   (t
+    (save-excursion
+      (re-search-backward "//" nil t)
+      (current-column)))
+   )
   )
 
 ;;;
@@ -2665,7 +2753,7 @@ column number the line should be indented to."
 		    (setq e (point))
 		    (verilog-backward-syntactic-ws)
 		    (backward-char)
-		    (verilog-beg-of-statement-1))
+		    (verilog-beg-of-statement-1)) ;Ack, need to grok `define
 		  e))
 	       (end
 		(progn
