@@ -142,6 +142,12 @@
   (customize-group 'verilog-mode)
   )
 
+(defun verilog-font-customize ()
+  "Link to customize fonts used for Verilog"
+  (interactive)
+  (customize-apropos "font-lock-*" 'faces)
+  )
+
 (defgroup verilog-mode nil
   "Facilitates easy editing of Verilog source text"
   :group 'languages)
@@ -180,7 +186,7 @@
   :type 'integer 
   )
 
-(defcustom verilog-cexp-indent 1
+(defcustom verilog-cexp-indent 2
   "*Indentation of Verilog statements split across lines."
   :group 'verilog-mode
   :type 'integer 
@@ -195,13 +201,13 @@
 (defcustom verilog-auto-newline t
   "*Non-nil means automatically newline after semicolons"
   :group 'verilog-mode
-  :type 'integer 
+  :type 'boolean
   )
 
 (defcustom verilog-auto-indent-on-newline t
   "*Non-nil means automatically indent line after newline"
   :group 'verilog-mode
-  :type 'integer 
+  :type 'boolean
   )
 
 (defcustom verilog-tab-always-indent t
@@ -209,12 +215,19 @@
   current line, regardless of where in the line point is when the TAB
   command is used."
   :group 'verilog-mode
-  :type 'integer 
+  :type 'boolean 
   )
 
 (defcustom verilog-indent-begin-after-if t
   "*If true, indent begin statements following if, else, while, for
   and repeat.  otherwise, line them up."
+  :group 'verilog-mode
+  :type 'boolean )
+
+
+(defcustom verilog-align-ifelse nil
+  "*If true, align `else' under matching `if'. Otherwise
+  else is lined up with first character on line holding matching if "
   :group 'verilog-mode
   :type 'boolean )
 
@@ -347,6 +360,7 @@ lineups."
 	"----"
 	["Submit bug report"         verilog-submit-bug-report t]
 	["Customize Verilog Mode..." verilog-customize t]
+	["Customize Fonts & Colors used by Verilog" verilog-font-customize t]
 	"XEmacs menu for VERILOG mode."))
   (progn
     (easy-menu-define verilog-menu verilog-mode-map "Menu for Verilog mode"
@@ -370,6 +384,7 @@ lineups."
 			"----"
 			["Submit bug report"         verilog-submit-bug-report t]
 			["Customize Verilog Mode..." verilog-customize t]
+			["Customize Fonts & Colors used by Verilog" verilog-font-customize t]
 			))))
 
 (defvar verilog-mode-abbrev-table nil
@@ -915,7 +930,9 @@ Variables controlling indentation/edit style:
     Indentation of first begin in a task or function block
     Set to 0 to get such code to linedup underneath the task or function keyword
  verilog-cexp-indent            (default 1)
-    Indentation of Verilog statements broken across lines.
+    Indentation of Verilog statements broken across lines IE:
+    if (a)
+     begin
  verilog-case-indent            (default 2)
     Indentation for case statements.
  verilog-auto-newline           (default nil)
@@ -931,7 +948,7 @@ Variables controlling indentation/edit style:
     if, else, while, for and repeat statements, if any. otherwise,
     the begin is lined up with the preceding token. If t, you get:
       if (a)
-         begin
+         begin // amount of indent based on verilog-cexp-indent
     otherwise you get:
       if (a)
       begin
@@ -1079,6 +1096,7 @@ Other useful functions are:
       () 
     (save-excursion
       (beginning-of-line)
+      (verilog-forward-ws&directives)
       (verilog-indent-line))
     (if (and verilog-auto-newline
 	     (= 0 (verilog-parenthesis-depth)))
@@ -1996,12 +2014,13 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 			      ((match-end 2) ; found it
 			       (setq elsec (1- elsec))
 			       (if (= 0 elsec)
-				   ;; back up to first word on this line
-				   (progn 
-				     (beginning-of-line)
-				     (verilog-forward-syntactic-ws)
-				     (throw 'nesting 'statement))
-				   ))
+				   (if verilog-align-ifelse
+				       (throw 'nesting 'statement)
+				     (progn ;; back up to first word on this line
+				       (beginning-of-line)
+				       (verilog-forward-syntactic-ws)
+				       (throw 'nesting 'statement))
+				     )))
 			      (t ; endblock
 				; try to leap back to matching outward block by striding across
 				; indent level changing tokens then immediately
@@ -2081,6 +2100,9 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
   (catch 'nesting
     (while (verilog-re-search-backward verilog-indent-re nil 'move)
       (cond 
+       ((looking-at verilog-behavioral-level-re)
+	(throw 'nesting 'behavioral))
+			
        ((looking-at verilog-beg-block-re-1)
 	(cond
 	 ((match-end 2)  (throw 'nesting 'case))
@@ -2101,9 +2123,6 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
        ((looking-at verilog-cpp-level-re)
 	(throw 'nesting 'cpp))
 
-       ((looking-at verilog-behavioral-level-re)
-	(throw 'nesting 'behavioral))
-			
        ((bobp) 
 	(throw 'nesting 'cpp))
        )
@@ -2898,7 +2917,7 @@ Do not count named blocks or case-statements."
 		      (just-one-space)
 		      (indent-to ind)
 		      )
-		  (if (/= (point) (marker-position m1))
+		  (if (/= p ind)
 		      (progn
 			(just-one-space)
 			(indent-to ind))
@@ -2907,7 +2926,11 @@ Do not count named blocks or case-statements."
 		)
 	    )
 	  )
-      (indent-to (+ baseind (eval (cdr (assoc 'declaration verilog-indent-alist)))))
+      (let ((val (+ baseind (eval (cdr (assoc 'declaration verilog-indent-alist))))))
+	(if (/= val (current-column))
+	    (progn
+	      (delete-horizontal-space)
+	      (indent-to val))))
       )
     (goto-char pos)
     )
@@ -3445,6 +3468,7 @@ The default is a name found in the buffer around point."
        verilog-indent-level-module 
        verilog-indent-level-declaration
        verilog-indent-level-behavioral 
+       verilog-cexp-indent
        verilog-case-indent 
        verilog-auto-newline 
        verilog-auto-indent-on-newline 
