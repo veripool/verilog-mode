@@ -30,19 +30,21 @@
 ;;; USAGE
 ;;; =====
 
-;;; Emacs should enter Verilog mode when you find a Verilog source file.
-;;; When you have entered Verilog mode, you may get more info by pressing
-;;; C-h m. You may also get online help describing various functions by:
-;;; C-h f <Name of function you want described>
+;;; A major mode for editing Verilog HDL source code. When you have
+;;; entered Verilog mode, you may get more info by pressing C-h m. You
+;;; may also get online help describing various functions by: C-h f
+;;; <Name of function you want described>
 
-;;; to set up auto mode, put this file in your load path,
+;;; To set up automatic verilog mode, put this file in your load path,
 ;;; and include stuff like this in your .emacs:
+
 ; (autoload 'verilog-mode "verilog-mode" "Verilog mode" t )
 ; (setq auto-mode-alist (cons  '("\\.v\\'" . verilog-mode) auto-mode-alist))
 ; (setq auto-mode-alist (cons  '("\\.dv\\'" . verilog-mode) auto-mode-alist))
 
-;;; If you want to customize Verilog mode to fit you better, you may add
-;;; these lines (the values of the variables presented here are the defaults):
+;;; If you want to customize Verilog mode to fit your needs better,
+;;; you may add these lines (the values of the variables presented
+;;; here are the defaults):
 ;;;
 ;;; ;; User customization for Verilog mode
 ;;; (setq verilog-indent-level       3
@@ -52,24 +54,171 @@
 ;;;       verilog-auto-endcomments   t
 ;;;       verilog-auto-lineup        '(all))
 
+;;; I've put in the common support for colored displays for older
+;;; emacs-19 behaviour, and newer emacs-19 behaviour, as well as
+;;; support for xemacs.  After that, customizing according to your
+;;; particular emacs version is up to you.  I've used the following
+;;; for emacs 19.27 and emacs 19.30; also xemacs seems to work for me
+;;; as well.  I must caution that A) I always use dark background, so
+;;; you may have to hack a bit to get the light version working with
+;;; decent colors; and B) I've edited the code below from what I use,
+;;; and haven't tested it. (much).  Also since the font-lock package
+;;; doesn't have a version number, I've had to key off the emacs
+;;; version number, which might not corrolate with the font-lock
+;;; package you happen to be using.
+
+;;(defvar background-mode 'dark)
+;;(defvar display-type 'color)
+
+;;(cond 
+;; (window-system
+;;  (if (string-match "XEmacs\\|Lucid" emacs-version)
+;;      ()
+;;    (progn
+;;      (setq display-type 
+;;	    (condition-case nil
+;;		(let ((display-resource (x-get-resource ".displayType" "DisplayType")))
+;;		  (cond (display-resource (intern (downcase display-resource)))
+;;			((x-display-color-p) 'color)
+;;			((x-display-grayscale-p) 'grayscale)
+;;			(t 'mono)))
+;;	      (error 'mono))
+;;	    background-mode 
+;;	    (condition-case nil
+;;		(let ((bg-resource (x-get-resource ".backgroundMode"
+;;						   "BackgroundMode"))
+;;		      (params (frame-parameters)))
+;;		  (cond (bg-resource (intern (downcase bg-resource)))
+;;			((and (cdr (assq 'background-color params))
+;;			      (< (apply '+ (x-color-values
+;;					    (cdr (assq 'background-color params))))
+;;				 (/ (apply '+ (x-color-values "white")) 3)))
+;;			 'dark)
+;;			(t 'light)))
+;;	      (error 'light)))
+;;      (message "It appears you have a %s background" background-mode)))
+;;  (cond
+;;   ((eq display-type 'color)
+    
+;;    ;; Pretty Colors in source windows.
+;;    (require 'font-lock)
+;;    (autoload 'turn-on-fast-lock "fast-lock"
+;;      "Unconditionally turn on Fast Lock mode.")
+;;    (add-hook 'c-mode-hook 'font-lock-mode)
+;;    (add-hook 'perl-mode-hook 'font-lock-mode)
+;;    (add-hook 'elisp-mode-hook 'font-lock-mode)
+;;    (add-hook 'asm-mode-hook 'font-lock-mode)
+;;    (setq fast-lock-cache-directories '("~/.backups" "."))
+;;    (setq c-font-lock-keywords c-font-lock-keywords-2)
+;;    (setq c++-font-lock-keywords c++-font-lock-keywords-2)
+;;    (add-hook 'font-lock-mode-hook 'make-faces)
+;;    (if (eq background-mode 'dark)
+;;	;; Make background a light gray
+;;	(set-face-background (quote region) "gray30")
+;;      ;; Make background a dark gray
+;;      (set-face-background (quote region) "gray70"))
+;;    )
+;;   ((eq display-type 'mono)
+;;    (progn
+;;      ;; Frames are too expensive to create
+;;      ;; on my NCD running x-remote, which happens
+;;      ;; to be the only place I run X mono color
+;;      (setq vm-frame-per-composition nil
+;;	    vm-frame-per-folder nil)
+;;      )
+;;    )
+;;   )
+;;  )
+;; )
+
+;;(defun make-my-faces ()
+;;  "Customize faces the way I like to see them"
+;;  (interactive)
+;;  (cond ((> emacs-minor-version 29)
+;;	 ;; Make background a light gray
+;;	 (setq font-lock-face-attributes
+;;	       '(
+;;		 (font-lock-comment-face "#efc80c"		nil nil t   nil) 
+;;		 (font-lock-function-name-face "red"		nil t   nil nil) 
+;;		 (font-lock-keyword-face "tan" 		nil nil nil nil) 
+;;		 (font-lock-reference-face "indianred"         nil t nil nil  )
+;;		 (font-lock-string-face  "lightskyblue1"	nil nil nil nil) 
+;;		 (font-lock-type-face 	  "Aquamarine"          nil nil nil nil) 
+;;		 (font-lock-variable-name-face "LightGoldenrod") 
+;;		 )))
+;;	(t
+;;	 (if (eq background-mode 'dark)
+;;	     (progn
+;;	       (make-face 'my-font-lock-function-name-face)
+;;	       (set-face-foreground 'my-font-lock-function-name-face "red") 
+;;	       (setq  font-lock-function-name-face  'my-font-lock-function-name-face)
+	       
+;;	       (make-face 'my-font-lock-keyword-face)
+;;	       (set-face-foreground 'my-font-lock-keyword-face "tan")
+;;	       (setq  font-lock-keyword-face  'my-font-lock-keyword-face)
+	       
+;;	       (make-face 'my-font-lock-string-face)
+;;	       (set-face-foreground 'my-font-lock-string-face      "lightskyblue1")
+;;	       (setq  font-lock-string-face  'my-font-lock-string-face)
+	       
+;;	       (make-face 'my-font-lock-type-face)
+;;	       (set-face-foreground 'my-font-lock-type-face        "#efc80c") ; yellow
+;;	       (setq  font-lock-type-face  'my-font-lock-type-face)
+	       
+;;	       (make-face 'my-font-lock-variable-name-face)
+;;	       (set-face-foreground 'my-font-lock-variable-name-face "LightGoldenrod") 
+;;	       (setq  font-lock-variable-name-face  'my-font-lock-variable-name-face)
+;;	       )
+;;	   (progn
+;;	     (make-face 'my-font-lock-function-name-face)
+;;	     (set-face-foreground 'my-font-lock-function-name-face "DarkGreen") 
+;;	     (setq  font-lock-function-name-face  'my-font-lock-function-name-face)
+	     
+;;	     (make-face 'my-font-lock-keyword-face)
+;;	     (set-face-foreground 'my-font-lock-keyword-face "indianred")
+;;	     (setq  font-lock-keyword-face  'my-font-lock-keyword-face)
+	     
+;;	     (make-face 'my-font-lock-string-face)
+;;	     (set-face-foreground 'my-font-lock-string-face      "RoyalBlue4")
+;;	     (setq  font-lock-string-face  'my-font-lock-string-face)
+	     
+;;	     (make-face 'my-font-lock-type-face)
+;;	     (set-face-foreground 'my-font-lock-type-face        "#003800") ; yellow
+;;	     (setq  font-lock-type-face  'my-font-lock-type-face)
+	     
+;;	     (make-face 'my-font-lock-variable-name-face)
+;;	     (set-face-foreground 'my-font-lock-variable-name-face "LightGoldenrod") 
+;;	     (setq  font-lock-variable-name-face  'my-font-lock-variable-name-face)
+;;	     )
+;;	   )
+;;	 )
+;;	)
+;;  (turn-on-fast-lock)
+;;  )
+
+
 ;;; KNOWN BUGS / BUGREPORTS
-;;; =======================
-;;; This is beta code, and likely has bugs. Please report any and all
-;;; bugs to me at mac@verilog.com.
+;;; ======================= This is beta code, and likely has
+;;; bugs. Please report any and all bugs to me at mac@verilog.com.
 ;; 
 ;; $Log$
-;; Revision 2.2  1996/03/06 22:00:41  mac
-;; 1) Add correct table..endtable indentation, and end comments for
-;;    primitives.
-;; 2) move color setting out of verilog-mode; folks should do this in
-;;    their .emacs
-;; 3) set up font lock keywords to work for emacs before 19.30 and after
-;;    19.30
-;; 4) Change all auto inserted comments to be of the // flavor, leaving
-;;    the /* */ comments for the user; this lets user comment out blocks
-;;    of code easily.
-;; 5) auto comment for end of else block is now much more useful.
+;; Revision 2.3  1996/03/12 22:35:23  mac
+;; 1) Moved highlight specific initialization out of this mode, and added
+;;    comments telling folks how to use it.
+;; 2) Added support for udps
 ;;
+; Revision 2.2  1996/03/06  22:00:41  mac
+; 1) Add correct table..endtable indentation, and end comments for
+;    primitives.
+; 2) move color setting out of verilog-mode; folks should do this in
+;    their .emacs
+; 3) set up font lock keywords to work for emacs before 19.30 and after
+;    19.30
+; 4) Change all auto inserted comments to be of the // flavor, leaving
+;    the /* */ comments for the user; this lets user comment out blocks
+;    of code easily.
+; 5) auto comment for end of else block is now much more useful.
+;
 ; Revision 2.1  1996/02/20  19:08:06  mac
 ; First public release
 ;
@@ -239,7 +388,7 @@
 ;;;
 (defconst verilog-symbol-re      "\\<[a-zA-Z_][a-zA-Z_0-9.]*\\>")
 (defconst verilog-case-re        "\\(\\<case[xz]?\\>\\)")
-(defconst verilog-case-item-re   "^[ \t]*[^ \t,:]+[ \t]*\\(,[ \t]*[^ \t,:]+[ \t]*\\)*:")
+(defconst verilog-case-item-re   "^[ \t]*[^:]+[ \t]*:")
 (defconst verilog-endcomment-reason-re 
   (concat 
    "\\(fork\\)\\|\\(begin\\)\\|\\(if\\)\\|\\(else\\)\\|"
@@ -260,7 +409,7 @@
 (defconst verilog-zero-indent-re 
   (concat verilog-defun-re "\\|" verilog-end-defun-re))
 (defconst verilog-autoindent-lines-re
-  "\\<\\(\\(macro\\)?module\\|primitive\\|end\\(case\\|function\\|task\\|module\\|primitive\\)?\\|join\\|begin\\|else\\)\\>\\|`\\(else\\|ifdef\\|endif\\)\\>")
+  "\\<\\(\\(macro\\)?module\\|primitive\\|end\\(case\\|function\\|task\\|module\\|primitive\\)?\\|join\\|begin\\|else\\|endtable\\)\\>\\|`\\(else\\|ifdef\\|endif\\)\\>")
 (defconst verilog-indent-reg 
   (concat "\\(\\<begin\\>\\|\\<case[xz]?\\>\\|\\<fork\\>\\|\\<table\\>\\)\\|"
 	  "\\(\\<end\\>\\|\\<join\\>\\|\\<endcase\\>\\|\\<endtable\\>\\)\\|" 
@@ -430,9 +579,11 @@ supported list, along with the values for this variable:
    ("^[ \t]*\\(function\\|task\\|module\\|macromodule\\|primitive\\)\\>[ \t]*\\(\\sw+\\)"  
     2 'font-lock-function-name-face nil t)
    ("\\\\[^ \t]*" 0 'font-lock-function-name-face)
-   ("\\(@\\)\\|\\(#\[ \t\]*\\(\[0-9\]*\\('[hdxbo][0-9_xz]*\\)?\\)\\|(\[^)\]*)\\)\\|\\(`[ \t]*[A-Za-z][A-Za-z0-9_]*\\)" 
+   ("\\(@\\)\\|\\(#\[ \t\]*\\(\[0-9\]*\\('[hdxbo][0-9_xz]*\\)?\\)\\|(\[^)\]*)\\)"
     0 'font-lock-type-face)
-   ("\\<\\(in\\(teger\\|put\\|out\\)\\|output\\|event\\|tri[01]?\\|wire\\|re\\(al\\|g\\)\\)\\>" 
+   ("\\(`[ \t]*[A-Za-z][A-Za-z0-9_]*\\)" 
+    0 'font-lock-type-face)
+   ("\\<\\(in\\(teger\\|put\\|out\\)\\|parameter\\|output\\|event\\|tri[01]?\\|wire\\|re\\(al\\|g\\)\\)\\>" 
     0 'font-lock-type-face)
    ("\\(\\$[a-zA-Z][a-zA-Z0-9_\\$]*\\)\\|\\(\\<\\(begin\\|case[xz]?\\|end\\(case\\|function\\|task\\|module\\|table\\|primitive\\)?\\|a\\(ssign\\|lways\\)\\|initial\\|table\\|\\(pos\\|neg\\)edge\\|else\\|for\\(ever\\|k\\)?\\|join\\|if\\|repeat\\|then\\|while\\)\\>\\)" 
     0 'font-lock-keyword-face)
@@ -448,11 +599,9 @@ supported list, along with the values for this variable:
   '(
     ("^[ \t]*\\(function\\|task\\|module\\|macromodule\\|primitive\\)\\>[ \t]*"  . 1)
     ("^[ \t]*\\(function\\|task\\|module\\|macromodule\\|primitive\\)\\>[ \t]*\\(\\sw+\\)"  2 font-lock-function-name-face nil t)
-    ("\\(\\\\[^ \t]*\\)" 1 font-lock-function-name-face)
-    ("\\(`[^ \t]*\\)" 1 font-lock-function-name-face)
-    ("`[ \t]*[A-Za-z][A-Za-z0-9_]*" . font-lock-type-face) 
+    ("\\(\\\\[^ \t]*\\)\\|\\(`[ \t]*[A-Za-z][A-Za-z0-9_]*\\)" 0 font-lock-function-name-face)
     ("[@#]" . font-lock-type-face)
-    ("\\<\\(in\\(teger\\|put\\|out\\)\\|output\\|event\\|tri[01]?\\|wire\\|re\\(al\\|g\\)\\)\\>" 0 font-lock-type-face)
+    ("\\<\\(in\\(teger\\|put\\|out\\)\\|parameter\\|output\\|event\\|tri[01]?\\|wire\\|re\\(al\\|g\\)\\)\\>" 0 font-lock-type-face)
     ("\\(\\$[a-zA-Z][a-zA-Z0-9_\\$]*\\)\\|\\(\\<\\(begin\\|case[xz]?\\|end\\(case\\|function\\|task\\|module\\|table\\|primitive\\)?\\|a\\(ssign\\|lways\\)\\|initial\\|table\\|\\(pos\\|neg\\)edge\\|else\\|for\\(ever\\|k\\)?\\|join\\|if\\|repeat\\|then\\|while\\)\\>\\)" . font-lock-keyword-face)
     )
 ;;  "Regular expressions of words to highlight in Verilog mode,  acceptable to emacsen pre version 19.30"
@@ -1142,25 +1291,32 @@ Insert `// NAME ' if this line ends a module or primitive named NAME."
 		    )))
 	       (;- this is end{function,task,module}
 		t 
-		(let (state b e com)
+		(let (state string com)
 		  (end-of-line)
 		  (delete-horizontal-space)
 		  (cond 
-		   ((match-end 5) (setq reg "\\<function\\>"))
-		   ((match-end 6) (setq reg "\\<task\\>"))
-		   ((match-end 7) (setq reg "\\<\\(macro\\)?module\\>"))
-		   ((match-end 8) (setq reg "\\<primitive\\>"))
+		   ((match-end 5) (setq reg "\\(\\<function\\>\\)\\|\\(\\<\\(task\\|\\(macro\\)?module\\|primitive\\)\\>\\)"))
+		   ((match-end 6) (setq reg "\\(\\<task\\>\\)\\|\\(\\<\\(function\\|\\(macro\\)?module\\|primitive\\)\\>\\)"))
+		   ((match-end 7) (setq reg "\\(\\<\\(macro\\)?module\\>\\)\\|\\(\\<\\(function\\|task\\|primitive\\)\\>\\)"))
+		   ((match-end 8) (setq reg "\\(\\<primitive\\>\\)\\|\\(\\<\\(function\\|task\\|\\(macro\\)?module\\)\\>\\)"))
 		   )
-		  (save-excursion
-		    (setq b (progn 
-			      (verilog-re-search-backward reg nil 'move)
-			      (skip-chars-forward "^ \t")
-			      (skip-chars-forward " \t")
-			      (point))
-			  e (progn 
-			      (skip-chars-forward "a-zA-Z0-9_")
-			      (point))))
-		  (insert (concat " // " (buffer-substring b e) )))
+		  (let (b e)
+		    (save-excursion
+		      (verilog-re-search-backward reg nil 'move)
+		      (cond 
+		       ((match-end 1)
+			(setq b (progn 
+				  (skip-chars-forward "^ \t")
+				  (skip-chars-forward " \t")
+				  (point))
+			      e (progn 
+				  (skip-chars-forward "a-zA-Z0-9_")
+				  (point)))
+			(setq string (buffer-substring b e)))
+		       (t
+			(ding 't)
+			(setq string "unmactched end(function|task|module|primitive)")))))
+		  (insert (concat " // " string )))
 		)
 	       )
 	    )
@@ -1306,7 +1462,7 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 					; indent level changing tokens then immediately
 					; previous line governs indentation.
 			   (let ((reg)(nest 1))
-			     (looking-at verilog-end-block-re-1) ;; end|join|endcase
+			     (looking-at verilog-end-block-re-1) ;; end|join|endcase|endtable
 			     (cond 
 			      ((match-end 1)                       ; end
 			       ;; Search back for matching begin
