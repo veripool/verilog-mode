@@ -372,44 +372,54 @@ lineups."
 (defvar verilog-mode-abbrev-table nil
   "Abbrev table in use in Verilog-mode buffers.")
 
-(defvar verilog-font-lock-keywords-after-1930
+(defvar verilog-font-lock-keywords-after-1930 
   '(
-   ("^\\s-*function\\>\\s-+\\(\\(\\[[^]]*\\]\\|real\\|realtime\\|integer\\|time\\)\\s-+\\)?\\(\\sw+\\)"
-    3 'font-lock-function-name-face nil t)
-   ("^\\s-*\\(task\\|module\\|macromodule\\|primitive\\)\\>\\s-*\\(\\sw+\\)"  
-    2 'font-lock-function-name-face nil t)
-   ("\\(\\\\\\S-*\\s-\\)\\|\\(`\\s-*[A-Za-z][A-Za-z0-9_]*\\)" 0 'font-lock-function-name-face)
-   ("\\(@\\)\\|\\(#\\s-*\\(\\(\[0-9_\]+\\('[hdxbo][0-9_xz]*\\)?\\)\\|\\((\[^)\]*)\\|\\sw+\\)\\)\\)" 0 'font-lock-type-face)
-; "integer" "event" "input" "inout" "parameter" "defparam" "output" "supply0" "supply1" "supply" "tri" "tri0" "tri1" "trireg"
-; "triand" trior" "wire" "wor" "wand" "time" "real" "realtime" "reg" "signed" "vectored"
-   ("\\<\\(defparam\\|event\\|in\\(out\\|put\\|teger\\)\\|output\\|parameter\\|re\\(al\\(\\|time\\)\\|g\\)\\|s\\(igned\\|upply\\(\\|[01]\\)\\)\\|t\\(ime\\|ri\\(\\|[01]\\|and\\|or\\|reg\\)\\)\\|vectored\\|w\\(and\\|ire\\|or\\)\\)\\>" 0 'font-lock-type-face)
-; "assign" "force" "always" "initial" "begin" "end"  "case" "casex" "casez" "default" "endcase"
-; "if" "wait" "else" "fork" "join" "for" "while" "repeat" "forever" "posedge" "negedge"
-; "primitive" "endprimitive" "specify" "endspecify" "table" "endtable" 
-; "function" "endfunction" "task" "endtask" "module" "macromodule""endmodule"
- ("\\<\\(\\$[a-zA-Z][a-zA-Z0-9_\\$]*\\|\\(a\\(lways\\|ssign\\)\\|begin\\|case\\(\\|[xz]\\)\\|\\(d\\(e\\(fault\\|assign\\)\\|isable\\)\\)\\|e\\(lse\\|nd\\(\\|case\\|function\\|module\\|primitive\\|specify\\|ta\\(ble\\|sk\\)\\)\\)\\|f\\(or\\(\\|ce\\|ever\\|k\\)\\|unction\\)\\|i\\(f\\|nitial\\)\\|join\\|m\\(acromodule\\|odule\\)\\|negedge\\|p\\(osedge\\|rimitive\\)\\|re\\(peat\\|lease\\)\\|specify\\|ta\\(ble\\|sk\\)\\|w\\(ait\\|hile\\)\\)\\)\\>" 0 'font-lock-keyword-face)
+    ("^\\s-*function\\>\\s-+\\(\\(\\[[^]]*\\]\\|integer\\|real\\(time\\)?\\|time\\)\\s-+\\)?\\(\\sw+\\)"
+     3 'font-lock-function-name-face nil t)
+    ("^\\s-*\\(task\\|module\\|macromodule\\|primitive\\)\\>\\s-*\\(\\sw+\\)"  
+     2 'font-lock-function-name-face nil t)
+    ("\\(\\\\\\S-*\\s-\\)\\|\\(`\\s-*[A-Za-z][A-Za-z0-9_]*\\)" 
+     0 'font-lock-function-name-face)
+    ("\\(@\\)\\|\\(#\\s-*\\(\\(\[0-9_\]+\\('[hdxbo][0-9_xz]*\\)?\\)\\|\\((\[^)\]*)\\|\\sw+\\)\\)\\)" 
+     0 'font-lock-type-face)
+;    (princ (regexp-opt (list 
+;			"defparam" "event" "inout" "input" "integer" "output" "parameter"
+;			"real" "realtime" "reg" "signed" "supply" "supply0" "supply1" "time"
+;			"tri" "tri0" "tri1" "triand" "trior" "trireg" "vectored" "wand" "wire"
+;			"wor" ) nil)
+    ("\\<\\(?:defparam\\|event\\|in\\(?:out\\|put\\|teger\\)\\|output\\|parameter\\|re\\(?:al\\(?:time\\)?\\|g\\)\\|s\\(?:igned\\|upply[01]?\\)\\|t\\(?:ime\\|ri\\(?:and\\|or\\|reg\\|[01]\\)?\\)\\|vectored\\|w\\(?:and\\|ire\\|or\\)\\)\\>"
+     0 'font-lock-type-face)
 
-   )
-)
+;    (princ (concat "\\<\\(\\$[a-zA-Z][a-zA-Z0-9_\\$]*\\|" 
+;	     (regexp-opt (list 
+;			  "always" "assign" "begin" "case" "casex" "casez" "default" "deassign"
+;			  "disable" "else" "end" "endcase" "endfunction" "endmodule"
+;			  "endprimitive" "endspecify" "endtable" "endtask" "for" "force"
+;			  "forever" "fork" "function" "if" "initial" "join" "macromodule"
+;			  "module" "negedge" "posedge" "primitive" "repeat" "release" "specify"
+;			  "table" "task" "wait" "while" ))
+;	     "\\)\\>" )
+    ("\\<\\(\\$[a-zA-Z][a-zA-Z0-9_\\$]*\\|a\\(?:lways\\|ssign\\)\\|begin\\|case[xz]?\\|d\\(?:e\\(?:assign\\|fault\\)\\|isable\\)\\|e\\(?:lse\\|nd\\(?:case\\|function\\|module\\|primitive\\|specify\\|ta\\(?:ble\\|sk\\)\\)?\\)\\|f\\(?:or\\(?:ce\\|ever\\|k\\)?\\|unction\\)\\|i\\(?:f\\|nitial\\)\\|join\\|m\\(?:acromodule\\|odule\\)\\|negedge\\|p\\(?:osedge\\|rimitive\\)\\|re\\(?:lease\\|peat\\)\\|specify\\|ta\\(?:ble\\|sk\\)\\|w\\(?:ait\\|hile\\)\\)\\>"
+     0 'font-lock-keyword-face))
+  )
+
 
 (defvar verilog-font-lock-keywords-before-1930
   '(
-    ("^\\s-*function\\>\\s-+\\(\\(\\[[^]]*\\]\\|real\\|realtime\\|integer\\|time\\)\\s-+\\)?\\(\\sw+\\)"
-      3 font-lock-function-name-face)
+    ("^\\s-*function\\>\\s-+\\(\\(\\[[^]]*\\]\\|integer\\|real\\(time\\)?\\|time\\)\\s-+\\)?\\(\\sw+\\)"
+     3 font-lock-function-name-face)
     ("^\\s-*\\(task\\|module\\|macromodule\\|primitive\\)\\>\\s-*\\(\\sw+\\)"  
      2 font-lock-function-name-face nil t)
-    ("\\(\\\\\\S-*\\s-\\)\\|\\(`\\s-*[A-Za-z][A-Za-z0-9_]*\\)" 0 font-lock-function-name-face)
-    ("\\(@\\)\\|\\(#\\s-*\\(\\(\[0-9_\]+\\('[hdxbo][0-9_xz]*\\)?\\)\\|\\((\[^)\]*)\\|\\sw+\\)\\)\\)" 0 font-lock-type-face)
-; "integer" "event" "input" "inout" "parameter" "defparam" "output" "supply0" "supply1" "supply" "tri" "tri0" "tri1" "trireg"
-; "triand" trior" "wire" "wor" "wand" "time" "real" "realtime" "reg" "signed" "vectored"
-   ("\\<\\(defparam\\|event\\|in\\(out\\|put\\|teger\\)\\|output\\|parameter\\|re\\(al\\(\\|time\\)\\|g\\)\\|s\\(igned\\|upply\\(\\|[01]\\)\\)\\|t\\(ime\\|ri\\(\\|[01]\\|and\\|or\\|reg\\)\\)\\|vectored\\|w\\(and\\|ire\\|or\\)\\)\\>" 0 font-lock-type-face)
-; "assign" "force" "always" "initial" "begin" "end"  "case" "casex" "casez" "default" "endcase"
-; "if" "wait" "else" "fork" "join" "for" "while" "repeat" "forever" "posedge" "negedge"
-; "primitive" "endprimitive" "specify" "endspecify" "table" "endtable" 
-; "function" "endfunction" "task" "endtask" "module" "macromodule""endmodule"
-   ("\\<\\(\\$[a-zA-Z][a-zA-Z0-9_\\$]*\\|\\(a\\(lways\\|ssign\\)\\|begin\\|case\\(\\|[xz]\\)\\|\\(d\\(e\\(fault\\|assign\\)\\)isable\\)\\)\\|e\\(lse\\|nd\\(\\|case\\|function\\|module\\|primitive\\|specify\\|ta\\(ble\\|sk\\)\\)\\)\\|f\\(or\\(\\|ce\\|ever\\|k\\)\\|unction\\)\\|i\\(f\\|nitial\\)\\|join\\|m\\(acromodule\\|odule\\)\\|negedge\\|p\\(osedge\\|rimitive\\)\\|re\\(peat\\|lease\\)\\|specify\\|ta\\(ble\\|sk\\)\\|w\\(ait\\|hile\\)\\)\\)\\>" 0 font-lock-keyword-face)
+    ("\\(\\\\\\S-*\\s-\\)\\|\\(`\\s-*[A-Za-z][A-Za-z0-9_]*\\)" 
+     0 font-lock-function-name-face)
+    ("\\(@\\)\\|\\(#\\s-*\\(\\(\[0-9_\]+\\('[hdxbo][0-9_xz]*\\)?\\)\\|\\((\[^)\]*)\\|\\sw+\\)\\)\\)" 
+     0 font-lock-type-face)
+    ("\\<\\(defparam\\|event\\|in\\(out\\|put\\|teger\\)\\|output\\|parameter\\|re\\(al\\(time\\)?\\|g\\)\\|s\\(igned\\|upply[01]?\\)\\|t\\(ime\\|ri\\(and\\|or\\|reg\\|[01]\\)?\\)\\|vectored\\|w\\(and\\|ire\\|or\\)\\)\\>"
+     0 font-lock-type-face)
+    ("\\<\\(\\$[a-zA-Z][a-zA-Z0-9_\\$]*\\|a\\(lways\\|ssign\\)\\|begin\\|case[xz]?\\|d\\(e\\(assign\\|fault\\)\\|isable\\)\\|e\\(lse\\|nd\\(case\\|function\\|module\\|primitive\\|specify\\|ta\\(ble\\|sk\\)\\)?\\)\\|f\\(or\\(ce\\|ever\\|k\\)?\\|unction\\)\\|i\\(f\\|nitial\\)\\|join\\|m\\(acromodule\\|odule\\)\\|negedge\\|p\\(osedge\\|rimitive\\)\\|re\\(lease\\|peat\\)\\|specify\\|ta\\(ble\\|sk\\)\\|w\\(ait\\|hile\\)\\)\\>"
+     0 font-lock-keyword-face)
     )
-)
+  )
 
 (defvar verilog-imenu-generic-expression
   '((nil "^\\s-*\\(\\(m\\(odule\\|acromodule\\)\\)\\|primitive\\)\\s-+\\([a-zA-Z0-9_.:]+\\)" 3)
@@ -628,10 +638,14 @@ compilation-error-regexp-alist.  This allows \\[next-error] to find the errors."
 
 (defconst verilog-end-block-re-1 "\\(\\<end\\>\\)\\|\\(\\<endcase\\>\\)\\|\\(\\<join\\>\\)\\|\\(\\<endtable\\>\\)\\|\\(\\<endspecify\\>\\)\\|\\(\\<endfunction\\>\\)\\|\\(\\<endtask\\>\\)")
 (defconst verilog-declaration-re 
-  ;; "input" "inout" "output" "integer" "parameter" "defparam" "event" 
-  ;; "real" "reg" "realtime" "time" "tri" "tri0" "tri1" "trireg" "triand" 
-  ;; "trior" "supply0" "supply1" "wire" "wor" "wand"
-"\\(\\<\\(assign\\>\\|defparam\\>\\|event\\>\\|in\\(out\\>\\|put\\>\\|teger\\>\\)\\|output\\>\\|parameter\\>\\|re\\(al\\(\\>\\|time\\>\\)\\|g\\>\\)\\|supply\\(0\\>\\|1\\>\\)\\|t\\(ime\\>\\|ri\\(0\\>\\|1\\>\\|\\>\\|and\\>\\|or\\>\\|reg\\>\\)\\)\\|w\\(and\\>\\|ire\\>\\|or\\>\\)\\)\\)")
+;	(concat "\\<" 
+;		 (regexp-opt (list 
+;			      "assign" "defparam" "event" "inout" "input" "integer" "output"
+;			      "parameter" "real" "realtime" "reg" "supply" "supply0" "supply1"
+;			      "time" "tri" "tri0" "tri1" "triand" "trior" "trireg" "wand" "wire"
+;			      "wor") t)
+;		 "\\>"))
+  "\\(?:assign\\|defparam\\|event\\|in\\(?:out\\|put\\|teger\\)\\|output\\|parameter\\|re\\(?:al\\(?:time\\)?\\|g\\)\\|supply[01]?\\|t\\(?:ime\\|ri\\(?:and\\|or\\|reg\\|[01]\\)?\\)\\|w\\(?:and\\|ire\\|or\\)\\)" )
 (defconst verilog-range-re "\\[[^]]*\\]")
 (defconst verilog-macroexp-re "`\\sw+")
 (defconst verilog-delay-re "#\\s-*\\(\\([0-9_]+\\('[hdxbo][0-9_xz]+\\)?\\)\\|\\(([^)]*)\\)\\|\\(\\sw+\\)\\)")
