@@ -2135,7 +2135,9 @@ Useful for creating trace.ind files."
   "Converts structural verilog instances to occupy one line."
   (interactive)
   (goto-char (point-min))
-  (global-replace-regexp "\\([^;]\\)[ \t]*\n[ \t]*" "\\1 "))
+  (goto-char (point-min))
+  (while (re-search-forward "\\([^;]\\)[ \t]*\n[ \t]*" nil t)
+    (replace-match "\\1 " nil nil)))
 
 (defun verilog-auto-save-compile ()
   "Update automatics with \\[verilog-auto],
