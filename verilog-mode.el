@@ -904,7 +904,7 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
    "\\(\\<end\\>\\|\\<join\\>\\|\\<endcase\\>\\|\\<endtable\\>\\|\\<endspecify\\>\\)\\|"
    "\\(\\<module\\>\\|\\<macromodule\\>\\|\\<primitive\\>\\|\\<initial\\>\\|\\<always\\>\\)\\|"
    "\\(\\<endmodule\\>\\|\\<endprimitive\\>\\)\\|"
-   "\\(\\<enerate\\>\\|\\<endgenerate\\>\\)\\|"
+   "\\(\\<generate\\>\\|\\<endgenerate\\>\\)\\|"
    "\\(\\<endtask\\>\\|\\<endfunction\\>\\)\\|"
    "\\(\\<function\\>\\|\\<task\\>\\)"
    ;;	  "\\|\\(\\<if\\>\\|\\<else\\>\\)"
