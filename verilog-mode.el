@@ -973,7 +973,7 @@ Other useful functions are:
   (set-syntax-table verilog-mode-syntax-table)
   (make-local-variable 'indent-line-function)
   (setq indent-line-function 'verilog-indent-line)
-  (setq comment-indent-function 'verilog-indent-comment)
+  (setq comment-indent-function 'verilog-comment-indent)
   (make-local-variable 'parse-sexp-ignore-comments)
   (setq parse-sexp-ignore-comments nil)
   (make-local-variable 'comment-start)
