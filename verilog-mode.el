@@ -443,7 +443,7 @@ too many redundanet comments in tight quarters")
 ;;; Regular expressions used to calculate indent, etc.
 ;;;
 (defconst verilog-symbol-re      "\\<[a-zA-Z_][a-zA-Z_0-9.]*\\>")
-(defconst verilog-case-re        "\\(\\<case[xz]?\\>\\)")
+(defconst verilog-case-re        "\\(\\<case[xz]?\\>[^:]\\)")
 ;; Want to match
 ;; aa :
 ;; aa,bb :
@@ -484,7 +484,7 @@ too many redundanet comments in tight quarters")
 (defconst verilog-behavorial-block-beg-re
   "\\(\\<initial\\>\\|\\<always\\>\\|\\<function\\>\\|\\<task\\>\\)")
 (defconst verilog-indent-reg 
-  (concat "\\(\\<begin\\>\\|\\<case[xz]?\\>\\|\\<specify\\>\\|\\<fork\\>\\|\\<table\\>\\)\\|"
+  (concat "\\(\\<begin\\>\\|\\<case[xz]?\\>[^:]\\|\\<specify\\>\\|\\<fork\\>\\|\\<table\\>\\)\\|"
 	  "\\(\\<end\\>\\|\\<join\\>\\|\\<endcase\\>\\|\\<endtable\\>\\|\\<endspecify\\>\\)\\|" 
 	  "\\(\\<module\\>\\|\\<macromodule\\>\\|\\<primitive\\>\\|\\<initial\\>\\|\\<always\\>\\)\\|"
 	  "\\(\\<endmodule\\>\\|\\<endprimitive\\>\\)\\|"
@@ -493,7 +493,7 @@ too many redundanet comments in tight quarters")
 ;;	  "\\|\\(\\<if\\>\\|\\<else\\>\\)"
 	  ))
 (defconst verilog-complete-reg
-  "\\(\\<always\\>\\)\\|\\(\\<repeat\\>\\)\\|\\(\\<case[xz]?\\>\\)\\|\\(\\<while\\>\\)\\|\\(\\<if\\>\\)\\|\\(\\<for\\(ever\\)?\\>\\)")
+  "\\(\\<always\\>\\)\\|\\(\\<repeat\\>\\)\\|\\(\\<case[xz]?\\>[^:]\\)\\|\\(\\<while\\>\\)\\|\\(\\<if\\>\\)\\|\\(\\<for\\(ever\\)?\\>\\)")
 (defconst verilog-end-statement-re 
   (concat "\\(" verilog-beg-block-re "\\)\\|\\("
 	  verilog-end-block-re "\\)"))
@@ -758,7 +758,7 @@ supported list, along with the values for this variable:
 	)
        ((match-end 2) ; endcase
 	;; Search back for matching case
-	(setq reg "\\(\\<case[xz]?\\>\\)\\|\\(\\<endcase\\>\\)" )
+	(setq reg "\\(\\<case[xz]?\\>[^:]\\)\\|\\(\\<endcase\\>\\)" )
 	)
        ((match-end 3) ; join
 	;; Search back for matching fork
@@ -1265,18 +1265,19 @@ With argument, first kill any existing labels."
 	 (progn (verilog-backward-syntactic-ws)	
 		(= (preceding-char) ?\:)))
 	(catch 'found
-	  (let ((nest 0))
+	  (let ((nest 1))
 	    (while t
-	      (verilog-re-search-backward "\\(\\<module\\>\\)\\|\\(\\<case[xz]?\\>\\)\\|\\(\\<endcase\\>\\)\\>" nil 'move)
+	      (verilog-re-search-backward "\\(\\<module\\>\\)\\|\\(\\<case[xz]?\\>[^:]\\)\\|\\(\\<endcase\\>\\)\\>" nil 'move)
 	      (cond
 	       ((match-end 3)
 		(setq nest (1+ nest)))
 	       ((match-end 2)
-		(throw 'found (< nest 1))
+		(if (= nest 1)
+		(throw 'found 1))
 		(setq nest (1- nest))
 		)
 	       ( t
-		 (throw 'found (< nest 0)))
+		 (throw 'found (= nest 0)))
 	       )
 	      )
 	    )
@@ -1375,9 +1376,9 @@ With argument, first kill any existing labels."
   )
 
 (defun verilog-set-auto-endcomments (indent-str kill-existing-comment)
-  "Insert `// _case: 7 ' or `// NAME ' on this line if appropriate.
-Insert `// _case expr ' if this line ends a case block.  
-Insert `// _ifdef FOO ' if this line ends code conditional on FOO.
+  "Insert `// case: 7 ' or `// NAME ' on this line if appropriate.
+Insert `// case expr ' if this line ends a case block.  
+Insert `// ifdef FOO ' if this line ends code conditional on FOO.
 Insert `// NAME ' if this line ends a module or primitive named NAME."
   (save-excursion
     (cond 
@@ -1425,7 +1426,7 @@ Insert `// NAME ' if this line ends a module or primitive named NAME."
 	    (if (> (- (point) b) verilog-minimum-comment-distance)
 		(insert (concat (if 
 				    (= else 0)
-				    " // _ifdef " 
+				    " // ifdef " 
 				  " // !ifdef ")
 				(buffer-substring b e))))
 	  (progn
@@ -1505,7 +1506,7 @@ Insert `// NAME ' if this line ends a module or primitive named NAME."
 			  (setq str (verilog-backward-case-item lim))
 			  (setq there (point))
 			  (setq err nil)
-			  (setq str (concat " // _case: " str ))
+			  (setq str (concat " // case: " str ))
 			  )
 			 (;- try to find "reason" for this begin
 			  (cond 
@@ -1555,7 +1556,7 @@ Insert `// NAME ' if this line ends a module or primitive named NAME."
 					    (setq there (point))
 					    (setq err nil)
 					    (setq str (verilog-get-expr))
-					    (setq str (concat " // _else !if" str ))
+					    (setq str (concat " // else: !if" str ))
 					    (throw 'skip 1))
 					)))
 				    )
@@ -1569,7 +1570,7 @@ Insert `// NAME ' if this line ends a module or primitive named NAME."
 			      (setq there (point))
 			      (setq err nil)
 			      (setq str (verilog-get-expr))
-			      (setq str (concat " // _" cntx str )))
+			      (setq str (concat " // " cntx str )))
 			     
 			     (;-- otherwise...
 			      (setq str " // auto-endcomment confused ")
@@ -1583,7 +1584,7 @@ Insert `// NAME ' if this line ends a module or primitive named NAME."
 			       (goto-char here)
 			       (setq str (verilog-backward-case-item lim))))
 			    (setq err nil)
-			    (setq str (concat " // _case: " str ))
+			    (setq str (concat " // case: " str ))
 			    )
 			   )
 			  )
@@ -1786,7 +1787,7 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 				   )
 				  ((match-end 2) ; endcase
 				   ;; Search back for matching case
-				   (setq reg "\\(\\<case[xz]?\\>\\)\\|\\(\\<endcase\\>\\)" )
+				   (setq reg "\\(\\<case[xz]?\\>[^:]\\)\\|\\(\\<endcase\\>\\)" )
 				   )
 				  ((match-end 3) ; join
 				   ;; Search back for matching fork
@@ -1839,7 +1840,7 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 			 (verilog-leap-to-head)
 			 (if (verilog-in-case-region-p)
 			     (progn
-			       (verilog-re-search-backward "\\(\\<case[xz]?\\>\\)\\|\\(\\<endcase\\>\\)" nil 'move)
+			       (verilog-re-search-backward "\\(\\<case[xz]?\\>[^:]\\)\\|\\(\\<endcase\\>\\)" nil 'move)
 			       (if (match-end 0)
 				   (goto-char (match-end 0)))))
 			 )
@@ -1889,7 +1890,7 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 	   
 	   ((match-end 2) ; endcase
 	    ;; Search back for matching case
-	    (setq reg "\\(\\<case[xz]?\\>\\)\\|\\(\\<endcase\\>\\)" )
+	    (setq reg "\\(\\<case[xz]?\\>[^:]\\)\\|\\(\\<endcase\\>\\)" )
 	    )
 	   ((match-end 3) ; join
 	    ;; Search back for matching fork
@@ -1933,7 +1934,7 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 		  (setq snest nest)
 		  (setq nest (1+ nest))
 		  (setq sreg reg)
-		  (setq reg "\\(\\<case[xz]?\\>\\)\\|\\(\\<endcase\\>\\)" )
+		  (setq reg "\\(\\<case[xz]?\\>[^:]\\)\\|\\(\\<endcase\\>\\)" )
 		  )
 		 ((match-end 4)
 		  ;; join, jump to fork
@@ -1993,7 +1994,7 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
       (backward-up-list 1)
       (verilog-backward-syntactic-ws)
       (forward-word -1)
-      (not (looking-at "\\<case[xz]?\\>"))))
+      (not (looking-at "\\<case[xz]?\\>[^:]"))))
    
    (;-- any of begin|initial|while are complete statements; 'begin : foo' is also complete
     t
