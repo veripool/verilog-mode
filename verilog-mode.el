@@ -277,7 +277,7 @@ lineups."
 ; "if" "wait" "else" "fork" "join" "for" "while" "repeat" "forever" "posedge" "negedge"
 ; "primitive" "endprimitive" "specify" "endspecify" "table" "endtable" 
 ; "function" "endfunction" "task" "endtask" "module" "macromodule""endmodule"
-   ("\\<\\$[a-zA-Z][a-zA-Z0-9_\\$]*\\|\\(a\\(lways\\|ssign\\)\\|begin\\|case\\(\\|[xz]\\)\\|\\(de\\(fault\\|assign\\)\\)\\|e\\(lse\\|nd\\(\\|case\\|function\\|module\\|primitive\\|specify\\|ta\\(ble\\|sk\\)\\)\\)\\|f\\(or\\(\\|ce\\|ever\\|k\\)\\|unction\\)\\|i\\(f\\|nitial\\)\\|join\\|m\\(acromodule\\|odule\\)\\|negedge\\|p\\(osedge\\|rimitive\\)\\|repeat\\|specify\\|ta\\(ble\\|sk\\)\\|w\\(ait\\|hile\\)\\)\\>" 0 font-lock-keyword-face)
+   ("\\<\\(\\$[a-zA-Z][a-zA-Z0-9_\\$]*\\|\\(a\\(lways\\|ssign\\)\\|begin\\|case\\(\\|[xz]\\)\\|\\(de\\(fault\\|assign\\)\\)\\|e\\(lse\\|nd\\(\\|case\\|function\\|module\\|primitive\\|specify\\|ta\\(ble\\|sk\\)\\)\\)\\|f\\(or\\(\\|ce\\|ever\\|k\\)\\|unction\\)\\|i\\(f\\|nitial\\)\\|join\\|m\\(acromodule\\|odule\\)\\|negedge\\|p\\(osedge\\|rimitive\\)\\|repeat\\|specify\\|ta\\(ble\\|sk\\)\\|w\\(ait\\|hile\\)\\)\\)\\>" 0 font-lock-keyword-face)
     )
 )
 
@@ -620,7 +620,6 @@ supported list, along with the values for this variable:
 
 (defun verilog-populate-syntax-table (table)
   ;; Populate the syntax TABLE
-  ;; DO NOT TRY TO SET _ (UNDERSCORE) TO WORD CLASS!
   (modify-syntax-entry ?\\ "\\" table)
   (modify-syntax-entry ?+ "." table)
   (modify-syntax-entry ?- "." table)
@@ -643,15 +642,13 @@ supported list, along with the values for this variable:
     (modify-syntax-entry ?/  ". 1456" table)
     (modify-syntax-entry ?*  ". 23"   table)
     (modify-syntax-entry ?\n "> b"    table)
-    ;; Give CR the same syntax as newline, for selective-display
-    (modify-syntax-entry ?\^m "> b"    table))
+    )
    ((memq '1-bit verilog-emacs-features)
     ;; Emacs 19 does things differently, but we can work with it
     (modify-syntax-entry ?/  ". 124b" table)
     (modify-syntax-entry ?*  ". 23"   table)
     (modify-syntax-entry ?\n "> b"    table)
-    ;; Give CR the same syntax as newline, for selective-display
-    (modify-syntax-entry ?\^m "> b"   table))
+    )
    ))
 
 (defvar verilog-mode-syntax-table nil
