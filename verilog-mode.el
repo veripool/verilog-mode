@@ -579,7 +579,7 @@ Variables controlling indentation/edit style:
     regardless of where in the line point is when the TAB command is used.
  verilog-indent-begin-after-if  (default t)
     Non-nil means to indent begin statements following a preceeding
-    if, else, while, for and repeat staements, if any. otherwise,
+    if, else, while, for and repeat statements, if any. otherwise,
     the begin is lined up with the preceeding token. If t, you get:
       if (a)
          begin
@@ -618,8 +618,6 @@ Other useful functions are:
   (setq comment-indent-function 'verilog-indent-comment)
   (make-local-variable 'parse-sexp-ignore-comments)
   (setq parse-sexp-ignore-comments nil)
-  (make-local-variable 'case-fold-search)
-  (setq case-fold-search t)
   (make-local-variable 'comment-start)
   (make-local-variable 'comment-end)
   (make-local-variable 'comment-multi-line)
@@ -1663,23 +1661,30 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 	 (;-- any of begin|initial|while are complete statements; 'begin : foo' is also complete
 	  t
 	  (forward-word -1)
-	  (and (not (looking-at verilog-indent-reg))
-	       (let ((back (point)))
-		 (verilog-backward-syntactic-ws)
-		 (if (= (preceding-char) ?\:)
-		     (progn (backward-char)
-			    (verilog-backward-syntactic-ws)
-			    (backward-sexp)
-			    (if (looking-at "begin")
-				nil
-			      t)
-			    )
-		   (progn 
-		     (goto-char back)
-		     t))
-		 
-		 )
-	       )
+	  (cond 
+	   ((looking-at "initial\\>")
+	    t)
+	   ((looking-at verilog-indent-reg)
+	      nil)
+	   (t
+	    (let 
+		((back (point)))
+	      (verilog-backward-syntactic-ws)
+	      (if (= (preceding-char) ?\:)
+		  (progn (backward-char)
+			 (verilog-backward-syntactic-ws)
+			 (backward-sexp)
+			 (if (looking-at "begin")
+			     nil
+			   t)
+			 )
+		(progn 
+		  (goto-char back)
+		  t))
+	      
+	      )
+	    )
+	   )
 	  )
 	 )
 	)
