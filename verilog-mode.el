@@ -65,9 +65,14 @@
 ;;; This is beta code, and likely has bugs. Please report any and all
 ;;; bugs to me at mac@verilog.com.
 ;; 
+;; $Header$
+;; $Log$
+;; Revision 1.91  1996/01/03 17:19:02  mac
+;; Base of publically released version
+;;
 ;;; Code:
 
-(defconst verilog-mode-version "1.91 $$Header$$"
+(defconst verilog-mode-version "$$Revision$$"
   "Version of this verilog mode.")
 
 (defvar verilog-mode-abbrev-table nil
