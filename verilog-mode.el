@@ -258,9 +258,11 @@ functions. The name of the function or case will be set between the braces.")
     "\\(@\\)\\|\\(#\[ \t\]*\\(\\(\[0-9\]+\\('[hdxbo][0-9_xz]*\\)?\\)\\|\\((\[^)\]*)\\)\\)\\)"
 
     0 font-lock-type-face)  ("\\(`[ \t]*[A-Za-z][A-Za-z0-9_]*\\)" 
-    0 font-lock-type-face)  ("\\<\\(in\\(teger\\|put\\|out\\)\\|parameter\\|output\\|event\\|tri[01]?\\|wire\\|re\\(al\\|g\\)\\)\\>" 
-    0 font-lock-type-face)  ("\\(\\$[a-zA-Z][a-zA-Z0-9_\\$]*\\)\\|\\(\\<\\(begin\\|case[xz]?\\|end\\(case\\|function\\|task\\|module\\|table\\|primitive\\)?\\|a\\(ssign\\|lways\\)\\|initial\\|table\\|\\(pos\\|neg\\)edge\\|else\\|for\\(ever\\|k\\)?\\|join\\|if\\|repeat\\|then\\|while\\)\\>\\)" 
-    0 font-lock-keyword-face)
+    0 font-lock-type-face)  
+    ("\\<\\(in\\(teger\\|put\\|out\\)\\|parameter\\|output\\|event\\|tri[01]?\\|w\\(ire\\|or\\|and\\)\\|time\\|re\\(al\\(time\\)?\\|g\\)\\)\\>" 
+     0 font-lock-type-face)  
+    ("\\(\\$[a-zA-Z][a-zA-Z0-9_\\$]*\\)\\|\\(\\<\\(begin\\|case[xz]?\\|end\\(case\\|function\\|task\\|module\\|table\\|primitive\\|specify\\)?\\|a\\(ssign\\|lways\\)\\|initial\\|table\\|\\(pos\\|neg\\)edge\\|else\\|for\\(ever\\|k\\)?\\|join\\|if\\|repeat\\|then\\|while\\|specify\\)\\>\\)" 
+     0 font-lock-keyword-face)
    )
 )
 (defvar verilog-font-lock-keywords nil)
@@ -270,8 +272,9 @@ functions. The name of the function or case will be set between the braces.")
     ("^[ \t]*\\(function\\|task\\|module\\|macromodule\\|primitive\\)\\>[ \t]*\\(\\sw+\\)"  2 font-lock-function-name-face nil t)
     ("\\(\\\\[^ \t]*\\)\\|\\(`[ \t]*[A-Za-z][A-Za-z0-9_]*\\)" 0 font-lock-function-name-face)
     ("[@#]" . font-lock-type-face)
-    ("\\<\\(in\\(teger\\|put\\|out\\)\\|parameter\\|output\\|event\\|tri[01]?\\|wire\\|re\\(al\\|g\\)\\)\\>" 0 font-lock-type-face)
-    ("\\(\\$[a-zA-Z][a-zA-Z0-9_\\$]*\\)\\|\\(\\<\\(begin\\|case[xz]?\\|end\\(case\\|function\\|task\\|module\\|table\\|primitive\\)?\\|a\\(ssign\\|lways\\)\\|initial\\|table\\|\\(pos\\|neg\\)edge\\|else\\|for\\(ever\\|k\\)?\\|join\\|if\\|repeat\\|then\\|while\\)\\>\\)" . font-lock-keyword-face)
+    ("\\<\\(in\\(teger\\|put\\|out\\)\\|parameter\\|output\\|event\\|tri[01]?\\|w\\(ire\\|or\\|and\\)\\|time\\|re\\(al\\(time\\)?\\|g\\)\\)\\>" 
+     0 font-lock-type-face)
+    ("\\(\\$[a-zA-Z][a-zA-Z0-9_\\$]*\\)\\|\\(\\<\\(begin\\|case[xz]?\\|end\\(case\\|function\\|task\\|module\\|table\\|primitive\\|specify\\)?\\|a\\(ssign\\|lways\\)\\|initial\\|table\\|\\(pos\\|neg\\)edge\\|else\\|for\\(ever\\|k\\)?\\|join\\|if\\|repeat\\|then\\|while\\|specify\\)\\>\\)" . font-lock-keyword-face)
     )
 )
 
@@ -328,31 +331,38 @@ functions. The name of the function or case will be set between the braces.")
 (defconst verilog-no-indent-begin-re "\\<\\(if\\|else\\|while\\|for\\|repeat\\)\\>")
 (defconst verilog-endcomment-reason-re 
   (concat 
-   "\\(fork\\)\\|\\(begin\\)\\|\\(if\\)\\|\\(else\\)\\|"
-   "\\(task\\)\\|\\(function\\)\\|\\(initial\\)\\|\\(always\\(\[ \t\]*@\\)?\\)\\|\\(while\\)\\|\\(for\\)"))
+   "\\(\\<fork\\>\\)\\|\\(\\<begin\\>\\)\\|\\(\\<if\\>\\)\\|\\(\\<else\\>\\)\\|"
+   "\\(\\<task\\>\\)\\|\\(\\<function\\>\\)\\|\\(\\<initial\\>\\)\\|\\(\\<always\\>\\(\[ \t\]*@\\)?\\)\\|\\(\\<while\\>\\)\\|\\(\\<for\\(each\\)?\\>\\)")) ;; \\|\\(\\<repeat\\>\\)\\|\\(\\<wait\\>\\)"))
 
 (defconst verilog-named-block-re  "begin[ \t]*:")
-(defconst verilog-beg-block-re   "\\<\\(begin\\|case\\|casex\\|casez\\|fork\\|table\\)\\>")
-(defconst verilog-beg-block-re-1 "\\<\\(begin\\)\\|\\(case[xz]?\\)\\|\\(fork\\)\\|\\(table\\)\\>")
-(defconst verilog-end-block-re   "\\<\\(end\\|join\\|endcase\\|endtable\\)\\>")
-(defconst verilog-end-block-re-1 "\\(\\<end\\>\\)\\|\\(\\<endcase\\>\\)\\|\\(\\<join\\>\\)\\|\\(\\<endtable\\>\\)\\|\\(\\<endfunction\\>\\)\\|\\(\\<endtask\\>\\)")
+(defconst verilog-beg-block-re   "\\<\\(begin\\|case\\|casex\\|casez\\|fork\\|table\\|specify\\)\\>")
+(defconst verilog-beg-block-re-1 "\\<\\(begin\\)\\|\\(case[xz]?\\)\\|\\(fork\\)\\|\\(table\\)\\|\\(specify\\)\\>")
+(defconst verilog-end-block-re   "\\<\\(end\\|join\\|endcase\\|endtable\\|endspecify\\)\\>")
+(defconst verilog-end-block-re-1 "\\(\\<end\\>\\)\\|\\(\\<endcase\\>\\)\\|\\(\\<join\\>\\)\\|\\(\\<endtable\\>\\)\\|\\(\\<endspecify\\>\\)\\|\\(\\<endfunction\\>\\)\\|\\(\\<endtask\\>\\)")
 (defconst verilog-beg-tf-re      "\\<\\(task\\|function\\)\\>")
 (defconst verilog-end-tf-re      "\\<\\(endtask\\|endfunction\\)\\>")
-(defconst verilog-declaration-re     "\\<\\(in\\(put\\|out\\|teger\\)\\|output\\|event\\|re\\(al\\|g\\|eltime\\)\\|time\\|tri\\(0\\|1\\|and\\|or\\|reg\\)\\|w\\(and\\|or\\|ire\\)\\)\\>")
+(defconst verilog-declaration-re     "\\(\\<in\\(put\\|out\\|teger\\)\\>\\|\\<parameter\\>\\|\\<output\\>\\|\\<event\\>\\|re\\(al\\|g\\|altime\\)\\|time\\|tri\\(0\\|1\\|and\\|or\\|reg\\)\\|w\\(and\\|or\\|ire\\)\\)\\>")
 (defconst verilog-declaration-re-1 (concat verilog-declaration-re "[ \t]*\\(\\[[^]]*\\][ \t]*\\)?"))
 (defconst verilog-defun-re       "\\<\\(module\\|macromodule\\|primitive\\)\\>")
 (defconst verilog-end-defun-re   "\\<\\(endmodule\\|endprimitive\\)\\>")
 (defconst verilog-zero-indent-re 
   (concat verilog-defun-re "\\|" verilog-end-defun-re))
+(defconst verilog-directive-re
+  "\\(`else\\)\\|\\(`ifdef\\)\\|\\(`endif\\)\\|\\(`define\\)\\|\\(`undef\\)\\|\\(`include\\)")
 (defconst verilog-autoindent-lines-re
-  "\\<\\(\\(macro\\)?module\\|primitive\\|end\\(case\\|function\\|task\\|module\\|primitive\\)?\\|join\\|begin\\|else\\|endtable\\)\\>\\|`\\(else\\|ifdef\\|endif\\)\\>")
+  (concat
+   "\\<\\(\\(macro\\)?module\\|primitive\\|end\\(case\\|function\\|task\\|module\\|primitive\\|specify\\|table\\)?\\|join\\|begin\\|else\\)\\>\\|`\\(else\\|ifdef\\|endif\\)\\|"
+   verilog-directive-re
+   "\\>"))
+(defconst verilog-behavorial-block-beg-re
+  "\\(\\<initial\\>\\|\\<always\\>\\|\\<function\\>\\|\\<task\\>\\)")
 (defconst verilog-indent-reg 
-  (concat "\\(\\<begin\\>\\|\\<case[xz]?\\>\\|\\<fork\\>\\|\\<table\\>\\)\\|"
-	  "\\(\\<end\\>\\|\\<join\\>\\|\\<endcase\\>\\|\\<endtable\\>\\)\\|" 
+  (concat "\\(\\<begin\\>\\|\\<case[xz]?\\>\\|\\<specify\\>\\|\\<fork\\>\\|\\<table\\>\\)\\|"
+	  "\\(\\<end\\>\\|\\<join\\>\\|\\<endcase\\>\\|\\<endtable\\>\\|\\<endspecify\\>\\)\\|" 
 	  "\\(\\<module\\>\\|\\<macromodule\\>\\|\\<primitive\\>\\)\\|"
 	  "\\(\\<endmodule\\>\\|\\<endprimitive\\>\\)\\|"
 	  "\\(\\<endtask\\>\\|\\<endfunction\\>\\)\\|"
-	  "\\(\\<initial\\>\\|\\<always\\>\\|\\<function\\>\\|\\<task\\>\\)"
+	  verilog-behavorial-block-beg-re
 ;;	  "\\|\\(\\<if\\>\\|\\<else\\>\\)"
 	  ))
 (defconst verilog-complete-reg
@@ -752,12 +762,21 @@ Other useful functions are:
   (interactive)
   ;; If verilog-tab-always-indent, indent the beginning of the line.
   (if verilog-tab-always-indent
-      (let ((boi-point (save-excursion
-                         (beginning-of-line)
-                         (skip-chars-forward " \t")
-                         (verilog-indent-line)
-                         (back-to-indentation)
-                         (point))))
+      (let* ((boi-point (save-excursion
+			  (beginning-of-line)
+			  (skip-chars-forward " \t")
+			  (let (type state )
+			    (setq type (verilog-indent-line))
+			    (setq state (car type))
+			    (cond
+			     ((eq state 'block)
+			      (if (looking-at verilog-behavorial-block-beg-re )
+				  (error (concat "The reserved word \""
+					 (buffer-substring (match-beginning 0) (match-end 0))
+					 "\" must be at the behavorial level!"))))
+			     ))
+			  (back-to-indentation)
+			  (point))))
         (if (< (point) boi-point)
             (back-to-indentation)))
     (progn (insert "\t")
@@ -1220,7 +1239,7 @@ Insert `// NAME ' if this line ends a module or primitive named NAME."
 			  (insert str)
 			  (ding 't)			  
 			  )
-		      (let ((lim (save-excursion (verilog-beg-of-defun) (point))))
+		      (let (sp (lim (save-excursion (verilog-beg-of-defun) (point))))
 			(cond
 			 (;-- handle named block differently
 			  (looking-at verilog-named-block-re)
@@ -1236,7 +1255,9 @@ Insert `// NAME ' if this line ends a module or primitive named NAME."
 			  (setq str (concat " // case: " str ))
 			  )
 			 (;- try to find "reason" for this end
-			  (verilog-re-search-backward verilog-endcomment-reason-re lim 'move)
+			  (progn 
+			    (setq sp (point))
+			    (verilog-re-search-backward verilog-endcomment-reason-re lim 'move))
 			  (setq cntx (concat 
 				      (buffer-substring (match-beginning 0) (match-end 0)) " "))
 			  (cond
@@ -1244,10 +1265,19 @@ Insert `// NAME ' if this line ends a module or primitive named NAME."
 			    (match-end 1)
 			    (setq err nil)
 			    (setq str ""))			  			  
-			   (;- begin -- no other interesting data
+			   (;- begin -- likely no other interesting data
 			    (match-end 2)
 			    (setq err nil)
-			    (setq str ""))		  
+			    (save-excursion
+			      (goto-char sp)
+			      (if (verilog-continued-line)
+				  (setq str (progn 
+					      (beginning-of-line)
+					      (concat " // " (verilog-get-expr))))
+				(setq str "")		  
+				)
+			      )
+			    )
 			   (;- else 
 			    (match-end 4)
 			    (let ((nest 0)
@@ -1514,7 +1544,7 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 					; indent level changing tokens then immediately
 					; previous line governs indentation.
 			       (let ((reg)(nest 1))
-				 (looking-at verilog-end-block-re-1);; end|join|endcase|endtable
+				 (looking-at verilog-end-block-re-1);; end|join|endcase|endtable|endspecify
 				 (cond 
 				  ((match-end 1) ; end
 				   ;; Search back for matching begin
@@ -1531,6 +1561,10 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 				  ((match-end 4) ; endtable
 				   ;; Search back for matching table
 				   (setq reg "\\(\\<table\\>\\)\\|\\(\\<endtable\\>\\)" )
+				   )
+				  ((match-end 5) ; endspecify
+				   ;; Search back for matching table
+				   (setq reg "\\(\\<specify\\>\\)\\|\\(\\<endspecify\\>\\)" )
 				   )
 				  )
 				 (catch 'skip
@@ -1565,7 +1599,7 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 					; indent level changing tokens then immediately
 					; previous line governs indentation.
 			 (let ((reg)(nest 1))
-			   (looking-at verilog-end-block-re-1);; end|join|endcase|endtable
+			   (looking-at verilog-end-block-re-1);; end|join|endcase|endtable|endspecify
 			   (cond 
 			    ((match-end 1) ; end
 			     ;; Search back for matching begin
@@ -1582,6 +1616,10 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 			    ((match-end 4) ; endtable
 			     ;; Search back for matching table
 			     (setq reg "\\(\\<table\\>\\)\\|\\(\\<endtable\\>\\)" )
+			     )
+			    ((match-end 5) ; endspecify
+			     ;; Search back for matching specify
+			     (setq reg "\\(\\<specify\\>\\)\\|\\(\\<endspecify\\>\\)" )
 			     )
 			    )
 			   (catch 'skip
@@ -1635,9 +1673,10 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 	(cond 
 	 ((bolp)
 	  nil)
-	 ( ;-- Anything ending in a ; is complete
+	 (;-- Anything ending in a ; is complete
 	  (= (preceding-char) ?\;)
 	  nil)
+	 
 	 (;-- Could be 'case (foo)' or 'always @(bar)' which is complete
 	  (= (preceding-char) ?\))
 	  (progn
@@ -1658,14 +1697,14 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 	      (verilog-backward-syntactic-ws))
 	    (forward-word -1)
 	    (not (looking-at "\\<case[xz]?\\>"))))
+	 
 	 (;-- any of begin|initial|while are complete statements; 'begin : foo' is also complete
 	  t
 	  (forward-word -1)
 	  (cond 
-	   ((looking-at "initial\\>")
-	    t)
-	   ((looking-at verilog-indent-reg)
-	      nil)
+	   ( (looking-at "initial\\>")  t)
+	   ( (looking-at verilog-indent-reg) nil)
+	   
 	   (t
 	    (let 
 		((back (point)))
@@ -1750,7 +1789,7 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 	      (forward-comment (-(buffer-size)))
 	      (save-excursion
 		(beginning-of-line)
-		(if (looking-at "[ \t]*\\(`define\\)\\|\\(`ifdef\\)\\|\\(`else\\)\\|\\(`endif\\)\\|\\(`timescale\\)")
+		(if (looking-at "[ \t]*\\(`define\\)\\|\\(`ifdef\\)\\|\\(`else\\)\\|\\(`endif\\)\\|\\(`timescale\\)\\|\\(`include\\)")
 		    (setq jump t)
 		  (setq jump nil)))
 	      (if jump
@@ -1911,7 +1950,7 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
   )
 (defun verilog-indent-line ()
   "Indent for special part of code."
-  (if (looking-at "\\(`else\\)\\|\\(`ifdef\\)\\|\\(`endif\\)\\|\\(`define\\)\\|\\(`undef\\)\\|\\(`include\\)")
+  (if (looking-at verilog-directive-re)
       ;; We could nicely nest `ifdef's, but...
       (progn
 	(delete-horizontal-space)
@@ -1954,7 +1993,7 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 	  ))))
      
      (;-- Handle the ends
-      (looking-at verilog-end-block-re-1)
+      (looking-at verilog-end-block-re)
       (if (eq type 'statement)
 	  (indent-to (- ind verilog-indent-level))		 
 	(indent-to ind)))
@@ -2165,7 +2204,7 @@ it displays a list of all possible completions.")
 
 (defvar verilog-type-keywords
   '("buf" "bufif0" "bufif1" "cmos" "inout" "input"
-    "integer" "nand" "nmos" "nor" "not" "notif0" "notif1" "or" "output"
+    "integer" "nand" "nmos" "nor" "not" "notif0" "notif1" "or" "output" "parameter"
     "pmos" "pull0" "pull1" "pullup" "rcmos" "real" "realtime" "reg" "rnmos" "rpmos" "rtran"
     "rtranif0" "rtranif1" "time" "tran" "tranif0" "tranif1" "tri" "tri0" "tri1"
     "triand" "trior" "trireg" "wand" "wire" "wor" "xnor" "xor" )
