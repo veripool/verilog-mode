@@ -67,7 +67,7 @@
 ;; 
 ;;; Code:
 
-(defconst verilog-mode-version "1.91"
+(defconst verilog-mode-version "1.91 $$Version: $$"
   "Version of this verilog mode.")
 
 (defvar verilog-mode-abbrev-table nil
