@@ -209,8 +209,8 @@
 (defun verilog-regexp-opt (a b)
   "Deal with XEmacs & FSF both have `regexp-opt'; with different interface.
 Call 'regexp-opt' on A and B."
-  (if (string-match "XEmacs" emacs-version)
-      (regexp-opt a b 't)
+  (if verilog-running-on-xemacs
+      (unwind-protect (regexp-opt a b 't))
     (regexp-opt a b)))
 
 (defun verilog-customize ()
@@ -6688,7 +6688,7 @@ Wilson Snyder (wsnyder@wsnyder.org)"
 
 ;;
 ;; Place the templates into Verilog Mode.  They may be inserted under any key.
-;; C-c C-t will be the default.  If you use templates alot, you
+;; C-c C-t will be the default.  If you use templates a lot, you
 ;; may want to consider moving the binding to another key in your .emacs
 ;; file.  
 ;;
@@ -6991,37 +6991,35 @@ and the case items."
   (easy-menu-define verilog-stmt-menu verilog-mode-map
 		    "Menu for statement templates in Verilog."
 		    '("Statements"
-;		      ["-------" nil nil]
-		      ["C-c C-t h  header" (verilog-sk-header) t]
-		      ["C-c C-t /  comment" (verilog-sk-comment) t]
-		      ["-------" nil nil]
-		      ["C-c C-t m  module" (verilog-sk-module) t]
-		      ["C-c C-t p  primitive" (verilog-sk-primitive) t]
-		      ["-------" nil nil]
-		      ["C-c C-t I  input" (verilog-sk-input) t]
-		      ["C-c C-t O  output" (verilog-sk-output) t]
-		      ["C-c C-t =  inout" (verilog-sk-inout) t]
-		      ["C-c C-t W  wire" (verilog-sk-wire) t]
-		      ["C-c C-t R  reg" (verilog-sk-reg) t]
-		      ["-------" nil nil]
-		      ["C-c C-t i  initial" (verilog-sk-initial) t]
-		      ["C-c C-t a  always" (verilog-sk-always) t]
-		      ["C-c C-t F  function" (verilog-sk-function) t]
-		      ["C-c C-t t  task" (verilog-sk-task) t]
-		      ["C-c C-t s  specify" (verilog-sk-specify) t]
-		      ["C-c C-t g  generate" (verilog-sk-generate) t]
-		      ["-------" nil nil]
-		      ["C-c C-t b  begin" (verilog-sk-begin) t]
-		      ["C-c C-t ?  if" (verilog-sk-if) t]
-		      ["C-c C-t :  (if) else" (verilog-sk-else-if) t]
-		      ["C-c C-t f  for" (verilog-sk-for) t]
-		      ["C-c C-t w  while" (verilog-sk-while) t]
-		      ["C-c C-t j  fork" (verilog-sk-fork) t]
-		      ["C-c C-t r  repeat" (verilog-sk-repeat) t]
-		      ["C-c C-t c  case" (verilog-sk-case) t]
-		      ["C-c C-t x  casex" (verilog-sk-casex) t]
-		      ["C-c C-t z  casez" (verilog-sk-casez) t]
-		      ["-----" nil nil]
+		      ["Header"		verilog-sk-header  t]
+		      ["Comment"	verilog-sk-comment t]
+		      "----"
+		      ["Module"		verilog-sk-module t]
+		      ["Primitive"	verilog-sk-primitive t]
+		      "----"
+		      ["Input"		verilog-sk-input t]
+		      ["Output"		verilog-sk-output t]
+		      ["Inout"		verilog-sk-inout t]
+		      ["Wire"		verilog-sk-wire t]
+		      ["Reg"		verilog-sk-reg t]
+		      "----"
+		      ["Initial"	verilog-sk-initial t]
+		      ["Always" 	verilog-sk-always t]
+		      ["Function"	verilog-sk-function t]
+		      ["Task" 		verilog-sk-task t]
+		      ["Specify"	verilog-sk-specify t]
+		      ["Generate"	verilog-sk-generate t]
+		      "----"
+		      ["Begin"		verilog-sk-begin t]
+		      ["If" 		verilog-sk-if t]
+		      ["(if) else"	verilog-sk-else-if t]
+		      ["For" 		verilog-sk-for t]
+		      ["While" 		verilog-sk-while t]
+		      ["Fork" 		verilog-sk-fork t]
+		      ["Repeat" 	verilog-sk-repeat t]
+		      ["Case" 		verilog-sk-case t]
+		      ["Casex" 		verilog-sk-casex t]
+		      ["Casez" 		verilog-sk-casez t]
 		      ))
   (if verilog-running-on-xemacs
       (progn
