@@ -246,12 +246,6 @@
   :type 'boolean 
   )
 
-(defcustom verilog-indent-parenthetical t
-  "*Non-nil means to line up multi line parenthetical expressions"
-  :group 'verilog-mode
-  :type 'boolean
-  )
-
 (defcustom verilog-indent-begin-after-if t
   "*If true, indent begin statements following if, else, while, for
   and repeat.  otherwise, line them up."
@@ -1286,7 +1280,7 @@ Other useful functions are:
       (verilog-forward-ws&directives)
       (verilog-indent-line))
     (if (and verilog-auto-newline
-	     (= 0 (verilog-parenthesis-depth)))
+	     (not (verilog-parenthesis-depth)))
 	(electric-verilog-terminate-line))))
 
 (defun electric-verilog-semi-with-comment ()
@@ -2268,6 +2262,7 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
     (let* ((starting_position (point))
 	   (par 0) 
 	   (begin (looking-at "[ \t]*begin\\>"))
+	   (lim (save-excursion (verilog-re-search-backward "\\(\\<begin\\>\\)\\|\\(\\<module\\>\\)" nil t)))
 	   (type (catch 'nesting
 		   ;; Keep working backwards until we can figure out
 		   ;; what type of statement this is.
@@ -2287,11 +2282,11 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 		     ;; trap out if we crawl off the top of the buffer
 		     (if (bobp) (throw 'nesting 'cpp))
 
-		     (if (verilog-continued-line-1)
+		     (if (verilog-continued-line-1 lim)
 			 (let ((sp (point)))
 			   (if (and
 				(not (looking-at verilog-complete-reg))
-				(verilog-continued-line-1))
+				(verilog-continued-line-1 lim))
 			       (progn (goto-char sp)
 				      (throw 'nesting 'cexp))
 			     (goto-char sp))
@@ -2527,14 +2522,14 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
     )
   )
 
-(defun verilog-continued-line-1 ()
+(defun verilog-continued-line-1 (lim)
   "Return true if this is a continued line.
    Set point to where line starts"
   (let ((continued 't))
     (if (eq 0 (forward-line -1))
 	(progn
 	  (end-of-line)
-	  (verilog-backward-ws&directives)
+	  (verilog-backward-ws&directives lim)
 	  (if (bobp)
 	      (setq continued nil)
 	    (setq continued (verilog-backward-token))
@@ -2755,17 +2750,15 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 
 (defun verilog-in-paren ()
  "Return true if in a parenthetical expression"
- (if verilog-indent-parenthetical
-     (let ((state 
-	    (save-excursion
-	      (parse-partial-sexp (point-min) (point)))))
-       (/= 0 (nth 0 state)))
-   nil)
+ (let ((state 
+	(save-excursion
+	  (parse-partial-sexp (point-min) (point)))))
+   (/= 0 (nth 0 state)))
  )
 (defun verilog-parenthesis-depth ()
  "Return non zero if in parenthetical-expression"
  (save-excursion
-   (nth 2 (parse-partial-sexp (point-min) (point)))))
+   (nth 1 (parse-partial-sexp (point-min) (point)))))
 
 (defun verilog-skip-forward-comment-or-string ()
  "Return true if in a string or comment"
@@ -3017,10 +3010,16 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
   
 (defun verilog-indent-level ()
   "Return the indent-level the current statement has."
-  (save-excursion
-    (beginning-of-line)
-    (skip-chars-forward " \t")
-    (current-column)))
+  (save-excursion  
+    (let (par-pos)
+      (beginning-of-line)
+      (setq par-pos (verilog-parenthesis-depth))
+      (while par-pos
+	(goto-char par-pos)
+	(beginning-of-line)	    
+	(setq par-pos (verilog-parenthesis-depth)))
+      (skip-chars-forward " \t")
+      (current-column))))
 
 
 (defun verilog-case-indent-level ()
@@ -3187,7 +3186,7 @@ Do not count named blocks or case-statements."
 		    (indent-to ind))
 		  )
 		))
-	     ((verilog-continued-line-1)
+	     ((verilog-continued-line-1 start)
 	      (goto-char e)
 	      (delete-horizontal-space)
 	      (indent-to ind))
