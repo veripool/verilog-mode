@@ -839,7 +839,8 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
    "\\(\\<endtable\\>\\)\\|"
    "\\(\\<endspecify\\>\\)\\|"
    "\\(\\<endfunction\\>\\)\\|"
-   "\\(\\<endtask\\>\\)"))
+   "\\(\\<endtask\\>\\)\\|"
+   "\\(\\<endgenerate\\>\\)"))
 
 
 (defconst verilog-enders-re
@@ -2603,7 +2604,7 @@ Insert `// NAME ' if this line ends a module or primitive named NAME."
 		      (if err (ding 't))
 		      ))))
 	       
-	       (;- this is end{function,task,module}
+	       (;- this is end{function,task,module,primative,table,generate}
 		t
 		(let (string reg (width nil))
 		  (end-of-line)
@@ -2995,7 +2996,7 @@ type.  Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 			     (cond
 			      ((match-end 1) ; else, we're in deep
 			       (setq elsec (1+ elsec)))
-			      ((match-end 2) ; found it
+			      ((match-end 2) ; if
 			       (setq elsec (1- elsec))
 			       (if (= 0 elsec)
 				   (if verilog-align-ifelse
@@ -3009,7 +3010,7 @@ type.  Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 				; indent level changing tokens then immediately
 				; previous line governs indentation.
 			       (let ((reg)(nest 1))
-;;				 verilog-ends =>  else|if|end|join|endcase|endtable|endspecify|endfunction|endtask
+;;				 verilog-ends =>  else|if|end|join|endcase|endtable|endspecify|endfunction|endtask|endgenerate
 				 (cond
 				  ((match-end 3) ; end
 				   ;; Search back for matching begin
@@ -3026,6 +3027,9 @@ type.  Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 				  ((match-end 9) ; endtask
 				   ;; Search back for matching task
 				   (setq reg "\\(\\<task\\>\\)\\|\\(\\<endtask\\>\\)" ))
+				  ((match-end 10) ; endgenerate
+				   ;; Search back for matching generate
+				   (setq reg "\\(\\<generate\\>\\)\\|\\(\\<endgenerate\\>\\)" ))
 				  ((match-end 4) ; join
 				   ;; Search back for matching fork
 				   (setq reg "\\(\\<fork\\>\\)\\|\\(\\<join\\>\\)" ))
@@ -4763,7 +4767,8 @@ Duplicate signals are also removed.  For example A[2] and A[1] become A[2:1]."
 	out-list 
 	sig highbit lowbit		; Temp information about current signal
 	sv-name sv-highbit sv-lowbit	; Details about signal we are forming
-	sv-comment sv-memory sv-enum sv-signed)
+	sv-comment sv-memory sv-enum sv-signed sv-busstring
+	bus)
     ;; Shove signals so duplicated signals will be adjacent
     (setq in-list (sort in-list `verilog-signals-sort-compare))
     (while in-list
