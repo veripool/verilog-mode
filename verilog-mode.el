@@ -349,7 +349,7 @@ lineups."
    ("^\\s-*\\(function\\|task\\|module\\|macromodule\\|primitive\\)\\>\\s-*\\(\\sw+\\)"  
     2 'font-lock-function-name-face nil t)
    ("\\(\\\\\\S-*\\s-\\)\\|\\(`\\s-*[A-Za-z][A-Za-z0-9_]*\\)" 0 'font-lock-function-name-face)
-   ("\\(@\\)\\|\\(#\\s-*\\(\\(\[0-9\]+\\('[hdxbo][0-9_xz]*\\)?\\)\\|\\((\[^)\]*)\\|\\sw+\\)\\)\\)" 0 'font-lock-type-face)
+   ("\\(@\\)\\|\\(#\\s-*\\(\\(\[0-9_\]+\\('[hdxbo][0-9_xz]*\\)?\\)\\|\\((\[^)\]*)\\|\\sw+\\)\\)\\)" 0 'font-lock-type-face)
 ; "integer" "input" "inout" "parameter" "defparam" "output" "supply0" "supply1" "supply" "tri0" "tri1" "trireg"
 ; "triand" trior" "wire" "wor" "wand" "time" "real" "realtime" "reg" "signed" "vectored"
    ("\\<\\(defparam\\|in\\(out\\|put\\|teger\\)\\|output\\|parameter\\|re\\(al\\(\\|time\\)\\|g\\)\\|s\\(igned\\|upply\\(\\|[01]\\)\\)\\|t\\(ime\\|ri\\([01]\\|and\\|or\\|reg\\)\\)\\|vectored\\|w\\(and\\|ire\\|or\\)\\)\\>" 0 'font-lock-type-face)
@@ -357,7 +357,7 @@ lineups."
 ; "if" "wait" "else" "fork" "join" "for" "while" "repeat" "forever" "posedge" "negedge"
 ; "primitive" "endprimitive" "specify" "endspecify" "table" "endtable" 
 ; "function" "endfunction" "task" "endtask" "module" "macromodule""endmodule"
- ("\\<\\(\\$[a-zA-Z][a-zA-Z0-9_\\$]*\\|\\(a\\(lways\\|ssign\\)\\|begin\\|case\\(\\|[xz]\\)\\|\\(de\\(fault\\|assign\\)\\)\\|e\\(lse\\|nd\\(\\|case\\|function\\|module\\|primitive\\|specify\\|ta\\(ble\\|sk\\)\\)\\)\\|f\\(or\\(\\|ce\\|ever\\|k\\)\\|unction\\)\\|i\\(f\\|nitial\\)\\|join\\|m\\(acromodule\\|odule\\)\\|negedge\\|p\\(osedge\\|rimitive\\)\\|repeat\\|specify\\|ta\\(ble\\|sk\\)\\|w\\(ait\\|hile\\)\\)\\)\\>" 0 'font-lock-keyword-face)
+ ("\\<\\(\\$[a-zA-Z][a-zA-Z0-9_\\$]*\\|\\(a\\(lways\\|ssign\\)\\|begin\\|case\\(\\|[xz]\\)\\|\\(de\\(fault\\|assign\\)\\)\\|e\\(lse\\|nd\\(\\|case\\|function\\|module\\|primitive\\|specify\\|ta\\(ble\\|sk\\)\\)\\)\\|f\\(or\\(\\|ce\\|ever\\|k\\)\\|unction\\)\\|i\\(f\\|nitial\\)\\|join\\|m\\(acromodule\\|odule\\)\\|negedge\\|p\\(osedge\\|rimitive\\)\\|re\\(peat\\|lease\\)\\|specify\\|ta\\(ble\\|sk\\)\\|w\\(ait\\|hile\\)\\)\\)\\>" 0 'font-lock-keyword-face)
 
    )
 )
@@ -367,7 +367,7 @@ lineups."
     ("^\\s-*\\(function\\|task\\|module\\|macromodule\\|primitive\\)\\>\\s-*\\(\\sw+\\)"  
      2 font-lock-function-name-face nil t)
     ("\\(\\\\\\S-*\\s-\\)\\|\\(`\\s-*[A-Za-z][A-Za-z0-9_]*\\)" 0 font-lock-function-name-face)
-    ("[@#]" . font-lock-type-face)
+    ("\\(@\\)\\|\\(#\\s-*\\(\\(\[0-9_\]+\\('[hdxbo][0-9_xz]*\\)?\\)\\|\\((\[^)\]*)\\|\\sw+\\)\\)\\)" 0 font-lock-type-face)
 ; "integer" "input" "inout" "parameter" "defparam" "output" "supply0" "supply1" "supply" "tri0" "tri1" "trireg"
 ; "triand" trior" "wire" "wor" "wand" "time" "real" "realtime" "reg" "signed" "vectored"
    ("\\<\\(defparam\\|in\\(out\\|put\\|teger\\)\\|output\\|parameter\\|re\\(al\\(\\|time\\)\\|g\\)\\|s\\(igned\\|upply\\(\\|[01]\\)\\)\\|t\\(ime\\|ri\\([01]\\|and\\|or\\|reg\\)\\)\\|vectored\\|w\\(and\\|ire\\|or\\)\\)\\>" 0 font-lock-type-face)
@@ -375,7 +375,7 @@ lineups."
 ; "if" "wait" "else" "fork" "join" "for" "while" "repeat" "forever" "posedge" "negedge"
 ; "primitive" "endprimitive" "specify" "endspecify" "table" "endtable" 
 ; "function" "endfunction" "task" "endtask" "module" "macromodule""endmodule"
-   ("\\<\\(\\$[a-zA-Z][a-zA-Z0-9_\\$]*\\|\\(a\\(lways\\|ssign\\)\\|begin\\|case\\(\\|[xz]\\)\\|\\(de\\(fault\\|assign\\)\\)\\|e\\(lse\\|nd\\(\\|case\\|function\\|module\\|primitive\\|specify\\|ta\\(ble\\|sk\\)\\)\\)\\|f\\(or\\(\\|ce\\|ever\\|k\\)\\|unction\\)\\|i\\(f\\|nitial\\)\\|join\\|m\\(acromodule\\|odule\\)\\|negedge\\|p\\(osedge\\|rimitive\\)\\|repeat\\|specify\\|ta\\(ble\\|sk\\)\\|w\\(ait\\|hile\\)\\)\\)\\>" 0 font-lock-keyword-face)
+   ("\\<\\(\\$[a-zA-Z][a-zA-Z0-9_\\$]*\\|\\(a\\(lways\\|ssign\\)\\|begin\\|case\\(\\|[xz]\\)\\|\\(de\\(fault\\|assign\\)\\)\\|e\\(lse\\|nd\\(\\|case\\|function\\|module\\|primitive\\|specify\\|ta\\(ble\\|sk\\)\\)\\)\\|f\\(or\\(\\|ce\\|ever\\|k\\)\\|unction\\)\\|i\\(f\\|nitial\\)\\|join\\|m\\(acromodule\\|odule\\)\\|negedge\\|p\\(osedge\\|rimitive\\)\\|re\\(peat\\|lease\\)\\|specify\\|ta\\(ble\\|sk\\)\\|w\\(ait\\|hile\\)\\)\\)\\>" 0 font-lock-keyword-face)
     )
 )
 
@@ -596,9 +596,14 @@ compilation-error-regexp-alist.  This allows \\[next-error] to find the errors."
   ;; "input" "inout" "output" "integer" "parameter" "defparam" "event" 
   ;; "real" "reg" "realtime" "time" "tri" "tri0" "tri1" "trireg" "triand" 
   ;; "trior" "supply0" "supply1" "wire" "wor" "wand"
-"\\(\\<\\(defparam\\>\\|event\\>\\|in\\(out\\>\\|put\\>\\|teger\\>\\)\\|output\\>\\|parameter\\>\\|re\\(al\\(\\>\\|time\\>\\)\\|g\\>\\)\\|supply\\(0\\>\\|1\\>\\)\\|t\\(ime\\>\\|ri\\(0\\>\\|1\\>\\|\\>\\|and\\>\\|or\\>\\|reg\\>\\)\\)\\|w\\(and\\>\\|ire\\>\\|or\\>\\)\\)\\)")
-(defconst verilog-declaration-re-1 (concat "^[ \t]*" verilog-declaration-re "[ \t]*\\(\\[[^]]*\\][ \t]*\\)?"))
-(defconst verilog-declaration-re-2 (concat "[ \t]*" verilog-declaration-re "[ \t]*\\(\\[[^]]*\\][ \t]*\\)?"))
+"\\(\\<\\(assign\\>\\|defparam\\>\\|event\\>\\|in\\(out\\>\\|put\\>\\|teger\\>\\)\\|output\\>\\|parameter\\>\\|re\\(al\\(\\>\\|time\\>\\)\\|g\\>\\)\\|supply\\(0\\>\\|1\\>\\)\\|t\\(ime\\>\\|ri\\(0\\>\\|1\\>\\|\\>\\|and\\>\\|or\\>\\|reg\\>\\)\\)\\|w\\(and\\>\\|ire\\>\\|or\\>\\)\\)\\)")
+(defconst verilog-range-re "\\[[^]]*\\]")
+(defconst verilog-macroexp-re "`\\sw+")
+(defconst verilog-delay-re "#\\s-*\\(\\([0-9_]+\\('[hdxbo][0-9_xz]+\\)?\\)\\|\\(([^)]*)\\)\\|\\(\\sw+\\)\\)")
+(defconst verilog-declaration-re-2 
+  (concat "\\s-*" verilog-declaration-re 
+	  "\\s-+\\(\\(" verilog-range-re "\\)\\|\\(" verilog-delay-re "\\)\\|\\(" verilog-macroexp-re "\\)\\)?"))
+(defconst verilog-declaration-re-1 (concat "^" verilog-declaration-re-2))
 (defconst verilog-defun-re 
   ;;"module" "macromodule" "primitive"
   "\\(\\<\\(m\\(acromodule\\>\\|odule\\>\\)\\|primitive\\>\\)\\)")
@@ -648,7 +653,7 @@ compilation-error-regexp-alist.  This allows \\[next-error] to find the errors."
   "\\(\\<\\(function\\>\\|task\\>\\)\\)")
 (defconst verilog-complete-reg
   ;; "always" "initial" "repeat" "case" "casex" "casez" "while" "if" "for" "forever" "else"
-  "\\<\\(always\\|case\\(\\|[xz]\\)\\|else\\|for\\(\\|ever\\)\\|i\\(f\\|nitial\\)\\|repeat\\|while\\)\\>")
+  "\\<\\(always\\|case\\(\\|[xz]\\)\\|begin\\|else\\|for\\(\\|ever\\)\\|i\\(f\\|nitial\\)\\|repeat\\|while\\)\\>")
 (defconst verilog-end-statement-re 
   (concat "\\(" verilog-beg-block-re "\\)\\|\\("
 	  verilog-end-block-re "\\)"))
@@ -894,9 +899,16 @@ will break, as the o's continuously replace.  xa -> x works ok though."
   (store-match-data '(nil nil))
   (while (and
 	  (re-search-backward REGEXP BOUND NOERROR)
-	  (verilog-skip-backward-comment-or-string)
-	  (not (store-match-data '(nil nil))))
-    ())
+	  (and (verilog-skip-backward-comment-or-string)
+	       (progn
+		 (store-match-data '(nil nil))
+		 (if BOUND
+		     (> (point) BOUND)
+		   t)
+		 )
+	       )
+	  )
+    )
   (match-end 0))
 
 (defsubst verilog-re-search-forward-quick (regexp bound noerror)
@@ -1618,12 +1630,11 @@ area.  See also `verilog-comment-region'."
     (while (and (not (looking-at verilog-complete-reg))
 		(setq pt (point))
 		(verilog-backward-token)
-		(setq pt (point))
 		(verilog-backward-syntactic-ws)
+		(setq pt (point))
 		(not (bolp))
 		(not (= (preceding-char) ?\;)))
       )
-    (goto-char pt)
     (while (progn
 	     (setq pt (point))
 	     (and (not (looking-at verilog-complete-reg))
@@ -2389,23 +2400,15 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 				; indent level changing tokens then immediately
 				; previous line governs indentation.
 			       (let ((reg)(nest 1))
-;;				 (looking-at verilog-end-block-re-1);; end|join|endcase|endtable|endspecify
+;;				 verilog-ends =>  else|if|end|join|endcase|endtable|endspecify|endfunction|endtask
 				 (cond 
 				  ((match-end 3) ; end
 				   ;; Search back for matching begin
 				   (setq reg "\\(\\<begin\\>\\)\\|\\(\\<end\\>\\)" )
 				   )
-				  ((match-end 4) ; endcase
+				  ((match-end 5) ; endcase
 				   ;; Search back for matching case
 				   (setq reg "\\(\\<case[xz]?\\>[^:]\\)\\|\\(\\<endcase\\>\\)" )
-				   )
-				  ((match-end 5) ; join
-				   ;; Search back for matching fork
-				   (setq reg "\\(\\<fork\\>\\)\\|\\(\\<join\\>\\)" )
-				   )
-				  ((match-end 6) ; endtable
-				   ;; Search back for matching table
-				   (setq reg "\\(\\<table\\>\\)\\|\\(\\<endtable\\>\\)" )
 				   )
 				  ((match-end 7) ; endspecify
 				   ;; Search back for matching specify
@@ -2418,6 +2421,14 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 				  ((match-end 9) ; endtask
 				   ;; Search back for matching task
 				   (setq reg "\\(\\<task\\>\\)\\|\\(\\<endtask\\>\\)" )
+				   )
+				  ((match-end 4) ; join
+				   ;; Search back for matching fork
+				   (setq reg "\\(\\<fork\\>\\)\\|\\(\\<join\\>\\)" )
+				   )
+				  ((match-end 6) ; endtable
+				   ;; Search back for matching table
+				   (setq reg "\\(\\<table\\>\\)\\|\\(\\<endtable\\>\\)" )
 				   )
 				  )
 				 (catch 'skip
@@ -2669,19 +2680,13 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 (defun verilog-backward-syntactic-ws (&optional lim)
   ;; Backward skip over syntactic whitespace for Emacs 19.
   (save-restriction
-    (let* ((lim (or lim (point-min)))
-	   (here lim)
-	   bol
-	   )
+    (let* ((lim (or lim (point-min))) (here lim) )
       (if (< lim (point))
 	  (progn
 	    (narrow-to-region lim (point))
 	    (while (/= here (point))
 	      (setq here (point))
 	      (forward-comment (-(buffer-size)))
-	      (save-excursion
-		(setq bol (progn (beginning-of-line) (point))))
-	      (search-backward "//" bol t)
 	      )))
       ))
   t)
@@ -2766,6 +2771,21 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 	      )))
       )))
 
+(defun verilog-in-comment-p ()
+ "Return true if in a star or // comment"
+ (let ((state 
+	(save-excursion
+	  (parse-partial-sexp (point-min) (point)))))
+   (or (nth 4 state) (nth 7 state)))
+ )
+(defun verilog-in-star-comment-p ()
+ "Return true if in a star comment"
+ (let ((state 
+	(save-excursion
+	  (parse-partial-sexp (point-min) (point)))))
+   (nth 4 state))
+ )
+
 (defun verilog-in-comment-or-string-p ()
  "Return true if in a string or comment"
  (let ((state 
@@ -2783,14 +2803,6 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
        t
      nil)
    )
- )
-
-(defun verilog-in-star-comment-p ()
- "Return true if in a star comment"
- (let ((state 
-	(save-excursion
-	  (parse-partial-sexp (point-min) (point)))))
-   (nth 4 state))
  )
 
 (defun verilog-in-paren ()
@@ -2918,7 +2930,12 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
       (let ((here (point)))
 	(verilog-backward-syntactic-ws)
 	(cond
-	 ((= (preceding-char) ?\,)
+	 ((or
+	   (= (preceding-char) ?\,)
+	   (= (preceding-char) ?\])
+	   (save-excursion
+	     (verilog-beg-of-statement-1)
+	     (looking-at verilog-declaration-re)))
 	  (let* ( fst
 		  (val
 		   (save-excursion
@@ -2965,7 +2982,7 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 	 (t
 	  (goto-char here)
 	  (let ((val))
-	    (verilog-beg-of-statement)
+	    (verilog-beg-of-statement-1)
 	    (if (verilog-re-search-forward "=[ \\t]*" here 'move)
 		(setq val (current-column))
 	      (setq val (eval (cdr (assoc type verilog-indent-alist)))))
@@ -3077,7 +3094,7 @@ Do not count named blocks or case-statements."
       (current-column))
      ((and (not (looking-at verilog-case-re))
 	   (looking-at "^[^:;]+[ \t]*:"))
-      (search-forward ":" nil t)
+      (verilog-re-search-forward ":" nil t)
       (skip-chars-forward " \t")
       (current-column))
      (t
@@ -3218,7 +3235,7 @@ Do not count named blocks or case-statements."
 	     ((looking-at verilog-declaration-re-1)
 	      (let ((p (match-end 0)))
 		(set-marker m1 p)
-		(if (verilog-re-search-forward "\\[" p 'move)
+		(if (verilog-re-search-forward "[[#`]" p 'move)
 		    (progn
 		      (forward-char -1)
 		      (just-one-space)
@@ -3264,6 +3281,7 @@ Do not count named blocks or case-statements."
     (if (verilog-re-search-backward verilog-declaration-re-1 lim t)
 	(progn
 	  (goto-char (match-end 0))
+	  (skip-chars-forward " \t")
 	  (setq ind (current-column))
 	  (goto-char pos)
 	  (setq val (+ baseind (eval (cdr (assoc 'declaration verilog-indent-alist)))))
@@ -3274,7 +3292,7 @@ Do not count named blocks or case-statements."
 	  (if (looking-at verilog-declaration-re-2)
 	      (let ((p (match-end 0)))
 		(set-marker m1 p)
-		(if (verilog-re-search-forward "\\[" p 'move)
+		(if (verilog-re-search-forward "[[#`]" p 'move)
 		    (progn
 		      (forward-char -1)
 		      (just-one-space)
