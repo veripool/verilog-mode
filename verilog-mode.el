@@ -204,13 +204,17 @@
 ;;; bugs. Please report any and all bugs to me at mac@verilog.com.
 ;; 
 ;; $Log$
-;; Revision 2.6  1996/04/24 22:18:11  mac
-;; 1) Major change is the abandonment of case lining up.  It's too error
-;;    prone at present.  The problem is finding the right : (especially
-;;    given : can be in [msb:lsb] expressions on both sides of the "real"  :
-;; 2) More font lock stuff; things should work in emacs 19, and Xemacs now.
-;; 3) Some more effort to insure verilog snippets indent correctly.
+;; Revision 2.7  1996/04/27 03:02:28  mac
+;; Fixed a bug indenting declarations when they are
+;; not in a module context
 ;;
+; Revision 2.6  1996/04/24  22:18:11  mac
+; 1) Major change is the abandonment of case lining up.  It's too error
+;    prone at present.  The problem is finding the right : (especially
+;    given : can be in [msb:lsb] expressions on both sides of the "real"  :
+; 2) More font lock stuff; things should work in emacs 19, and Xemacs now.
+; 3) Some more effort to insure verilog snippets indent correctly.
+;
 ; Revision 2.5  1996/03/28  01:12:20  mac
 ; 1) added more special case indent of pre processor directives.
 ; 2) avoided overflow in regexp matcher for big case items.
@@ -2048,23 +2052,30 @@ column number the line should be indented to."
 	(delete-horizontal-space)
 	(indent-to (+ base-ind (eval (cdr (assoc 'declaration verilog-indent-alist)))))
 	(let* ((pos2 (point-marker))
-	      (stpos (if start start
+	       (more 1)
+	       (stpos (if start start
 		       (save-excursion
+			 
 			 (goto-char pos2)
 			 (catch 'first
-			   (while t
+			   (while more
+			     (setq here (point))
 			     (verilog-backward-syntactic-ws)
 			     (beginning-of-line)
 			     (if (bobp)
 				 (throw 'first (point-marker)))				 
 			     (verilog-forward-syntactic-ws)
 			     (if (looking-at verilog-declaration-re)
-				 ()
-			       (throw 'first (point-marker))))))))
-	      (edpos (if end 
-			 (set-marker (make-marker) end)
-		       lim))
-	      ind)
+				 (setq more (/= (point) here))
+			       (throw 'first (point-marker))))
+			   (throw 'first (point-marker)))
+			 )
+		       )
+		      )
+	       (edpos (if end 
+			  (set-marker (make-marker) end)
+			lim))
+	       ind)
 	  (goto-char stpos)
 	  ;; Indent lines in declaration block
 	  (if arg
