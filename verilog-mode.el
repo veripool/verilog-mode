@@ -2,7 +2,7 @@
 ;;
 ;; $Id$
 
-;; Copyright (C) 2000 Free Software Foundation, Inc.
+;; Copyright (C) 2001 Free Software Foundation, Inc.
 
 ;; Author: Michael McNamara (mac@verilog.com)
 ;; Senior Vice President of Technology, Verisity Design, Inc.
@@ -5419,14 +5419,16 @@ If undefined, and WING-IT, return just SYMBOL without the tick, else nil."
 or just the existing dirnames themselves if there are no wildcards."
   (interactive)
   (unless dirnames (error "verilog-library-directories should include at least '.'"))
-  (setq dirnames (nreverse dirnames))
+  (setq dirnames (reverse dirnames))	; not nreverse
   (let ((dirlist nil)
 	pattern dirfile dirfiles dirname root filename rest)
     (while dirnames
       (setq dirname (car dirnames)
 	    dirnames (cdr dirnames))
-      (cond ((or (string-match "\\(^[/\\]*[^*?]*[/\\]\\)\\([^/\\]*\\)\\(.*\\)" dirname)
-		 (string-match "\\(\\)\\(^[^/\\][*?]\\)\\(.*\\)" dirname))
+      (cond ((string-match (concat "^\\(\\|[/\\]*[^*?]*[/\\]\\)"  ;; root
+				   "\\([^/\\]*[*?][^/\\]*\\)"	  ;; filename with *?
+				   "\\(.*\\)")			  ;; rest
+			   dirname)
 	     (setq root (match-string 1 dirname)
 		   filename (match-string 2 dirname)
 		   rest (match-string 3 dirname)
@@ -5551,7 +5553,7 @@ Return modi if successful, else print message."
 					   (concat " (Expanded macro to " realmod ")")
 					 "")
 				       "\n    Check the verilog-library-directories variable."
-				       "\n    I looked in:\n\t" (mapconcat 'concat orig-filenames "\n\t"))))
+				       "\n    I looked in (if not listed, doesn't exist):\n\t" (mapconcat 'concat orig-filenames "\n\t"))))
 		     )
 	       (setq verilog-modi-lookup-last-mod module
 		     verilog-modi-lookup-last-current current))))
@@ -7009,7 +7011,7 @@ Using \\[describe-function], see also:
 If you have bugs with these autos, try contacting the AUTOAUTHOR
 Wilson Snyder (wsnyder@wsnyder.org)"
   (interactive)
-  (message "Updating AUTOs...")
+  (unless noninteractive (message "Updating AUTOs..."))
   (if (featurep 'dinotrace)
       (dinotrace-unannotate-all))
   (let ((oldbuf (if (not (buffer-modified-p))
@@ -7066,8 +7068,8 @@ Wilson Snyder (wsnyder@wsnyder.org)"
       ;; If end result is same as when started, clear modified flag
       (cond ((and oldbuf (equal oldbuf (buffer-string)))
 	     (set-buffer-modified-p nil)
-	     (message "Updating AUTOs...done (no changes)"))
-	    (t (message "Updating AUTOs...done")))
+	     (unless noninteractive (message "Updating AUTOs...done (no changes)")))
+	    (t (unless noninteractive (message "Updating AUTOs...done"))))
       ;; Restore font-lock
       (when fontlocked (font-lock-mode t))
       )))
