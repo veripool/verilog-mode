@@ -1723,6 +1723,60 @@ Other useful functions are:
   (newline)
   (insert " * "))
 
+(defun verilog-insert-indices (MAX)
+  "insert a set of indices at into the rectangle whose upper left
+corner is defined by the current point.  Indices always begin with 0
+and extend to the MAX - 1.  If no prefix arg is given, the user is
+prompted for a value. The indices are surrounded by square brackets
+[]. For example, the following code with the point located after the
+first 'a' gives:
+
+    a = b                           a[  0] = b
+    a = b                           a[  1] = b
+    a = b                           a[  2] = b
+    a = b                           a[  3] = b
+    a = b   ==> insert-indices ==>  a[  4] = b  
+    a = b                           a[  5] = b
+    a = b                           a[  6] = b
+    a = b                           a[  7] = b
+    a = b                           a[  8] = b"
+
+  (interactive "MAX?")
+  (save-excursion
+  (let ((n 0))
+    (while (< n MAX)
+      (save-excursion
+      (insert (format "[%3d]" n)))
+      (next-line 1)
+      (setq n (1+ n))))))
+
+
+(defun verilog-generate-numbers (MAX)
+  "Insert a set of generated numbers into the rectangle whose upper left
+corner is defined by point.  The numbers are padded to three digits, 
+starting with 000 and extending to (MAX - 1). If no prefix argument is
+supplied, then the user is prompted for the MAX number. consider the 
+following code fragment:
+
+    buf buf                           buf buf000
+    buf buf                           buf buf001
+    buf buf                           buf buf002
+    buf buf                           buf buf003
+    buf buf   ==> insert-indices ==>  buf buf004  
+    buf buf                           buf buf005
+    buf buf                           buf buf006
+    buf buf                           buf buf007
+    buf buf                           buf buf008"
+
+  (interactive "NMAX?")
+  (save-excursion
+  (let ((n 0))
+    (while (< n MAX)
+      (save-excursion
+      (insert (format "%3.3d" n)))
+      (next-line 1)
+      (setq n (1+ n))))))
+
 (defun verilog-mark-defun ()
   "Mark the current verilog function (or procedure).
 This puts the mark at the end, and point at the beginning."
