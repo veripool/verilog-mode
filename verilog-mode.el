@@ -207,29 +207,35 @@ lineups."
 (defvar verilog-font-lock-keywords-after-1930
   '(
     ;;
-   ("^\\s-*\\(function\\|task\\|module\\|macromodule\\|primitive\\)\\>"  
-    1 'font-lock-keyword-face) 
    ("^\\s-*\\(function\\|task\\|module\\|macromodule\\|primitive\\)\\>\\s-*\\(\\sw+\\)"  
     2 'font-lock-function-name-face nil t)
    ("\\(\\\\\\S-*\s-\\)\\|\\(`\\s-*[A-Za-z][A-Za-z0-9_]*\\)" 0 'font-lock-function-name-face)
    ("\\(@\\)\\|\\(#\\s-*\\(\\(\[0-9\]+\\('[hdxbo][0-9_xz]*\\)?\\)\\|\\((\[^)\]*)\\|\\sw+\\)\\)\\)" 0 'font-lock-type-face)
-   ("\\<\\(in\\(teger\\|put\\|out\\)\\|parameter\\|defparam\\|output\\|supply[01]?\\|event\\|tri\\(0\\|1\\|reg\\|and\\|or\\)?\\|w\\(ire\\|or\\|and\\)\\|time\\|re\\(al\\(time\\)?\\|g\\)\\)\\>" 
-    0 'font-lock-type-face)  
-   ("\\(\\$[a-zA-Z][a-zA-Z0-9_\\$]*\\)\\|\\(\\<\\(begin\\|case[xz]?\\|end\\(case\\|function\\|task\\|module\\|table\\|primitive\\|specify\\)?\\|a\\(ssign\\|lways\\)\\|default\\|initial\\|table\\|\\(pos\\|neg\\)edge\\|else\\|for\\(ever\\|k\\)?\\|join\\|if\\|repeat\\|then\\|while\\|specify\\)\\>\\)" 
-     0 'font-lock-keyword-face)
+; "integer" "input" "inout" "parameter" "defparam" "output" "supply0" "supply1" "supply" "tri0" "tri1" "trireg"
+; "triand" trior" "wire" "wor" "wand" "time" "real" "realtime" "reg" "signed" "vectored"
+   ("\\<\\(defparam\\|in\\(out\\|put\\|teger\\)\\|output\\|parameter\\|re\\(al\\(\\|time\\)\\|g\\)\\|s\\(igned\\|upply\\(\\|[01]\\)\\)\\|t\\(ime\\|ri\\([01]\\|and\\|or\\|reg\\)\\)\\|vectored\\|w\\(and\\|ire\\|or\\)\\)\\>" 0 'font-lock-type-face)
+; "assign" "force" "always" "initial" "begin" "end"  "case" "casex" "casez" "default" "endcase"
+; "if" "wait" "else" "fork" "join" "for" "while" "repeat" "forever" "posedge" "negedge"
+; "primitive" "endprimitive" "specify" "endspecify" "table" "endtable" 
+; "function" "endfunction" "task" "endtask" "module" "macromodule""endmodule"
+ ("\\<\\$[a-zA-Z][a-zA-Z0-9_\\$]*\\|\\(a\\(lways\\|ssign\\)\\|begin\\|case\\(\\|[xz]\\)\\|default\\|e\\(lse\\|nd\\(\\|case\\|function\\|module\\|primitive\\|specify\\|ta\\(ble\\|sk\\)\\)\\)\\|f\\(or\\(\\|ce\\|ever\\|k\\)\\|unction\\)\\|i\\(f\\|nitial\\)\\|join\\|m\\(acromodule\\|odule\\)\\|negedge\\|p\\(osedge\\|rimitive\\)\\|repeat\\|specify\\|ta\\(ble\\|sk\\)\\|w\\(ait\\|hile\\)\\)\\>" 0 'font-lock-keyword-face)
    )
 )
 
 (defvar verilog-font-lock-keywords-before-1930
   '(
-    ("^\\s-*\\(function\\|task\\|module\\|macromodule\\|primitive\\)\\>"  . 1)
     ("^\\s-*\\(function\\|task\\|module\\|macromodule\\|primitive\\)\\>\\s-*\\(\\sw+\\)"  
      2 font-lock-function-name-face nil t)
     ("\\(\\\\\\s-*\\)\\|\\(`[ \t]*[A-Za-z][A-Za-z0-9_]*\\)" 0 font-lock-function-name-face)
     ("[@#]" . font-lock-type-face)
-    ("\\<\\(in\\(teger\\|put\\|out\\)\\|parameter\\|defparam\\|output\\|supply[01]?\\|event\\|tri\\(0\\|1\\|reg\\|and\\|or\\)?\\|w\\(ire\\|or\\|and\\)\\|time\\|re\\(al\\(time\\)?\\|g\\)\\)\\>" 
-     0 font-lock-type-face)
-    ("\\(\\$[a-zA-Z][a-zA-Z0-9_\\$]*\\)\\|\\(\\<\\(begin\\|case[xz]?\\|end\\(case\\|function\\|task\\|module\\|table\\|primitive\\|specify\\)?\\|a\\(ssign\\|lways\\)\\|default\\|initial\\|table\\|\\(pos\\|neg\\)edge\\|else\\|for\\(ever\\|k\\)?\\|join\\|if\\|repeat\\|then\\|while\\|specify\\)\\>\\)" . font-lock-keyword-face)
+; "integer" "input" "inout" "parameter" "defparam" "output" "supply0" "supply1" "supply" "tri0" "tri1" "trireg"
+; "triand" trior" "wire" "wor" "wand" "time" "real" "realtime" "reg" "signed" "vectored"
+   ("\\<\\(defparam\\|in\\(out\\|put\\|teger\\)\\|output\\|parameter\\|re\\(al\\(\\|time\\)\\|g\\)\\|s\\(igned\\|upply\\(\\|[01]\\)\\)\\|t\\(ime\\|ri\\([01]\\|and\\|or\\|reg\\)\\)\\|vectored\\|w\\(and\\|ire\\|or\\)\\)\\>" 0 font-lock-type-face)
+; "assign" "force" "always" "initial" "begin" "end"  "case" "casex" "casez" "default" "endcase"
+; "if" "wait" "else" "fork" "join" "for" "while" "repeat" "forever" "posedge" "negedge"
+; "primitive" "endprimitive" "specify" "endspecify" "table" "endtable" 
+; "function" "endfunction" "task" "endtask" "module" "macromodule""endmodule"
+   ("\\<\\$[a-zA-Z][a-zA-Z0-9_\\$]*\\|\\(a\\(lways\\|ssign\\)\\|begin\\|case\\(\\|[xz]\\)\\|default\\|e\\(lse\\|nd\\(\\|case\\|function\\|module\\|primitive\\|specify\\|ta\\(ble\\|sk\\)\\)\\)\\|f\\(or\\(\\|ce\\|ever\\|k\\)\\|unction\\)\\|i\\(f\\|nitial\\)\\|join\\|m\\(acromodule\\|odule\\)\\|negedge\\|p\\(osedge\\|rimitive\\)\\|repeat\\|specify\\|ta\\(ble\\|sk\\)\\|w\\(ait\\|hile\\)\\)\\>" 0 font-lock-keyword-face)
     )
 )
 
@@ -264,6 +270,7 @@ lineups."
     ()
   (setq verilog-mode-map (make-sparse-keymap))
   (define-key verilog-mode-map ";"        'electric-verilog-semi)
+  (define-key verilog-mode-map [(control 59)]    'electric-verilog-semi-with-comment)
   (define-key verilog-mode-map ":"        'electric-verilog-colon)
   (define-key verilog-mode-map "="        'electric-verilog-equal)
   (define-key verilog-mode-map "\`"       'electric-verilog-tick)
@@ -455,8 +462,8 @@ lineups."
   ;; "function" "task"
   "\\(\\<\\(function\\>\\|task\\>\\)\\)")
 (defconst verilog-complete-reg
-  ;; "always" "repeat" "case" "casex" "casez" "while" "if" "for" "forever"
-  "\\(\\<\\(always\\>\\|case\\(\\>\\|x\\>\\|z\\>\\)\\|else\\|for\\(\\>\\|ever\\>\\)\\|if\\>\\|repeat\\>\\|while\\>\\)\\)")
+  ;; "always" "initial" "repeat" "case" "casex" "casez" "while" "if" "for" "forever" "else"
+  "\\<\\(always\\|case\\(\\|[xz]\\)\\|else\\|for\\(\\|ever\\)\\|i\\(f\\|nitial\\)\\|repeat\\|while\\)\\>")
 (defconst verilog-end-statement-re 
   (concat "\\(" verilog-beg-block-re "\\)\\|\\("
 	  verilog-end-block-re "\\)"))
@@ -1038,6 +1045,15 @@ Other useful functions are:
     (if (and verilog-auto-newline
 	     (= 0 (verilog-parenthesis-depth)))
 	(electric-verilog-terminate-line))))
+
+(defun electric-verilog-semi-with-comment ()
+  "Insert `;' character, reindent the line and indent for comment."
+  (interactive)
+  (insert "\;")
+  (save-excursion
+    (beginning-of-line)
+    (verilog-indent-line))
+  (indent-for-comment))
 
 (defun electric-verilog-colon ()
   "Insert `:' and do all indentions except line indent on this line."
@@ -1918,8 +1934,11 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 			      ((match-end 2) ; found it
 			       (setq elsec (1- elsec))
 			       (if (= 0 elsec)
-				   ;; Now previous line describes syntax
-				   (throw 'nesting 'statement)
+				   ;; back up to first word on this line
+				   (progn 
+				     (beginning-of-line)
+				     (verilog-forward-syntactic-ws)
+				     (throw 'nesting 'statement))
 				   ))
 			      (t ; endblock
 				; try to leap back to matching outward block by striding across
