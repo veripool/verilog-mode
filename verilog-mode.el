@@ -615,7 +615,7 @@ If set will become buffer local.")
   (define-key verilog-mode-map "\M-\t"    'verilog-complete-word)
   (define-key verilog-mode-map "\M-?"     'verilog-show-completions)
   (define-key verilog-mode-map [(meta control h)] 'verilog-mark-defun)
-  (define-key verilog-mode-map "\C-c`"    'verilog-surelint-off)
+  (define-key verilog-mode-map "\C-c\`"  'verilog-surelint-off)
   (define-key verilog-mode-map "\C-c\C-r" 'verilog-label-be)
   (define-key verilog-mode-map "\C-c\C-i" 'verilog-pretty-declarations)
   (define-key verilog-mode-map "\C-c\C-b" 'verilog-submit-bug-report)
@@ -684,6 +684,7 @@ If set will become buffer local.")
     ["Compile"				compile t]
     ["AUTO, Save, Compile"		verilog-auto-save-compile t]
     ["Next Compile Error"		next-error t]
+    ["Ignore Lint Warning at point"	verilog-surelint-off t]
     "----"
     ["Line up declarations around point"	verilog-pretty-declarations t]
     ["Redo/insert comments on every end"	verilog-label-be t]
@@ -2731,11 +2732,9 @@ becomes:
     (when 
 	(looking-at "\\(INFO\\|WARNING\\|ERROR\\) \\[[^-]+-\\([^]]+\\)\\]: \\([^,]+\\), line \\([0-9]+\\): \\(.*\\)$")
       (let* (
-            ;(type (match-string 1)) ; not needed
 	     (code (match-string 2))
 	     (file (match-string 3))
 	     (line (match-string 4))
-	    ; (text (match-string 5)) ; not needed
 	     (buffer (get-file-buffer file))
 	     dir filename)
 	(unless buffer
@@ -2777,10 +2776,7 @@ becomes:
 	    )
 	   (t
 	    (insert-string (format " // surefire lint_off_line %6s" code ))
-	    ))
-;;	  (electric-verilog-terminate-line)
-;;	  (insert-string (format " // %s: %s" type text)) 
-	  )))))
+	    )))))))
 
 
 (defun verilog-auto-save-compile ()
@@ -4307,7 +4303,7 @@ and `verilog-library-extensions'."
   "Return point if within translate-off region, else nil."
   (and (save-excursion
 	 (re-search-backward
-	  (concat "//\\s-*.*\\s-*" verilog-directive-regexp "\\(on\\|off\\)")
+	  (concat "//\\s-*.*\\s-*" verilog-directive-regexp "\\(on\\|off\\)\\>")
 	  nil t))
        (equal "off" (match-string 2))
        (point)))
@@ -4315,14 +4311,14 @@ and `verilog-library-extensions'."
 (defun verilog-start-translate-off (limit)
   "Return point before translate-off directive if before LIMIT, else nil."
   (when (re-search-forward
-	  (concat "//\\s-*.*\\s-*" verilog-directive-regexp "off")
+	  (concat "//\\s-*.*\\s-*" verilog-directive-regexp "off\\>")
 	  limit t)
     (match-beginning 0)))
 
 (defun verilog-back-to-start-translate-off (limit)
   "Return point before translate-off directive if before LIMIT, else nil."
   (when (re-search-backward
-	  (concat "//\\s-*.*\\s-*" verilog-directive-regexp "off")
+	  (concat "//\\s-*.*\\s-*" verilog-directive-regexp "off\\>")
 	  limit t)
     (match-beginning 0)))
 
@@ -4330,7 +4326,7 @@ and `verilog-library-extensions'."
   "Return point after translate-on directive if before LIMIT, else nil."
 	  
   (re-search-forward (concat
-		      "//\\s-*.*\\s-*" verilog-directive-regexp "on") limit t))
+		      "//\\s-*.*\\s-*" verilog-directive-regexp "on\\>") limit t))
 
 (defun verilog-match-translate-off (limit)
   "Match a translate-off block, setting `match-data' and returning t, else nil.
