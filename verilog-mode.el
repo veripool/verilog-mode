@@ -651,7 +651,7 @@ compilation-error-regexp-alist.  This allows \\[next-error] to find the errors."
 ;			      "time" "tri" "tri0" "tri1" "triand" "trior" "trireg" "wand" "wire"
 ;			      "wor") t)
 ;		 "\\>"))
-  "\\(?:assign\\|defparam\\|event\\|in\\(?:out\\|put\\|teger\\)\\|output\\|parameter\\|re\\(?:al\\(?:time\\)?\\|g\\)\\|supply[01]?\\|t\\(?:ime\\|ri\\(?:and\\|or\\|reg\\|[01]\\)?\\)\\|w\\(?:and\\|ire\\|or\\)\\)" )
+  "\\<\\(?:assign\\|defparam\\|event\\|in\\(?:out\\|put\\|teger\\)\\|output\\|parameter\\|re\\(?:al\\(?:time\\)?\\|g\\)\\|supply[01]?\\|t\\(?:ime\\|ri\\(?:and\\|or\\|reg\\|[01]\\)?\\)\\|w\\(?:and\\|ire\\|or\\)\\)\\>" )
 (defconst verilog-range-re "\\[[^]]*\\]")
 (defconst verilog-macroexp-re "`\\sw+")
 (defconst verilog-delay-re "#\\s-*\\(\\([0-9_]+\\('[hdxbo][0-9_xz]+\\)?\\)\\|\\(([^)]*)\\)\\|\\(\\sw+\\)\\)")
