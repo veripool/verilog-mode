@@ -380,7 +380,7 @@ too many redundanet comments in tight quarters")
    ("\\(`[ \t]*[A-Za-z][A-Za-z0-9_]*\\)"  0 font-lock-type-face)  
     ("\\<\\(in\\(teger\\|put\\|out\\)\\|parameter\\|defparam\\|output\\|supply[01]?\\|event\\|tri\\(0\\|1\\|reg\\|and\\|or\\)?\\|w\\(ire\\|or\\|and\\)\\|time\\|re\\(al\\(time\\)?\\|g\\)\\)\\>" 
      0 font-lock-type-face)  
-    ("\\(\\$[a-zA-Z][a-zA-Z0-9_\\$]*\\)\\|\\(\\<\\(begin\\|case[xz]?\\|end\\(case\\|function\\|task\\|module\\|table\\|primitive\\|specify\\)?\\|a\\(ssign\\|lways\\)\\|initial\\|table\\|\\(pos\\|neg\\)edge\\|else\\|for\\(ever\\|k\\)?\\|join\\|if\\|repeat\\|then\\|while\\|specify\\)\\>\\)" 
+    ("\\(\\$[a-zA-Z][a-zA-Z0-9_\\$]*\\)\\|\\(\\<\\(begin\\|case[xz]?\\|end\\(case\\|function\\|task\\|module\\|table\\|primitive\\|specify\\)?\\|a\\(ssign\\|lways\\)\\|default\\|initial\\|table\\|\\(pos\\|neg\\)edge\\|else\\|for\\(ever\\|k\\)?\\|join\\|if\\|repeat\\|then\\|while\\|specify\\)\\>\\)" 
      0 font-lock-keyword-face)
    )
 )
@@ -394,7 +394,7 @@ too many redundanet comments in tight quarters")
     ("[@#]" . font-lock-type-face)
     ("\\<\\(in\\(teger\\|put\\|out\\)\\|parameter\\|defparam\\|output\\|supply[01]?\\|event\\|tri\\(0\\|1\\|reg\\|and\\|or\\)?\\|w\\(ire\\|or\\|and\\)\\|time\\|re\\(al\\(time\\)?\\|g\\)\\)\\>" 
      0 font-lock-type-face)
-    ("\\(\\$[a-zA-Z][a-zA-Z0-9_\\$]*\\)\\|\\(\\<\\(begin\\|case[xz]?\\|end\\(case\\|function\\|task\\|module\\|table\\|primitive\\|specify\\)?\\|a\\(ssign\\|lways\\)\\|initial\\|table\\|\\(pos\\|neg\\)edge\\|else\\|for\\(ever\\|k\\)?\\|join\\|if\\|repeat\\|then\\|while\\|specify\\)\\>\\)" . font-lock-keyword-face)
+    ("\\(\\$[a-zA-Z][a-zA-Z0-9_\\$]*\\)\\|\\(\\<\\(begin\\|case[xz]?\\|end\\(case\\|function\\|task\\|module\\|table\\|primitive\\|specify\\)?\\|a\\(ssign\\|lways\\)\\|default\\|initial\\|table\\|\\(pos\\|neg\\)edge\\|else\\|for\\(ever\\|k\\)?\\|join\\|if\\|repeat\\|then\\|while\\|specify\\)\\>\\)" . font-lock-keyword-face)
     )
 )
 
@@ -450,7 +450,7 @@ too many redundanet comments in tight quarters")
 ;; a[34:32] :
 ;; a,
 ;;   b :
-(defconst verilog-no-indent-begin-re "\\<\\(if\\|else\\|while\\|for\\|repeat\\)\\>")
+(defconst verilog-no-indent-begin-re "\\<\\(if\\|else\\|while\\|for\\|repeat\\|always\\)\\>")
 (defconst verilog-endcomment-reason-re 
   (concat 
    "\\(\\<fork\\>\\)\\|\\(\\<begin\\>\\)\\|\\(\\<if\\>\\)\\|\\(\\<else\\>\\)\\|"
@@ -911,7 +911,7 @@ Other useful functions are:
   ;; Font lock support
   (make-local-variable 'font-lock-keywords)
   (if (string-match "XEmacs\\|Lucid" emacs-version)
-      (setq verilog-font-lock-keywords verilog-font-lock-keywords-before-1930 )
+      (setq verilog-font-lock-keywords verilog-font-lock-keywords-after-1930 )
     (cond ((> emacs-minor-version 29)
 	   (setq verilog-font-lock-keywords verilog-font-lock-keywords-after-1930 ))
 	  ('t 	 
@@ -947,7 +947,7 @@ Other useful functions are:
      ((nth 4 state)			; Inside any comment (hence /**/)
       (newline)
       (beginning-of-line)
-      (verilog-indent-comment)
+      (verilog-indent-comment t)
       (insert-string "* ")
       )
      ((eolp)
@@ -1056,11 +1056,9 @@ Other useful functions are:
 			  (point))))
         (if (< (point) boi-point)
             (back-to-indentation)))
-    (progn (insert "\t")
-	   (save-excursion
-	     (beginning-of-line)
-	     (verilog-indent-line)))
-    ))
+    (progn (insert "\t"))
+    )
+  )
 
 
 
@@ -1224,10 +1222,12 @@ With argument, first kill any existing labels."
   "Move backward to beginning of statement"
   (interactive)
   (while (save-excursion 
-	   (skip-chars-backward " \t")
-	   (not
-	    (or (bolp)
-		(= (preceding-char) ?\;))))
+	   (and
+	    (not (looking-at verilog-complete-reg))
+	    (skip-chars-backward " \t")
+	    (not (or (bolp) (= (preceding-char) ?\;)))
+	    )
+	   )
     (skip-chars-backward " \t")
     (verilog-backward-token))
   (let ((last (point)))
@@ -1726,7 +1726,7 @@ Insert `// NAME ' if this line ends a module or primitive named NAME."
     (behavorial  . verilog-indent-level)
     (statement   . ind)
     (cpp         . 0)
-    (comment     . (verilog-indent-comment t))
+    (comment     . (verilog-indent-comment))
     (unknown     . 3) 
     (string      . 0)))
 
@@ -2426,16 +2426,28 @@ Do not count named blocks or case-statements."
   "Indent current line as comment.
 If optional arg is non-nil, just return the
 column number the line should be indented to."
-    (let* ((stcol (save-excursion
-		    (re-search-backward 
-		     (if (verilog-in-star-comment-p)
-			 "/\\*"
-		       "//")
-		     nil t)
-		    (1+ (current-column)))))
-      (if arg stcol
-	(delete-horizontal-space)
-	(indent-to stcol))))
+  (let* ((stcol 
+	  (cond 
+	   ((verilog-in-star-comment-p)
+	    (save-excursion
+	      (re-search-backward "/\\*" nil t)
+	      (1+(current-column))))
+	   ( comment-column
+	     comment-column )
+	   (t
+	    (save-excursion
+	      (re-search-backward "//" nil t)
+	      (current-column)))
+	   )
+	  ))
+    (if arg 
+	(progn
+	  (delete-horizontal-space)
+	  (indent-to stcol))
+      stcol
+      )
+    )
+  )
 
 ;;;
 
