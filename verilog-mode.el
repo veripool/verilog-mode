@@ -230,7 +230,7 @@
 ;  :group 'verilog-mode)
 
 (defgroup verilog-mode-indent nil
-  "Customize indentation of verilog source text"
+  "Customize indentation and highlighting of verilog source text"
   :group 'verilog-mode)
 
 (defgroup verilog-mode-actions nil
@@ -271,6 +271,17 @@ Invoked when you type \\[compile].  \\[next-error] will take you to
 		(variable-item verilog-simulator)
                 (symbol :tag "Other"))
   :group 'verilog-mode-actions)
+
+(defcustom verilog-highlight-translate-off nil
+  "*Non-nil means background-highlight code excluded from translation.
+That is, all code between \"// synopsys translate_off\" and
+\"// synopsys translate_on\" is highlighted using a different background color
+\(face `verilog-font-lock-translate-off-face').
+Note: this will slow down on-the-fly fontification (and thus editing).
+NOTE: Activate the new setting in a Verilog buffer by re-fontifying it (menu
+      entry \"Fontify Buffer\").  XEmacs: turn off and on font locking."
+  :type 'boolean
+  :group 'verilog-mode-indent)
 
 (defcustom verilog-indent-level 3
   "*Indentation of Verilog statements with respect to containing block."
@@ -777,10 +788,10 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
 (defconst verilog-named-block-re  "begin[ \t]*:")
 (defconst verilog-beg-block-re
   ;; "begin" "case" "casex" "fork" "casez" "table" "specify" "function" "task"
-  "\\(\\<\\(begin\\>\\|case\\(\\>\\|x\\>\\|z\\>\\)\\|f\\(ork\\>\\|unction\\>\\)\\|specify\\>\\|ta\\(ble\\>\\|sk\\>\\)\\)\\)")
+  "\\(\\<\\(begin\\>\\|case\\(\\>\\|x\\>\\|z\\>\\)\\|generate\\|f\\(ork\\>\\|unction\\>\\)\\|specify\\>\\|ta\\(ble\\>\\|sk\\>\\)\\)\\)")
 
 (defconst verilog-beg-block-re-1
-  "\\<\\(begin\\)\\|\\(case[xz]?\\)\\|\\(fork\\)\\|\\(table\\)\\|\\(specify\\)\\|\\(function\\)\\|\\(task\\)\\>")
+  "\\<\\(begin\\)\\|\\(case[xz]?\\)\\|\\(fork\\)\\|\\(table\\)\\|\\(specify\\)\\|\\(function\\)\\|\\(task\\)\\|\\(generate\\)\\>")
 (defconst verilog-end-block-re
   ;; "end" "join" "endcase" "endtable" "endspecify" "endtask" "endfunction"
   "\\<\\(end\\(\\>\\|case\\>\\|function\\>\\|specify\\>\\|ta\\(ble\\>\\|sk\\>\\)\\)\\|join\\>\\)")
@@ -854,6 +865,7 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
    "\\(\\<end\\>\\|\\<join\\>\\|\\<endcase\\>\\|\\<endtable\\>\\|\\<endspecify\\>\\)\\|"
    "\\(\\<module\\>\\|\\<macromodule\\>\\|\\<primitive\\>\\|\\<initial\\>\\|\\<always\\>\\)\\|"
    "\\(\\<endmodule\\>\\|\\<endprimitive\\>\\)\\|"
+   "\\(\\<enerate\\>\\|\\<endgenerate\\>\\)\\|"
    "\\(\\<endtask\\>\\|\\<endfunction\\>\\)\\|"
    "\\(\\<function\\>\\|\\<task\\>\\)"
    ;;	  "\\|\\(\\<if\\>\\|\\<else\\>\\)"
@@ -874,7 +886,7 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
   "\\(\\<\\(function\\>\\|task\\>\\)\\)")
 (defconst verilog-complete-reg
   ;; "always" "initial" "repeat" "case" "casex" "casez" "while" "if" "for" "forever" "else"
-  "\\<\\(always\\|case\\(\\|[xz]\\)\\|begin\\|else\\|for\\(\\|ever\\)\\|i\\(f\\|nitial\\)\\|repeat\\|while\\)\\>")
+  "\\<\\(always\\|case\\(\\|[xz]\\)\\|begin\\|else\\|generate\\|for\\(\\|ever\\)\\|i\\(f\\|nitial\\)\\|repeat\\|while\\)\\>")
 (defconst verilog-end-statement-re
   (concat "\\(" verilog-beg-block-re "\\)\\|\\("
 	  verilog-end-block-re "\\)"))
@@ -888,23 +900,21 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
 (defconst verilog-exclude-str-end " -----/\\----- EXCLUDED -----/\\----- */")
 
 (defconst verilog-keywords
- '("`define" "`else" "`endif" "`ifdef" "`include" "`timescale" "`undef"
-   "always" "and" "assign" "begin" "buf" "bufif0" "bufif1" "case" "casex"
-   "casez" "cmos" "default" "defparam" "else" "end" "endcase" "endfunction"
-   "endmodule" "endprimitive" "endspecify" "endtable" "endtask" "event" "for"
-   "force" "forever" "fork" "function" "if" "initial" "inout" "input"
-   "integer" "join" "macromodule" "makefile" "module" "nand" "negedge" "nmos"
-   "nor" "not" "notif0" "notif1" "or" "output" "parameter" "pmos" "posedge"
-   "primitive" "pulldown" "pullup" "rcmos" "real" "realtime" "reg" "repeat"
-   "rnmos" "rpmos" "rtran" "rtranif0" "rtranif1" "signed" "specify" "supply"
-   "supply0" "supply1" "table" "task" "time" "tran" "tranif0" "tranif1" "tri"
-   "tri0" "tri1" "triand" "trior" "trireg" "vectored" "wait" "wand" "while"
-   "wire" "wor" "xnor" "xor" )
+ '("`define" "`else" "`endif" "`ifdef" "`include" "`timescale"
+   "`undef" "always" "and" "assign" "begin" "buf" "bufif0" "bufif1"
+   "case" "casex" "casez" "cmos" "default" "defparam" "disable" "else" "end"
+   "endcase" "endfunction" "endgenerate" "endmodule" "endprimitive"
+   "endspecify" "endtable" "endtask" "event" "for" "force" "forever"
+   "fork" "function" "generate" "if" "initial" "inout" "input" "integer"
+   "join" "macromodule" "makefile" "module" "nand" "negedge" "nmos" "nor"
+   "not" "notif0" "notif1" "or" "output" "parameter" "pmos" "posedge"
+   "primitive" "pulldown" "pullup" "rcmos" "real" "realtime" "reg"
+   "repeat" "rnmos" "rpmos" "rtran" "rtranif0" "rtranif1" "signed"
+   "specify" "supply" "supply0" "supply1" "table" "task" "time" "tran"
+   "tranif0" "tranif1" "tri" "tri0" "tri1" "triand" "trior" "trireg"
+   "vectored" "wait" "wand" "while" "wire" "wor" "xnor" "xor" )
  "List of Verilog keywords.")
 
-(defconst verilog-keywords-regexp
-  (concat "\\<\\(" (mapconcat 'format verilog-keywords "\\|") "\\)\\>")
-  "Regexp that matches Verilog keywords.")
 
 (defconst verilog-emacs-features
   (let ((major (and (boundp 'emacs-major-version)
@@ -1095,7 +1105,7 @@ See also `verilog-font-lock-extra-types'.")
 	   '("module" "macromodule" "primitive" "task") nil t )
 	  ))
 
-       (verilog-type-keywords
+       (verilog-type-font-keywords
 	(eval-when-compile
 	  (verilog-regexp-opt
 	   '("defparam" "event" "inout" "input" "integer" "output" "parameter"
@@ -1108,25 +1118,25 @@ See also `verilog-font-lock-extra-types'.")
 	  (verilog-regexp-opt
 	   '("surefire" "synopsys" "rtl_synthesis" "verilint" ) nil t)))
 
-       (verilog-keywords
+       (verilog-font-keywords
 	(eval-when-compile
 	  (verilog-regexp-opt
 	   '( "always" "assign" "begin" "case" "casex" "casez" "default" "deassign"
-	      "disable" "else" "end" "endcase" "endfunction" "endmodule"
+	      "disable" "else" "end" "endcase" "endfunction" "endgenerate" "endmodule"
 	      "endprimitive" "endspecify" "endtable" "endtask" "for" "force"
-	      "forever" "fork" "function" "if" "initial" "join" "macromodule"
+	      "forever" "fork" "function" "generate" "if" "initial" "join" "macromodule"
 	      "module" "negedge" "posedge" "primitive" "repeat" "release" "specify"
 	      "table" "task" "wait" "while" ) nil t ))))
        
   (setq verilog-font-lock-keywords
 	(list
 	 ;; Fontify all builtin keywords
-	 (concat "\\<\\(" verilog-keywords "\\|"
+	 (concat "\\<\\(" verilog-font-keywords "\\|"
 		       ;; And user/system tasks and functions
 		       "\\$[a-zA-Z][a-zA-Z0-9_\\$]*"
 		       "\\)\\>")
 	 ;; Fontify all types
-	 (cons (concat "\\<\\(" verilog-type-keywords "\\)\\>")
+	 (cons (concat "\\<\\(" verilog-type-font-keywords "\\)\\>")
 	       'font-lock-type-face)
 	 ))
 
@@ -1169,11 +1179,14 @@ See also `verilog-font-lock-extra-types'.")
 
   (setq verilog-font-lock-keywords-3
 	(append verilog-font-lock-keywords-2
-		(list
-		 ;; Fontify things in translate off regions
-		 '(verilog-match-translate-off (0 'verilog-font-lock-translate-off-face prepend))
-		 )))
+;		(when verilog-highlight-translate-off 
+		  (list
+		   ;; Fontify things in translate off regions
+		   '(verilog-match-translate-off (0 'verilog-font-lock-translate-off-face prepend))
+		   )))
+;  )
   )
+
 
 ;;
 ;;  Macros
@@ -1362,7 +1375,7 @@ Use filename, if current buffer being edited shorten to just buffer name."
      ((verilog-skip-forward-comment-or-string)
       (verilog-forward-syntactic-ws)
       )
-     ((looking-at verilog-beg-block-re-1);; begin|fork|case|table|specify
+     ((looking-at verilog-beg-block-re-1);; begin|case|fork|table|specify|function|task|generate
       (cond
        ((match-end 1) ; end
 	;; Search forward for matching begin
@@ -1385,6 +1398,9 @@ Use filename, if current buffer being edited shorten to just buffer name."
        ((match-end 7) ; endspecify
 	;; Search forward for matching task
 	(setq reg "\\(\\<task\\>\\)\\|\\(\\<endtask\\>\\)" ))
+       ((match-end 8) ; endgenerate
+	;; Search forward for matching generate
+	(setq reg "\\(\\<generate\\>\\)\\|\\(\\<endgenerate\\>\\)" ))
        )
       (if (forward-word 1)
 	  (catch 'skip
@@ -1425,41 +1441,57 @@ Use filename, if current buffer being edited shorten to just buffer name."
   (save-excursion
     (nth 3 (parse-partial-sexp (verilog-get-beg-of-line) (point)))))
 
-(put 'verilog-mode 'font-lock-defaults
-     '((verilog-font-lock-keywords
-	verilog-font-lock-keywords-1
-	verilog-font-lock-keywords-2
-	verilog-font-lock-keywords-3
-	)
-       nil ;; nil means highlight strings & comments as well as keywords
-       nil ;; nil means keywords must match case
-       nil ;; syntax table handled elsewhere
-       verilog-beg-of-defun ;; function to move to beginning of reasonable region to highlight
-       ))
-
-;; 
-
 (require 'font-lock)
 (defvar verilog-need-fld 1)
 (defvar font-lock-defaults-alist nil)	;In case we are XEmacs
-(if verilog-need-fld
-    (let ((verilog-mode-defaults
-	   '((verilog-font-lock-keywords
-	      verilog-font-lock-keywords-1
-	      verilog-font-lock-keywords-2
-	      verilog-font-lock-keywords-3
-	      )
-	     nil ;; nil means highlight strings & comments as well as keywords
-	     nil ;; nil means keywords must match case
-	     nil ;; syntax table handled elsewhere
-	     verilog-beg-of-defun ;; function to move to beginning of reasonable region to highlight
-	     )))
-      (setq font-lock-defaults-alist
-	    (append
-	     font-lock-defaults-alist
-	     (list (cons 'verilog-mode  verilog-mode-defaults))))
-      (setq verilog-need-fld 0)))
 
+(defun verilog-font-lock-init ()
+  "Initialize fontification."
+  ;; highlight keywords and standardized types, attributes, enumeration
+  ;; values, and subprograms
+  (setq verilog-font-lock-keywords-3
+	(append verilog-font-lock-keywords-2
+;		(when verilog-highlight-translate-off 
+		  (list
+		   ;; Fontify things in translate off regions
+		   '(verilog-match-translate-off (0 'verilog-font-lock-translate-off-face prepend))
+		   ))
+;	)
+  )
+  (put 'verilog-mode 'font-lock-defaults
+       '((verilog-font-lock-keywords
+	  verilog-font-lock-keywords-1
+	  verilog-font-lock-keywords-2
+	  verilog-font-lock-keywords-3
+	  )
+	 nil ;; nil means highlight strings & comments as well as keywords
+	 nil ;; nil means keywords must match case
+	 nil ;; syntax table handled elsewhere
+	 verilog-beg-of-defun ;; function to move to beginning of reasonable region to highlight
+	 ))
+  (if verilog-need-fld
+      (let ((verilog-mode-defaults
+	     '((verilog-font-lock-keywords
+		verilog-font-lock-keywords-1
+		verilog-font-lock-keywords-2
+		verilog-font-lock-keywords-3
+		)
+	       nil ;; nil means highlight strings & comments as well as keywords
+	       nil ;; nil means keywords must match case
+	       nil ;; syntax table handled elsewhere
+	       verilog-beg-of-defun ;; function to move to beginning of reasonable region to highlight
+	       )))
+	(setq font-lock-defaults-alist
+	      (append
+	       font-lock-defaults-alist
+	       (list (cons 'verilog-mode  verilog-mode-defaults))))
+	(setq verilog-need-fld 0))))
+
+;; initialize fontification for VHDL Mode
+(verilog-font-lock-init)
+
+
+;; 
 ;;
 ;;  Mode
 ;;
@@ -1539,7 +1571,37 @@ Other useful functions are:
 \\[verilog-beg-of-defun]\t- Move to beginning of current function.
 \\[verilog-end-of-defun]\t- Move to end of current function.
 \\[verilog-label-be]\t- Label matching begin ... end, fork ... join
-  and case ... endcase statements;"
+  and case ... endcase statements;
+
+\\[verilog-sk-always]  Insert a always @(AS) begin .. end block
+\\[verilog-sk-begin]  Insert a begin .. end block
+\\[verilog-sk-case]  Insert a case block, prompting for details
+\\[verilog-sk-else]  Insert an else begin .. end block
+\\[verilog-sk-for]  Insert a for (...) begin .. end block, prompting for details
+\\[verilog-sk-generate]  Insert a generate .. endgenerate block
+\\[verilog-sk-header]  Insert a nice header block at the top of file
+\\[verilog-sk-initial]  Insert an initial begin .. end block
+\\[verilog-sk-fork]  Insert a fork begin .. end .. join block
+\\[verilog-sk-module]  Insert a module .. (/*AUTOARG*/);.. endmodule block
+\\[verilog-sk-primitive]  Insert a primitive .. (.. );.. endprimitive block
+\\[verilog-sk-repeat]  Insert a repeate (..) begin .. end block
+\\[verilog-sk-specify]  Insert a specify .. endspecify block
+\\[verilog-sk-task]  Insert a task .. begin .. end endtask block
+\\[verilog-sk-while]  Insert a while (...) begin .. end block, prompting for details
+\\[verilog-sk-casex]  Insert a casex (...) item: begin.. end endcase block, prompting for details
+\\[verilog-sk-casez]  Insert a casez (...) item: begin.. end endcase block, prompting for details
+\\[verilog-sk-if]  Insert an if (..) begin .. end block
+\\[verilog-sk-else-if]  Insert an else if (..) begin .. end block
+\\[verilog-sk-comment]  Insert a comment block
+\\[verilog-sk-assign]  Insert an assign .. = ..; statement
+\\[verilog-sk-function]  Insert a function .. begin .. end endfunction block
+\\[verilog-sk-input]  Insert an input declaration, prompting for details
+\\[verilog-sk-output]  Insert an output declaration, prompting for details
+\\[verilog-sk-state-machine]  Insert a state machine definition, prompting for details!
+\\[verilog-sk-inout]  Insert an inout declaration, prompting for details
+\\[verilog-sk-wire]  Insert a wire declaration, prompting for details
+\\[verilog-sk-reg]  Insert a register declaration, prompting for details
+"
   (interactive)
   (kill-all-local-variables)
   (use-local-map verilog-mode-map)
@@ -3678,24 +3740,40 @@ it displays a list of all possible completions.")
 
 
 (defvar verilog-type-keywords
-  '("buf" "bufif0" "bufif1" "cmos" "defparam" "inout" "input"
+  '("and" "buf" "bufif0" "bufif1" "cmos" "defparam" "inout" "input"
     "integer" "nand" "nmos" "nor" "not" "notif0" "notif1" "or" "output" "parameter"
     "pmos" "pull0" "pull1" "pullup" "rcmos" "real" "realtime" "reg" "rnmos" "rpmos" "rtran"
     "rtranif0" "rtranif1" "time" "tran" "tranif0" "tranif1" "tri" "tri0" "tri1"
     "triand" "trior" "trireg" "wand" "wire" "wor" "xnor" "xor" )
   "*Keywords for types used when completing a word in a declaration or parmlist.
-\(eg.  integer, real, char.)  The types defined within the Verilog program
-will be completed runtime, and should not be added to this list.")
+\(eg.  integer, real, reg...)  ")
+
+(defvar verilog-cpp-keywords
+  '( 
+    "module" "macromodule" "primitive" "timescale" "define" "ifdef"
+    "endif"
+    )
+  "*Keywords to complete when at first word of a line in declarative scope.
+\(eg.  initial, always, begin, assign.)
+The procedures and variables defined within the Verilog program
+will be completed runtime and should not be added to this list.")
 
 (defvar verilog-defun-keywords
-  '("begin" "function" "task" "initial" "always" "assign" "posedge" "negedge" "endmodule")
+  (append
+   '( 
+     "begin" "function" "task" "initial" "always" "assign" 
+     "endmodule" "specify" "endspecify" "generate" "endgenerate"
+     )
+   verilog-type-keywords)
   "*Keywords to complete when at first word of a line in declarative scope.
 \(eg.  initial, always, begin, assign.)
 The procedures and variables defined within the Verilog program
 will be completed runtime and should not be added to this list.")
 
 (defvar verilog-block-keywords
-  '("begin" "fork" "join" "case" "end" "if" "else" "for" "while" "repeat")
+  '("begin" "fork" "join" "case" "end" "if" "else" "for" "while" "repeat"
+    "endgenerate" "endspecify" "endfunction" "endtask"
+    )
   "*Keywords to complete when at first word of a line in behavioral scope.
 \(eg.  begin, if, then, else, for, fork.)
 The procedures and variables defined within the Verilog program
@@ -3765,32 +3843,30 @@ TYPE is 'module, 'tf for task or function, or t if unknown."
     (if (match-beginning 0)
 	(goto-char (match-beginning 0)))))
 
-(defun verilog-get-completion-decl ()
+(defun verilog-get-completion-decl (end)
   "Macro for searching through current declaration (var, type or const)
 for matches of `str' and adding the occurence tp `all'"
-  (let ((end (save-excursion (verilog-declaration-end)
-			     (point)))
-	match)
+  (let ((re (or (and verilog-indent-declaration-macros
+		     verilog-declaration-re-2-macro)
+		verilog-declaration-re-2-no-macro))
+	decl-end match)
     ;; Traverse lines
-    (while (< (point) end)
-      (if (verilog-re-search-forward (or (and verilog-indent-declaration-macros
-					      verilog-declaration-re-1-macro)
-					 verilog-declaration-re-1-no-macro)
-				     (verilog-get-end-of-line) t)
-	  ;; Traverse current line
-	  (while (and (verilog-re-search-forward
-		       (concat "\\((\\|\\<\\(var\\|type\\|const\\)\\>\\)\\|"
-			       verilog-symbol-re)
-		       (verilog-get-beg-of-line) t)
-		      (not (match-end 1)))
-	    (setq match (buffer-substring (match-beginning 0) (match-end 0)))
-	    (if (string-match (concat "\\<" verilog-str) match)
-		(if (or (null verilog-pred)
-			(funcall verilog-pred match))
-		    (setq verilog-all (cons match verilog-all))))))
-      (if (verilog-re-search-forward "\\<record\\>" (verilog-get-end-of-line) t)
-	  (verilog-declaration-end)
-	(forward-line 1)))))
+    (while (and (< (point) end) 
+		(verilog-re-search-forward re end t))
+      ;; Traverse current line
+      (setq decl-end (save-excursion (verilog-declaration-end)))
+      (while (and (verilog-re-search-forward verilog-symbol-re decl-end t)
+		  (not (match-end 1)))
+	(setq match (buffer-substring (match-beginning 0) (match-end 0)))
+	(if (string-match (concat "\\<" verilog-str) match)
+	    (if (or (null verilog-pred)
+		    (funcall verilog-pred match))
+		(setq verilog-all (cons match verilog-all)))))
+      (forward-line 1)
+      )
+    )
+  verilog-all
+  )
 
 (defun verilog-type-completion ()
   "Calculate all possible completions for types."
@@ -3808,24 +3884,19 @@ for matches of `str' and adding the occurence tp `all'"
 		  start t)
 		 (not (match-end 1)))
 	    ;; Check current type declaration
-	    (verilog-get-completion-decl))))))
+	    (verilog-get-completion-decl start))))))
 
 (defun verilog-var-completion ()
   "Calculate all possible completions for variables (or constants)."
-  nil)
-;  Not done yet; in 1.99 perhaps
-;  (let ((start (point))
-;	goon twice)
-;    ;; Search for all reachable var declarations
-;    (while (or (verilog-beg-of-defun)
-;	       (setq goon (not goon)))
-;      (save-excursion
-;	(if (> start (prog1 (save-excursion (verilog-end-of-defun)
-;					    (point))))
-;	    () ; Declarations not reacable
-;	  (cond ((and (verilog-re-search-forward  verilog-declaration-re start t)
-;		      ;; Check var/const declarations
-;		      (verilog-get-completion-decl)))))))))
+  (let ((start (point)))
+    ;; Search for all reachable var declarations
+    (verilog-beg-of-defun)
+    (save-excursion
+      ;; Check var declarations
+      (verilog-get-completion-decl start)
+      )
+    )
+  )
 
 
 (defun verilog-keyword-completion (keyword-list)
@@ -3874,6 +3945,13 @@ otherwise."
 	       (save-excursion (verilog-var-completion))
 	       (verilog-func-completion 'tf)
 	       (verilog-keyword-completion verilog-tf-keywords))
+
+	      ((eq state 'cpp)
+	       (save-excursion (verilog-var-completion))
+	       (verilog-keyword-completion verilog-cpp-keywords))
+
+	      ((eq state 'cparenexp)
+	       (save-excursion (verilog-var-completion)))
 
 	      (t;--Anywhere else
 	       (save-excursion (verilog-var-completion))
@@ -6542,6 +6620,7 @@ Wilson Snyder (wsnyder@wsnyder.org)"
   (define-key verilog-mp "F" 'verilog-sk-function)
   (define-key verilog-mp "I" 'verilog-sk-input)
   (define-key verilog-mp "O" 'verilog-sk-output)
+  (define-key verilog-mp "S" 'verilog-sk-state-machine)
   (define-key verilog-mp "=" 'verilog-sk-inout)
   (define-key verilog-mp "W" 'verilog-sk-wire)
   (define-key verilog-mp "R" 'verilog-sk-reg)
@@ -6573,6 +6652,20 @@ Wilson Snyder (wsnyder@wsnyder.org)"
 (define-skeleton verilog-sk-prompt-name
   "Prompt for the name of something."
   "[name]: " str)
+
+(define-skeleton verilog-sk-prompt-clock
+  "Prompt for the name of something."
+  "name and edge of clock(s): " str)
+
+(defvar verilog-sk-reset nil)
+(defun verilog-sk-prompt-reset ()
+  "Prompt for the name of a state machine reset."
+  (setq verilog-sk-reset (read-input "name of reset: " "rst"))) 
+
+
+(define-skeleton verilog-sk-prompt-state-selector
+  "Prompt for the name of a state machine selector."
+  "name of selector (eg {a,b,c,d}): " str )
 
 (define-skeleton verilog-sk-prompt-output
   "Prompt for the name of something."
@@ -6649,7 +6742,6 @@ Wilson Snyder (wsnyder@wsnyder.org)"
   > (- verilog-indent-level-behavioral) "end" \n 
   > (- verilog-indent-level-behavioral) "endfunction" (progn (electric-verilog-terminate-line) nil))
 
-
 (define-skeleton verilog-sk-always
   "Insert always block.  Uses the minibuffer to prompt
 for sensitivity list."
@@ -6710,7 +6802,6 @@ and the case items."
   > ("case selector: " str ": begin" \n > _ \n > (- verilog-indent-level-behavioral) "end" \n )
   resume: >  (- verilog-case-indent) "endcase" (progn (electric-verilog-terminate-line) nil))
 
-
 (define-skeleton verilog-sk-casex
   "Build skeleton casex statement, prompting for the selector expression,
 and the case items."
@@ -6719,7 +6810,6 @@ and the case items."
   > ("case selector: " str ": begin" \n > _ \n > (- verilog-indent-level-behavioral) "end" \n )
   resume: >  (- verilog-case-indent) "endcase" (progn (electric-verilog-terminate-line) nil))
 
-
 (define-skeleton verilog-sk-casez
   "Build skeleton casez statement, prompting for the selector expression,
 and the case items."
@@ -6727,7 +6817,6 @@ and the case items."
   > "casez (" str ") " \n
   > ("case selector: " str ": begin" \n > _ \n > (- verilog-indent-level-behavioral) "end" \n )
   resume: >  (- verilog-case-indent) "endcase" (progn (electric-verilog-terminate-line) nil))
-
 
 (define-skeleton verilog-sk-if
   "Insert a skeleton if statement."
@@ -6809,6 +6898,29 @@ and the case items."
   > "* " _ \n
   > "*/")
 
+(define-skeleton verilog-sk-state-machine
+  "Insert a state machine definition."
+  "Name of state variable: "
+  '(setq input "state")
+  > "// State registers for " str | -23 \n
+  '(setq verilog-sk-state str)
+  > "reg [" (verilog-sk-prompt-width) | -1 verilog-sk-state ", next_" verilog-sk-state ?; \n
+  '(setq input nil)
+  > \n
+  > "// State FF for " verilog-sk-state \n
+  > "always @ ( " (read-string "clock:" "posedge clk") " or " (verilog-sk-prompt-reset) " ) begin" \n
+  > "if ( " verilog-sk-reset " ) " verilog-sk-state " = 0; else" \n
+  > verilog-sk-state " = next_" verilog-sk-state ?; \n
+  > (- verilog-indent-level-behavioral) "end" (progn (electric-verilog-terminate-line) nil)
+  > \n
+  > "// Next State Logic for " verilog-sk-state \n
+  > "always @ ( /*AUTOSENSE*/ ) begin\n" 
+  > "case (" (verilog-sk-prompt-state-selector) ") " \n
+  > ("case selector: " str ": begin" \n > "next_" verilog-sk-state " = " _ ";" \n > (- verilog-indent-level-behavioral) "end" \n )
+  resume: >  (- verilog-case-indent) "endcase" (progn (electric-verilog-terminate-line) nil)
+  > (- verilog-indent-level-behavioral) "end" (progn (electric-verilog-terminate-line) nil))
+
+
 ;; ---- add menu 'Statements' in Verilog mode (MH)
 (defun verilog-add-statement-menu ()
   "Adds the menu 'Statements' to the menu bar in Verilog mode."
@@ -6852,11 +6964,6 @@ and the case items."
 	(setq mode-popup-menu (cons "Verilog Mode" verilog-stmt-menu)))))
 
 (add-hook 'verilog-mode-hook 'verilog-add-statement-menu)
-(add-hook 'verilog-mode-hook '(lambda ()
-				(setq skeleton-further-elements 
-				      '((< '(backward-delete-char-untabify
-					     (min verilog-indent (current-column))))))
-				))
 
 
 
