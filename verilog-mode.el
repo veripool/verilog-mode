@@ -436,6 +436,9 @@ sub-module's port list has changed."
     ("\
 \\([a-zA-Z]?:?[^:( \t\n]+\\)[:(][ \t]*\\([0-9]+\\)\\([) \t]\\|\
 :\\([^0-9\n]\\|\\([0-9]+:\\)\\)\\)" 1 2 5)
+        ; xsim
+	; Error! in file /homes/mac/Axis/Xsim/test.v at line 13 		[OBJ_NOT_DECLARED] 
+    ("\\(Error\\|Warning\\).*in file (\\([^ \t]+\\) at line *\\([0-9]+\\))" 2 3)
 	; vcs
     ("\\(Error\\|Warning\\):[^(]*(\\([^ \t]+\\) line *\\([0-9]+\\))" 2 3)
     ("Warning:.*(port.*(\\([^ \t]+\\) line \\([0-9]+\\))" 1 2)
@@ -1181,10 +1184,15 @@ See also `verilog-font-lock-extra-types'.")
 (let* ((verilog-type-font-keywords
 	(eval-when-compile
 	  (verilog-regexp-opt
-	   '("defparam" "event" "inout" "input" "integer" "output" "parameter"
-	     "real" "realtime" "reg" "signed" "supply" "supply0" "supply1" "time"
-	     "tri" "tri0" "tri1" "triand" "trior" "trireg" "vectored" "wand" "wire"
-	     "wor" ) nil  )))
+	   '(
+	     "and" "buf" "bufif0" "bufif1" "cmos" "defparam" "event"
+	     "inout" "input" "integer" "nand" "nmos" "not" "notif0" "notif1" "or"
+	     "output" "parameter" "pmos" "pull0" "pull1" "pullup" "rcmos" "real"
+	     "realtime" "reg" "rnmos" "rpmos" "rtran" "rtranif0" "rtranif1"
+	     "signed" "supply" "supply0" "supply1" "time" "tran" "tranif0"
+	     "tranif1" "tri" "tri0" "tri1" "triand" "trior" "trireg" "vectored"
+	     "wand" "wire" "wor" "xnor" "xor"
+	     ) nil  )))
 
        (verilog-pragma-keywords
 	(eval-when-compile
@@ -5582,10 +5590,10 @@ If undefined, and WING-IT, return just SYMBOL without the tick, else nil."
     (setq symbol
 	  (verilog-string-replace-matches
 	   "\[[^0-9: \t]+\]" "" nil nil
-	   (or (verilog-symbol-detick symbol nil)
-	       (if verilog-auto-sense-defines-constant
-		   "0"
-		 symbol)))))
+	   (or (if verilog-auto-sense-defines-constant
+                   "0"
+                 symbol)
+               (verilog-symbol-detick symbol nil)))))
   (if (verilog-is-number symbol)
       nil
     symbol))
