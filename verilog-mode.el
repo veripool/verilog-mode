@@ -288,15 +288,18 @@ comments in tight quarters"
   :type 'integer 
   )
 
-(defvar verilog-error-regexp
+(setq verilog-error-regexp
   '(
-    ("^Error:.*\\s \\([^ \t]+\\)\\s *\\([0-9]+\\):" 1 2)			     ; vcs
-    ("^Warning:.*\\s \\([^ \t]+\\)\\s *\\([0-9]+\\):" 1 2)			     ; vcs
+    ("^\\(Error\\|Warning\\):.*\\s \\([^ \t]+\\)\\s *\\([0-9]+\\):" 2 3)			     ; vcs
+    ("^\\(Error\\|Warning\\):.*\n\\([^ \t]+\\)\\s *\\([0-9]+\\):" 2 3)			     ; vcs, with a newline
+    ("^\\(Error\\|Warning\\):[^(]*(\\([^ \t]+\\)\\s line \\([0-9]+\\))" 2 3)			     ; vcs, with a newline
+    ("^Warning:.*(port.*(\\([^ \t]+\\) line \\([0-9]+\\))" 1 2)			     ; vcs, with a newline
+    ("^syntax error:.*\n\\([^ \t]+\\)\\s *\\([0-9]+\\):" 1 2)			     ; vcs, with a newline
     ("^([WE][0-9A-Z]+)[ \t]+\\([^ \t\n,]+\\)[, \t]+\\([0-9]+\\):.*$" 1 2)	     ; vxl
     ("^([WE][0-9A-Z]+)[ \t]+\\([^ \t\n,]+\\)[, \t]+line[ \t]+\\([0-9]+\\):.*$" 1 2)  ; vxl
     )
-  "*List of regexps for verilog compilers, like verilint.
-See compilation-error-regexp-alist for the formatting.")
+;  "*List of regexps for verilog compilers, like verilint. See compilation-error-regexp-alist for the formatting."
+)
 
 (defcustom verilog-library-directories '(".")
   "*List of directories when looking for files for /*AUTOINST*/
@@ -785,7 +788,7 @@ The syntax patches are no longer supported either for verilog-mode."))))
     (list major comments))
   "A list of features extant in the Emacs you are using.
 There are many flavors of Emacs out there, each with different
-features supporting those needed by verilog-mode.  Here's the current
+features supporting those needed by verilog-mode.  Heres the current
 supported list, along with the values for this variable:
 
  Vanilla Emacs 18/Epoch 4:   (v18 no-dual-comments)
