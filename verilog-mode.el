@@ -3919,11 +3919,11 @@ module that the point is over."
   ;; For read-sub-decl, read lines of port defs until none match anymore
   (let (sigs)
     (while (or
-	    (if (looking-at "\\s-*\\.[^(]*(\\([^[({]*\\))\\s-*[,;]")
+	    (if (looking-at "\\s-*\\.[^(]*(\\([^[({)]*\\))")
 		(or (equal (match-string 1) "")
 		    (setq sigs (cons (list (match-string 1) nil comment)
 				     sigs))))
-	    (if (looking-at "\\s-*\\.[^(]*(\\([^[({]*\\)\\(\\[[^]]+\\]\\))\\s-*[,;]")
+	    (if (looking-at "\\s-*\\.[^(]*(\\([^[({)]*\\)\\(\\[[^]]+\\]\\))")
 		(or (equal (match-string 1) "")
 		    (setq sigs (cons (list (match-string 1) (match-string 2) comment)
 				     sigs))))
@@ -3982,7 +3982,7 @@ always block that the point is over."
 	(setq keywd (buffer-substring (point) 
 				      (save-excursion (skip-syntax-forward "w_")
 						      (point))))
-	;;(setq dbg (cons (list (point) keywd paren clear-close-level) dbg))
+	;;(setq dbg (cons (list (point) keywd rvalue paren clear-close-level) dbg))
 	(cond
 	 ((looking-at "//")
 	  (search-forward "\n"))
@@ -4013,6 +4013,9 @@ always block that the point is over."
 	  (forward-char 1))
 	 ((looking-at "(")
 	  (setq paren (1+ paren))
+	  (if (and (= paren 1) (= bra 0))
+	      ;; Function call
+	      (setq next-is 'value rvalue t))
 	  (forward-char 1))
 	 ((looking-at ")")
 	  (setq paren (1- paren))
@@ -4095,7 +4098,7 @@ found returns the signal name connections.  Return nil or list of
 				(point)))
 	     ;;
 	     (while (< (point) tpl-end-pt)
-	       (when (looking-at "\\s-*\\.\\([a-zA-Z0-9`_$]+\\)\\s-*(\\(.*\\))\\s-*[;,]")
+	       (when (looking-at "\\s-*\\.\\([a-zA-Z0-9`_$]+\\)\\s-*(\\(.*\\))\\s-*\\(,\\|)\\s-*;\\)")
 		 (setq tpl-list (cons
 				 (list
 				  (match-string 1)
@@ -4803,6 +4806,9 @@ only instantiate other modules.
 Limitiations:
   This ONLY detects outputs of AUTOINSTants (see verilog-read-sub-decl).
 
+  If any concatenation, or bitsubscripts are missing in the AUTOINSTant's
+  instantiation, all bets are off.  (For example due to a AUTO_TEMPLATE).
+
 A simple example (see verilog-auto-inst for what else is going on here):
 
 	module ex_output (ov,i)
@@ -4899,6 +4905,12 @@ Typing \\[verilog-auto] will make this into:
   "Make input statements for any input signal into an /*AUTOINST*/ that
 isn't declared elsewhere inside the module.  This is useful for modules which
 only instantiate other modules.
+
+Limitiations:
+  This ONLY detects outputs of AUTOINSTants (see verilog-read-sub-decl).
+
+  If any concatenation, or bitsubscripts are missing in the AUTOINSTant's
+  instantiation, all bets are off.  (For example due to a AUTO_TEMPLATE).
 
 A simple example (see verilog-auto-inst for what else is going on here):
 
