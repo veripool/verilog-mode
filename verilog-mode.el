@@ -319,9 +319,9 @@ comments in tight quarters"
 (defvar verilog-auto-update-tick nil
   "Modification tick at which autos were last performed.")
 
-(setq verilog-error-regexp
+(defvar verilog-error-regexp
   '(
-    ("\\(Error\\|Warning\\): \\([^\,]+\\), line \\([0-9]+\\):" 2 3) 
+    ("\\(Error\\|Warning\\): \\([^ ]+\\), line \\([0-9]+\\):" 2 3) 
 	; SureFire
     ("\\(Error\\|Warning\\):.*\\s \\([^ \t]+\\)\\s *\\([0-9]+\\):" 2 3) 
 	; vcs
@@ -341,9 +341,10 @@ comments in tight quarters"
     ("([WE][0-9A-Z]+)[ \t]+\\([^ \t\n,]+\\)[, \t]+line[ \t]+\\([0-9]+\\):.*$" 1 2)  
        ; vxl
     )
-;  "*List of regexps for verilog compilers, like verilint. See compilation-error-regexp-alist for the formatting."
+  "*List of regexps for verilog compilers, like verilint. See compilation-error-regexp-alist for the formatting."
 )
-(setq compilation-font-lock-keywords 
+
+(defvar verilog-error-font-lock-keywords 
   '(
     ("^\\(Error\\|Warning\\): \\([^,]+\\), line \\([0-9]+\\):" 
      2 bold t) 
@@ -382,9 +383,8 @@ comments in tight quarters"
     ("^([WE][0-9A-Z]+)[ \t]+\\([^ \t\n,]+\\)[, \t]+line[ \t]+\\([0-9]+\\):.*$" 2
      bold t)  
     )
-;  "*List of regexps for verilog compilers, like verilint. See compilation-error-regexp-alist for the formatting."
-)
-
+  "*Keywords to also highlight in *compilation* buffers from verilog-mode"
+  )
 
 (defcustom verilog-library-directories '(".")
   "*List of directories when looking for files for /*AUTOINST*/
@@ -401,9 +401,18 @@ something like:
 
 Note these are only read when the file is first visited, you must use
 \\[find-alternate-file] RET  to have these take effect after editing them!
+  
+See also verilog-library-extensions.
 "
   :group 'verilog-mode
   :type '(repeat directory)
+  )
+
+(defcustom verilog-library-extensions '(".v")
+  "*List of extensions to use when looking for files for /*AUTOINST*/.
+See also verilog-library-directories."
+  :type 'string 
+  :group 'verilog-mode
   )
 
 (defcustom verilog-auto-sense-include-inputs nil
@@ -457,7 +466,7 @@ lineups."
      2 'font-lock-function-name-face nil t)
     ("\\(\\\\\\S-*\\s-\\)\\|\\(`\\s-*[A-Za-z][A-Za-z0-9_]*\\)" 
      0 'font-lock-function-name-face)
-    ("\\(@\\)\\|\\(#\\s-*\\(\\(\[0-9_\]+\\('[hdxbo][0-9_xz]*\\)?\\)\\|\\((\[^)\]*)\\|\\sw+\\)\\)\\)" 
+    ("\\(@\\)\\|\\(#\\s-*\\(\\(\[0-9_\]+\\('[hdxbo][0-9a-fA-F_xz]*\\)?\\)\\|\\((\[^)\]*)\\|\\sw+\\)\\)\\)" 
      0 'font-lock-type-face)
 ;    (princ (regexp-opt (list 
 ;			"defparam" "event" "inout" "input" "integer" "output" "parameter"
@@ -490,7 +499,7 @@ lineups."
      2 font-lock-function-name-face nil t)
     ("\\(\\\\\\S-*\\s-\\)\\|\\(`\\s-*[A-Za-z][A-Za-z0-9_]*\\)" 
      0 font-lock-function-name-face)
-    ("\\(@\\)\\|\\(#\\s-*\\(\\(\[0-9_\]+\\('[hdxbo][0-9_xz]*\\)?\\)\\|\\((\[^)\]*)\\|\\sw+\\)\\)\\)" 
+    ("\\(@\\)\\|\\(#\\s-*\\(\\(\[0-9_\]+\\('[hdxbo][0-9a-fA-F_xz]*\\)?\\)\\|\\((\[^)\]*)\\|\\sw+\\)\\)\\)" 
      0 font-lock-type-face)
     ("\\<\\(defparam\\|event\\|in\\(out\\|put\\|teger\\)\\|output\\|parameter\\|re\\(al\\(time\\)?\\|g\\)\\|s\\(igned\\|upply[01]?\\)\\|t\\(ime\\|ri\\(and\\|or\\|reg\\|[01]\\)?\\)\\|vectored\\|w\\(and\\|ire\\|or\\)\\)\\>"
      0 font-lock-type-face)
@@ -594,6 +603,7 @@ format (e.g. 09/17/1997) is not supported.")
     ("Help..."
      ["AUTO General"			(describe-function 'verilog-auto) t]
      ["AUTO Library Path"		(describe-variable 'verilog-library-directories) t]
+     ["AUTO Library Extensions"		(describe-variable 'verilog-library-extensions) t]
      ["AUTO `define Reading"		(describe-function 'verilog-read-defines) t]
      ["AUTO `include Reading"		(describe-function 'verilog-read-includes) t]
      ["AUTOARG"				(describe-function 'verilog-auto-arg) t]
@@ -638,6 +648,7 @@ value of verilog-compiler; in the later, the path to the current buffer is subst
   
 (add-hook 'verilog-mode-hook 'verilog-compile)
 
+
 (defvar verilog-error-regexp-add-didit nil)
 (setq verilog-error-regexp-add-didit nil)	;; So reloading file does it again
 (defun verilog-error-regexp-add ()
@@ -647,11 +658,30 @@ compilation-error-regexp-alist.  This allows \\[next-error] to find the errors."
 	(t (setq verilog-error-regexp-add-didit t)
 	   ;; Probably buffer local at this point; maybe also in let; change all three
 	   (set (make-local-variable 'compilation-error-regexp-alist)
-		(append compilation-error-regexp-alist verilog-error-regexp))
+		(append compilation-error-regexp-alist 
+			verilog-error-regexp))
 	   (setq compilation-error-regexp-alist
-		 (append compilation-error-regexp-alist verilog-error-regexp))
+		 (append compilation-error-regexp-alist 
+			 verilog-error-regexp))
 	   (setq-default compilation-error-regexp-alist
-			 (append (default-value 'compilation-error-regexp-alist) verilog-error-regexp)))))
+			 (append (default-value 'compilation-error-regexp-alist) 
+				 verilog-error-regexp))
+; area under development...
+;	   (set (make-local-variable 'compilation-font-lock-keywords)
+;		(append compilation-font-lock-keywords 
+;			verilog-error-font-lock-keywords))
+;	   (setq compilation-font-lock-keywords
+;		 (append compilation-font-lock-keywords 
+;			 verilog-error-font-lock-keywords))
+;	   (setq-default compilation-font-lock-keywords
+;			 (append (default-value 'compilation-error-regexp-alist) 
+;				 verilog-error-font-lock-keywords))				 
+	   
+	   )
+	)
+  ; Always reinstall the font locks 
+  ;(font-lock-set-defaults t)
+  )
 
 (add-hook 'compilation-mode-hook 'verilog-error-regexp-add)
 
@@ -726,7 +756,7 @@ compilation-error-regexp-alist.  This allows \\[next-error] to find the errors."
   "\\<\\(assign\\|defparam\\|event\\|in\\(out\\|put\\|teger\\)\\|output\\|parameter\\|re\\(al\\(time\\)?\\|g\\)\\|supply[01]?\\|t\\(ime\\|ri\\(and\\|or\\|reg\\|[01]\\)?\\)\\|w\\(and\\|ire\\|or\\)\\)\\>" )
 (defconst verilog-range-re "\\[[^]]*\\]")
 (defconst verilog-macroexp-re "`\\sw+")
-(defconst verilog-delay-re "#\\s-*\\(\\([0-9_]+\\('[hdxbo][0-9_xz]+\\)?\\)\\|\\(([^)]*)\\)\\|\\(\\sw+\\)\\)")
+(defconst verilog-delay-re "#\\s-*\\(\\([0-9_]+\\('[hdxbo][0-9a-fA-F_xz]+\\)?\\)\\|\\(([^)]*)\\)\\|\\(\\sw+\\)\\)")
 (defconst verilog-declaration-re-2 
   (concat "\\s-*" verilog-declaration-re 
 	  "\\s-*\\(\\(" verilog-range-re "\\)\\|\\(" verilog-delay-re "\\)\\|\\(" verilog-macroexp-re "\\)\\)?"))
@@ -3882,7 +3912,8 @@ With optional second arg non-nil, STR is the complete name of the instruction."
 (defun verilog-goto-defun ()
   "Move to specified Verilog module/task/function.
 The default is a name found in the buffer around point.
-If search fails, other files are checked based on verilog-library-directories."
+If search fails, other files are checked based on verilog-library-directories
+and verilog-library-extensions."
   (interactive)
   (let* ((default (verilog-get-default-symbol))
 	 ;; The following variable is used in verilog-comp-function
@@ -4456,7 +4487,11 @@ component library to determine connectivity of the design."
 			    "\[[^0-9: \t]+\]" "" nil nil
 			    (or (verilog-symbol-detick keywd nil) keywd)))
 		     (if (or (string-match "^[0-9 \t]+$" keywd)
-			     (string-match "^[0-9 \t]+'[hbdox]*[0-9 \t]*$" keywd))
+			     (string-match "^[0-9 \t]+'o[_xz0-7 \t]*$" keywd)
+			     (string-match "^[0-9 \t]+'[hx][_xz0-9a-fA-F \t]*$" keywd)
+			     (string-match "^[0-9 \t]+'d[_xz0-9 \t]*$" keywd)
+			     (string-match "^[0-9 \t]+'b*[_xz01 \t]*$" keywd)
+			     )
 			 (setq keywd nil))
 		     )
 		   (if got-sig (if got-rvalue
@@ -4557,8 +4592,8 @@ found returns the signal name connections.  Return nil or list of
 
 (defun verilog-read-defines (&optional filename)
   "Read `defines for the current file, or with a optional FILENAME, that
-file.  If the filename is provided, verilog-library-directories will be
-used to resolve it.
+file.  If the filename is provided, verilog-library-directories and
+verilog-library-extensions will be used to resolve it.
 
 Defines must be simple text substitutions, one on a line, starting
 at the beginning of the line.  Any ifdefs or multline comments around the
@@ -4697,7 +4732,7 @@ If undefined, and WING-IT, return just SYMBOL without the tick, else nil."
 
 (defun verilog-library-filenames (filename current)
   "Return a search path to find the given filename name.  Uses the
-verilog-library-directories variable to build the path"
+verilog-library-directories and -extensions variables to build the path"
   (let ((ckdir verilog-library-directories)
 	fn outlist)
     (while ckdir
@@ -4711,10 +4746,17 @@ verilog-library-directories variable to build the path"
 
 (defun verilog-module-filenames (mod current)
   "Return a search path to find the given module name.  Uses the
-verilog-library-directories variable to build the path"
+verilog-library-extensions and verilog-library-directories variable to
+build the path"
   ;; Return search locations for it
   (append (list current)	; first, current buffer
-	  (verilog-library-filenames (concat mod ".v") current)))
+ 	  (let ((ext verilog-library-extensions) flist)
+ 	    (while ext
+ 	      (setq flist
+ 		    (append (verilog-library-filenames
+ 			     (concat mod (car ext)) current) flist)
+		    ext (cdr ext)))
+	    flist)))
 
 ;;;
 ;;; Module Information
@@ -5167,10 +5209,11 @@ automatically derived from the module header of the instantiated netlist.
 Limitations:
   This presumes a one-to-one port name to signal name mapping.
 
-  Module names must be resolvable to filenames, either by being in the same
-  directory, or by changing the variable verilog-library-directories.
-  Macros `modname are translated through the vh-{name} emacs variable,
-  if that is not found, it just ignores the `.
+  Module names must be resolvable to filenames by adding a
+  verilog-library-extension, and being found in the same directory, or by
+  changing the variable verilog-library-directories.  Macros `modname are
+  translated through the vh-{name} emacs variable, if that is not found, it
+  just ignores the `.
 
 A simple example:
 
