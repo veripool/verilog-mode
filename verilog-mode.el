@@ -40,7 +40,7 @@
 ;;; <Name of function you want described>
 
 ;;; You can get step by step help in installing this file by going to
-;;; <http://www.surefirev.com/emacs_install.html>
+;;; <http://www.verilog.com/emacs_install.html>
 
 ;;; The short list of installation instructions are: To set up
 ;;; automatic verilog mode, put this file in your load path, and put
@@ -116,6 +116,13 @@
 	      (` (cond ( (, var) (,@ body))))))
         (error nil))
       (condition-case nil
+	  (if (string-match "XEmacs" emacs-version)
+	      (defun verilog-regexp-opt (a &optional b c)
+		(regexp-opt a b c ))
+	    (defun verilog-regexp-opt (a &optional b c)
+	      (regexp-opt a b)))
+	(error nil))
+      (condition-case nil
           (if (fboundp 'unless)
 	      nil ;; fab
 	    (defmacro unless (var &rest body)
@@ -177,6 +184,11 @@
 	)
 
       ))
+
+(unless (fboundp 'regexp-opt)
+  (defun regexp-opt (strings &optional paren shy)
+    (let ((open (if paren "\\(" "")) (close (if paren "\\)" "")))
+      (concat open (mapconcat 'regexp-quote strings "\\|") close))))
 
 (defun verilog-customize ()
   "Link to customize screen for Verilog"
@@ -517,58 +529,6 @@ lineups."
 (defvar verilog-mode-abbrev-table nil
   "Abbrev table in use in Verilog-mode buffers.")
 
-(defvar verilog-font-lock-keywords-after-1930
-  '(
-    ("^\\s-*function\\>\\s-+\\(\\(\\[[^]]*\\]\\|integer\\|real\\(time\\)?\\|time\\)\\s-+\\)?\\(\\sw+\\)"
-     3 'font-lock-function-name-face nil t)
-    ("\\(//\\s-*sv\\s-.*\\)" 1 'font-lock-function-name-face t t)
-    ("^\\s-*\\(task\\|module\\|macromodule\\|primitive\\)\\>\\s-*\\(\\sw+\\)"
-     2 'font-lock-function-name-face nil t)
-    ("\\(\\\\\\S-*\\s-\\)"  0 'font-lock-function-name-face)
-    ("`\\s-*[A-Za-z][A-Za-z0-9_]*" 0 'font-lock-function-name-face)
-    ("\\(@\\)\\|\\(#\\s-*\\(\\(\[0-9_.\]+\\('[hdxbo][0-9a-fA-F_xz]*\\)?\\)\\|\\(([^)]+)\\|\\sw+\\)\\)\\)"
-     0 'font-lock-type-face append)
-
-;    (princ (regexp-opt (list
-;			"defparam" "event" "inout" "input" "integer" "output" "parameter"
-;			"real" "realtime" "reg" "signed" "supply" "supply0" "supply1" "time"
-;			"tri" "tri0" "tri1" "triand" "trior" "trireg" "vectored" "wand" "wire"
-;			"wor" ) nil)
-    ("\\<\\(defparam\\|event\\|in\\(out\\|put\\|teger\\)\\|output\\|parameter\\|re\\(al\\(time\\)?\\|g\\)\\|s\\(igned\\|upply[01]?\\)\\|t\\(ime\\|ri\\(and\\|or\\|reg\\|[01]\\)?\\)\\|vectored\\|w\\(and\\|ire\\|or\\)\\)\\>"
-     0 'font-lock-type-face)
-
-;    (princ (concat "\\<\\(\\$[a-zA-Z][a-zA-Z0-9_\\$]*\\|"
-;	     (regexp-opt (list
-;			  "always" "assign" "begin" "case" "casex" "casez" "default" "deassign"
-;			  "disable" "else" "end" "endcase" "endfunction" "endmodule"
-;			  "endprimitive" "endspecify" "endtable" "endtask" "for" "force"
-;			  "forever" "fork" "function" "if" "initial" "join" "macromodule"
-;			  "module" "negedge" "posedge" "primitive" "repeat" "release" "specify"
-;			  "table" "task" "wait" "while" ))
-;	     "\\)\\>" )
-    ("\\<\\(\\$[a-zA-Z][a-zA-Z0-9_\\$]*\\|a\\(lways\\|ssign\\)\\|begin\\|case[xz]?\\|d\\(e\\(assign\\|fault\\)\\|isable\\)\\|e\\(lse\\|nd\\(case\\|function\\|module\\|primitive\\|specify\\|ta\\(ble\\|sk\\)\\)?\\)\\|f\\(or\\(ce\\|ever\\|k\\)?\\|unction\\)\\|i\\(f\\|nitial\\)\\|join\\|m\\(acromodule\\|odule\\)\\|negedge\\|p\\(osedge\\|rimitive\\)\\|re\\(lease\\|peat\\)\\|specify\\|ta\\(ble\\|sk\\)\\|w\\(ait\\|hile\\)\\)\\>"
-     0 'font-lock-keyword-face))
-  )
-
-
-(defvar verilog-font-lock-keywords-before-1930
-  '(
-    ("^\\s-*function\\>\\s-+\\(\\(\\[[^]]*\\]\\|integer\\|real\\(time\\)?\\|time\\)\\s-+\\)?\\(\\sw+\\)"
-     3 font-lock-function-name-face nil t)
-    ("\\(//\\s-*sv\\s-.*\\)" 1 font-lock-function-name-face t t)
-    ("^\\s-*\\(task\\|module\\|macromodule\\|primitive\\)\\>\\s-*\\(\\sw+\\)"
-     2 font-lock-function-name-face nil t)
-    ("\\\\\\S-*\\s-" 0 font-lock-function-name-face)
-    ("`\\s-*[A-Za-z][A-Za-z0-9_]*" 0 font-lock-function-name-face)
-    ("\\(@\\)\\|\\(#\\s-*\\(\\(\[0-9_.\]+\\('[hdxbo][0-9a-fA-F_xz]*\\)?\\)\\|\\(([^)]+)\\|\\sw+\\)\\)\\)"
-     0 font-lock-type-face)
-    ("\\<\\(defparam\\|event\\|in\\(out\\|put\\|teger\\)\\|output\\|parameter\\|re\\(al\\(time\\)?\\|g\\)\\|s\\(igned\\|upply[01]?\\)\\|t\\(ime\\|ri\\(and\\|or\\|reg\\|[01]\\)?\\)\\|vectored\\|w\\(and\\|ire\\|or\\)\\)\\>"
-     0 font-lock-type-face)
-    ("\\<\\(\\$[a-zA-Z][a-zA-Z0-9_\\$]*\\|a\\(lways\\|ssign\\)\\|begin\\|case[xz]?\\|d\\(e\\(assign\\|fault\\)\\|isable\\)\\|e\\(lse\\|nd\\(case\\|function\\|module\\|primitive\\|specify\\|ta\\(ble\\|sk\\)\\)?\\)\\|f\\(or\\(ce\\|ever\\|k\\)?\\|unction\\)\\|i\\(f\\|nitial\\)\\|join\\|m\\(acromodule\\|odule\\)\\|negedge\\|p\\(osedge\\|rimitive\\)\\|re\\(lease\\|peat\\)\\|specify\\|ta\\(ble\\|sk\\)\\|w\\(ait\\|hile\\)\\)\\>"
-     0 font-lock-keyword-face)
-    )
-  )
-
 (defvar verilog-imenu-generic-expression
   '((nil "^\\s-*\\(\\(m\\(odule\\|acromodule\\)\\)\\|primitive\\)\\s-+\\([a-zA-Z0-9_.:]+\\)" 4)
     ("*Vars*" "^\\s-*\\(reg\\|wire\\)\\s-+\\(\\|\\[[^\\]]+\\]\\s-+\\)\\([A-Za-z0-9_]+\\)" 3))
@@ -827,14 +787,15 @@ compilation-error-regexp-alist.  This allows \\[next-error] to find the errors."
 
 (defconst verilog-end-block-re-1 "\\(\\<end\\>\\)\\|\\(\\<endcase\\>\\)\\|\\(\\<join\\>\\)\\|\\(\\<endtable\\>\\)\\|\\(\\<endspecify\\>\\)\\|\\(\\<endfunction\\>\\)\\|\\(\\<endtask\\>\\)")
 (defconst verilog-declaration-re
-;	(concat "\\<"
-;		 (regexp-opt (list
-;			      "assign" "defparam" "event" "inout" "input" "integer" "output"
-;			      "parameter" "real" "realtime" "reg" "supply" "supply0" "supply1"
-;			      "time" "tri" "tri0" "tri1" "triand" "trior" "trireg" "wand" "wire"
-;			      "wor") t)
-;		 "\\>"))
-  "\\<\\(assign\\|defparam\\|event\\|in\\(out\\|put\\|teger\\)\\|output\\|parameter\\|re\\(al\\(time\\)?\\|g\\)\\|supply[01]?\\|t\\(ime\\|ri\\(and\\|or\\|reg\\|[01]\\)?\\)\\|w\\(and\\|ire\\|or\\)\\)\\>" )
+  (eval-when-compile
+    (concat "\\<"
+	    (verilog-regexp-opt
+	     (list
+	      "assign" "defparam" "event" "inout" "input" "integer" "output"
+	      "parameter" "real" "realtime" "reg" "supply" "supply0" "supply1"
+	      "time" "tri" "tri0" "tri1" "triand" "trior" "trireg" "wand" "wire"
+	      "wor") t)
+	    "\\>")))
 (defconst verilog-range-re "\\[[^]]*\\]")
 (defconst verilog-macroexp-re "`\\sw+")
 (defconst verilog-delay-re "#\\s-*\\(\\([0-9_]+\\('[hdxbo][0-9a-fA-F_xz]+\\)?\\)\\|\\(([^)]*)\\)\\|\\(\\sw+\\)\\)")
@@ -1083,34 +1044,127 @@ supported list, along with the values for this variable:
 
 (defvar verilog-mode-syntax-table nil
   "Syntax table used in verilog-mode buffers.")
-(defvar verilog-font-lock-keywords nil
-  "keyword highlighting used in verilog-mode buffers.")
-(defvar verilog-font-lock-keywords-1 nil
-  "keyword highlighting used in verilog-mode buffers.")
-(defvar verilog-font-lock-keywords-2 nil
-  "keyword highlighting used in verilog-mode buffers.")
-(defvar verilog-font-lock-keywords-3 nil
-  "keyword highlighting used in verilog-mode buffers.")
-(defvar verilog-font-lock-keywords-4 nil
-  "keyword highlighting used in verilog-mode buffers.")
-(if verilog-font-lock-keywords
-    ()
-  (cond
-   ((memq 'flock-syntax-after-1930 verilog-emacs-features)
-    (setq verilog-font-lock-keywords verilog-font-lock-keywords-after-1930
-	  verilog-font-lock-keywords-1 verilog-font-lock-keywords-after-1930
-	  verilog-font-lock-keywords-2 verilog-font-lock-keywords-after-1930
-	  verilog-font-lock-keywords-3 verilog-font-lock-keywords-after-1930
-	  verilog-font-lock-keywords-4 verilog-font-lock-keywords-after-1930)
-    )
-   (t
-    (setq verilog-font-lock-keywords   verilog-font-lock-keywords-before-1930
-	  verilog-font-lock-keywords-1 verilog-font-lock-keywords-before-1930
-	  verilog-font-lock-keywords-2 verilog-font-lock-keywords-before-1930
-	  verilog-font-lock-keywords-3 verilog-font-lock-keywords-before-1930
-	  verilog-font-lock-keywords-4 verilog-font-lock-keywords-before-1930)
-    )
-   )
+
+(defconst verilog-font-lock-keywords nil
+  "Default highlighting for Verilog mode.")
+
+(defconst verilog-font-lock-keywords-1 nil
+  "Subdued level highlighting for Verilog mode.")
+
+(defconst verilog-font-lock-keywords-2 nil
+  "Medium level highlighting for Verilog mode.
+See also `verilog-font-lock-extra-types'.")
+
+(defconst verilog-font-lock-keywords-3 nil
+  "Gaudy level highlighting for Verilog mode.
+See also `verilog-font-lock-extra-types'.")
+(defvar 
+  verilog-font-lock-translate-off-face 
+  'verilog-font-lock-translate-off-face 
+  "Font to use for translated off regions")
+(defface verilog-font-lock-translate-off-face
+  '((((class color) 
+      (background light)) 
+     (:background "gray90" :italic t :foreground "gray80"))
+    (((class color) 
+      (background dark)) 
+     (:background "gray10" :italic t :foreground "gray20"))
+    (((class grayscale) (background light))
+     (:foreground "DimGray" :italic t))
+    (((class grayscale) (background dark))
+     (:foreground "LightGray" :italic t))
+    (t (:italis t)))
+  "Font lock mode face used to background highlight translate-off regions."
+  :group 'font-lock-highlighting-faces)
+
+(let* ((verilog-function-keywords
+	(eval-when-compile
+	  (verilog-regexp-opt
+	   '("module" "macromodule" "primitive" "task") nil t )
+	  ))
+
+       (verilog-type-keywords
+	(eval-when-compile
+	  (verilog-regexp-opt
+	   '("defparam" "event" "inout" "input" "integer" "output" "parameter"
+	     "real" "realtime" "reg" "signed" "supply" "supply0" "supply1" "time"
+	     "tri" "tri0" "tri1" "triand" "trior" "trireg" "vectored" "wand" "wire"
+	     "wor" ))))
+
+       (verilog-pragma-keywords
+	(eval-when-compile
+	  (verilog-regexp-opt
+	   '("surefire" "synopsys" "rtl_synthesis" "verilint" ))))
+
+       (verilog-keywords
+	(eval-when-compile
+	  (verilog-regexp-opt
+	   '( "always" "assign" "begin" "case" "casex" "casez" "default" "deassign"
+	      "disable" "else" "end" "endcase" "endfunction" "endmodule"
+	      "endprimitive" "endspecify" "endtable" "endtask" "for" "force"
+	      "forever" "fork" "function" "if" "initial" "join" "macromodule"
+	      "module" "negedge" "posedge" "primitive" "repeat" "release" "specify"
+	      "table" "task" "wait" "while" )))))
+       
+  (setq verilog-font-lock-keywords
+	(list
+	 ;; Fontify all builtin keywords
+	 (concat "\\<\\(" verilog-keywords "\\|"
+		       ;; And user/system tasks and functions
+		       "\\$[a-zA-Z][a-zA-Z0-9_\\$]*"
+		       "\\)\\>")
+	 ;; Fontify all types
+	 (cons (concat "\\<\\(" verilog-type-keywords "\\)\\>")
+	       'font-lock-type-face)
+	 )
+	)
+  (setq verilog-font-lock-keywords-1
+	(append verilog-font-lock-keywords
+		(list
+		 ;; Fontify module definitions
+		 (list
+		  (concat "\\<\\(" verilog-function-keywords 
+			  "\\)\\>\\s-*\\(\\sw+\\)")
+		  '(1 font-lock-keyword-face)
+		  (list 3 'font-lock-function-name-face 'prepend))
+		 ;; Fontify function definitions
+		 (list 
+		  (concat "\\<function\\>\\s-+\\(integer\\|real\\(time\\)?\\|time\\)\\s-+\\(\\sw+\\)" )
+		       '(1 font-lock-keyword-face) 
+		       '(3 font-lock-reference-face prepend)
+		       )
+		 '("\\<function\\>\\s-+\\(\\[[^]]+\\]\\)\\s-+\\(\\sw+\\)"
+		   (1 font-lock-keyword-face) 
+		   (2 font-lock-reference-face append)
+		   )
+		 '("\\<function\\>\\s-+\\(\\sw+\\)"
+		   1 'font-lock-reference-face append)
+		 )
+		)
+	)
+  (setq verilog-font-lock-keywords-2
+	(append verilog-font-lock-keywords-1
+		(list
+		 ;; Fontify pragmas
+		 (concat "\\(//\\s-*" verilog-pragma-keywords "\\s-.*\\)")
+		 ;; Fontify escaped names
+		 '("\\(\\\\\\S-*\\s-\\)"  0 font-lock-function-name-face)
+		 ;; Fontify macro definitions/ uses
+		 '("`\\s-*[A-Za-z][A-Za-z0-9_]*" 0 font-lock-function-name-face)
+		 ;; Fontify delays/numbers
+		 '("\\(@\\)\\|\\(#\\s-*\\(\\(\[0-9_.\]+\\('[hdxbo][0-9a-fA-F_xz]*\\)?\\)\\|\\(([^)]+)\\|\\sw+\\)\\)\\)"
+		   0 font-lock-type-face append)
+		 )
+		)
+	)
+  (setq verilog-font-lock-keywords-3
+	(append verilog-font-lock-keywords-2  
+		(list
+		 ;; Fontify things in translate off regions
+		 '(verilog-match-translate-off (0 'verilog-font-lock-translate-off-face prepend))
+		 )
+		)
+	)
   )
 
 ;;;
@@ -1225,7 +1279,7 @@ so there may be a large up front penalty for the first search."
 		   (buffer-name))
 	      buffer-file-name
 	      (buffer-name))
-	  ":" (count-lines (point-min) (or pointnum (point)))))
+	  ":" (int-to-string (count-lines (point-min) (or pointnum (point))))))
 
 (defun electric-verilog-backward-sexp ()
   "Move backward over a sexp"
@@ -1380,12 +1434,35 @@ so there may be a large up front penalty for the first search."
     (nth 3 (parse-partial-sexp (verilog-get-beg-of-line) (point)))))
 
 (put 'verilog-mode 'font-lock-defaults
-     '((verilog-font-lock-keywords-after-1930 )
+     '((verilog-font-lock-keywords 
+	verilog-font-lock-keywords-1
+	verilog-font-lock-keywords-2
+	verilog-font-lock-keywords-3)
        nil ;; nil means highlight strings & comments as well as keywords
        nil ;; nil means keywords must match case
        nil ;; syntax table handled elsewhere
        verilog-beg-of-defun ;; function to move to beginning of reasonable region to highlight
        ))
+(require 'font-lock)
+(defvar verilog-need-fld 1)
+(defvar font-lock-defaults-alist nil)	;In case we are XEmacs
+(if verilog-need-fld
+    (let ((verilog-mode-defaults
+	   '((verilog-font-lock-keywords 
+	      verilog-font-lock-keywords-1
+	      verilog-font-lock-keywords-2
+	      verilog-font-lock-keywords-3)
+	     nil ;; nil means highlight strings & comments as well as keywords
+	     nil ;; nil means keywords must match case
+	     nil ;; syntax table handled elsewhere
+	     verilog-beg-of-defun ;; function to move to beginning of reasonable region to highlight
+	     )))
+      (setq font-lock-defaults-alist
+	    (append
+	     font-lock-defaults-alist
+	     (list (cons 'verilog-mode  verilog-mode-defaults)))
+	    )
+      (setq verilog-need-fld 0)))
 
 ;;;
 ;;;  Mode
@@ -1503,13 +1580,6 @@ Other useful functions are:
               (add-submenu nil verilog-xemacs-menu))) ))
   ;; Stuff for GNU emacs
   (make-local-variable 'font-lock-defaults)
-  (setq font-lock-defaults
-	'((verilog-font-lock-keywords verilog-font-lock-keywords-1
-				      verilog-font-lock-keywords-2
-				      verilog-font-lock-keywords-3
-				      verilog-font-lock-keywords-4)
-	  nil t))
-
   ;; Tell imenu how to handle verilog.
   (make-local-variable 'imenu-generic-expression)
   (setq imenu-generic-expression verilog-imenu-generic-expression)
@@ -1968,7 +2038,7 @@ area.  See also `verilog-comment-region'."
 		  (not (= (preceding-char) ?\;))
 		  (verilog-continued-line))))
     (goto-char pt)
-    (verilog-forward-syntactic-ws)
+    (verilog-forward-ws&directives)
     )
   )
 (defun verilog-end-of-statement ()
@@ -3030,7 +3100,8 @@ of the appropriate enclosing block."
       (let ((back (point)))
 	(forward-word -1)
 	(cond
-	 ((looking-at "\\<\\(always\\|initial\\|if\\|while\\|repeat\\|case[xz]?\\)\\>")
+	 (
+	  (looking-at "\\<\\(always\\|case\\(\\|[xz]\\)\\|begin\\|for\\(\\|ever\\)\\|i\\(f\\|nitial\\)\\|repeat\\|while\\)\\>")
 	  (not (looking-at "\\<case[xz]?\\>[^:]")))
 	 (t
 	  (goto-char back)
@@ -3044,43 +3115,41 @@ of the appropriate enclosing block."
 	 
    (;-- any of begin|initial|while are complete statements; 'begin : foo' is also complete
     t
-    (let ((pt (point)))
-      (forward-word -1)
-      (cond
-       (
-	(looking-at "\\(else\\)\\|\\(initial\\>\\)\\|\\(always\\>\\)")
-	t)
-       (
-	(looking-at verilog-indent-reg)
-	nil)
-       (t
-	(let
-	    ((back (point)))
+    (forward-word -1)
+    (cond
+     (
+      (looking-at "\\(else\\)\\|\\(initial\\>\\)\\|\\(always\\>\\)")
+      t)
+     (
+      (looking-at verilog-indent-reg)
+      nil)
+     (t
+      (let
+	  ((back (point)))
+	(verilog-backward-syntactic-ws)
+	(cond
+	 ((= (preceding-char) ?\:)
+	  (backward-char)
 	  (verilog-backward-syntactic-ws)
-	  (cond
-	   ((= (preceding-char) ?\:)
-	    (backward-char)
-	    (verilog-backward-syntactic-ws)
-	    (backward-sexp)
-	    (if (looking-at "begin")
-		nil
-	      t)
-	    )
-	   ((= (preceding-char) ?\#)
-	    (backward-char)
+	  (backward-sexp)
+	  (if (looking-at "begin")
+	      nil
 	    t)
-	   ((= (preceding-char) ?\`)
-	    (backward-char)
-	    t)
-	   
-	   (t
-	    (goto-char back)
-	    t)
-	   )
 	  )
+	 ((= (preceding-char) ?\#)
+	  (backward-char)
+	  t)
+	 ((= (preceding-char) ?\`)
+	  (backward-char)
+	  t)
+	 
+	 (t
+	  (goto-char back)
+	  t)
+	 )
 	)
-       )
       )
+     )
     )
    )
   )
@@ -3169,7 +3238,8 @@ of the appropriate enclosing block."
 		)))
 	    (narrow-to-region (point) lim)
 	    (while (/= here (point))
-	      (setq here (point))
+	      (setq here (point)
+		    jump nil)
 	      (forward-comment (buffer-size))
 	      (save-excursion
 		(beginning-of-line)
@@ -4244,6 +4314,59 @@ and verilog-library-extensions."
 		      (setq tag (format "%3d" this-linenum)))
 		  (insert tag ?:)))))))
       (set-buffer-modified-p nil))))
+
+
+;;;; Highlight helper functions
+(defconst verilog-directive-regexp "\\(translate\\|coverage\\|lint\\)_")
+(defun verilog-within-translate-off ()
+  "Return point if within translate-off region, else nil."
+  (and (save-excursion
+	 (re-search-backward
+	  (concat "//\\s-*.*\\s-*" verilog-directive-regexp "\\(on\\|off\\)")
+	  nil t))
+       (equal "off" (match-string 2))
+       (point)))
+
+(defun verilog-start-translate-off (limit)
+  "Return point before translate-off directive if before LIMIT, else nil."
+  (when (re-search-forward
+	  (concat "//\\s-*.*\\s-*" verilog-directive-regexp "off")
+	  limit t)
+    (match-beginning 0)))
+
+(defun verilog-end-translate-off (limit)
+  "Return point after translate-on directive if before LIMIT, else nil."
+	  
+  (re-search-forward (concat 
+		      "//\\s-*.*\\s-*" verilog-directive-regexp "on") limit t))
+
+(defun verilog-match-translate-off (limit)
+  "Match a translate-off block, setting match-data and returning t, else nil."
+  (when (< (point) limit)
+    (let ((start (or (verilog-within-translate-off)
+		     (verilog-start-translate-off limit)))
+	  (case-fold-search t))
+      (when start
+	(let ((end (or (verilog-end-translate-off limit) limit)))
+	  (set-match-data (list start end))
+	  (goto-char end))))))
+
+(defun verilog-font-lock-match-item (limit)
+  "Match, and move over, any declaration item after point. Adapted from
+`font-lock-match-c-style-declaration-item-and-skip-to-next'."
+  (condition-case nil
+      (save-restriction
+	(narrow-to-region (point-min) limit)
+	;; match item
+	(when (looking-at "\\s-*\\([a-zA-Z]\\w*\\)")
+	  (save-match-data
+	    (goto-char (match-end 1))
+	    ;; move to next item
+	    (if (looking-at "\\(\\s-*,\\)")
+		(goto-char (match-end 1))
+	      (end-of-line) t))))
+    (error t)))
+
 
 ;;;; Added by Subbu Meiyappan for Header
 
@@ -6414,6 +6537,7 @@ Wilson Snyder (wsnyder@wsnyder.org)
       (when fontlocked (font-lock-mode t))
       )))
 
+
 ;;;
 ;;; Bug reporting
 ;;;
