@@ -5,6 +5,7 @@
 ;; Copyright (C) 1996 Free Software Foundation, Inc.
 
 ;; Author: Michael McNamara (mac@verilog.com) 
+;; President, Silicon Sorcery
 ;; Keywords: languages
 
 ;; This file is part of GNU Emacs.
@@ -203,171 +204,6 @@
 ;;; ======================= This is beta code, and likely has
 ;;; bugs. Please report any and all bugs to me at mac@verilog.com.
 ;; 
-;; $Log$
-;; Revision 2.7  1996/04/27 03:02:28  mac
-;; Fixed a bug indenting declarations when they are
-;; not in a module context
-;;
-; Revision 2.6  1996/04/24  22:18:11  mac
-; 1) Major change is the abandonment of case lining up.  It's too error
-;    prone at present.  The problem is finding the right : (especially
-;    given : can be in [msb:lsb] expressions on both sides of the "real"  :
-; 2) More font lock stuff; things should work in emacs 19, and Xemacs now.
-; 3) Some more effort to insure verilog snippets indent correctly.
-;
-; Revision 2.5  1996/03/28  01:12:20  mac
-; 1) added more special case indent of pre processor directives.
-; 2) avoided overflow in regexp matcher for big case items.
-; 3) made auto indent better for "snippets": incomplete verilog that
-;    folks like to `include
-;
-; Revision 2.4  1996/03/27  21:29:02  mac
-; 1) Reorganized varaible definitions
-; 2) added verilog-indent-begin-after-if variable
-;    (if true (default) indent begin following if/else/while et cetera)
-; 3) added verilog-auto-indent-on-newline variable
-;    (if true (default) indent new line after user hits ^m)
-; 4) added \M-\r which updates end comment
-; 5) work on case item auto comments
-;
-; Revision 2.3  1996/03/12  22:35:23  mac
-; 1) Moved highlight specific initialization out of this mode, and added
-;    comments telling folks how to use it.
-; 2) Added support for udps
-;
-; Revision 2.2  1996/03/06  22:00:41  mac
-; 1) Add correct table..endtable indentation, and end comments for
-;    primitives.
-; 2) move color setting out of verilog-mode; folks should do this in
-;    their .emacs
-; 3) set up font lock keywords to work for emacs before 19.30 and after
-;    19.30
-; 4) Change all auto inserted comments to be of the // flavor, leaving
-;    the /* */ comments for the user; this lets user comment out blocks
-;    of code easily.
-; 5) auto comment for end of else block is now much more useful.
-;
-; Revision 2.1  1996/02/20  19:08:06  mac
-; First public release
-;
-; Revision 1.99  1996/02/15  17:14:23  mac
-; Made work with Xemacs. provided verilog-mode. small clean up in regexps
-;
-; Revision 1.98  1996/01/26  00:27:25  mac
-; missing )
-;
-; Revision 1.97  1996/01/25  21:39:47  mac
-; 1) major change is smart auto-end-comments. (Thanks to
-;    Nadim.Saeed@amd.com for the suggestion) Basically, much like I was
-;    doing at every endcase, now at every end, I parse back to find the
-;    reason for this block.  I.E., if you had:
-;
-;    while (true) begin
-; 	/* do stuff */
-;    end
-;
-;    I insert a comment after the end as follows: /* while (true) */
-;
-;    This greatly enhances readability of code...
-;
-; 2) cleanup of usage of font-lock on dumb terminals
-; 3) macromodule added where appropriate
-; 4) comment indentation cleanups
-; 5) a ; in a for(i = 1; no longer triggers a newline
-; 6) start of work on a indent-line-relative, which would examine only a
-;    few lines of code to determine indent level, which would be bound
-;    to <CR>; allowing quick entry of source. An occasional <TAB> which
-;    would invoke the expensive ((order N logN) where N is number of
-;    lines in the module) verilog-indent-line to get indentation
-;    "perfect".
-; 7) some more work on completion.
-;
-; Revision 1.96  1996/01/11  23:21:49  mac
-; Changed comment at top of file to say "verilog-mode.el" instead of
-; "verilog.el", as I want you to call this file verilog-mode.el
-;
-; Revision 1.95  1996/01/11  23:04:24  mac
-; 1) Reworked color, borrowing ideas from gnus, so we pick either a
-;    light or dark color scheme, based on the background color of the
-;    frame. Also made it all work on a monochrome X screen as well.
-; 2) Tuned the auto-indent case feature to handle all the stuff that is
-;    legal as a case item.  Still doesn't work "right" for nested cases
-; 3) Added verilog-re-search-{forward,backward} which are like their
-;    base versions, except they never match in strings or comments of
-;    either form; changed most searches to use these.
-; 4) Reworked electric-terminate-line to be faster, and better.
-; 5) Reworked electric-tick to be not zero indent user text macros; just
-;    the verilog preprocessor symbols.
-; 6) Re worked set-auto-comments to be more efficient (mostly by
-;    eliminating redundant calls to verilog-calculate indent, an
-;    expensive function, but also other cleanup)
-; 7) sped up verilog-calcualte-indent
-; 8) sped up verilog-continued-line (used by the above)
-; 9) reorganized and centralized "in-comment" decision code based on
-;    more complete understanding of parse-partial-sexp
-; 10) fixed bugs in indent-declaration that caused infinate loops given
-;    type names in comments (eg reg, wire, input, et al)
-;
-; ToDo:
-; 1) Handle auto lineup correctly in nested cases.
-; 2) Re think when to do auto line up; (at present, we do it if you ever
-;    reindent a declaration or case item; and we reindent all the way
-;    back to the nearest previous non declaration or case statement;
-;    which is a lose should you have 100 declarations in a row, and you
-;    type M-C-\ to reindent region.)
-; 3) Support completion of declared wires and registers; again, need to
-;    cache lookup, as rebuilding every time a user trys to complete is a
-;    lose.
-;
-; Revision 1.94  1996/01/06  02:22:21  mac
-; Many changes; the major one is that indent calculation is much faster.
-; Also some colorization changes, and bug fixes
-;
-; Revision 1.93  1996/01/03  22:21:24  mac
-; Fix some silly typos; for now on I promise to _at least_ byte-compile
-; and load the file before I send it out...
-;
-; Revision 1.92  1996/01/03  21:40:50  mac
-; Fix a few bugs:
-;  a typo, hints to use autoload, incorrect indentation of module as
-;  typed, named blocks where not handled. [ Thanks Drew!]
-;
-; There was a bug in the auto endcomment for `else and `endif (comment
-;  went to the wrong spot)
-;
-; Changed some features:
-; The auto comments used to add comments like:
-;  endmodule /* module: foo */
-;  endfunction /* function: bar */
-;
-;  I deleted the "module:" and "function:" parts as they are rather obvious...
-;
-; The end for named blocks is now marked.
-;
-; Added some features:
-;  Now M-C-t (esc tab) does some reasonable completion;
-;  it tries to get appropriate keywords based on scope;
-;  it tries to get tasks based on scope;
-;  it tires to get modules based on scope.
-;
-;  eg,
-;  module foo;
-;    ini<M-TAB> fills with initial
-;
-;  module barinsky;
-;  endmodule
-;
-;  module foo;
-;
-;   ba<M-TAB> fills with barinsky
-;
-; and so on.
-;
-; However, it still needs more work (vestiges of pascal mode remain)
-;
-; Revision 1.91  1996/01/03  17:19:02  mac
-; Base of publically released version
-;
 ;;; Code:
 
 (provide 'verilog-mode)
@@ -666,10 +502,6 @@ supported list, along with the values for this variable:
   ;; add extra comment syntax
   (verilog-setup-dual-comments verilog-mode-syntax-table)
   )
-
-
-
-
 ;;;
 ;;;  Macros
 ;;;
@@ -829,12 +661,11 @@ Other useful functions are:
       (verilog-indent-line)
       )
      ((nth 4 state)			; Inside any comment (hence /**/)
-      (let ((level verilog-indent-level))
-	(newline)
-	(beginning-of-line)
-	(indent-to level)
-	(insert-string " * ")
-	))
+      (newline)
+      (beginning-of-line)
+      (verilog-indent-comment)
+      (insert-string "* ")
+      )
      ( t
        ;; First, check if current line should be indented
        (if (save-excursion 
@@ -1612,7 +1443,8 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 		   ;; Basically we need to figure out 
 		   ;; 1) if this is a continuation of the previous line;
 		   ;; 2) are we in a block scope (begin..end)
-		   ;; 3) 
+		   (if (verilog-in-star-comment)
+		       (throw 'nesting 'comment))
 		   ;; See if we are continuing a previous line
 		   (while t
 		     (if (bobp)
@@ -1762,13 +1594,13 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
     (let* ((lim (or lim (point-min)))
 	   (here lim)
 	   bol
-	   (hugenum (- (point-max))))
+	   )
       (if (< lim (point))
 	  (progn
 	    (narrow-to-region lim (point))
 	    (while (/= here (point))
 	      (setq here (point))
-	      (forward-comment hugenum)
+	      (forward-comment (-(buffer-size)))
 	      (save-excursion
 		(setq bol (progn (beginning-of-line) (point))))
 	      (search-backward "//" bol t)
@@ -1780,13 +1612,13 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
   (save-restriction
     (let* ((lim (or lim (point-max)))
 	   (here lim)
-	   (hugenum (point-max)))
+	   )
       (if (> lim (point))
 	  (progn
 	    (narrow-to-region (point) lim)
 	    (while (/= here (point))
 	      (setq here (point))
-	      (forward-comment hugenum)
+	      (forward-comment (buffer-size))
 	      )))
       )))
 
@@ -1797,17 +1629,23 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 	   (here lim)
 	   bol
 	   jump
-	   (hugenum (- (point-max))))
+	   )
       (if (< lim (point))
 	  (progn
+	    (let ((state 
+		   (save-excursion
+		     (parse-partial-sexp (point-min) (point)))))
+	      (cond
+	       ((nth 4 state) ;; in /* */ comment
+		(verilog-re-search-backward "/\*" nil 'move)
+		)
+	       ((nth 7 state) ;; in // comment
+		(verilog-re-search-backward "//" nil 'move)
+		)))
 	    (narrow-to-region lim (point))
 	    (while (/= here (point))
 	      (setq here (point))
-	      (forward-comment hugenum)
-	      (if (verilog-in-comment-or-string-p)
-		  (progn (save-excursion
-			   (setq bol (progn (beginning-of-line) (point))))
-			 (search-backward "//" bol t)))
+	      (forward-comment (-(buffer-size)))
 	      (save-excursion
 		(beginning-of-line)
 		(if (looking-at "[ \t]*\\(`define\\)\\|\\(`ifdef\\)\\|\\(`else\\)\\|\\(`endif\\)\\|\\(`timescale\\)")
@@ -1824,14 +1662,23 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
     (let* ((lim (or lim (point-max)))
 	   (here lim)
 	   jump
-	   (hugenum (point-max)))
+	   )
       (if (> lim (point))
 	  (progn
+	    (let ((state 
+		   (save-excursion
+		     (parse-partial-sexp (point-min) (point)))))
+	      (cond
+	       ((nth 4 state) ;; in /* */ comment
+		(verilog-re-search-forward "/\*" nil 'move)
+		)
+	       ((nth 7 state) ;; in // comment
+		(verilog-re-search-forward "//" nil 'move)
+		)))
 	    (narrow-to-region (point) lim)
 	    (while (/= here (point))
 	      (setq here (point))
 	      (forward-comment hugenum)
-	      (verilog-skip-forward-comment-or-string)
 	      (save-excursion
 		(beginning-of-line)
 		(if (looking-at "[ \t]*\\(`define\\)\\|\\(`ifdef\\)\\|\\(`else\\)\\|\\(`endif\\)\\|\\(`timescale\\)")
@@ -1852,6 +1699,14 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 	(save-excursion
 	  (parse-partial-sexp (point-min) (point)))))
    (or (nth 3 state) (nth 4 state) (nth 7 state))) ; Inside string or comment
+ )
+
+(defun verilog-in-star-comment ()
+ "Return true if in a star comment"
+ (let ((state 
+	(save-excursion
+	  (parse-partial-sexp (point-min) (point)))))
+   (nth 4 state))
  )
 
 (defun verilog-skip-forward-comment-or-string ()
