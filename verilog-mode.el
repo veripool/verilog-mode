@@ -1680,6 +1680,16 @@ Other useful functions are:
               (add-submenu nil verilog-xemacs-menu))) ))
   ;; Stuff for GNU emacs
   (make-local-variable 'font-lock-defaults)
+  ;;------------------------------------------------------------
+  ;; now hook in 'verilog-colorize-include-files (eldo-mode.el&spice-mode.el)
+  ;; all buffer local:
+  (make-local-hook 'font-lock-mode-hook)
+  (make-local-hook 'font-lock-after-fontify-buffer-hook); doesn't exist in emacs 20
+  (add-hook 'font-lock-mode-hook 'verilog-colorize-include-files-buffer t t)
+  (add-hook 'font-lock-after-fontify-buffer-hook 'verilog-colorize-include-files-buffer t t) ; not in emacs 20
+  (make-local-hook 'after-change-functions)
+  (add-hook 'after-change-functions 'verilog-colorize-include-files t t)
+
   ;; Tell imenu how to handle verilog.
   (make-local-variable 'imenu-generic-expression)
   (setq imenu-generic-expression verilog-imenu-generic-expression)
@@ -5502,7 +5512,7 @@ or just the existing dirnames themselves if there are no wildcards."
 (defun verilog-library-filenames (filename current)
   "Return a search path to find the given FILENAME name.
 Uses the CURRENT filename, `verilog-library-directories' and
-`verilog-library-extensions` variables to build the path."
+`verilog-library-extensions' variables to build the path."
   (let ((ckdir (verilog-expand-dirnames verilog-library-directories))
 	fn outlist)
     (while ckdir
@@ -7508,6 +7518,133 @@ and the case items."
 (add-hook 'verilog-mode-hook 'verilog-add-statement-menu)
 
 
+
+;;
+;; Include file loading with mouse/return event
+;; 
+;; idea & first impl.: M. Rouat (eldo-mode.el)
+;; second (emacs/xemacs) impl.: G. Van der Plas (spice-mode.el)
+
+(if verilog-running-on-xemacs
+    (require 'overlay)
+  (require 'lucid)) ;; what else can we do ??
+
+(defconst verilog-include-file-regexp
+  "^`include\\s-+\"\\([^\n\"]*\\)\""
+  "Regexp that matches the include file")
+
+(defvar verilog-mode-mouse-map nil
+  "Map containing mouse bindings for verilog-mode.")
+
+(if verilog-mode-mouse-map 
+    ()
+  (let ((map (make-sparse-keymap))) ; as described in info pages, make a map
+    (set-keymap-parent map verilog-mode-map)
+    ;; mouse button bindings
+    (define-key map "\r"            'verilog-load-file-at-point)
+    (if verilog-running-on-xemacs
+	(define-key map 'button2    'verilog-load-file-at-mouse);ffap-at-mouse ?
+      (define-key map [mouse-2]     'verilog-load-file-at-mouse))
+    (if verilog-running-on-xemacs
+	(define-key map 'Sh-button2 'mouse-yank) ; you wanna paste don't you ?
+      (define-key map [S-mouse-2]   'mouse-yank-at-click))
+    (setq verilog-mode-mouse-map map))) ;; copy complete map now
+
+;; create set-extent-keymap procedure when it does not exist
+(eval-and-compile
+  (unless (fboundp 'set-extent-keymap)
+    (defun set-extent-keymap (extent keymap)
+      "fallback version of set-extent-keymap (for emacs 2[01])"
+      (set-extent-property extent 'local-map keymap))))
+
+(defun verilog-colorize-include-files (beg end old-len)
+  "This function colorises included files when the mouse passes over them.
+Clicking on the middle-mouse button loads them in a buffer (as in dired)."
+  (save-excursion
+    (save-match-data
+      (let (end-point)
+	(goto-char end)
+	(setq end-point (verilog-get-end-of-line))
+	(goto-char beg)
+	(beginning-of-line)  ; scan entire line !
+	;; delete overlays existing on this line 
+	(let ((overlays (overlays-in (point) end-point)))
+	  (while overlays
+	    (if (and 
+		 (overlay-get (car overlays) 'detachable)
+		 (overlay-get (car overlays) 'verilog-include-file))
+		(delete-overlay (car overlays)))
+	    (setq overlays (cdr overlays)))) ; let
+	;; make new ones, could reuse deleted one ?
+	(while (search-forward-regexp verilog-include-file-regexp end-point t)
+	  (let (extent)
+	    (goto-char (match-beginning 1))
+	    (or (extent-at (point) (buffer-name) 'mouse-face) ;; not yet extended
+		(progn
+		  (setq extent (make-extent (match-beginning 1) (match-end 1)))
+		  (set-extent-property extent 'start-closed 't)
+		  (set-extent-property extent 'end-closed 't)
+		  (set-extent-property extent 'detachable 't)
+		  (set-extent-property extent 'verilog-include-file 't)
+		  (set-extent-property extent 'mouse-face 'highlight)
+		  (set-extent-keymap extent verilog-mode-mouse-map)))))))))
+
+
+(defun verilog-colorize-include-files-buffer ()
+  (interactive)
+  ;; delete overlays
+  (let ((overlays (overlays-in (point-min) (point-max))))
+    (while overlays
+      (if (and 
+	   (overlay-get (car overlays) 'detachable)
+	   (overlay-get (car overlays) 'verilog-include-file))
+	  (delete-overlay (car overlays)))
+      (setq overlays (cdr overlays)))) ; let
+  ;; remake overlays
+  (verilog-colorize-include-files (point-min) (point-max) nil))
+
+;; ffap-at-mouse isn't useful for verilog mode. It uses library paths.
+;; so define this function to do more or less the same as ffap-at-mouse
+;; but first resolve filename...
+(defun verilog-load-file-at-mouse (event)
+  "loads file under button 2 click. Files are checked based on
+`verilog-library-directories'."
+  (interactive "@e")
+  (save-excursion ;; implement a verilog specific ffap-at-mouse
+    (mouse-set-point event)
+    (beginning-of-line)
+    (if (looking-at verilog-include-file-regexp)
+	(if (and (car (verilog-library-filenames 
+		       (match-string 1) (buffer-file-name)))
+		 (file-readable-p (car (verilog-library-filenames 
+					(match-string 1) (buffer-file-name)))))
+	    (find-file (car (verilog-library-filenames 
+			     (match-string 1) (buffer-file-name))))
+	  (progn
+	    (message 
+	     "File '%s' isn't readable, use shift-mouse2 to paste in this field" 
+	     (match-string 1))))
+      )))
+
+;; ffap isn't useable for verilog mode. It uses library paths.
+;; so define this function to do more or less the same as ffap
+;; but first resolve filename...
+(defun verilog-load-file-at-point ()
+  "loads file under point. Files are checked based on
+`verilog-library-directories'."
+  (interactive)
+  (save-excursion ;; implement a verilog specific ffap
+    (beginning-of-line)
+    (if (looking-at verilog-include-file-regexp)
+	(if (and 
+	     (car (verilog-library-filenames 
+		   (match-string 1) (buffer-file-name)))
+	     (file-readable-p (car (verilog-library-filenames 
+				    (match-string 1) (buffer-file-name)))))
+	    (find-file (car (verilog-library-filenames 
+			     (match-string 1) (buffer-file-name))))))
+      ))
+
 
 ;;
 ;; Bug reporting
