@@ -317,6 +317,16 @@ If non nil, treat as
   :group 'verilog-mode-indent
   :type 'boolean)
 
+(defcustom verilog-indent-lists t
+  "*How to treat indenting items in a list.
+If t (the default), indent as:
+  always @( posedge a or
+            reset ) begin
+If nil, treat as
+  always @( posedge a or
+     reset ) begin"
+  :group 'verilog-mode-indent
+  :type 'boolean)
 
 (defcustom verilog-indent-level-behavioral 3
   "*Absolute indentation of first begin in a task or function block.
@@ -482,7 +492,26 @@ something like:
 Note these are only read when the file is first visited, you must use
 \\[find-alternate-file] RET  to have these take effect after editing them!
 
-See also verilog-library-extensions."
+See also verilog-library-files and verilog-library-extensions."
+  :group 'verilog-mode-auto
+  :type '(repeat file))
+
+(defcustom verilog-library-files '(".")
+  "*List of files to search for modules in when looking for files for
+/*AUTOINST*/.  This is a complete path, usually to a technology file with
+many standard cells defined in it.
+
+You might want these defined in each file; put at the *END* of your file
+something like:
+
+// Local Variables:
+// verilog-library-files:(\"/some/path/technology.v\" \"/some/path/tech2.v\")
+// End:
+
+Note these are only read when the file is first visited, you must use
+\\[find-alternate-file] RET  to have these take effect after editing them!
+
+See also verilog-library-directories."
   :group 'verilog-mode-auto
   :type '(repeat directory))
 
@@ -677,6 +706,7 @@ If set will become buffer local.")
     ("AUTO Help..."
      ["AUTO General"			(describe-function 'verilog-auto) t]
      ["AUTO Library Path"		(describe-variable 'verilog-library-directories) t]
+     ["AUTO Library Files"		(describe-variable 'verilog-library-files) t]
      ["AUTO Library Extensions"		(describe-variable 'verilog-library-extensions) t]
      ["AUTO `define Reading"		(describe-function 'verilog-read-defines) t]
      ["AUTO `include Reading"		(describe-function 'verilog-read-includes) t]
@@ -2772,8 +2802,11 @@ type.  Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 		   ;; if we are in a comment, done.
 		   (if (verilog-in-star-comment-p)   (throw 'nesting 'comment))
 
-		   ;; if we are in a parenthesized list, done.
- 		   (if (verilog-in-paren) (progn (setq par 1) (throw 'nesting 'block)))
+		   ;; if we are in a parenthesized list, and the user likes to indent
+		   ;; these, return. 
+ 		   (if (and verilog-indent-lists
+			    (verilog-in-paren)) 
+		       (progn (setq par 1) (throw 'nesting 'block)))
 ;		   (if (/= 0 (verilog-parenthesis-depth)) (progn (setq par 1) (throw 'nesting 'block)))
 
 		   ;; if we have a directive, done.
@@ -4125,7 +4158,8 @@ VERILOG-STR is an exact match, nil otherwise."
 (defun verilog-goto-defun ()
   "Move to specified Verilog module/task/function.
 The default is a name found in the buffer around point.
-If search fails, other files are checked based on `verilog-library-directories'
+If search fails, other files are checked based on
+`verilog-library-directories', `verilog-library-files',
 and `verilog-library-extensions'."
   (interactive)
   (let* ((default (verilog-get-default-symbol))
@@ -4751,7 +4785,7 @@ EXIT-KEYWD is expression to stop at, nil if top level.
 RVALUE is true if at right hand side of equal.
 IGNORE-NEXT is true to ignore next token, fake from inside case statement."
   (let* ((semi-rvalue (equal "endcase" exit-keywd)) ;; true if after a ; we are looking for rvalue
-	 keywd last-keywd sig-tolk sig-last-tolk gotend)
+	 keywd last-keywd sig-tolk sig-last-tolk gotend end-else-check)
     ;;(if dbg (setq dbg (concat dbg (format "Recursion %S %S %S\n" exit-keywd rvalue ignore-next))))
     (while (not (or (eobp) gotend))
       (cond
@@ -4772,12 +4806,26 @@ IGNORE-NEXT is true to ignore next token, fake from inside case statement."
 	   ((equal keywd "\"")
 	    (or (re-search-forward "[^\\]\"" nil t)
 		(error "%s: Unmatched quotes, at char %d" (verilog-point-text) (point))))
+	   ;; else at top level loop, keep parsing
+	   ((and end-else-check (equal keywd "else"))
+	    ;;(if dbg (setq dbg (concat dbg (format "\tif-check-else %s\n" keywd))))
+	    ;; no forward movement, want to see else in lower loop
+	    (setq end-else-check nil))
+	   ;; End at top level loop
+	   ((and end-else-check (looking-at "^[ \t\n]"))
+	    ;;(if dbg (setq dbg (concat dbg (format "\tif-check-else-other %s\n" keywd))))
+	    (setq gotend t))
 	   ;; Final statement?
-	   ((equal keywd (or exit-keywd ";"))
+	   ((and exit-keywd (equal keywd exit-keywd))
 	    (setq gotend t)
 	    (forward-char (length keywd)))
+	   ;; Standard tokens...
 	   ((equal keywd ";")
 	    (setq ignore-next nil rvalue semi-rvalue)
+	    ;; Final statement at top level loop?
+	    (when (not exit-keywd)
+	      ;;(if dbg (setq dbg (concat dbg (format "\ttop-end-check %s\n" keywd))))
+	      (setq end-else-check t))
 	    (forward-char 1))
 	   ((equal keywd "'")
 	    (if (looking-at "'[odbhx][_xz?0-9a-fA-F \t]*")
@@ -5121,8 +5169,9 @@ variables to build the path."
 
 (defun verilog-module-filenames (module current)
   "Return a search path to find the given MODULE name.
-Uses the CURRENT filename, `verilog-library-extensions' and
-`verilog-library-directories' variable to build the path."
+Uses the CURRENT filename, `verilog-library-extensions',
+`verilog-library-directories' and `verilog-library-files'
+variables to build the path."
   ;; Return search locations for it
   (append (list current)	; first, current buffer
  	  (let ((ext verilog-library-extensions) flist)
@@ -5131,7 +5180,9 @@ Uses the CURRENT filename, `verilog-library-extensions' and
  		    (append (verilog-library-filenames
  			     (concat module (car ext)) current) flist)
 		    ext (cdr ext)))
-	    flist)))
+	    flist)
+	  verilog-library-files	 ; finally, any libraries
+	  ))
 
 ;;
 ;; Module Information
@@ -5683,10 +5734,10 @@ Limitations:
   This presumes a one-to-one port name to signal name mapping.
 
   Module names must be resolvable to filenames by adding a
-  verilog-library-extension, and being found in the same directory, or by
-  changing the variable `verilog-library-directories'.  Macros `modname are
-  translated through the vh-{name} Emacs variable, if that is not found, it
-  just ignores the `.
+  verilog-library-extension, and being found in the same directory, or
+  by changing the variable `verilog-library-directories' or
+  `verilog-library-files'.  Macros `modname are translated through the
+  vh-{name} Emacs variable, if that is not found, it just ignores the `.
 
   In templates you must have one signal per line, ending in a ), or ));,
   and have proper () nesting, including a final ); to end the template.
@@ -6029,9 +6080,8 @@ Typing \\[verilog-auto] will make this into:
 	   output o;
 	   input i;
 	   /*AUTOWIRE*/
-	   // Beginning of automatic wires
-           // (for undeclared instantiated-module outputs)
-	   wire [31:0]		ov;	// From inst of inst.v
+	   // Beginning of automatic wires (for undeclared instantiated-module outputs)
+	   wire [31:0]		ov;			// From inst of inst.v
 	   // End of automatics
 	   inst inst (/*AUTOINST*/
 		      // Outputs
@@ -6520,7 +6570,7 @@ For example:
 	somesub sub (/*AUTOINST*/);
 
 You can also update the AUTOs from the shell using:
-	emacs --batch $FILENAME_V -f verilog-auto -f `save-buffer'
+	emacs --batch $FILENAME_V -f verilog-auto -f save-buffer
 
 Using \\[describe-function], see also:
    `verilog-auto-arg'    for AUTOARG module instantiations
@@ -6640,7 +6690,7 @@ Wilson Snyder (wsnyder@wsnyder.org)"
 ;; Place the templates into Verilog Mode.  They may be inserted under any key.
 ;; C-c C-t will be the default.  If you use templates alot, you
 ;; may want to consider moving the binding to another key in your .emacs
-;; file.
+;; file.  
 ;;
 ;(define-key verilog-mode-map "\C-ct" verilog-template-map)
 (define-key verilog-mode-map "\C-c\C-t" verilog-template-map)
@@ -6942,34 +6992,35 @@ and the case items."
 		    "Menu for statement templates in Verilog."
 		    '("Statements"
 ;		      ["-------" nil nil]
-		      ["header" (verilog-sk-header) t]
-		      ["comment" (verilog-sk-comment) t]
+		      ["C-c C-t h  header" (verilog-sk-header) t]
+		      ["C-c C-t /  comment" (verilog-sk-comment) t]
 		      ["-------" nil nil]
-		      ["module" (verilog-sk-module) t]
-		      ["primitive" (verilog-sk-primitive) t]
+		      ["C-c C-t m  module" (verilog-sk-module) t]
+		      ["C-c C-t p  primitive" (verilog-sk-primitive) t]
 		      ["-------" nil nil]
-		      ["input" (verilog-sk-input) t]
-		      ["output" (verilog-sk-output) t]
-		      ["inout" (verilog-sk-inout) t]
-		      ["wire" (verilog-sk-wire) t]
-		      ["reg" (verilog-sk-reg) t]
+		      ["C-c C-t I  input" (verilog-sk-input) t]
+		      ["C-c C-t O  output" (verilog-sk-output) t]
+		      ["C-c C-t =  inout" (verilog-sk-inout) t]
+		      ["C-c C-t W  wire" (verilog-sk-wire) t]
+		      ["C-c C-t R  reg" (verilog-sk-reg) t]
 		      ["-------" nil nil]
-		      ["initial" (verilog-sk-initial) t]
-		      ["always" (verilog-sk-always) t]
-		      ["function" (verilog-sk-function) t]
-		      ["task" (verilog-sk-task) t]
-		      ["specify" (verilog-sk-specify) t]
-		      ["generate" (verilog-sk-generate) t]
+		      ["C-c C-t i  initial" (verilog-sk-initial) t]
+		      ["C-c C-t a  always" (verilog-sk-always) t]
+		      ["C-c C-t F  function" (verilog-sk-function) t]
+		      ["C-c C-t t  task" (verilog-sk-task) t]
+		      ["C-c C-t s  specify" (verilog-sk-specify) t]
+		      ["C-c C-t g  generate" (verilog-sk-generate) t]
 		      ["-------" nil nil]
-		      ["begin" (verilog-sk-begin) t]
-		      ["if" (verilog-sk-if) t]
-		      ["else (if)" (verilog-sk-else-if) t]
-		      ["for" (verilog-sk-for) t]
-		      ["while" (verilog-sk-while) t]
-		      ["repeat" (verilog-sk-repeat) t]
-		      ["case" (verilog-sk-case) t]
-		      ["casex" (verilog-sk-casex) t]
-		      ["casez" (verilog-sk-casez) t]
+		      ["C-c C-t b  begin" (verilog-sk-begin) t]
+		      ["C-c C-t ?  if" (verilog-sk-if) t]
+		      ["C-c C-t :  (if) else" (verilog-sk-else-if) t]
+		      ["C-c C-t f  for" (verilog-sk-for) t]
+		      ["C-c C-t w  while" (verilog-sk-while) t]
+		      ["C-c C-t j  fork" (verilog-sk-fork) t]
+		      ["C-c C-t r  repeat" (verilog-sk-repeat) t]
+		      ["C-c C-t c  case" (verilog-sk-case) t]
+		      ["C-c C-t x  casex" (verilog-sk-casex) t]
+		      ["C-c C-t z  casez" (verilog-sk-casez) t]
 		      ["-----" nil nil]
 		      ))
   (if verilog-running-on-xemacs
