@@ -108,6 +108,12 @@
 	      (` (cond ( (, var) (,@ body))))))
         (error nil))
       (condition-case nil
+          (if (fboundp 'unless)
+	      nil ;; fab
+	    (defmacro unless (var &rest body)
+	      (` (if (, var) nil (,@ body)))))
+        (error nil))
+      (condition-case nil
           (if (fboundp 'store-match-data)
 	      nil ;; fab
 	    (defmacro store-match-data (&rest args) nil))
@@ -137,9 +143,9 @@
 	  (require 'dinotrace)
 	(error nil))
       (condition-case nil
-	  (if (fboundp 'dinotrace-unannotate-all-buffers)
+	  (if (fboundp 'dinotrace-unannotate-all)
 	      nil ;; great
-	    (defun dinotrace-unannotate-all-buffers (&rest args) nil))
+	    (defun dinotrace-unannotate-all (&rest args) nil))
 	(error nil))
       (condition-case nil
 	  (if (fboundp 'customize-apropos)
@@ -833,14 +839,18 @@ supported list, along with the values for this variable:
 ;;;  Macros
 ;;;
 
-(defun verilog-string-replace-matches (from-string to-string fixedcase literal string)
-  "Replace occurances of from-string with to-string in the string."
+(defsubst verilog-string-replace-matches (from-string to-string fixedcase literal string)
+  "Replace occurances of from-string with to-string in the string.
+The case (verilog-string-replace-matches \"o\" \"oo\" nil nil \"foobar\")
+will break, as the o's continuously replace.  xa -> x works ok though."
   ;; Hopefully soon to a emacs built-in
-  (while (string-match from-string string)
-    (setq string (replace-match to-string fixedcase literal string)))
-  string)
+  (let ((start 0))
+    (while (string-match from-string string start)
+      (setq string (replace-match to-string fixedcase literal string)
+	    start (min (length string) (match-end 0))))
+    string))
 
-(defun verilog-string-remove-spaces (string)
+(defsubst verilog-string-remove-spaces (string)
   "Remove spaces surrounding the string"
   (save-match-data
     (setq string (verilog-string-replace-matches "^\\s-+" "" nil nil string))
@@ -1342,6 +1352,7 @@ Other useful functions are:
 	    (skip-chars-backward " \t")
 	    (bolp)))
       (let* (
+	     (oldpnt (point))
 	     (boi-point 
 	      (save-excursion
 		(beginning-of-line)
@@ -1361,7 +1372,25 @@ Other useful functions are:
 		(back-to-indentation)
 		(point))))
         (if (< (point) boi-point)
-            (back-to-indentation)))
+            (back-to-indentation)
+	  (if (not (eolp))
+	      (end-of-line)
+	    (progn
+	      (indent-for-comment)
+	      (if (and (eolp) (= oldpnt (point)))
+		  (progn	; kill existing comment
+		    (beginning-of-line)
+		    (re-search-forward comment-start-skip oldpnt 'move)
+		    (goto-char (match-beginning 0))
+		    (skip-chars-backward " \t")
+		    (kill-region (point) oldpnt)
+		    )
+		)
+	      )
+	    )
+					;					 )
+	  )
+	)
     (progn (insert "\t"))
     )
   )
@@ -2253,6 +2282,24 @@ save the buffer, and compile to check syntax."
     (unknown     . 3) 
     (string      . 0)))
 
+(defun verilog-continued-line-1 (lim)
+  "Return true if this is a continued line.
+   Set point to where line starts"
+  (let ((continued 't))
+    (if (eq 0 (forward-line -1))
+	(progn
+	  (end-of-line)
+	  (verilog-backward-ws&directives lim)
+	  (if (bobp)
+	      (setq continued nil)
+	    (setq continued (verilog-backward-token))
+	    )
+	  )
+      (setq continued nil)
+      )
+    continued)
+  )
+
 (defun verilog-calculate-indent ()
   "Calculate the indent of the current Verilog line, through examination
 of previous lines.  Once a line is found that is definitive as to the
@@ -2522,23 +2569,6 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
     )
   )
 
-(defun verilog-continued-line-1 (lim)
-  "Return true if this is a continued line.
-   Set point to where line starts"
-  (let ((continued 't))
-    (if (eq 0 (forward-line -1))
-	(progn
-	  (end-of-line)
-	  (verilog-backward-ws&directives lim)
-	  (if (bobp)
-	      (setq continued nil)
-	    (setq continued (verilog-backward-token))
-	    )
-	  )
-      (setq continued nil)
-      )
-    continued)
-  )
 
 (defun verilog-continued-line ()
   "Return true if this is a continued line.
@@ -3821,7 +3851,7 @@ busses combined.  For example A[2] and A[1] become A[2:1]."
   (let ((combo "")
 	out-list signal highbit lowbit svhighbit svlowbit comment svbusstring bus)
       ;; Shove signals so duplicated signals will be adjacent
-      (setq in-list (sort in-list '(lambda (a b) (string< (car a) (car b)))))
+      (setq in-list (sort in-list (function (lambda (a b) (string< (car a) (car b))))))
       (while in-list
 	(setq signal (nth 0 (car in-list))
 	      bus (nth 1 (car in-list))
@@ -3884,9 +3914,10 @@ busses combined.  For example A[2] and A[1] become A[2:1]."
     (buffer-substring-no-properties (match-beginning 0) (match-end 0))))
 
 (defun verilog-read-inst-name ()
-  "Return instance_name when point is inside instantiation"
+  "Return instance_name when point is inside instantiation.
+Or, return module name when after its ( or ;"
   (save-excursion
-    (search-backward "(")
+    (re-search-backward "[(;]")
     (verilog-re-search-backward-quick "\\b[a-zA-Z0-9`_\$]" nil nil)
     (skip-chars-backward "a-zA-Z0-9`_$")
     (looking-at "[a-zA-Z0-9`_\$]+")
@@ -3918,9 +3949,11 @@ module that the point is over."
 	 ((looking-at "//")
 	  (search-forward "\n"))
 	 ((looking-at "/\\*")
-	  (search-forward "*/"))
+	  (or (search-forward "*/")
+	      (error "Unmatched /* */, at char %d in %s" (point) (buffer-name))))
 	 ((eq ?\" (following-char))
-	  (re-search-forward "[^\\]\""))	;; don't forward-char first, since we look for a non backslash first
+	  (or (re-search-forward "[^\\]\"" nil t)	;; don't forward-char first, since we look for a non backslash first
+	      (error "Unmatched quotes, at char %d in %s" (point) (buffer-name))))
 	 ((eq ?\; (following-char))
 	  (setq vec nil expect-signal nil newsig nil paren 0 rvalue nil)
 	  (forward-char 1))
@@ -3954,22 +3987,22 @@ module that the point is over."
 	  (goto-char (match-end 0))
 	  (setq keywd (match-string 1))
 	  (cond ((equal keywd "input")
-		 (setq expect-signal 'sigs-in))
+		 (setq vec nil expect-signal 'sigs-in))
 		((equal keywd "output")
-		 (setq expect-signal 'sigs-out))
+		 (setq vec nil expect-signal 'sigs-out))
 		((equal keywd "inout")
-		 (setq expect-signal 'sigs-inout))
+		 (setq vec nil expect-signal 'sigs-inout))
 		((equal keywd "wire")
-		 (setq expect-signal 'sigs-wire))
+		 (setq vec nil expect-signal 'sigs-wire))
 		((equal keywd "reg")
-		 (setq expect-signal 'sigs-reg))
+		 (setq vec nil expect-signal 'sigs-reg))
 		((equal keywd "assign")
-		 (setq expect-signal 'sigs-assign))
+		 (setq vec nil expect-signal 'sigs-assign))
 		((or (equal keywd "supply0")
 		     (equal keywd "supply1")
 		     (equal keywd "supply")
 		     (equal keywd "parameter"))
-		 (setq expect-signal 'sigs-const))
+		 (setq vec nil expect-signal 'sigs-const))
 		((or (equal keywd "function")
 		     (equal keywd "task"))
 		 (setq functask (1+ functask)))
@@ -4091,7 +4124,8 @@ component library to determine connectivity of the design."
        ((looking-at "//")
 	(search-forward "\n"))
        ((looking-at "/\\*")
-	(search-forward "*/"))
+	(or (search-forward "*/")
+	    (error "Unmatched /* */, at char %d in %s" (point) (buffer-name))))
        (t (setq keywd (buffer-substring-no-properties
 		       (point) 
 		       (save-excursion (when (eq 0 (skip-syntax-forward "w_"))
@@ -4102,7 +4136,8 @@ component library to determine connectivity of the design."
 	  ;;(if dbg (setq dbg (concat dbg (format "\tPt %S %S\t%S %S\n" (point) keywd rvalue ignore-next))))
 	  (cond
 	   ((equal keywd "\"")
-	    (re-search-forward "[^\\]\""))
+	    (or (re-search-forward "[^\\]\"" nil t)
+		(error "Unmatched quotes, at char %d in %s" (point) (buffer-name))))
 	   ;; Final statement?
 	   ((equal keywd (or exit-keywd ";"))
 	    (setq gotend t)
@@ -4272,9 +4307,10 @@ Note these are only read when the file is first visited, you must use
 "
   (save-excursion
     (goto-char (point-min))
-    (while (re-search-forward "^\\s-*`define\\s-+\\([a-zA-Z0-9_$]+\\)\\s-+\\([a-zA-Z0-9_$`]+\\)" nil t)
+    (while (re-search-forward "^\\s-*`define\\s-+\\([a-zA-Z0-9_$]+\\)\\s-+\\(.*\\)$" nil t)
       (let ((mac (intern (concat "vh-" (match-string 1))))
 	    (value (match-string 2)))
+	(setq value (verilog-string-replace-matches "\\s-*/[/*].*$" "" nil nil value))
 	(make-variable-buffer-local mac)
 	(set mac value)))))
 
@@ -4321,7 +4357,7 @@ Allows version control to check out the file if need be."
 	   (while (and 
 		   ;; It may be tempting to look for verilog-defun-re, don't, it slows things down a lot!
 		   (verilog-re-search-forward-quick "module" nil t)
-		   (verilog-re-search-forward-quick "(" nil t))
+		   (verilog-re-search-forward-quick "[(;]" nil t))
 	     (if (equal mod (verilog-read-inst-name))
 		 (setq pt (point))))
 	   pt))))
@@ -4343,10 +4379,10 @@ If undefined, and WING-IT, return just SYMBOL without the tick, else nil."
 verilog-library-directories variable to build the path"
   ;; Return search locations for it
   (append (list current)	; first, current buffer
-	  (mapcar '(lambda (dir) 
-		     (expand-file-name
-		      (concat mod ".v")
-		      (expand-file-name dir (file-name-directory current))))
+	  (mapcar (function (lambda (dir) 
+			      (expand-file-name
+			       (concat mod ".v")
+			       (expand-file-name dir (file-name-directory current)))))
 		  verilog-library-directories)))
 
 ;;;
@@ -4424,7 +4460,7 @@ Return modi if successful, else print message."
 
 (defun verilog-modi-goto (modi)
   "Move point/buffer to specified modi"
-  (or modi (error "Passed unfound modi to goto, check earlier."))
+  (or modi (error "Passed unfound modi to goto, check earlier"))
   (set-buffer (if (bufferp (aref modi 1))
 		  (aref modi 1)
 		(find-file-noselect (aref modi 1))))
@@ -4589,7 +4625,7 @@ signals and invalidating the cache."
   "Print out a definition for a list of SIGNALS of the given TYPE,
 with appropriate INPUT.  TYPE is normally wire/reg/output."
   (or dont-sort
-      (setq sigs (sort (copy-alist sigs) '(lambda (a b) (string< (car a) (car b))))))
+      (setq sigs (sort (copy-alist sigs) (function (lambda (a b) (string< (car a) (car b)))))))
   (while sigs
     (let ((sig (car sigs)))
       (indent-to indent-pt)
@@ -4636,6 +4672,8 @@ Deletion stops at the matching end parenthesis."
 Use \\[verilog-auto] to re-insert the updated AUTOs."
   (interactive)
   (save-excursion
+    (if (buffer-file-name)
+	(find-file-noselect (buffer-file-name)))	;; To check we have latest version
     ;; Remove those that have multi-line insertions
     (verilog-auto-re-search-do "/\\*AUTO\\(OUTPUTEVERY\\|WIRE\\|REG\\|INPUT\\|OUTPUT\\)\\*/"
 			       'verilog-delete-autos-lined)
@@ -4728,25 +4766,20 @@ Typing \\[verilog-auto] will make this into:
 	 (tpl-net (concat port (nth 1 port-st))))
     (cond (tpl-ass
 	   (setq tpl-net (nth 1 tpl-ass))
-	   (or
-	    (and
-	     (string-match "@\"\\([^>\"]+\\)\"" tpl-net)
-	     (while (string-match "@\"\\([^>\"]+\\)\"" tpl-net)
-	       (setq tpl-net (concat (substring tpl-net 0 (match-beginning 0))
-				     (save-match-data
-				       (let ((expr (match-string 1 tpl-net)))
-					 (while (string-match "@" expr)
-					   (setq expr (concat (substring expr 0 (match-beginning 0))
-							      tpl-num
-							      (substring expr (match-end 0)))))
-					 (prin1 (eval (car (read-from-string expr)))
-						(lambda (ch) ()))))
-				     (substring tpl-net (match-end 0))))))
-	    (and
-	     (while (string-match "@" tpl-net)
-	       (setq tpl-net (concat (substring tpl-net 0 (match-beginning 0))
-				     tpl-num
-				     (substring tpl-net (match-end 0)))))))))
+	   (cond ((string-match "@\"\\(.*[^\\]\\)\"" tpl-net)
+		  (setq tpl-net
+			(concat
+			 (substring tpl-net 0 (match-beginning 0))
+			 (save-match-data
+			   (let ((expr (match-string 1 tpl-net)))
+			     (setq expr (verilog-string-replace-matches "\\\\\"" "\"" nil nil expr))
+			     (setq expr (verilog-string-replace-matches "@" tpl-num nil nil expr))
+			     (prin1 (eval (car (read-from-string expr)))
+				    (lambda (ch) ()))))
+			 (substring tpl-net (match-end 0)))))
+		 (t
+		  (setq tpl-net (verilog-string-replace-matches "@" tpl-num nil nil tpl-net))
+		  ))))
     (indent-to indent-pt)
     (insert "." port)
     (indent-to 40)
@@ -4817,7 +4850,8 @@ need to be listed.
 
 If the syntax @\"( ... )\" is found, the expression in quotes will be
 evaluated as a lisp expression, with @ replaced by the instantation number.
-The example above would put @+1 modulo 4 into the brackets.
+The example above would put @+1 modulo 4 into the brackets.  Quote all
+double-quotes inside the expression with a leading backslash (\").
 
 The above template will convert:
 
@@ -4865,21 +4899,21 @@ signal wasn't in the template, it is assumed to be a direct connection.
 	(let ((sig-list (verilog-modi-get-outputs submodi)))
 	  (indent-to indent-pt)
 	  (insert "// Outputs\n")	;; Note these are searched for in verilog-read-sub-decl
-	  (mapcar '(lambda (port) 
-		     (verilog-auto-inst-port port indent-pt tpl-list tpl-num))
+	  (mapcar (function (lambda (port) 
+			      (verilog-auto-inst-port port indent-pt tpl-list tpl-num)))
 		  sig-list))
 	(let ((sig-list (verilog-modi-get-inouts submodi)))
 	  (when sig-list
 	    (indent-to indent-pt)
 	    (insert "// Inouts\n")
-	    (mapcar '(lambda (port) 
-		       (verilog-auto-inst-port port indent-pt tpl-list tpl-num))
+	    (mapcar (function (lambda (port) 
+				(verilog-auto-inst-port port indent-pt tpl-list tpl-num)))
 		    sig-list)))
 	(let ((sig-list (verilog-modi-get-inputs submodi)))
 	  (indent-to indent-pt)
 	  (insert "// Inputs\n")
-	  (mapcar '(lambda (port) 
-		     (verilog-auto-inst-port port indent-pt tpl-list tpl-num))
+	  (mapcar (function (lambda (port) 
+			      (verilog-auto-inst-port port indent-pt tpl-list tpl-num)))
 		  sig-list))
 	;; Kill extra semi
 	(save-excursion
@@ -5289,7 +5323,7 @@ Typing \\[verilog-auto] will make this into:
 	(let ((tlen (length sig-list)))
 	  (setq sig-list (verilog-signals-not-in sig-list sig-memories))
 	  (if (not (eq tlen (length sig-list))) (insert " /*memory or*/ "))))
-      (setq sig-list (sort sig-list '(lambda (a b) (string< (car a) (car b)))))
+      (setq sig-list (sort sig-list (function (lambda (a b) (string< (car a) (car b))))))
       (while sig-list 
 	(cond ((> (+ 4 (current-column) (length (nth 0 (car sig-list)))) fill-column) ;+4 for width of or
 	       (insert "\n")
@@ -5342,7 +5376,7 @@ Wilson Snyder (wsnyder@wsnyder.org)
   (interactive)
   (message "Updating AUTOs...")
   (if (featurep 'dinotrace)
-      (dinotrace-unannotate-all-buffers))
+      (dinotrace-unannotate-all))
   (let ((oldbuf (if (not (buffer-modified-p))
 		    (buffer-string)))
 	;; Before version 20, match-string with font-lock returns a 
