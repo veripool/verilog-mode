@@ -2730,14 +2730,15 @@ becomes:
     (beginning-of-line)
     (when 
 	(looking-at "\\(INFO\\|WARNING\\|ERROR\\) \\[[^-]+-\\([^]]+\\)\\]: \\([^,]+\\), line \\([0-9]+\\): \\(.*\\)$")
-      (let* ((type (match-string 1))
+      (let* (
+            ;(type (match-string 1)) ; not needed
 	     (code (match-string 2))
 	     (file (match-string 3))
 	     (line (match-string 4))
-	     (text (match-string 5))
-	     (buffer (get-buffer(file-name-nondirectory file)))
+	    ; (text (match-string 5)) ; not needed
+	     (buffer (get-file-buffer file))
 	     dir filename)
-	(unless (compare-file-to-buffer buffer file)
+	(unless buffer
 	  (progn
 	    (setq buffer
 		  (and (file-exists-p file)
@@ -3221,12 +3222,11 @@ Optional BOUND limits search."
 		   (save-excursion
 		     (parse-partial-sexp (point-min) (point)))))
 	      (cond
-	       ((nth 4 state) ;; in /* */ comment
-		(verilog-re-search-backward "/\*" nil 'move)
-		)
 	       ((nth 7 state) ;; in // comment
 		(verilog-re-search-backward "//" nil 'move)
-		)))
+                (skip-chars-backward "/"))
+	       ((nth 4 state) ;; in /* */ comment
+		(verilog-re-search-backward "/\*" nil 'move))))
 	    (narrow-to-region bound (point))
 	    (while (/= here (point))
 	      (setq here (point))
@@ -3259,12 +3259,10 @@ Optional BOUND limits search."
 		   (save-excursion
 		     (parse-partial-sexp (point-min) (point)))))
 	      (cond
-	       ((nth 4 state) ;; in /* */ comment
-		(verilog-re-search-forward "/\*" nil 'move)
-		)
 	       ((nth 7 state) ;; in // comment
-		(verilog-re-search-forward "//" nil 'move)
-		)))
+		(verilog-re-search-forward "//" nil 'move))
+	       ((nth 4 state) ;; in /* */ comment
+		(verilog-re-search-forward "/\*" nil 'move))))
 	    (narrow-to-region (point) bound)
 	    (while (/= here (point))
 	      (setq here (point)
@@ -3355,7 +3353,7 @@ Optional BOUND limits search."
      (search-backward "\"")
      t)
     ((nth 7 state)			;Inside // comment
-     (search-backward "//")
+     (search-backward "//")(skip-chars-backward "/")
      t)
     ((nth 4 state)			;Inside /* */ comment
      (search-backward "/*")
@@ -5175,7 +5173,11 @@ Some macros and such are also found and included.  For dinotrace.el"
   "Return point if MODULE is specified inside FILENAME, else nil.
 Allows version control to check out the file if need be."
   (and (or (file-exists-p filename)
-	   (and (fboundp 'vc-backend) (vc-backend filename)))
+	   (and 
+	    (condition-case nil
+		(fboundp 'vc-backend) 
+	      (error nil))
+	    (vc-backend filename)))
        (let (pt)
 	 (save-excursion
 	   (set-buffer (find-file-noselect filename))
@@ -7089,19 +7091,41 @@ and the case items."
     (reporter-submit-bug-report
      "verilog-mode-bugs@verilog.com"
      (concat "verilog-mode v" (substring verilog-mode-version 12 -3))
-     '(verilog-indent-level
-       verilog-indent-level-module
-       verilog-indent-level-declaration
-       verilog-indent-level-behavioral
-       verilog-cexp-indent
-       verilog-case-indent
-       verilog-auto-newline
-       verilog-auto-indent-on-newline
-       verilog-tab-always-indent
+     '(
+       verilog-align-ifelse
        verilog-auto-endcomments
-       verilog-minimum-comment-distance
+       verilog-auto-hook
+       verilog-auto-indent-on-newline
+       verilog-auto-inst-vector
+       verilog-auto-lineup
+       verilog-auto-newline
+       verilog-auto-save-policy
+       verilog-auto-sense-defines-constant
+       verilog-auto-sense-include-inputs
+       verilog-before-auto-hook
+       verilog-case-indent
+       verilog-cexp-indent
+       verilog-compiler
+       verilog-coverage
+       verilog-highlight-translate-off
        verilog-indent-begin-after-if
-       verilog-auto-lineup)
+       verilog-indent-declaration-macros
+       verilog-indent-level
+       verilog-indent-level-behavioral
+       verilog-indent-level-declaration
+       verilog-indent-level-directive
+       verilog-indent-level-module
+       verilog-indent-lists
+       verilog-library-directories
+       verilog-library-extensions
+       verilog-library-files
+       verilog-linter
+       verilog-minimum-comment-distance
+       verilog-mode-hook
+       verilog-simulator
+       verilog-tab-always-indent
+       verilog-tab-to-comment
+       )
      nil nil
      (concat "Hi Mac,
 
