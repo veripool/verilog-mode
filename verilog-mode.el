@@ -214,6 +214,12 @@
 	(regexp-opt a b 't)
       (regexp-opt a b)))
   )
+(defun verilog-regexp-opt (a b)
+  "Deal with differing number of required arguments for  `regexp-opt'.
+Call 'regexp-opt' on A and B."
+  (if (= 3 (function-min-args `regexp-opt))
+      (unwind-protect (regexp-opt a b 't))
+    (regexp-opt a b)))
 
 (defun verilog-customize ()
   "Link to customize screen for Verilog."
@@ -1027,21 +1033,41 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
 
 (defconst verilog-keywords
   '( "`define" "`else" "`endif" "`ifdef"
-     "`include" "`timescale" "`undef" "always" "always_comb" "always_ff"
-     "always_latch" "and" "assign" "begin" "bit" "buf" "bufif0" "bufif1"
-     "case" "casex" "casez" "cmos" "default" "defparam" "disable" "else"
-     "end" "endcase" "endfunction" "endgenerate" "endinterface"
-     "endmodule" "endpackage" "endprimitive" "endspecify" "endtable"
-     "endtask" "event" "final" "for" "force" "forever" "fork" "function"
-     "generate" "if" "iff" "initial" "inout" "input" "integer" "interface"
-     "join" "join_any" "join_none" "localparam" "logic" "macromodule" "makefile" "module"
-     "nand" "negedge" "nmos" "nor" "not" "notif0" "notif1" "or" "output" "return" "break" "continue"
-     "package" "parameter" "pmos" "posedge" "primitive" "priority"
-     "pulldown" "pullup" "rcmos" "real" "realtime" "reg" "repeat"
-     "rnmos" "rpmos" "rtran" "rtranif0" "rtranif1" "signed" "specify"
-     "supply" "supply0" "supply1" "table" "task" "time" "tran" "tranif0"
-     "tranif1" "tri" "tri0" "tri1" "triand" "trior" "trireg" "typedef"
-     "unique" "vectored" "wait" "wand" "while" "wire" "wor" "xnor" "xor"
+     "`include" "`timescale" "`undef" 
+     "alias" "always" "always_comb" "always_ff" "always_latch" "and"
+     "assert" "assign" "assume" "automatic" "before" "begin" "bind"
+     "bins" "binsof" "bit" "break" "buf" "bufif0" "bufif1" "byte"
+     "case" "casex" "casez" "cell" "chandle" "class" "clocking" "cmos"
+     "config" "const" "constraint" "context" "continue" "cover"
+     "covergroup" "coverpoint" "cross" "deassign" "default" "defparam"
+     "design" "disable" "dist" "do" "edge" "else" "end" "endcase"
+     "endclass" "endclocking" "endconfig" "endfunction" "endgenerate"
+     "endgroup" "endinterface" "endmodule" "endpackage" "endprimitive"
+     "endprogram" "endproperty" "endspecify" "endsequence" "endtable"
+     "endtask" "enum" "event" "expect" "export" "extends" "extern"
+     "final" "first_match" "for" "force" "foreach" "forever" "fork"
+     "forkjoin" "function" "generate" "genvar" "highz0" "highz1" "if"
+     "iff" "ifnone" "ignore_bins" "illegal_bins" "import" "incdir"
+     "include" "initial" "inout" "input" "inside" "instance" "int"
+     "integer" "interface" "intersect" "join" "join_any" "join_none"
+     "large" "liblist" "library" "local" "localparam" "logic"
+     "longint" "macromodule" "matches" "medium" "modport" "module"
+     "nand" "negedge" "new" "nmos" "nor" "noshowcancelled" "not"
+     "notif0" "notif1" "null" "or" "output" "package" "packed"
+     "parameter" "pmos" "posedge" "primitive" "priority" "program"
+     "property" "protected" "pull0" "pull1" "pulldown" "pullup"
+     "pulsestyle_onevent" "pulsestyle_ondetect" "pure" "rand" "randc"
+     "randcase" "randsequence" "rcmos" "real" "realtime" "ref" "reg"
+     "release" "repeat" "return" "rnmos" "rpmos" "rtran" "rtranif0"
+     "rtranif1" "scalared" "sequence" "shortint" "shortreal"
+     "showcancelled" "signed" "small" "solve" "specify" "specparam"
+     "static" "string" "strong0" "strong1" "struct" "super" "supply0"
+     "supply1" "table" "tagged" "task" "this" "throughout" "time"
+     "timeprecision" "timeunit" "tran" "tranif0" "tranif1" "tri"
+     "tri0" "tri1" "triand" "trior" "trireg" "type" "typedef" "union"
+     "unique" "unsigned" "use" "var" "vectored" "virtual" "void"
+     "wait" "wait_order" "wand" "weak0" "weak1" "while" "wildcard"
+     "wire" "with" "within" "wor" "xnor" "xor"
  )
  "List of Verilog keywords.")
 
@@ -1229,6 +1255,21 @@ See also `verilog-font-lock-extra-types'.")
   "Font lock mode face used to background highlight translate-off regions."
   :group 'font-lock-highlighting-faces)
 
+(defvar
+  verilog-font-lock-p1800-face
+  'verilog-font-lock-p1800-face
+  "Font to use for p1800 keywords")
+(defface verilog-font-p1800-face
+  '((((class color)
+      (background light))
+     (:foreground "DarkOrange3" :bold t ))
+    (((class color)
+      (background dark))
+     (:foreground "gray10" :bold t ))
+    (t (:italic t)))
+  "Font lock mode face used to highlight P1800 keywords."
+  :group 'font-lock-highlighting-faces)
+
 (let* ((verilog-type-font-keywords
 	(eval-when-compile
 	  (verilog-regexp-opt
@@ -1249,6 +1290,31 @@ See also `verilog-font-lock-extra-types'.")
 	  (verilog-regexp-opt
 	   '("surefire" "synopsys" "rtl_synthesis" "verilint" ) nil
 	    )))
+
+       (verilog-p1800-keywords
+	(eval-when-compile
+	  (verilog-regexp-opt
+	   '("alias" "assert" "assume" "automatic" "before" "bind"
+	     "bins" "binsof" "break" "byte" "cell" "chandle" "class"
+	     "clocking" "config" "const" "constraint" "context" "continue"
+	     "cover" "covergroup" "coverpoint" "cross" "deassign" "design"
+	     "dist" "do" "edge" "endclass" "endclocking" "endconfig"
+	     "endgroup" "endprogram" "endproperty" "endsequence" "enum"
+	     "expect" "export" "extends" "extern" "first_match" "foreach"
+	     "forkjoin" "genvar" "highz0" "highz1" "ifnone" "ignore_bins"
+	     "illegal_bins" "import" "incdir" "include" "inside" "instance"
+	     "int" "intersect" "large" "liblist" "library" "local" "longint"
+	     "matches" "medium" "modport" "new" "noshowcancelled" "null"
+	     "packed" "program" "property" "protected" "pull0" "pull1"
+	     "pulsestyle_onevent" "pulsestyle_ondetect" "pure" "rand" "randc"
+	     "randcase" "randsequence" "ref" "release" "return" "scalared"
+	     "sequence" "shortint" "shortreal" "showcancelled" "small" "solve"
+	     "specparam" "static" "string" "strong0" "strong1" "struct"
+	     "super" "tagged" "this" "throughout" "timeprecision" "timeunit"
+	     "type" "union" "unsigned" "use" "var" "virtual" "void"
+	     "wait_order" "weak0" "weak1" "wildcard" "with" "within"
+	     ) nil )))
+
 
        (verilog-font-keywords
 	(eval-when-compile
@@ -1276,6 +1342,10 @@ See also `verilog-font-lock-extra-types'.")
 	 ;; Fontify all types
 	 (cons (concat "\\<\\(" verilog-type-font-keywords "\\)\\>")
 	       'font-lock-type-face)
+	 ;; Fontify IEEE-P1800 keywords
+	 (cons (concat "\\<\\(" verilog-p1800-keywords "\\)\\>")
+	       'verilog-font-p1800-face)
+
 	 ))
 
   (setq verilog-font-lock-keywords-1
