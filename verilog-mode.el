@@ -7,7 +7,9 @@
 ;; Author: Michael McNamara (mac@verilog.com) 
 ;; President, SureFire Verification, Inc.
 ;; (company was previously known as Silicon Sorcery)
+;;	http://www.surefirev.com
 ;; AUTO features, signal, modsig; by: Wilson Snyder (wsnyder@wsnyder.org)
+;;	http://www.veripool.org
 ;; Keywords: languages
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -272,13 +274,6 @@
   :group 'verilog-mode
   :type 'boolean )
 
-(defcustom verilog-auto-endcomments t
-  "*Non-nil means a comment /* ... */ is set after the ends which ends
-  cases and functions. The name of the function or case will be set
-  between the braces."
-  :group 'verilog-mode
-  :type 'boolean )
-
 (defcustom verilog-minimum-comment-distance 10
   "*Minimum distance (in lines) between begin and end required before
 a comment will be inserted.  Setting this variable to zero results in
@@ -287,6 +282,29 @@ comments in tight quarters"
   :group 'verilog-mode
   :type 'integer 
   )
+
+(defcustom verilog-auto-endcomments t
+  "*Non-nil means a comment /* ... */ is set after the ends which ends
+  cases and functions. The name of the function or case will be set
+  between the braces."
+  :group 'verilog-mode
+  :type 'boolean )
+
+(defcustom verilog-auto-save-policy nil
+  "*Non-nil indicates action to take when saving a Verilog buffer that has
+  been changed but not auto-updated.  A value of `force' will always do the
+  auto-updates when saving.  A value of `detect' will do the auto-updates
+  when it thinks necessary.  A value of `ask' will query the user when it
+  thinks updating is needed.
+
+  You should not rely on the 'ask or 'detect policies, they are safeguards
+  only.  They do not detect when AUTOINSTs need to be updated because a
+  sub-module's port list has changed."
+  :group 'verilog-mode
+  :type '(choice (const nil) (const ask) (const detect) (const force)))
+
+(defvar verilog-auto-update-tick nil
+  "Modification tick at which autos were last performed.")
 
 (setq verilog-error-regexp
   '(
@@ -362,9 +380,9 @@ lineups."
     2 'font-lock-function-name-face nil t)
    ("\\(\\\\\\S-*\\s-\\)\\|\\(`\\s-*[A-Za-z][A-Za-z0-9_]*\\)" 0 'font-lock-function-name-face)
    ("\\(@\\)\\|\\(#\\s-*\\(\\(\[0-9_\]+\\('[hdxbo][0-9_xz]*\\)?\\)\\|\\((\[^)\]*)\\|\\sw+\\)\\)\\)" 0 'font-lock-type-face)
-; "integer" "event" "input" "inout" "parameter" "defparam" "output" "supply0" "supply1" "supply" "tri0" "tri1" "trireg"
+; "integer" "event" "input" "inout" "parameter" "defparam" "output" "supply0" "supply1" "supply" "tri" "tri0" "tri1" "trireg"
 ; "triand" trior" "wire" "wor" "wand" "time" "real" "realtime" "reg" "signed" "vectored"
-   ("\\<\\(defparam\\|event\\|in\\(out\\|put\\|teger\\)\\|output\\|parameter\\|re\\(al\\(\\|time\\)\\|g\\)\\|s\\(igned\\|upply\\(\\|[01]\\)\\)\\|t\\(ime\\|ri\\([01]\\|and\\|or\\|reg\\)\\)\\|vectored\\|w\\(and\\|ire\\|or\\)\\)\\>" 0 'font-lock-type-face)
+   ("\\<\\(defparam\\|event\\|in\\(out\\|put\\|teger\\)\\|output\\|parameter\\|re\\(al\\(\\|time\\)\\|g\\)\\|s\\(igned\\|upply\\(\\|[01]\\)\\)\\|t\\(ime\\|ri\\(\\|[01]\\|and\\|or\\|reg\\)\\)\\|vectored\\|w\\(and\\|ire\\|or\\)\\)\\>" 0 'font-lock-type-face)
 ; "assign" "force" "always" "initial" "begin" "end"  "case" "casex" "casez" "default" "endcase"
 ; "if" "wait" "else" "fork" "join" "for" "while" "repeat" "forever" "posedge" "negedge"
 ; "primitive" "endprimitive" "specify" "endspecify" "table" "endtable" 
@@ -382,9 +400,9 @@ lineups."
      2 font-lock-function-name-face nil t)
     ("\\(\\\\\\S-*\\s-\\)\\|\\(`\\s-*[A-Za-z][A-Za-z0-9_]*\\)" 0 font-lock-function-name-face)
     ("\\(@\\)\\|\\(#\\s-*\\(\\(\[0-9_\]+\\('[hdxbo][0-9_xz]*\\)?\\)\\|\\((\[^)\]*)\\|\\sw+\\)\\)\\)" 0 font-lock-type-face)
-; "integer" "event" "input" "inout" "parameter" "defparam" "output" "supply0" "supply1" "supply" "tri0" "tri1" "trireg"
+; "integer" "event" "input" "inout" "parameter" "defparam" "output" "supply0" "supply1" "supply" "tri" "tri0" "tri1" "trireg"
 ; "triand" trior" "wire" "wor" "wand" "time" "real" "realtime" "reg" "signed" "vectored"
-   ("\\<\\(defparam\\|event\\|in\\(out\\|put\\|teger\\)\\|output\\|parameter\\|re\\(al\\(\\|time\\)\\|g\\)\\|s\\(igned\\|upply\\(\\|[01]\\)\\)\\|t\\(ime\\|ri\\([01]\\|and\\|or\\|reg\\)\\)\\|vectored\\|w\\(and\\|ire\\|or\\)\\)\\>" 0 font-lock-type-face)
+   ("\\<\\(defparam\\|event\\|in\\(out\\|put\\|teger\\)\\|output\\|parameter\\|re\\(al\\(\\|time\\)\\|g\\)\\|s\\(igned\\|upply\\(\\|[01]\\)\\)\\|t\\(ime\\|ri\\(\\|[01]\\|and\\|or\\|reg\\)\\)\\|vectored\\|w\\(and\\|ire\\|or\\)\\)\\>" 0 font-lock-type-face)
 ; "assign" "force" "always" "initial" "begin" "end"  "case" "casex" "casez" "default" "endcase"
 ; "if" "wait" "else" "fork" "join" "for" "while" "repeat" "forever" "posedge" "negedge"
 ; "primitive" "endprimitive" "specify" "endspecify" "table" "endtable" 
@@ -487,8 +505,9 @@ format (e.g. 09/17/1997) is not supported.")
     "----"
     ("Help..."
      ["AUTO General"			(describe-function 'verilog-auto) t]
-     ["AUTO `define Reading"		(describe-function 'verilog-read-defines) t]
      ["AUTO Library Path"		(describe-variable 'verilog-library-directories) t]
+     ["AUTO `define Reading"		(describe-function 'verilog-read-defines) t]
+     ["AUTO `include Reading"		(describe-function 'verilog-read-includes) t]
      ["AUTOARG"				(describe-function 'verilog-auto-arg) t]
      ["AUTOINST"			(describe-function 'verilog-auto-inst) t]
      ["AUTOINOUTMODULE"			(describe-function 'verilog-auto-inout-module) t]
@@ -788,7 +807,7 @@ The syntax patches are no longer supported either for verilog-mode."))))
     (list major comments))
   "A list of features extant in the Emacs you are using.
 There are many flavors of Emacs out there, each with different
-features supporting those needed by verilog-mode.  Heres the current
+features supporting those needed by verilog-mode.  Here's the current
 supported list, along with the values for this variable:
 
  Vanilla Emacs 18/Epoch 4:   (v18 no-dual-comments)
@@ -1249,6 +1268,8 @@ Other useful functions are:
   ;; Tell imenu how to handle verilog. 
   (make-local-variable 'imenu-generic-expression) 
   (setq imenu-generic-expression verilog-imenu-generic-expression) 
+  ;; Stuff for autos
+  (add-hook 'write-contents-hooks 'verilog-auto-save-check) ; already local
   ;; End GNU emacs stuff
   (run-hooks 'verilog-mode-hook))
 
@@ -2292,7 +2313,7 @@ Useful for creating tri's and other expanded fields."
   "Update automatics with \\[verilog-auto],
 save the buffer, and compile to check syntax."
   (interactive)
-  (verilog-auto)
+  (verilog-auto)	; Always do it for saftey
   (save-buffer)
   (compile compile-command))
 
@@ -4277,6 +4298,9 @@ component library to determine connectivity of the design."
 	   ((equal keywd "=")
 	    (setq ignore-next nil rvalue t)
 	    (forward-char 1))
+	   ((equal keywd "?")
+	    (forward-char 1)
+	    (verilog-read-always-signals-recurse ":" rvalue nil))
 	   ((equal keywd "[")
 	    (forward-char 1)
 	    (verilog-read-always-signals-recurse "]" t nil))
@@ -4314,7 +4338,8 @@ component library to determine connectivity of the design."
 			   (verilog-string-replace-matches
 			    "\[[^0-9: \t]+\]" "" nil nil
 			    (or (verilog-symbol-detick keywd nil) keywd)))
-		     (if (string-match "^[0-9 \t]+$" keywd)
+		     (if (or (string-match "^[0-9 \t]+$" keywd)
+			     (string-match "^[0-9 \t]+'[hbdox]*[0-9 \t]*$" keywd))
 			 (setq keywd nil))
 		     )
 		   (if got-sig (if got-rvalue
@@ -4413,14 +4438,20 @@ found returns the signal name connections.  Return nil or list of
 	     )))))
 ;;;(progn (find-file "auto-template.v") (verilog-read-auto-template "ptl_entry"))
 
-(defun verilog-read-defines ()
-  "Read `defines for the given file.  They must be simple text substitutions,
-one on a line.
+(defun verilog-read-defines (&optional filename)
+  "Read `defines for the current file, or with a optional FILENAME, that
+file.  If the filename is provided, verilog-library-directories will be
+used to resolve it.
+
+Defines must be simple text substitutions, one on a line, starting
+at the beginning of the line.  Any ifdefs or multline comments around the
+define are ignored.
 
 Defines are stored inside emacs variables using the name vh-{definename}.
-Useful for setting vh-* variables. The file variables feature can be used
-to set defines that verilog-mode can see; put at the *END* of your file
-something like:
+
+This function is useful for setting vh-* variables. The file variables
+feature can be used to set defines that verilog-mode can see; put at the
+*END* of your file something like:
 
 // Local Variables:
 // vh-macro:\"macro_definition\"
@@ -4431,19 +4462,61 @@ you can read them automatically (provided enable-local-eval is on):
 
 // Local Variables:
 // eval:(verilog-read-defines)
+// eval:(verilog-read-defines \"group_standard_includes.v\")
 // End:
 
 Note these are only read when the file is first visited, you must use
 \\[find-alternate-file] RET  to have these take effect after editing them!
 "
+  (let ((origbuf (current-buffer)))
+    (save-excursion
+      (when filename
+	(let ((fns (verilog-library-filenames filename (buffer-file-name))))
+	  (if fns
+	      (set-buffer (find-file-noselect (car fns)))
+	    (error (concat "Can't find verilog-read-defines file: " filename)))))
+      (goto-char (point-min))
+      (while (re-search-forward "^\\s-*`define\\s-+\\([a-zA-Z0-9_$]+\\)\\s-+\\(.*\\)$" nil t)
+	(let ((mac (intern (concat "vh-" (match-string 1))))
+	      (value (match-string 2)))
+	  (setq value (verilog-string-replace-matches "\\s-*/[/*].*$" "" nil nil value))
+	  (save-excursion
+	    (set-buffer origbuf)
+	    ;;(message "Define %s %s=%s" origbuf mac value) (sleep-for 1)
+	    (set (make-variable-buffer-local mac) value)))))))
+
+(defun verilog-read-includes ()
+  "Read `includes for the current file.  This will find all of the `includes
+which are at the beginning of lines, ignoring any ifdefs or multiline comments
+around them.  verilog-read-defines is then performed on each included file.
+
+It is often useful put at the *END* of your file something like:
+
+// Local Variables:
+// eval:(verilog-read-includes)
+// End:
+
+Note includes are only read when the file is first visited, you must use
+\\[find-alternate-file] RET  to have these take effect after editing them!
+
+It is good to get in the habit of including all needed files in each .v
+file that needs it, rather then waiting for compile time.  This will aid
+this process, Verilint, and readability.  To prevent defining the same
+variable over and over when many modules are compiled together, put a test
+around the inside each include file:
+
+foo.v (a include):
+	`ifdef _FOO_V	// include if not already included
+	`else
+	`define _FOO_V
+	... contents of file
+	`endif // _FOO_V
+"
   (save-excursion
     (goto-char (point-min))
-    (while (re-search-forward "^\\s-*`define\\s-+\\([a-zA-Z0-9_$]+\\)\\s-+\\(.*\\)$" nil t)
-      (let ((mac (intern (concat "vh-" (match-string 1))))
-	    (value (match-string 2)))
-	(setq value (verilog-string-replace-matches "\\s-*/[/*].*$" "" nil nil value))
-	(make-variable-buffer-local mac)
-	(set mac value)))))
+    (while (re-search-forward "^\\s-*`include\\s-+\\([^ \t\n]+\\)" nil t)
+      (let ((inc (verilog-string-replace-matches "\"" "" nil nil (match-string 1))))
+	(verilog-read-defines inc)))))
 
 (defun verilog-read-signals ()
   "Return a simple list of all possible signals in the file, overly aggressive but
@@ -4505,16 +4578,26 @@ If undefined, and WING-IT, return just SYMBOL without the tick, else nil."
   mod)
 ;;(verilog-symbol-detick "mod" nil)
 
+(defun verilog-library-filenames (filename current)
+  "Return a search path to find the given filename name.  Uses the
+verilog-library-directories variable to build the path"
+  (let ((ckdir verilog-library-directories)
+	fn outlist)
+    (while ckdir
+      (setq fn (expand-file-name
+		filename
+		(expand-file-name (car ckdir) (file-name-directory current))))
+      (if (file-exists-p fn)
+	  (setq outlist (cons fn outlist)))
+      (setq ckdir (cdr ckdir)))
+    (nreverse outlist)))
+
 (defun verilog-module-filenames (mod current)
   "Return a search path to find the given module name.  Uses the
 verilog-library-directories variable to build the path"
   ;; Return search locations for it
   (append (list current)	; first, current buffer
-	  (mapcar (function (lambda (dir) 
-			      (expand-file-name
-			       (concat mod ".v")
-			       (expand-file-name dir (file-name-directory current)))))
-		  verilog-library-directories)))
+	  (verilog-library-filenames (concat mod ".v") current)))
 
 ;;;
 ;;; Module Information
@@ -4822,6 +4905,32 @@ Use \\[verilog-auto] to re-insert the updated AUTOs."
 
 
 ;;;
+;;; Auto save
+;;;
+
+(defun verilog-auto-save-check ()
+  "On saving see if we need auto update"
+  (cond ((not verilog-auto-save-policy)) ; disabled
+	((not (save-excursion
+		(save-match-data
+		  (let ((case-fold-search nil))
+		    (goto-char (point-min))
+		    (re-search-forward "AUTO" nil t))))))
+	((eq verilog-auto-save-policy 'force)
+	 (verilog-auto))
+	((not (buffer-modified-p)))
+	((eq verilog-auto-update-tick (buffer-modified-tick))) ; up-to-date
+	((eq verilog-auto-save-policy 'detect)
+	 (verilog-auto))
+	(t
+	 (when (yes-or-no-p "AUTO statements not recomputed, do it now? ")
+	   (verilog-auto))
+	 ;; Don't ask again if didn't update
+	 (set (make-local-variable 'verilog-auto-update-tick) (buffer-modified-tick))
+	 ))
+  nil)	;; Always return nil -- we don't write the file ourselves
+
+;;;
 ;;; Auto creation
 ;;;
 
@@ -4897,17 +5006,18 @@ Typing \\[verilog-auto] will make this into:
 	 (tpl-net (concat port (nth 1 port-st))))
     (cond (tpl-ass
 	   (setq tpl-net (nth 1 tpl-ass))
-	   (cond ((string-match "@\"\\(.*[^\\]\\)\"" tpl-net)
-		  (setq tpl-net
-			(concat
-			 (substring tpl-net 0 (match-beginning 0))
-			 (save-match-data
-			   (let ((expr (match-string 1 tpl-net)))
-			     (setq expr (verilog-string-replace-matches "\\\\\"" "\"" nil nil expr))
-			     (setq expr (verilog-string-replace-matches "@" tpl-num nil nil expr))
-			     (prin1 (eval (car (read-from-string expr)))
-				    (lambda (ch) ()))))
-			 (substring tpl-net (match-end 0)))))
+	   (cond ((string-match "@\".*[^\\]\"" tpl-net)
+		  (while (string-match "@\"\\(\\([^\\\"]*\\(\\\\.\\)*\\)*\\)\"" tpl-net)
+		    (setq tpl-net
+			  (concat
+			   (substring tpl-net 0 (match-beginning 0))
+			   (save-match-data
+			     (let ((expr (match-string 1 tpl-net)))
+			       (setq expr (verilog-string-replace-matches "\\\\\"" "\"" nil nil expr))
+			       (setq expr (verilog-string-replace-matches "@" tpl-num nil nil expr))
+			       (prin1 (eval (car (read-from-string expr)))
+				      (lambda (ch) ()))))
+			   (substring tpl-net (match-end 0))))))
 		 (t
 		  (setq tpl-net (verilog-string-replace-matches "@" tpl-num nil nil tpl-net))
 		  ))))
@@ -4920,6 +5030,8 @@ Typing \\[verilog-auto] will make this into:
       (insert " // Templated"))
     (insert "\n")))
 ;;;(verilog-auto-inst-port (list "foo" "[5:0]") 10 (list (list "foo" "a@\"(% (+ @ 1) 4)\"a")) "3")
+;;;(x "incom[@\"(+ (* 8 @) 7)\":@\"(* 8 @)\"]")
+;;;(x ".out (outgo[@\"(concat (+ (* 8 @) 7) \\\":\\\" ( * 8 @))\"]));")
 
 (defun verilog-auto-inst ()
   "Replace the argument calls inside an instantiation with ones
@@ -5028,11 +5140,12 @@ signal wasn't in the template, it is assumed to be a direct connection.
 	;; Find submodule's signals and dump
 	(insert "\n")
 	(let ((sig-list (verilog-modi-get-outputs submodi)))
-	  (indent-to indent-pt)
-	  (insert "// Outputs\n")	;; Note these are searched for in verilog-read-sub-decl
-	  (mapcar (function (lambda (port) 
-			      (verilog-auto-inst-port port indent-pt tpl-list tpl-num)))
-		  sig-list))
+	  (when sig-list
+	    (indent-to indent-pt)
+	    (insert "// Outputs\n")	;; Note these are searched for in verilog-read-sub-decl
+	    (mapcar (function (lambda (port) 
+				(verilog-auto-inst-port port indent-pt tpl-list tpl-num)))
+		    sig-list)))
 	(let ((sig-list (verilog-modi-get-inouts submodi)))
 	  (when sig-list
 	    (indent-to indent-pt)
@@ -5041,23 +5154,27 @@ signal wasn't in the template, it is assumed to be a direct connection.
 				(verilog-auto-inst-port port indent-pt tpl-list tpl-num)))
 		    sig-list)))
 	(let ((sig-list (verilog-modi-get-inputs submodi)))
-	  (indent-to indent-pt)
-	  (insert "// Inputs\n")
-	  (mapcar (function (lambda (port) 
-			      (verilog-auto-inst-port port indent-pt tpl-list tpl-num)))
-		  sig-list))
+	  (when sig-list
+	    (indent-to indent-pt)
+	    (insert "// Inputs\n")
+	    (mapcar (function (lambda (port) 
+				(verilog-auto-inst-port port indent-pt tpl-list tpl-num)))
+		    sig-list)))
 	;; Kill extra semi
 	(save-excursion
-	  (when (re-search-backward "," pt t)
-	    (delete-char 1)
-	    (insert ");")
-	    (search-forward "\n")	;; Added by inst-port
-	    (delete-backward-char 1)
-	    (if (search-forward ")" nil t) ;; From user, moved up a line
-		(delete-backward-char 1))
-	    (if (search-forward ";" nil t) ;; Don't error if user had syntax error and forgot it
-		(delete-backward-char 1))
-	    ))
+	  (cond ((re-search-backward "," pt t)
+		 (delete-char 1)
+		 (insert ");")
+		 (search-forward "\n")	;; Added by inst-port
+		 (delete-backward-char 1)
+		 (if (search-forward ")" nil t) ;; From user, moved up a line
+		     (delete-backward-char 1))
+		 (if (search-forward ";" nil t) ;; Don't error if user had syntax error and forgot it
+		     (delete-backward-char 1))
+		 )
+		(t
+		 (delete-backward-char 1)	;; Newline Inserted above
+		 )))
 	))))
 
 (defun verilog-auto-reg ()
@@ -5500,7 +5617,8 @@ Using \\[describe-function], see also:
    verilog-auto-reg    for AUTOREG registers
    verilog-auto-sense  for AUTOSENSE always sensitivity lists
 
-   verilog-read-defines for reading `define values
+   verilog-read-defines  for reading `define values
+   verilog-read-includes for reading `includes
 
 If you have bugs with these autos, try contacting
 Wilson Snyder (wsnyder@wsnyder.org)
@@ -5548,6 +5666,8 @@ Wilson Snyder (wsnyder@wsnyder.org)
        )
       ;;
       (run-hooks 'verilog-auto-hook)
+      ;;
+      (set (make-local-variable 'verilog-auto-update-tick) (buffer-modified-tick))
       ;;
       ;; If end result is same as when started, clear modified flag
       (cond ((and oldbuf (equal oldbuf (buffer-string)))
