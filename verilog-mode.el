@@ -387,7 +387,7 @@ lineups."
 ; "if" "wait" "else" "fork" "join" "for" "while" "repeat" "forever" "posedge" "negedge"
 ; "primitive" "endprimitive" "specify" "endspecify" "table" "endtable" 
 ; "function" "endfunction" "task" "endtask" "module" "macromodule""endmodule"
- ("\\<\\(\\$[a-zA-Z][a-zA-Z0-9_\\$]*\\|\\(a\\(lways\\|ssign\\)\\|begin\\|case\\(\\|[xz]\\)\\|\\(de\\(fault\\|assign\\)\\)\\|e\\(lse\\|nd\\(\\|case\\|function\\|module\\|primitive\\|specify\\|ta\\(ble\\|sk\\)\\)\\)\\|f\\(or\\(\\|ce\\|ever\\|k\\)\\|unction\\)\\|i\\(f\\|nitial\\)\\|join\\|m\\(acromodule\\|odule\\)\\|negedge\\|p\\(osedge\\|rimitive\\)\\|re\\(peat\\|lease\\)\\|specify\\|ta\\(ble\\|sk\\)\\|w\\(ait\\|hile\\)\\)\\)\\>" 0 'font-lock-keyword-face)
+ ("\\<\\(\\$[a-zA-Z][a-zA-Z0-9_\\$]*\\|\\(a\\(lways\\|ssign\\)\\|begin\\|case\\(\\|[xz]\\)\\|\\(d\\(e\\(fault\\|assign\\)\\|isable\\)\\)\\|e\\(lse\\|nd\\(\\|case\\|function\\|module\\|primitive\\|specify\\|ta\\(ble\\|sk\\)\\)\\)\\|f\\(or\\(\\|ce\\|ever\\|k\\)\\|unction\\)\\|i\\(f\\|nitial\\)\\|join\\|m\\(acromodule\\|odule\\)\\|negedge\\|p\\(osedge\\|rimitive\\)\\|re\\(peat\\|lease\\)\\|specify\\|ta\\(ble\\|sk\\)\\|w\\(ait\\|hile\\)\\)\\)\\>" 0 'font-lock-keyword-face)
 
    )
 )
@@ -407,7 +407,7 @@ lineups."
 ; "if" "wait" "else" "fork" "join" "for" "while" "repeat" "forever" "posedge" "negedge"
 ; "primitive" "endprimitive" "specify" "endspecify" "table" "endtable" 
 ; "function" "endfunction" "task" "endtask" "module" "macromodule""endmodule"
-   ("\\<\\(\\$[a-zA-Z][a-zA-Z0-9_\\$]*\\|\\(a\\(lways\\|ssign\\)\\|begin\\|case\\(\\|[xz]\\)\\|\\(de\\(fault\\|assign\\)\\)\\|e\\(lse\\|nd\\(\\|case\\|function\\|module\\|primitive\\|specify\\|ta\\(ble\\|sk\\)\\)\\)\\|f\\(or\\(\\|ce\\|ever\\|k\\)\\|unction\\)\\|i\\(f\\|nitial\\)\\|join\\|m\\(acromodule\\|odule\\)\\|negedge\\|p\\(osedge\\|rimitive\\)\\|re\\(peat\\|lease\\)\\|specify\\|ta\\(ble\\|sk\\)\\|w\\(ait\\|hile\\)\\)\\)\\>" 0 font-lock-keyword-face)
+   ("\\<\\(\\$[a-zA-Z][a-zA-Z0-9_\\$]*\\|\\(a\\(lways\\|ssign\\)\\|begin\\|case\\(\\|[xz]\\)\\|\\(d\\(e\\(fault\\|assign\\)\\)isable\\)\\)\\|e\\(lse\\|nd\\(\\|case\\|function\\|module\\|primitive\\|specify\\|ta\\(ble\\|sk\\)\\)\\)\\|f\\(or\\(\\|ce\\|ever\\|k\\)\\|unction\\)\\|i\\(f\\|nitial\\)\\|join\\|m\\(acromodule\\|odule\\)\\|negedge\\|p\\(osedge\\|rimitive\\)\\|re\\(peat\\|lease\\)\\|specify\\|ta\\(ble\\|sk\\)\\|w\\(ait\\|hile\\)\\)\\)\\>" 0 font-lock-keyword-face)
     )
 )
 
