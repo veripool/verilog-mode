@@ -58,9 +58,12 @@
 ;;; bugs to me at mac@verilog.com.
 ;; 
 ;; $Log$
-;; Revision 1.99  1996/02/15 17:14:23  mac
-;; Made work with Xemacs. provided verilog-mode. small clean up in regexps
+;; Revision 2.1  1996/02/20 19:08:06  mac
+;; First public release
 ;;
+; Revision 1.99  1996/02/15  17:14:23  mac
+; Made work with Xemacs. provided verilog-mode. small clean up in regexps
+;
 ; Revision 1.98  1996/01/26  00:27:25  mac
 ; missing )
 ;
@@ -300,16 +303,16 @@
 ;	  (make-face-bold font-lock-keyword-face)
 	  (if (eq verilog-background-mode 'dark)
 	      (progn
-		(set-face-foreground 'font-lock-keyword-face     "tan")
-		(set-face-foreground 'font-lock-function-name-face "red") 
-		(set-face-foreground 'font-lock-type-face        "#efc80c") ; yellow
-		(set-face-foreground 'font-lock-string-face      "lightskyblue1")
+		(set-face-foreground font-lock-keyword-face     "tan")
+		(set-face-foreground font-lock-function-name-face "red") 
+		(set-face-foreground font-lock-type-face        "#efc80c") ; yellow
+		(set-face-foreground font-lock-string-face      "lightskyblue1")
 		)
 	    (progn
-	      (set-face-foreground 'font-lock-keyword-face     "indianred")
-	      (set-face-foreground 'font-lock-function-name-face "DarkGreen") 
-	      (set-face-foreground 'font-lock-type-face        "#003800")
-	      (set-face-foreground 'font-lock-string-face      "RoyalBlue")
+	      (set-face-foreground font-lock-keyword-face     "indianred")
+	      (set-face-foreground font-lock-function-name-face "DarkGreen") 
+	      (set-face-foreground font-lock-type-face        "#003800")
+	      (set-face-foreground font-lock-string-face      "RoyalBlue")
 	      )
 	    )))))))
 
