@@ -469,7 +469,7 @@ too many redundanet comments in tight quarters")
 	  "\\<re\\(al\\|g\\|altime\\)\\>\\|"
 	  "\\<time\\>\\|\\<tri\\(0\\|1\\|and\\|or\\|reg\\)?\\>\\|"
 	  "\\<supply[01]\\>\\|\\<w\\(and\\|or\\|ire\\)\\>\\)"))
-(defconst verilog-declaration-re-1 (concat verilog-declaration-re "[ \t]*\\(\\[[^]]*\\][ \t]*\\)?"))
+(defconst verilog-declaration-re-1 (concat "^[ \t]*" verilog-declaration-re "[ \t]*\\(\\[[^]]*\\][ \t]*\\)?"))
 (defconst verilog-defun-re       "\\<\\(module\\|macromodule\\|primitive\\)\\>")
 (defconst verilog-end-defun-re   "\\<\\(endmodule\\|endprimitive\\)\\>")
 (defconst verilog-zero-indent-re 
@@ -736,6 +736,14 @@ supported list, along with the values for this variable:
      ((looking-at verilog-end-block-re-1);; end|join|endcase|endtable|endspecify
       (verilog-leap-to-head)
       )
+     ((looking-at "\\(endmodule\\>\\)\\|\\(\\<endprimitive\\>\\)")
+      (cond
+       ((match-end 1)
+	(verilog-re-search-backward "\\<\\(macro\\)?module\\>" nil 'move))
+       ((match-end 2)
+	(verilog-re-search-backward "\\<primitive\\>" nil 'move))
+       (t 
+	(backward-sexp 1))))
      (t
       (backward-sexp))
      ) ;; cond
@@ -750,34 +758,34 @@ supported list, along with the values for this variable:
      ((verilog-skip-forward-comment-or-string)
       (verilog-forward-syntactic-ws)
       )
-     ((looking-at verilog-beg-block-re-1);; end|join|endcase|endtable|endspecify
+     ((looking-at verilog-beg-block-re-1);; begin|fork|case|table|specify
       (cond 
        ((match-end 1) ; end
-	;; Search back for matching begin
+	;; Search forward for matching begin
 	(setq reg "\\(\\<begin\\>\\)\\|\\(\\<end\\>\\)" )
 	)
        ((match-end 2) ; endcase
-	;; Search back for matching case
+	;; Search forward for matching case
 	(setq reg "\\(\\<case[xz]?\\>[^:]\\)\\|\\(\\<endcase\\>\\)" )
 	)
        ((match-end 3) ; join
-	;; Search back for matching fork
+	;; Search forward for matching fork
 	(setq reg "\\(\\<fork\\>\\)\\|\\(\\<join\\>\\)" )
 	)
        ((match-end 4) ; endtable
-	;; Search back for matching table
+	;; Search forward for matching table
 	(setq reg "\\(\\<table\\>\\)\\|\\(\\<endtable\\>\\)" )
 	)
        ((match-end 5) ; endspecify
-	;; Search back for matching specify
+	;; Search forward for matching specify
 	(setq reg "\\(\\<specify\\>\\)\\|\\(\\<endspecify\\>\\)" )
 	)
        ((match-end 6) ; endfunction
-	;; Search back for matching function
+	;; Search forward for matching function
 	(setq reg "\\(\\<function\\>\\)\\|\\(\\<endfunction\\>\\)" )
 	)
        ((match-end 7) ; endspecify
-	;; Search back for matching task
+	;; Search forward for matching task
 	(setq reg "\\(\\<task\\>\\)\\|\\(\\<endtask\\>\\)" )
 	)
        )
@@ -796,6 +804,17 @@ supported list, along with the values for this variable:
 	    )
 	)
       )
+     ((looking-at "\\(\\<\\(macro\\)?module\\>\\)\\|\\(\\<primitive\\>\\)")
+      (cond
+       ((match-end 1)
+	(verilog-re-search-forward "\\<endmodule\\>" nil 'move))
+       ((match-end 2)
+	(verilog-re-search-forward "\\<endprimitive\\>" nil 'move))
+       (t 
+	(goto-char st)
+	(if (= (following-char) ?\) )
+	    (forward-char 1)
+	  (forward-sexp 1)))))
      (t
       (goto-char st)
       (if (= (following-char) ?\) )
@@ -973,7 +992,7 @@ Other useful functions are:
     (beginning-of-line)
     (verilog-indent-line))
   (if (and verilog-auto-newline
-	   (not (verilog-parenthesis-depth)))
+	   (= 0 (verilog-parenthesis-depth)))
       (electric-verilog-terminate-line)))
 
 (defun electric-verilog-colon ()
@@ -1836,31 +1855,33 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 		       )
 		     (while (verilog-re-search-backward verilog-indent-reg nil 'move)
 		       (cond 
-			((match-end 2) 
-			 (verilog-leap-to-head)
-			 (if (verilog-in-case-region-p)
-			     (progn
-			       (verilog-re-search-backward "\\(\\<case[xz]?\\>[^:]\\)\\|\\(\\<endcase\\>\\)" nil 'move)
-			       (if (match-end 0)
-				   (goto-char (match-end 0)))))
-			 )
-			
 			((match-end 1)   ; beg-block
 			 (looking-at verilog-beg-block-re-1)
 			 (cond
 			  ((match-end 2)  (throw 'nesting 'case))
 			  (t              (throw 'nesting 'block))))
 
-			((or (match-end 3) 
-			     (match-end 5)) 
+			((match-end 2) ;; end-block
+			 (verilog-leap-to-head)
+			 (if (verilog-in-case-region-p)
+			     (progn
+			       (verilog-leap-to-case-head)
+			       (if (looking-at verilog-case-re)
+				   (throw 'nesting 'case))
+			       )))
+			
+			((or (match-end 3) ;; module.. primitive
+			     (match-end 5)) ;; endtask..
 			 (throw 'nesting 'defun)) 
 
-			((match-end 6) 
+			((match-end 4) ;; endmodule
+			 (throw 'nesting 'cpp))
+
+			((match-end 6) ;; function/task
 			 (throw 'nesting 'behavorial))
 
-			((match-end 4)                     (throw 'nesting 'cpp))
-
-			((bobp) (throw 'nesting 'cpp))
+			((bobp) 
+			 (throw 'nesting 'cpp))
 			)
 		       )
 		     )
@@ -1875,6 +1896,22 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 	(if (eq type 'case)
 	    (list type (verilog-case-indent-level))
 	  (list type (verilog-indent-level)))))))
+(defun verilog-leap-to-case-head () ""
+  (let ((nest 1))
+    (while (/= 0 nest)
+      (verilog-re-search-backward "\\(\\<case[xz]?\\>[^:]\\)\\|\\(\\<endcase\\>\\)" nil 'move)
+      (cond 
+       ((match-end 1)
+	(setq nest (1- nest)))
+       ((match-end 2)
+	(setq nest (1+ nest)))
+       ((bobp)
+	(ding 't)
+	(setq nest 0))
+       )
+      )
+    )
+  )
 
 (defun verilog-leap-to-head () "foo"
   (let (reg 
@@ -2135,8 +2172,7 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 (defun verilog-parenthesis-depth ()
  "Return non zero if in parenthetical-expression"
  (save-excursion
-   (and (verilog-re-search-backward "\\((\\)\\|\\()\\)" nil 'move)
-	(match-end 1))))
+   (car (parse-partial-sexp (point-min) (point)))))
 
 (defun verilog-in-comment-or-string-p ()
  "Return true if in a string or comment"
@@ -2441,7 +2477,7 @@ column number the line should be indented to."
 				 (backward-char))
 			     (verilog-beg-of-statement)
 			     (if (bobp)
-				 (throw 'first (point-marker)))				 
+				 (throw 'first (point-marker)))		
 			     (if (looking-at verilog-declaration-re)
 				 (setq more (/= (point) here))
 			       (throw 'first (point-marker))))
