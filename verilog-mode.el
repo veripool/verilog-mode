@@ -6599,9 +6599,7 @@ Wilson Snyder (wsnyder@wsnyder.org)"
   (interactive "*")
   (save-excursion
     (goto-char (point-min))
-    (if (fboundp 'make-header)
-	(make-header)
-      (verilog-sk-header-tmpl))))
+    (verilog-sk-header-tmpl)))
 
 (define-skeleton verilog-sk-header-tmpl
   "Insert a comment block containing the module title, author, etc."
@@ -6623,7 +6621,6 @@ Wilson Snyder (wsnyder@wsnyder.org)"
   > "module " (verilog-sk-prompt-name) " (/*AUTOARG*/ ) ;" \n
   > _ \n
   > (- verilog-indent-level-behavioral) "endmodule" (progn (electric-verilog-terminate-line) nil))
-  >)
 
 (define-skeleton verilog-sk-primitive
   "Insert a task definition."
@@ -6631,7 +6628,6 @@ Wilson Snyder (wsnyder@wsnyder.org)"
   > "primitive " (verilog-sk-prompt-name) " ( " (verilog-sk-prompt-output) ("input:" ", " str ) " );"\n
   > _ \n
   > (- verilog-indent-level-behavioral) "endprimitive" (progn (electric-verilog-terminate-line) nil))
-  >)
 
 (define-skeleton verilog-sk-task
   "Insert a task definition."
@@ -6642,7 +6638,6 @@ Wilson Snyder (wsnyder@wsnyder.org)"
   > \n 
   > (- verilog-indent-level-behavioral) "end" \n 
   > (- verilog-indent-level-behavioral) "endtask" (progn (electric-verilog-terminate-line) nil))
-  >)
 
 (define-skeleton verilog-sk-function
   "Insert a function definition."
@@ -6653,7 +6648,7 @@ Wilson Snyder (wsnyder@wsnyder.org)"
   > \n 
   > (- verilog-indent-level-behavioral) "end" \n 
   > (- verilog-indent-level-behavioral) "endfunction" (progn (electric-verilog-terminate-line) nil))
-  >)
+
 
 (define-skeleton verilog-sk-always
   "Insert always block.  Uses the minibuffer to prompt
@@ -6662,7 +6657,7 @@ for sensitivity list."
   > "always @ ( /*AUTOSENSE*/ ) begin\n" 
   > _ \n
   > (- verilog-indent-level-behavioral) "end" \n >
-)
+  )
 
 (define-skeleton verilog-sk-initial
   "Insert an initial block."
@@ -6851,10 +6846,10 @@ and the case items."
 		      ["casez" (verilog-sk-casez) t]
 		      ["-----" nil nil]
 		      ))
-    (if (verilog-xemacs) 
-	(progn
-	  (easy-menu-add verilog-stmt-menu)
-	  (setq mode-popup-menu (cons "Verilog Mode" verilog-stmt-menu)))))
+  (if (string-match "XEmacs" emacs-version)
+      (progn
+	(easy-menu-add verilog-stmt-menu)
+	(setq mode-popup-menu (cons "Verilog Mode" verilog-stmt-menu)))))
 
 (add-hook 'verilog-mode-hook 'verilog-add-statement-menu)
 (add-hook 'verilog-mode-hook '(lambda ()
