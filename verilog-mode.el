@@ -428,7 +428,7 @@ sub-module's port list has changed."
 	; SureLint
 ;;    ("[^\n]*\\[\\([^:]+\\):\\([0-9]+\\)\\]" 1 2)
 	; Most SureFire tools
-    ("\\(WARNING\\|ERROR\\|INFO\\)[^:]*: \\([^,]+\\), line \\([0-9]+\\):" 2 3 )
+    ("\\(WARNING\\|ERROR\\|INFO\\)[^:]*: \\([^,]+\\), \\(line \\|\\)\\([0-9]+\\):" 2 4 )
     ("\
 \\([a-zA-Z]?:?[^:( \t\n]+\\)[:(][ \t]*\\([0-9]+\\)\\([) \t]\\|\
 :\\([^0-9\n]\\|\\([0-9]+:\\)\\)\\)" 1 2 5)
@@ -486,8 +486,9 @@ sub-module's port list has changed."
 
 (defcustom verilog-library-directories '(".")
   "*List of directories when looking for files for /*AUTOINST*/.
-The directory may be relative to the current file, or absolute.  Having at
-least the current directory is a good idea.
+The directory may be relative to the current file, or absolute.
+Environment variables are also expanded in the directory names.
+Having at least the current directory is a good idea.
 
 You might want these defined in each file; put at the *END* of your file
 something like:
@@ -4693,6 +4694,16 @@ Signals must be in standard (base vector) form."
   "Compare signal A and B for sorting."
   (string< (car a) (car b)))
 
+(defun verilog-signals-not-params (in-list)
+  "Return list of signals in IN-LIST that aren't parameters or
+numeric constants."
+  (let (out-list)
+    (while in-list
+      (unless (boundp (intern (concat "vh-" (car (car in-list)))))
+	(setq out-list (cons (car in-list) out-list)))
+      (setq in-list (cdr in-list)))
+    (nreverse out-list)))
+
 (defun verilog-signals-combine-bus (in-list)
   "Return a list of signals in IN-LIST, with busses combined.
 Duplicate signals are also removed.  For example A[2] and A[1] become A[2:1]."
@@ -4917,19 +4928,25 @@ Return the list of signals found, using COMMENT for each signal."
 	      (if (looking-at "\\s-*\\.[^(]*(\\s-*\\(\\\\[^ \t\n]*\\)\\s-*)")
 		  (let ((sig (concat (match-string 1) " ")) ;; escaped id's need trailing space
 			vec)
+		    (setq sig (verilog-symbol-detick-denumber sig))
 		    (or (equal sig "")
+			(not sig)
 			(setq sigs (cons (list sig vec comment)
 					 sigs)))))
 	      (if (looking-at "\\s-*\\.[^(]*(\\s-*\\([^[({)]*\\)\\s-*)")
 		  (let ((sig (verilog-string-remove-spaces (match-string 1)))
 			vec)
+		    (setq sig (verilog-symbol-detick-denumber sig))
 		    (or (equal sig "")
+			(not sig)
 			(setq sigs (cons (list sig vec comment)
 					 sigs)))))
 	      (if (looking-at "\\s-*\\.[^(]*(\\s-*\\([^[({)]*\\)\\s-*\\(\\[[^]]+\\]\\)\\s-*)")
 		  (let ((sig (verilog-string-remove-spaces (match-string 1)))
 			(vec (match-string 2)))
+		    (setq sig (verilog-symbol-detick-denumber sig))
 		    (or (equal sig "")
+			(not sig)
 			(setq sigs (cons (list sig vec comment)
 					 sigs)))))
 	      (looking-at "\\s-*\\.[^(]*("))
@@ -5062,7 +5079,7 @@ IGNORE-NEXT is true to ignore next token, fake from inside case statement."
 				       (point)))
 		sig-last-tolk sig-tolk
 		sig-tolk nil)
-	  ;;(if dbg (setq dbg (concat dbg (format "\tPt %S %S\t%S %S\n" (point) keywd rvalue ignore-next))))
+	  ;;(if dbg (setq dbg (concat dbg (format "\tPt %S %S\t%S %S %S\n" (point) keywd rvalue ignore-next end-else-check))))
 	  (cond
 	   ((equal keywd "\"")
 	    (or (re-search-forward "[^\\]\"" nil t)
@@ -5073,7 +5090,7 @@ IGNORE-NEXT is true to ignore next token, fake from inside case statement."
 	    ;; no forward movement, want to see else in lower loop
 	    (setq end-else-check nil))
 	   ;; End at top level loop
-	   ((and end-else-check (looking-at "^[ \t\n]"))
+	   ((and end-else-check (looking-at "[^ \t\n]"))
 	    ;;(if dbg (setq dbg (concat dbg (format "\tif-check-else-other %s\n" keywd))))
 	    (setq gotend t))
 	   ;; Final statement?
@@ -5119,8 +5136,9 @@ IGNORE-NEXT is true to ignore next token, fake from inside case statement."
 	   ((equal keywd "begin")
 	    (skip-syntax-forward "w_")
 	    (verilog-read-always-signals-recurse "end" nil nil)
+	    ;;(if dbg (setq dbg (concat dbg (format "\tgot-end %s\n" exit-keywd))))
 	    (setq ignore-next nil rvalue semi-rvalue)
-	    (if (not exit-keywd) (setq gotend t)))	;; top level begin/end
+	    (if (not exit-keywd) (setq end-else-check t)))
 	   ((or (equal keywd "case")
 		(equal keywd "casex")
 		(equal keywd "casez"))
@@ -5136,22 +5154,7 @@ IGNORE-NEXT is true to ignore next token, fake from inside case statement."
 		       (string-match "^\\$" keywd))	;; PLI task
 		   (setq ignore-next nil))
 		  (t
-		   (when (string-match "^`" keywd)
-		     ;; This only will work if the define is a simple signal, not
-		     ;; something like a[b].  Sorry, it should be substituted into the parser
-		     (setq keywd
-			   (verilog-string-replace-matches
-			    "\[[^0-9: \t]+\]" "" nil nil
-			    (or (verilog-symbol-detick keywd nil)
-				(if verilog-auto-sense-defines-constant
-				    "0"
-				  keywd))))
-		     (if (or (string-match "^[0-9 \t:]+$" keywd)
-			     (string-match "^[---]*[0-9]+$" keywd)
-			     (string-match "^[0-9 \t]+'[odbhx][_xz?0-9a-fA-F \t]*$" keywd)
-			     )
-			 (setq keywd nil))
-		     )
+		   (setq keywd (verilog-symbol-detick-denumber keywd))
 		   (if got-sig (if got-rvalue
 				   (setq sigs-in (cons got-sig sigs-in))
 				 (setq sigs-out (cons got-sig sigs-out))))
@@ -5307,18 +5310,27 @@ Note these are only read when the file is first visited, you must use
 	(goto-char (point-min))
 	(while (re-search-forward "^\\s-*`include\\s-+\\([^ \t\n]+\\)" nil t)
 	  (let ((inc (verilog-string-replace-matches "\"" "" nil nil (match-string 1))))
-	    (verilog-read-defines inc recurse))))
+	    (unless (verilog-inside-comment-p)
+	      (verilog-read-defines inc recurse)))))
       ;; Read `defines
+      ;; note we don't use verilog-re... it's faster this way, and that
+      ;; function has problems when comments are at the end of the define
       (goto-char (point-min))
-      (while (verilog-re-search-forward "^\\s-*`define\\s-+\\([a-zA-Z0-9_$]+\\)\\s-+\\(.*\\)$" nil t)
+      (while (re-search-forward "^\\s-*`define\\s-+\\([a-zA-Z0-9_$]+\\)\\s-+\\(.*\\)$" nil t)
 	(let ((defname (match-string 1))
 	      (defvalue (match-string 2)))
 	  (setq defvalue (verilog-string-replace-matches "\\s-*/[/*].*$" "" nil nil defvalue))
 	  (verilog-set-define defname defvalue origbuf)))
       ;; Hack: Read parameters
       (goto-char (point-min))
-      (while (verilog-re-search-forward "^\\s-*parameter\\s-+\\([a-zA-Z0-9_$]+\\)\\s-+=\\s-+\\([^;]*\\)" nil t)
-	(verilog-set-define (match-string 1) (match-string 2) origbuf))
+      (while (re-search-forward
+	      "^\\s-*parameter\\(\\s-*\\[[^]]*\\]\\|\\)\\s-+\\([a-zA-Z0-9_$]+\\)\\s-*=\\s-*\\([^;,]*\\),?\\s-*" nil t)
+	(verilog-set-define (match-string 2) (match-string 3) origbuf)
+	(forward-comment 999)
+	(while (looking-at "\\s-*,?\\s-*\\([a-zA-Z0-9_$]+\\)\\s-*=\\s-*\\([^;,]*\\),?\\s-*")
+	  (verilog-set-define (match-string 1) (match-string 2) origbuf)
+	  (goto-char (match-end 0))
+	  (forward-comment 999)))
       )))
 
 (defun verilog-read-includes ()
@@ -5410,6 +5422,13 @@ Allows version control to check out the file if need be."
 		 (setq pt (point))))
 	   pt))))
 
+(defun verilog-is-number (symbol)
+  "Return true if SYMBOL is number-like."
+  (or (string-match "^[0-9 \t:]+$" symbol)
+      (string-match "^[---]*[0-9]+$" symbol)
+      (string-match "^[0-9 \t]+'[odbhx][_xz?0-9a-fA-F \t]*$" symbol)
+      ))
+
 (defun verilog-symbol-detick (symbol wing-it)
   "Return a expanded SYMBOL name without any defines.
 If the variable vh-{symbol} is defined, return that value.
@@ -5422,6 +5441,22 @@ If undefined, and WING-IT, return just SYMBOL without the tick, else nil."
   symbol)
 ;;(verilog-symbol-detick "`mod" nil)
 
+(defun verilog-symbol-detick-denumber (symbol)
+  "Return symbol with defines converted and any numbers dropped to nil."
+  (when (string-match "^`" symbol)
+    ;; This only will work if the define is a simple signal, not
+    ;; something like a[b].  Sorry, it should be substituted into the parser
+    (setq symbol
+	  (verilog-string-replace-matches
+	   "\[[^0-9: \t]+\]" "" nil nil
+	   (or (verilog-symbol-detick symbol nil)
+	       (if verilog-auto-sense-defines-constant
+		   "0"
+		 symbol)))))
+  (if (verilog-is-number symbol)
+      nil
+    symbol))
+
 (defun verilog-expand-dirnames (&optional dirnames)
   "Return a list of existing directories given a list of wildcarded dirnames
 or just the existing dirnames themselves if there are no wildcards."
@@ -5431,7 +5466,7 @@ or just the existing dirnames themselves if there are no wildcards."
   (let ((dirlist nil)
 	pattern dirfile dirfiles dirname root filename rest)
     (while dirnames
-      (setq dirname (car dirnames)
+      (setq dirname (substitute-in-file-name (car dirnames))
 	    dirnames (cdr dirnames))
       (cond ((string-match (concat "^\\(\\|[/\\]*[^*?]*[/\\]\\)"  ;; root
 				   "\\([^/\\]*[*?][^/\\]*\\)"	  ;; filename with *?
@@ -6724,30 +6759,40 @@ Typing \\[verilog-auto] will make this into:
 	   end"
   (save-excursion
     ;; Find beginning
-    (let* ((indent-pt (save-excursion
-		       (or (and (search-backward "(" nil t)  (1+ (current-column)))
-			   (current-indentation))))
+    (let* ((start-pt (save-excursion
+		       (verilog-re-search-backward "(" nil t)
+		       (point)))
+	   (indent-pt (save-excursion
+			(or (and (goto-char start-pt) (1+ (current-column)))
+			    (current-indentation))))
 	   (modi (verilog-modi-current))
 	   (sig-memories (verilog-signals-memory (verilog-modi-get-regs modi)))
 	   sigss sig-list not-first presense-sigs)
       ;; Read signals in always, eliminate outputs from sense list
       (setq presense-sigs (verilog-signals-from-signame
 			   (save-excursion
-			     (verilog-read-signals (save-excursion
-						     (verilog-re-search-backward "(" nil t)
-						     (point))
-						   (point)))))
+			     (verilog-read-signals start-pt (point)))))
       (setq sigss (verilog-read-always-signals))
-      (setq sig-list (verilog-signals-not-in (verilog-alw-get-inputs sigss)
-					     (append (and (not verilog-auto-sense-include-inputs)
-							  (verilog-alw-get-outputs sigss))
-						     (verilog-modi-get-consts modi)
-						     presense-sigs)
-					     ))
+      (setq sig-list (verilog-signals-not-params
+		      (verilog-signals-not-in (verilog-alw-get-inputs sigss)
+					      (append (and (not verilog-auto-sense-include-inputs)
+							   (verilog-alw-get-outputs sigss))
+						      (verilog-modi-get-consts modi)
+						      presense-sigs)
+					      )))
       (when sig-memories
 	(let ((tlen (length sig-list)))
 	  (setq sig-list (verilog-signals-not-in sig-list sig-memories))
 	  (if (not (eq tlen (length sig-list))) (insert " /*memory or*/ "))))
+      (if (and presense-sigs  ;; Add a "or" if not "(.... or /*AUTOSENSE*/"
+	       (save-excursion (goto-char (point))
+			       (verilog-re-search-backward "[a-zA-Z0-9`_\$]+" start-pt t)
+			       (verilog-re-search-backward "\\s-" start-pt t)
+			       (while (looking-at "\\s-`endif")
+				 (verilog-re-search-backward "[a-zA-Z0-9`_\$]+" start-pt t)
+				 (verilog-re-search-backward "\\s-" start-pt t))
+			       (not (looking-at "\\s-or\\b"))))
+	  (setq not-first t))
       (setq sig-list (sort sig-list `verilog-signals-sort-compare))
       (while sig-list
 	(cond ((> (+ 4 (current-column) (length (verilog-sig-name (car sig-list)))) fill-column) ;+4 for width of or
@@ -6896,7 +6941,7 @@ Typing \\[verilog-auto] will make this into:
    // Beginning of automatic ASCII enum decoding
    reg [39:0]		_stateascii_r;		// Decode of state_r
    always @(state_r) begin
-      casex ({state_r}) // synopsys full_case parallel_case
+      case ({state_r})
 	SM_IDLE:  _stateascii_r = \"idle \";
 	SM_SEND:  _stateascii_r = \"send \";
 	SM_WAIT1: _stateascii_r = \"wait1\";
@@ -6950,7 +6995,7 @@ Typing \\[verilog-auto] will make this into:
       (verilog-insert-indent "always @(" undecode-name ") begin\n")
       (setq indent-pt (+ indent-pt verilog-indent-level))
       (indent-to indent-pt)
-      (insert "casex ({" undecode-name "}) // synopsys full_case parallel_case\n")
+      (insert "case ({" undecode-name "})\n")
       (setq indent-pt (+ indent-pt verilog-case-indent))
       ;;
       (let ((tmp-sigs enum-sigs)
