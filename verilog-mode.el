@@ -387,6 +387,20 @@ lineups."
 (defvar verilog-mode-abbrev-table nil
   "Abbrev table in use in Verilog-mode buffers.")
 
+;;;
+;;; provide a verilog-header function.
+;;; Customization variables:
+;;;
+(defvar verilog-date-scientific-format nil
+  "*If non-nil, dates are written in scientific format (e.g. 1997/09/17),
+in european format otherwise (e.g. 17.09.1997). The braindead american
+format (e.g. 09/17/1997) is not supported.")
+
+(defvar verilog-company nil "Default name of Company for verilog
+  header. If set will become buffer local. ")
+
+(defvar verilog-project nil "Default name of Project for verilog
+  header. If set will become buffer local.")
 
 (define-abbrev-table 'verilog-mode-abbrev-table ())
 
@@ -424,6 +438,7 @@ lineups."
   (define-key verilog-mode-map "\C-c\C-a" 'verilog-auto)
   (define-key verilog-mode-map "\C-c\C-s" 'verilog-auto-save-compile)
   (define-key verilog-mode-map "\C-c\C-e" 'verilog-expand-vector)
+  (define-key verilog-mode-map "\C-c\C-h" 'verilog-header)
   )
 
 ;; menus
@@ -2764,7 +2779,7 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
  (save-excursion
    (backward-char)
    (skip-chars-backward "^ \t\n")
-   (if (= (char-after) ?\\ )
+   (if (= (char-after (point) ) ?\\ )
        t
      nil)
    )
@@ -3818,6 +3833,86 @@ If search fails, other files are checked based on verilog-library-directories."
 		      (setq tag (format "%3d" this-linenum)))
 		  (insert tag ?:)))))))
       (set-buffer-modified-p nil))))
+
+;;;; Added by Subbu Meiyappan for Header
+
+(defun verilog-header ()
+  "Insert a standard Verilog file header."
+  (interactive)
+  (let ((start (point)))
+  (insert "\
+//-----------------------------------------------------------------------------
+// Title         : <title>
+// Project       : <project>
+//-----------------------------------------------------------------------------
+// File          : <filename>
+// Author        : <author>
+// Created       : <credate>
+// Last modified : <moddate>
+//-----------------------------------------------------------------------------
+// Description :
+// <description>
+//-----------------------------------------------------------------------------
+// Copyright (c) 1998 by <company> This model is the confidential and
+// proprietary property of <company> and the possession or use of this
+// file requires a written license from <company>.
+//------------------------------------------------------------------------------
+// Modification history :
+// <modhist>
+//-----------------------------------------------------------------------------
+
+")
+    (goto-char start)
+    (search-forward "<filename>")
+    (replace-match (buffer-name) t t)
+    (search-forward "<author>") (replace-match "" t t)
+    (insert (user-full-name))     
+    (insert "  <" (user-login-name) "@" (system-name) ">")
+    (search-forward "<credate>") (replace-match "" t t)
+    (insert-date)
+    (search-forward "<moddate>") (replace-match "" t t)
+    (insert-date)
+    (search-forward "<modhist>") (replace-match "" t t)
+    (insert-date)
+    (insert " : created")
+    (goto-char start)
+    (let (string)
+      (setq string (read-string "title: "))
+      (search-forward "<title>")
+      (replace-match string t t)
+      (setq string (read-string "project: " verilog-project))
+      (make-variable-buffer-local 'verilog-project)
+      (setq verilog-project string)
+      (search-forward "<project>")
+      (replace-match string t t)
+      (setq string (read-string "Company: " verilog-company))
+      (make-variable-buffer-local 'verilog-company)
+      (setq verilog-company string)
+      (search-forward "<company>")
+      (replace-match string t t)
+      (search-forward "<company>")
+      (replace-match string t t)
+      (search-forward "<company>")
+      (replace-match string t t)
+      (search-backward "<description>")
+      (replace-match "" t t)
+  )))
+
+;; verilog-header Uses the insert-date function 
+
+(defun insert-date ()
+  "Insert date from the system."
+  (interactive)
+  (let ((timpos))
+    (setq timpos (point))
+    (if verilog-date-scientific-format
+	(shell-command  "date \"+@%Y/%m/%d\"" t)
+      (shell-command  "date \"+@%d.%m.%Y\"" t))
+    (search-forward "@")
+    (delete-region timpos (point))
+    (end-of-line))
+    (delete-char 1)
+  )
 
 
 ;;;
