@@ -1,12 +1,15 @@
+D=/home/mac/external_webpage/src/data
+S=/home/mac/external_webpage/src
 uuencoded_verilog-mode : make_log.pl verilog-mode.el
 	make_log.pl	
-	cvs log verilog-mode.el > l1
-	cat l1 | chop_log.pl > log
-	cat preamble log uu > $@
-	rm l1 log
 
-uu: verilog-mode.el.gz
-	uuencode verilog-mode.el.gz < verilog-mode.el.gz > $@
+install : $(D)/uuencoded_verilog-mode $(D)/emacs-version.h $(S)/ChangeLog.txt
 
-verilog-mode.el.gz : verilog-mode.el
-	gzip -c9 verilog-mode.el > $@
+$(D)/uuencoded_verilog-mode : uuencoded_verilog-mode
+	cp $? $@
+$(D)/emacs-version.h : emacs-version.h
+	cp $? $@
+	touch $(S)/verilog-mode.html
+$(S)/ChangeLog.txt : ChangeLog.txt
+	cp $? $@
+

@@ -86,7 +86,11 @@
 ;; This variable will always hold the version number of the mode
 (defconst verilog-mode-version "$$Revision$$"
   "Version of this verilog mode.")
-
+(defun verilog-version ()
+  "Inform caller of the version of this file"
+  (interactive)
+  (message (concat "Using verilog-mode version " (substring verilog-mode-version 12 -3 )) )
+  )
 ;;
 ;; A hack so we can support either custom, or the old defvar
 ;;
