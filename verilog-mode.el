@@ -100,7 +100,12 @@
           (require 'easymenu)
         (error nil))
       (condition-case nil
-	  (if (fboundp 'current-menubar)
+          (if (fboundp 'store-match-data)
+	      nil ;; fab
+	    (defmacro store-match-data (&rest args) nil))
+        (error nil))
+      (condition-case nil
+	  (if (boundp 'current-menubar)
 	      nil ;; great
 	    (defmacro set-buffer-menubar (&rest args) nil)
 	    (defmacro add-submenu (&rest args) nil))
@@ -670,7 +675,7 @@ supported list, along with the values for this variable:
 
 (defsubst verilog-re-search-forward (REGEXP BOUND NOERROR)
   "Like re-search-forward, but skips over matches in comments or strings"
-  (set-match-data '(nil nil))    
+  (store-match-data '(nil nil))    
   (while (and
 	  (re-search-forward REGEXP BOUND NOERROR)
 	  (and (verilog-skip-forward-comment-or-string)
@@ -687,11 +692,11 @@ supported list, along with the values for this variable:
 
 (defsubst verilog-re-search-backward (REGEXP BOUND NOERROR)
   "Like re-search-backward, but skips over matches in comments or strings"
-  (set-match-data '(nil nil))
+  (store-match-data '(nil nil))
   (while (and
 	  (re-search-backward REGEXP BOUND NOERROR)
 	  (verilog-skip-backward-comment-or-string)
-	  (not (set-match-data '(nil nil))))
+	  (not (store-match-data '(nil nil))))
     ())
   (match-end 0))
 
