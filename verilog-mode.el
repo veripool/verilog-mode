@@ -287,7 +287,18 @@ See compilation-error-regexp-alist for the formatting.")
   "*List of directories when looking for files for /*AUTOINST*/
 auto-instantiation.  The directory may be relative to the current
 file, or absolute.  Having at least the current directory is a good
-idea."
+idea.
+ 
+You might want these defined in each file; put at the *END* of your file
+something like:
+
+// Local Variables:
+// verilog-library-directories:(\".\" \"subdir\" \"subdir2\")
+// End:
+
+Note these are only read when the file is first visited, you must use
+\\[find-alternate-file] RET  to have these take effect after editing them!
+"
   :group 'verilog-mode
   :type '(repeat directory)
   )
@@ -408,68 +419,53 @@ lineups."
 
 ;; menus
 
-(if (string-match "XEmacs" emacs-version)
-    (defvar verilog-xemacs-menu
-      '("Verilog"
-	["Line up declarations around point"        verilog-pretty-declarations t]
-	["Redo/insert comments on every end" verilog-label-be t]
-	"----"
-	["Beginning of function"     verilog-beg-of-defun t]
-	["End of function"           verilog-end-of-defun t]
-	["Mark function"             verilog-mark-defun t]
-	["Goto function"             verilog-goto-defun t]
-	"----"
-	["Move to beginning of block" electric-verilog-backward-sexp t]
-	["Move to end of block"      electric-verilog-forward-sexp t]
-	"----" 
-	["Comment Region"            verilog-comment-region t]
-	["UnComment Region"          verilog-uncomment-region t]
-	["Multi-line comment insert" verilog-star-comment t]
-	"----" 
-	["Insert begin-end block"    verilog-insert-block t]
-	["Complete word"             verilog-complete-word t]
-	"----"
-	["Recompute AUTOs"	     verilog-auto t]
-	["Kill AUTOs"		     verilog-delete-auto t]
-	["AUTO, Save, Compile"	     verilog-auto-save-compile t]
-	["Compile"		     verilog-compile t]
-	["Next Compile Error"	     next-error t]
-	"----"
-	["Submit bug report"         verilog-submit-bug-report t]
-	["Customize Verilog Mode..." verilog-customize t]
-	["Customize Fonts & Colors used by Verilog" verilog-font-customize t]
-	"XEmacs menu for VERILOG mode."))
-  (progn
+(defvar verilog-xemacs-menu
+  '("Verilog"
+    ["Line up declarations around point"	verilog-pretty-declarations t]
+    ["Redo/insert comments on every end"	verilog-label-be t]
+    "----"
+    ["Beginning of function"		verilog-beg-of-defun t]
+    ["End of function"			verilog-end-of-defun t]
+    ["Mark function"			verilog-mark-defun t]
+    ["Goto function"			verilog-goto-defun t]
+    "----"				
+    ["Move to beginning of block"	electric-verilog-backward-sexp t]
+    ["Move to end of block"		electric-verilog-forward-sexp t]
+    "----"				
+    ["Comment Region"			verilog-comment-region t]
+    ["UnComment Region"			verilog-uncomment-region t]
+    ["Multi-line comment insert"	verilog-star-comment t]
+    "----"				
+    ["Insert begin-end block"		verilog-insert-block t]
+    ["Complete word"			verilog-complete-word t]
+    "----"
+    ["Recompute AUTOs"			verilog-auto t]
+    ["Kill AUTOs"			verilog-delete-auto t]
+    ["AUTO, Save, Compile"		verilog-auto-save-compile t]
+    ["Compile"				verilog-compile t]
+    ["Next Compile Error"		next-error t]
+    "----"
+    ("Help..."
+     ["AUTO General"			(describe-function 'verilog-auto) t]
+     ["AUTO `define Reading"		(describe-function 'verilog-read-defines) t]
+     ["AUTO Library Path"		(describe-variable 'verilog-library-directories) t]
+     ["AUTOARG"				(describe-function 'verilog-auto-arg) t]
+     ["AUTOINST"			(describe-function 'verilog-auto-inst) t]
+     ["AUTOINPUT"			(describe-function 'verilog-auto-input) t]
+     ["AUTOOUTPUT"			(describe-function 'verilog-auto-output) t]
+     ["AUTOOUTPUTEVERY"			(describe-function 'verilog-auto-output-every) t]
+     ["AUTOWIRE"			(describe-function 'verilog-auto-wire) t]
+     ["AUTOREG"				(describe-function 'verilog-auto-reg) t]
+     ["AUTOSENSE"			(describe-function 'verilog-auto-sense) t]
+     )
+    ["Submit bug report"		verilog-submit-bug-report t]
+    ["Customize Verilog Mode..."	verilog-customize t]
+    ["Customize Verilog Fonts & Colors"	verilog-font-customize t]
+    )
+  "Emacs menu for VERILOG mode.")
+(or (string-match "XEmacs" emacs-version)
     (easy-menu-define verilog-menu verilog-mode-map "Menu for Verilog mode"
-		      '("Verilog"
-			["Line up declarations around point"        verilog-pretty-declarations t]
-			["Redo/insert comments on every end" verilog-label-be t]
-			"----"
-			["Beginning of function"     verilog-beg-of-defun t]
-			["End of function"           verilog-end-of-defun t]
-			["Mark function"             verilog-mark-defun t]
-			["Goto function"             verilog-goto-defun t]
-			"----" 
-			["Move to beginning of block" electric-verilog-backward-sexp t]
-			["Move to end of block"      electric-verilog-forward-sexp t]
-			"----" 
-			["Comment Region"            verilog-comment-region t]
-			["UnComment Region"          verilog-uncomment-region t]
-			["Multi-line comment insert" verilog-star-comment t]
-			"----" 
-			["Insert begin-end block"    verilog-insert-block t]
-			["Complete word"             verilog-complete-word t]
-			"----"
-			["Recompute AUTOs"	     verilog-auto t]
-			["Kill AUTOs"		     verilog-delete-auto t]
-			["AUTO, Save, Compile"	     verilog-auto-save-compile t]
-			["Compile"		     verilog-compile t]
-			["Next Compile Error"	     next-error t]
-			"----"
-			["Submit bug report"         verilog-submit-bug-report t]
-			["Customize Verilog Mode..." verilog-customize t]
-			["Customize Fonts & Colors used by Verilog" verilog-font-customize t]
-			))))
+		      verilog-xemacs-menu))		   
 
 (defvar verilog-mode-abbrev-table nil
   "Abbrev table in use in Verilog-mode buffers.")
@@ -3923,12 +3919,15 @@ module that the point is over."
   ;; For read-sub-decl, read lines of port defs until none match anymore
   (let (sigs)
     (while (or
-	    (if (looking-at "\\s-*\\.[^(]*(\\([^[({]+\\))\\(,\\|);\\)$")
-		(setq sigs (cons (list (match-string 1) nil comment)
-				 sigs)))
-	    (if (looking-at "\\s-*\\.[^(]*(\\([^[({]+\\)\\(\\[[^]]+\\]\\))\\(,\\|);\\)$")
-		(setq sigs (cons (list (match-string 1) (match-string 2) comment)
-				 sigs))))
+	    (if (looking-at "\\s-*\\.[^(]*(\\([^[({]*\\))\\s-*[,;]")
+		(or (equal (match-string 1) "")
+		    (setq sigs (cons (list (match-string 1) nil comment)
+				     sigs))))
+	    (if (looking-at "\\s-*\\.[^(]*(\\([^[({]*\\)\\(\\[[^]]+\\]\\))\\s-*[,;]")
+		(or (equal (match-string 1) "")
+		    (setq sigs (cons (list (match-string 1) (match-string 2) comment)
+				     sigs))))
+	    (looking-at "\\s-*\\.[^(]*("))
       (forward-line 1))
     sigs))
 
@@ -4096,7 +4095,7 @@ found returns the signal name connections.  Return nil or list of
 				(point)))
 	     ;;
 	     (while (< (point) tpl-end-pt)
-	       (when (looking-at "\\s-*\\.\\([a-zA-Z0-9`_$]+\\)\\s-*(\\(.+\\))\\s-*\\()\\s-*;\\|,\\)")
+	       (when (looking-at "\\s-*\\.\\([a-zA-Z0-9`_$]+\\)\\s-*(\\(.*\\))\\s-*[;,]")
 		 (setq tpl-list (cons
 				 (list
 				  (match-string 1)
@@ -4107,6 +4106,37 @@ found returns the signal name connections.  Return nil or list of
 	     tpl-list
 	     )))))
 ;;;(progn (find-file "auto-template.v") (verilog-read-auto-template "ptl_entry"))
+
+(defun verilog-read-defines ()
+  "Read `defines for the given file.  They must be simple text substitutions,
+one on a line.
+
+Defines are stored inside emacs variables using the name vh-{definename}.
+Useful for setting vh-* variables. The file variables feature can be used
+to set defines that verilog-mode can see; put at the *END* of your file
+something like:
+
+// Local Variables:
+// vh-macro:\"macro_definition\"
+// End:
+
+If macros are defined earlier in the same file and you want their values,
+you can read them automatically (provided enable-local-eval is on):
+
+// Local Variables:
+// eval:(verilog-read-defines)
+// End:
+
+Note these are only read when the file is first visited, you must use
+\\[find-alternate-file] RET  to have these take effect after editing them!
+"
+  (save-excursion
+    (goto-char (point-min))
+    (while (re-search-forward "^\\s-*`define\\s-+\\([a-zA-Z0-9_$]+\\)\\s-+\\([a-zA-Z0-9_$`]+\\)" nil t)
+      (let ((mac (intern (concat "vh-" (match-string 1))))
+	    (value (match-string 2)))
+	(make-variable-buffer-local mac)
+	(set mac value)))))
 
 
 ;;;
@@ -4229,7 +4259,7 @@ Return modi if successful, else print message."
 (defun verilog-modi-goto (modi)
   "Move point/buffer to specified modi"
   (or modi (error "Passed unfound modi to goto, check earlier."))
-  (find-file (aref modi 1))
+  (set-buffer (find-file-noselect (aref modi 1)))
   (goto-char (aref modi 2)))
 
 (defun verilog-goto-defun-file (mod)
@@ -4915,11 +4945,11 @@ Typing \\[verilog-auto] will make this into:
       )))
 
 (defun verilog-auto-sense ()
-  "Replace the always (/*autosense*/) sensitivity list with one
+  "Replace the always (/*AUTOSENSE*/) sensitivity list with one
 automatically derived from all inputs declared in the always statement.
 Signals that are generated within the same always block are NOT placed into
-the sensitivity list.  Long lines are split based on the fill-column, see
-\\[set-fill-column].
+the sensitivity list (see verilog-auto-sense-include-inputs).
+Long lines are split based on the fill-column, see \\[set-fill-column].
 
 Limitiations:
   The end of a always is considered to be a ; unless a begin/end is used.
@@ -5005,6 +5035,8 @@ Using \\[describe-function], see also:
    verilog-auto-wire   for AUTOWIRE instantiation wires
    verilog-auto-reg    for AUTOREG registers
    verilog-auto-sense  for AUTOSENSE always sensitivity lists
+
+   verilog-read-defines for reading `define values
 
 If you have bugs with these autos, try contacting
 Wilson Snyder (wsnyder@wsnyder.org)
