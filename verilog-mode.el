@@ -533,11 +533,13 @@ lineups."
 	(error "Cannot figure out the major and minor version numbers."))
     ;; calculate the major version
     (cond
-     ((= major 18) (setq major 'v18))	;Emacs 18
      ((= major 4)  (setq major 'v18))	;Epoch 4
-     ((= major 20) (setq major 'v20
-			 flavor 'XEmacs))
+     ((= major 18) (setq major 'v18))	;Emacs 18
      ((= major 19) (setq major 'v19	;Emacs 19
+			 flavor (if (or (string-match "Lucid" emacs-version)
+					(string-match "XEmacs" emacs-version))
+				    'XEmacs 'FSF)))
+     ((= major 20) (setq major 'v20 
 			 flavor (if (or (string-match "Lucid" emacs-version)
 					(string-match "XEmacs" emacs-version))
 				    'XEmacs 'FSF)))
@@ -611,7 +613,7 @@ supported list, along with the values for this variable:
  Emacs 18/Epoch 4 (patch2):  (v18 8-bit)
  XEmacs (formerly Lucid) 19: (v19 8-bit)
  XEmacs 20:                  (v20 8-bit)
- Emacs 19:                   (v19 1-bit).")
+ Emacs 19,20:                (v19 1-bit).")
 
 (defconst verilog-comment-start-regexp "//\\|/\\*"
   "Dual comment value for `comment-start-regexp'.")
@@ -2535,7 +2537,6 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
   ""
   (let ((type (car indent-str))
 	(ind (car (cdr indent-str))))
-    (delete-horizontal-space)
     (cond 
      (; handle continued exp
       (eq type 'cexp)
@@ -2544,7 +2545,7 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 	(cond
 	 ((= (preceding-char) ?\,)
 	  (let* ( fst
-		  (column 
+		  (val
 		   (save-excursion
 		     (backward-char 1)
 		     (verilog-beg-of-statement-1)
@@ -2569,13 +2570,20 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 		   )
 		  )
 	    (goto-char here)
-	    (beginning-of-line)
-	    (delete-horizontal-space)
-	    (indent-to  column))
+	    (if (/= (current-column) val)
+		(progn
+		  (delete-horizontal-space)
+		  (indent-to val)))
+	    )
 	  )
 	 ((= (preceding-char) ?\) )
 	  (goto-char here)
-	  (indent-to (eval (cdr (assoc type verilog-indent-alist))))
+	  (let ((val (eval (cdr (assoc type verilog-indent-alist)))))
+	    (if (/= (current-column) val)
+		(progn
+		  (delete-horizontal-space)
+		  (indent-to val)))
+	    )
 	  )
 	 (t
 	  (goto-char here)
@@ -2585,7 +2593,10 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 		(setq val (current-column))
 	      (setq val (eval (cdr (assoc type verilog-indent-alist)))))
 	    (goto-char here)
-	    (indent-to val)
+	    (if (/= (current-column) val)
+		(progn
+		  (delete-horizontal-space)
+		  (indent-to val)))
 	    )
 	  )
 	 )
@@ -2593,35 +2604,55 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
       )
      (; handle inside parenthetical expressions
       (eq type 'cparenexp)
-      (let ((column (save-excursion
+      (let ((val (save-excursion
 		      (backward-up-list 1)
 		      (forward-char 1)
 		      (skip-chars-forward " \t")
 		      (current-column))))
-	(beginning-of-line)
-	(delete-horizontal-space)
-	(indent-to  column)))
-
+	(if (/= (current-column) val)
+	    (progn
+	      (delete-horizontal-space)
+	      (indent-to val)))
+	))
+     
      (;-- Handle the ends
       (looking-at verilog-end-block-re )
-      (if (eq type 'statement)
-	  (indent-to (- ind verilog-indent-level))		 
-	(indent-to ind)))
+      (let ((val (if (eq type 'statement)
+		     (- ind verilog-indent-level)
+		   ind)))
+	(if (/= (current-column) val)
+	    (progn
+	      (delete-horizontal-space)
+	      (indent-to val)))
+	))
+
+	
      (;-- Case -- maybe line 'em up
       (and (eq type 'case) (not (looking-at "^[ \t]*$")))
       (progn
 	(cond
 	 ((looking-at "\\<endcase\\>")
-	  (indent-to ind))
+	  (if (/= (current-column) ind)
+	      (progn
+		(delete-horizontal-space)
+		(indent-to ind))))
 	 (t
-	  (indent-to (eval (cdr (assoc type verilog-indent-alist))))
-	  ))))
-     
+	  (let ((val (eval (cdr (assoc type verilog-indent-alist)))))
+	    (if (/= (current-column) val)
+		(progn
+		  (delete-horizontal-space)
+		  (indent-to val)))
+	    )
+	  )
+	 )
+	)
+      )
 
      (;-- defun
       (and (eq type 'defun)
  	   (looking-at verilog-zero-indent-re))
-      (indent-to 0))
+      (if (/= (current-column) 0)
+	  (delete-horizontal-space)))
 
      (;-- declaration
       (and (or 
@@ -2633,7 +2664,10 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
      (;-- Everything else
       t
       (let ((val (eval (cdr (assoc type verilog-indent-alist)))))
-	(indent-to val)
+	(if (/= (current-column) val)
+	    (progn
+	      (delete-horizontal-space)
+	      (indent-to val)))
 	))
      )
     (if (looking-at "[ \t]+$")
@@ -2840,6 +2874,7 @@ Do not count named blocks or case-statements."
 	       (verilog-re-search-backward "\\(\\<begin\\>\\)\\|\\(\\<module\\>\\)" nil 'move)  
 	       (point)))
 	(ind)
+	(val)
 	(m1 (make-marker))
 	)
     ;; Use previous declaration (in this module) as template.
@@ -2848,8 +2883,11 @@ Do not count named blocks or case-statements."
 	  (goto-char (match-end 0))
 	  (setq ind (current-column))
 	  (goto-char pos)
-	  (beginning-of-line)
-	  (indent-to (+ baseind (eval (cdr (assoc 'declaration verilog-indent-alist)))))
+	  (setq val (+ baseind (eval (cdr (assoc 'declaration verilog-indent-alist)))))
+	  (if (/= (current-column) val)
+	      (progn
+		(delete-horizontal-space)
+		(indent-to val)))
 	  (if (looking-at verilog-declaration-re-2)
 	      (let ((p (match-end 0)))
 		(set-marker m1 p)
@@ -2861,9 +2899,10 @@ Do not count named blocks or case-statements."
 		      (just-one-space)
 		      (indent-to ind)
 		      )
-		  (progn
-		    (just-one-space)
-		    (indent-to ind)
+		  (if (/= (point) (marker-position m1))
+		      (progn
+			(just-one-space)
+			(indent-to ind))
 		    )
 		  )
 		)
