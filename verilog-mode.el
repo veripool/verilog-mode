@@ -208,17 +208,12 @@
 
 (eval-when-compile
   (defun verilog-regexp-opt (a b)
-    "Wrapper to deal with XEmacs and FSF emacs having similar functions with differing number of arguments."
-    (if (string-match "XEmacs" emacs-version)
+  "Deal with differing number of required arguments for  `regexp-opt'.
+   Call 'regexp-opt' on A and B."
+    (if (= 3 (function-min-args `regexp-opt))
 	(regexp-opt a b 't)
       (regexp-opt a b)))
   )
-(defun verilog-regexp-opt (a b)
-  "Deal with XEmacs & FSF both have `regexp-opt'; with different interface.
-Call 'regexp-opt' on A and B."
-  (if verilog-running-on-xemacs
-      (unwind-protect (regexp-opt a b 't))
-    (regexp-opt a b)))
 
 (defun verilog-customize ()
   "Link to customize screen for Verilog."
@@ -6361,7 +6356,8 @@ declaring ports manually, as it makes code harder to maintain."
 (defvar vector-skip-list nil) ; Prevent compile warning
 (defvar vl-cell-type nil "See verilog-auto-inst") ; Prevent compile warning
 (defvar vl-cell-name nil "See verilog-auto-inst") ; Prevent compile warning
-
+(defvar vl-width 0)
+(defvar vl-name 0)
 (defun verilog-auto-inst-port (port-st indent-pt tpl-list tpl-num)
   "Print out a instantiation connection for this PORT-ST.
 Insert to INDENT-PT, use template TPL-LIST.
