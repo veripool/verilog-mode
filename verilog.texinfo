@@ -1,0 +1,302 @@
+\input texinfo
+@setfilename verilog.info
+@c $Id$
+
+@ifinfo
+@format
+START-INFO-DIR-ENTRY
+* Verilog-mode: (verilog).	The Verilog Mode user guide.
+END-INFO-DIR-ENTRY
+@end format
+@end ifinfo
+
+@ifinfo
+This file documents the Verilog-HDL editing mode for XEmacs and FSF
+emacs, called the verilog-mode.
+
+Copyright (C) 2000 Free Software Foundation, Inc.
+Contributed and written by Michael McNamara. 
+
+Permission is granted to make and distribute verbatim copies of this
+manual provided the copyright notice and this permission notice are
+preserved on all copies.
+
+@ignore
+Permission is granted to process this file through Tex and print the
+results, provided the printed document carries copying permission notice
+identical to this one except for the removal of this paragraph (this
+paragraph not being relevant to the printed manual).
+
+@end ignore
+Permission is granted to copy or distribute modified versions of this
+manual under the terms of the GPL (for which purpose this text may be
+regarded as a program in the language TeX).
+@end ifinfo
+
+@setchapternewpage off
+@settitle Verilog Mode
+@titlepage
+@title{The Verilog Mode}
+@subtitle{A guide to using the Verilog Mode}
+@author Michael McNamara
+@author 
+@page
+@tex
+\def\$#1${{#1}}  % Kluge: collect RCS revision info without $...$
+\xdef\manvers{\$Revision$}  % For use in headers, footers too
+{\parskip=0pt
+\hfill Verilog Mode Support\par
+\hfill \manvers\par
+\hfill \TeX{}info \texinfoversion\par
+}
+@end tex
+
+@vskip 0pt plus 1filll
+Copyright @copyright{} 2000 Free Software Foundation, Inc.
+
+Permission is granted to make and distribute verbatim copies of
+this manual provided the copyright notice and this permission notice
+are preserved on all copies.
+
+@end titlepage
+
+@node Top
+@c Perhaps this should be the title of the document (but only for info,
+@c not for TeX).  Existing GNU manuals seem inconsistent on this point.
+@top Scope of this Document
+
+This document documents the use and customization of the Verilog-mode
+for Emacs.  
+@menu
+* New Versions::		Getting new versions
+* Installing::		        How to install the Verilog Mode
+* Getting Started::		Getting started using the Verilog-mode
+* Indent::		        Customizing the indentation
+* Colors::      		Enabling and customizing the colors
+* AUTO::			Using the AUTO features
+* Templates::			Using the Template features
+* FAQ::			        Frequently Asked Questions
+@end menu
+
+@node New Versions
+@chapter Getting New Versions
+
+Check the web at @file{http://www.verilog.com} to see if there are newer
+versions of this file.  Also check the FAQ on the web, as it may have up
+to date answers to questions that others have asked.
+
+@node Installing
+@chapter Installing the Verilog-Mode
+
+If you've got it installed, but there are no colors, check out
+@pxref{Colors}.
+
+If you'd like to see the FAQ check out @pxref{FAQ}.
+
+OK, you want to use the Verilog emacs mode, but have never
+used emacs, or always had some one else do the messy set up
+details.  Here is a step by step recipe for installing the
+verilog-mode:
+
+@itemize @bullet
+@item
+Take the mail message your received, and save it into a
+file. Let us say you save it into a file called @file{foo}.
+
+@item
+Run uudecode on the file.  There is no need to worry about deleting any
+mail headers; uudecode is pretty smart about all that. What you would
+type is:
+	  
+% uudecode < @file{foo}
+	
+This will create a file called @file{verilog-mode.el.gz} in your current
+directory. Now you can remove the file called @file{foo}
+
+@item
+Now you need to uncompress the file; use @file{gunzip} which you should
+have, if not you can get it from the Free Software Foundation at
+ftp://prep.ai.mit.edu/pub/gnu. Run:
+
+% gunzip verilog-mode.el.gz 
+
+@item
+To install verilog mode for just your own use continue as follows:
+
+Make a directory called @file{elisp} in your home directory.
+	      
+put the file @file{verilog-mode.el} in this directory, and call the file
+@file{verilog-mode.el}
+	    
+edit the file @file{.emacs} in your home directory. Create this file if
+it does not already exist.
+	      
+Add the lines below (starting with (defun) to that file.  Then run a new
+emacs process.  You are all set; this new emacs and all subsequent
+emacsen now will know about verilog files and how to indent them, and
+colorize them.
+	      
+Note: you can remove the old lisp you may have from using a previous
+version of verilog-mode; the below is all you need. The old stuff tried
+to complete the installation of font-lock mode, pick rational colors,
+and figure out what color your background screen was.  Emacs is a fair
+bit better at this now.
+
+(defun prepend-path (my-path ) 
+        (setq load-path (cons (expand-file-name my-path) load-path)))
+	  
+(defun append-path ( my-path )
+        (setq load-path (append load-path (list (expand-file-name my-path)))))
+;; Look first in the directory ~/elisp for elisp files
+(prepend-path "~/elisp")
+;; Load verilog mode only when needed
+(autoload 'verilog-mode "verilog-mode" "Verilog mode" t )
+;; Any files that end in .v should be in verilog mode
+(setq auto-mode-alist (cons  '("\\.v\\'" . verilog-mode) auto-mode-alist))
+;; Any files in verilog mode should have their keywords colorized
+(add-hook 'verilog-mode-hook '(lambda () (font-lock-mode 1)))
+
+@item
+
+To install verilog mode for general use, continue as follows:
+	  
+put the file @file{verilog-mode.el} in the appropriate directories, for
+XEmacs, it is likely to be @file{/usr/local/lib/xemacs/site-lisp}, and
+for FSF emacs it is likely to be is
+@file{/usr/local/share/emacs/site-lisp}.  I say likely, because the
+person who installed emacs at your site is free to customize this to
+their preference.  
+	      
+An easy way to determine the right place is to type @file{C-h v
+load-path RET} to emacs; this will give you a list of the paths that it
+is going to search to find lisp files. Here, typing at FSF emacs, I get:
+
+load-path's value is ("/home/mac/emacs/lisp"
+ "/usr/local/share/emacs/19.34/site-lisp"
+ "/usr/local/share/emacs/site-lisp" 
+ "/usr/local/share/emacs/19.34/lisp")
+Documentation:
+*List of directories to search for files to load.
+
+
+From examining this, I deduce that
+@file{/usr/local/share/emacs/site-lisp} seems appropriate. I didn't
+choose @file{/usr/local/share/emacs/19.34/site-lisp} as the
+@file{verilog-mode.el} is not emacs-version specific.<p>
+		  
+Edit the file @file{site-start.el} in the general site-lisp directory.
+Create this file if it does not already exist.
+	      
+Add the lines below to that file.  Then run a new emacs process.  You
+are all set; this new emacs and all subsequent emacsen you or anyone
+else at your site ever startup will know about verilog files and how to
+indent them, and colorize them.!
+
+;; Load verilog mode only when needed
+(autoload 'verilog-mode "verilog-mode" "Verilog mode" t ) 
+;; Any files that end in .v should be in verilog mode
+(setq auto-mode-alist (cons  '("\\.v\\'" . verilog-mode) auto-mode-alist))
+;; Any files in verilog mode should have their keywords colorized
+(add-hook 'verilog-mode-hook '(lambda () (font-lock-mode 1)))
+@end itemize
+
+@node Getting Started
+@chapter Getting Started Using the Verilog-Mode
+
+To be supplied.
+
+@node Indent
+@chapter Configuring and Using the auto indent features
+
+To be supplied
+
+@node Colors
+@chapter Configuring and Using the syntax coloring features
+
+Coloring your code is really cool, impresses your friends, and actually
+does help one code quicker, and helps one understand others code. The
+only problem is that each version of emacs has different ways of
+specifying what color should be used, and hence it is a bear.
+      
+For a while, I distributed code folks could put in their .emacs that
+would attempt to figure out what version of emacs (FSF or XEmacs) was
+installed, and which sub version of the two major packages was in use.
+Further, it attempted to determine if the user had a dark, or a light
+background, and then would install my notion of what might be nice
+colors.
+      
+The world is changing too fast; and both XEmacs and FSF emacs now have
+easy to modify, and quite reasonable defaults. Therefore I removed my
+distributed code, and have added this section to support folks still
+using older emacsen.  Find your version below, and see what hints I have
+for getting colors to work.
+	    
+First: install verilog-mode as per the above instructions. 
+      
+XEmacs 19.14 and later; FSF emacs 20.x and later</b>
+
+Select the menu bar @code{Verilog->Customize Verilog Fonts and Colors}
+and a nice interface pops up where you can select the font-lock-* faces
+to colors that you find pleasing. You can choose the font face, whether
+it is bold, italic, and/or underlined; or
+all three.
+
+
+FSF emacs 19 and earlier</b>
+
+@itemize @bullet
+
+@item 
+Visit a file, and get it in verilog-mode as per above install instructions.
+	    
+@item
+Gag at the ugly default colors.
+	    
+@item
+Include the following elisp in your .emacs:
+
+  (setq font-lock-face-attributes 
+  '((font-lock-comment-face "Firebrick")
+  (font-lock-string-face "RosyBrown")
+  (font-lock-keyword-face "Purple")
+  (font-lock-function-name-face "Blue")
+  (font-lock-variable-name-face "DarkGoldenrod")
+  (font-lock-type-face "DarkOliveGreen")
+  (font-lock-reference-face "CadetBlue")))
+
+@end itemize
+
+These are the defaults; go ahead and change the values in quotes to
+anything you'd rather have. Clicking on the @code{Edit->Text
+Properties->Display Colors} gives you a buffer of color names,
+alternatively with the foreground, or background in that color. This can
+be useful for addressing the question, "That's ugly, what would be a
+better color?" Going to @code{Edit->Text Properties->Display Faces} will
+show you the faces that have already been set up.
+	    
+Older versions
+
+Best is to upgrade if you can. Try:
+
+http://www.xemacs.org XEmacs home page
+ftp://prep.ai.mit.edu/pub/gnu  GNU Emacs ftp site
+
+@node AUTO
+@chapter Using the AUTO feature
+
+To be supplied
+
+
+@node Templates
+@chapter Using the Template feature
+
+To be supplied
+
+
+@node FAQ
+@chapter Frequently asked questions
+
+To be supplied
+
+@contents
+@bye
