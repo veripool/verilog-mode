@@ -312,11 +312,13 @@ comments in tight quarters"
 
 (setq verilog-error-regexp
   '(
-    ("^\\(Error\\|Warning\\):.*\\s \\([^ \t]+\\)\\s *\\([0-9]+\\):" 2 3)			     ; vcs
-    ("^\\(Error\\|Warning\\):.*\n\\([^ \t]+\\)\\s *\\([0-9]+\\):" 2 3)			     ; vcs, with a newline
-    ("^\\(Error\\|Warning\\):[^(]*(\\([^ \t]+\\)\\s line \\([0-9]+\\))" 2 3)			     ; vcs, with a newline
-    ("^Warning:.*(port.*(\\([^ \t]+\\) line \\([0-9]+\\))" 1 2)			     ; vcs, with a newline
-    ("^syntax error:.*\n\\([^ \t]+\\)\\s *\\([0-9]+\\):" 1 2)			     ; vcs, with a newline
+    ("^\\(Error\\|Warning\\):.*\\s \\([^ \t]+\\)\\s *\\([0-9]+\\):" 2 3) ; vcs
+    ("^\\(Error\\|Warning\\):.*\n\\([^ \t]+\\)\\s *\\([0-9]+\\):" 2 3) ; vcs, w/newline
+    ("^\\(Error\\|Warning\\):[^(]*(\\([^ \t]+\\)\\s line \\([0-9]+\\))" 2 3) ; vcs, w/newline 
+    ("^Warning:.*(port.*(\\([^ \t]+\\) line \\([0-9]+\\))" 1 2) ; vcs, w/newline 
+    ("^syntax error:.*\n\\([^ \t]+\\)\\s *\\([0-9]+\\):" 1 2) ; vcs, w/newline
+    ("^Warning: port size.*(\\([^ \t]+\\)\\s line *\\([0-9]+\\))" 1 2)  ; vcs
+    ("^Error: Port name.*(\\([^ \t]+\\)\\s line *\\([0-9]+\\))" 1 2)	; vcs
     ("^([WE][0-9A-Z]+)[ \t]+\\([^ \t\n,]+\\)[, \t]+\\([0-9]+\\):.*$" 1 2)	     ; vxl
     ("^([WE][0-9A-Z]+)[ \t]+\\([^ \t\n,]+\\)[, \t]+line[ \t]+\\([0-9]+\\):.*$" 1 2)  ; vxl
     )
@@ -412,7 +414,7 @@ lineups."
 (defvar verilog-font-lock-keywords-before-1930
   '(
     ("^\\s-*function\\>\\s-+\\(\\(\\[[^]]*\\]\\|integer\\|real\\(time\\)?\\|time\\)\\s-+\\)?\\(\\sw+\\)"
-     3 font-lock-function-name-face)
+     3 font-lock-function-name-face nil t)
     ("\\(//\\s-*sv\\s-.*\\)" 1 font-lock-function-name-face t t)
     ("^\\s-*\\(task\\|module\\|macromodule\\|primitive\\)\\>\\s-*\\(\\sw+\\)"  
      2 font-lock-function-name-face nil t)
@@ -428,8 +430,8 @@ lineups."
   )
 
 (defvar verilog-imenu-generic-expression
-  '((nil "^\\s-*\\(\\(m\\(odule\\|acromodule\\)\\)\\|primitive\\)\\s-+\\([a-zA-Z0-9_.:]+\\)" 3)
-    ("*Vars*" "^\\s-*\\(reg\\|wire\\)\\)\\s-+\\(\\|\\[[^\\]+]\\s-+\\)\\([-A-Za-z0-9+]+\\)" 3))
+  '((nil "^\\s-*\\(\\(m\\(odule\\|acromodule\\)\\)\\|primitive\\)\\s-+\\([a-zA-Z0-9_.:]+\\)" 4)
+    ("*Vars*" "^\\s-*\\(reg\\|wire\\)\\s-+\\(\\|\\[[^\\]]+\\]\\s-+\\)\\([A-Za-z0-9_]+\\)" 3))
   "Imenu expression for Verilog-mode.  See `imenu-generic-expression'.")
 
 (defvar verilog-mode-abbrev-table nil
