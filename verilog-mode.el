@@ -466,15 +466,16 @@ lineups."
      2 'font-lock-function-name-face nil t)
     ("\\(\\\\\\S-*\\s-\\)\\|\\(`\\s-*[A-Za-z][A-Za-z0-9_]*\\)" 
      0 'font-lock-function-name-face)
-    ("\\(@\\)\\|\\(#\\s-*\\(\\(\[0-9_\]+\\('[hdxbo][0-9a-fA-F_xz]*\\)?\\)\\|\\((\[^)\]*)\\|\\sw+\\)\\)\\)" 
-     0 'font-lock-type-face)
+    ("\\(@\\)\\|\\(#\\s-*\\(\\(\[0-9_.\]+\\('[hdxbo][0-9a-fA-F_xz]*\\)?\\)\\|\\((\[^)\]*)\\|\\sw+\\)\\)\\)" 
+     0 'font-lock-type-face append)
+
 ;    (princ (regexp-opt (list 
 ;			"defparam" "event" "inout" "input" "integer" "output" "parameter"
 ;			"real" "realtime" "reg" "signed" "supply" "supply0" "supply1" "time"
 ;			"tri" "tri0" "tri1" "triand" "trior" "trireg" "vectored" "wand" "wire"
 ;			"wor" ) nil)
     ("\\<\\(defparam\\|event\\|in\\(out\\|put\\|teger\\)\\|output\\|parameter\\|re\\(al\\(time\\)?\\|g\\)\\|s\\(igned\\|upply[01]?\\)\\|t\\(ime\\|ri\\(and\\|or\\|reg\\|[01]\\)?\\)\\|vectored\\|w\\(and\\|ire\\|or\\)\\)\\>"
-     0 'font-lock-type-face)
+     0 'font-lock-constant-face)
 
 ;    (princ (concat "\\<\\(\\$[a-zA-Z][a-zA-Z0-9_\\$]*\\|" 
 ;	     (regexp-opt (list 
@@ -499,8 +500,8 @@ lineups."
      2 font-lock-function-name-face nil t)
     ("\\(\\\\\\S-*\\s-\\)\\|\\(`\\s-*[A-Za-z][A-Za-z0-9_]*\\)" 
      0 font-lock-function-name-face)
-    ("\\(@\\)\\|\\(#\\s-*\\(\\(\[0-9_\]+\\('[hdxbo][0-9a-fA-F_xz]*\\)?\\)\\|\\((\[^)\]*)\\|\\sw+\\)\\)\\)" 
-     0 font-lock-type-face)
+    ("\\(@\\)\\|\\(#\\s-*\\(\\(\[0-9_.\]+\\('[hdxbo][0-9a-fA-F_xz]*\\)?\\)\\|\\((\[^)\]*)\\|\\sw+\\)\\)\\)" 
+     0 font-lock-constant-face)
     ("\\<\\(defparam\\|event\\|in\\(out\\|put\\|teger\\)\\|output\\|parameter\\|re\\(al\\(time\\)?\\|g\\)\\|s\\(igned\\|upply[01]?\\)\\|t\\(ime\\|ri\\(and\\|or\\|reg\\|[01]\\)?\\)\\|vectored\\|w\\(and\\|ire\\|or\\)\\)\\>"
      0 font-lock-type-face)
     ("\\<\\(\\$[a-zA-Z][a-zA-Z0-9_\\$]*\\|a\\(lways\\|ssign\\)\\|begin\\|case[xz]?\\|d\\(e\\(assign\\|fault\\)\\|isable\\)\\|e\\(lse\\|nd\\(case\\|function\\|module\\|primitive\\|specify\\|ta\\(ble\\|sk\\)\\)?\\)\\|f\\(or\\(ce\\|ever\\|k\\)?\\|unction\\)\\|i\\(f\\|nitial\\)\\|join\\|m\\(acromodule\\|odule\\)\\|negedge\\|p\\(osedge\\|rimitive\\)\\|re\\(lease\\|peat\\)\\|specify\\|ta\\(ble\\|sk\\)\\|w\\(ait\\|hile\\)\\)\\>"
