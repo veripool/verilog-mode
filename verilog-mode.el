@@ -85,8 +85,16 @@
     ;; We have the old custom-library, hack around it!
     (defmacro defgroup (&rest args)
       nil)
+    (defmacro customize (&rest args)
+      (message "Sorry, Customise is not available with this version of emacs"))
     (defmacro defcustom (var value doc &rest args) 
       (` (defvar (, var) (, value) (, doc))))))
+
+(defun verilog-customize ()
+  "Link to customize screen for Verilog"
+  (interactive)
+  (customize 'verilog-mode)
+  )
 
 (defgroup verilog-mode nil
   "Faciliates easy editing of Verilog source text"
@@ -224,6 +232,9 @@ lineups."
           (require 'imenu)
         (error nil))
       (condition-case nil
+	  (require 'reporter)
+        (error nil))
+      (condition-case nil
           (require 'easymenu)
         (error nil))))
 
@@ -259,6 +270,8 @@ lineups."
   (define-key verilog-mode-map "\M-\C-h"  'verilog-mark-defun)
   (define-key verilog-mode-map "\C-c\C-b" 'verilog-insert-block)
   (define-key verilog-mode-map "\C-cb"    'verilog-label-be)
+  (define-key verilog-mode-map "\C-ci"    'verilog-pretty-declarations)
+  (define-key verilog-mode-map "\C-cC-b"  'verilog-submit-bug-report)
   (define-key verilog-mode-map "\M-*"     'verilog-star-comment)
   (define-key verilog-mode-map "\C-c\C-c" 'verilog-comment-region)
   (define-key verilog-mode-map "\C-c\C-u" 'verilog-uncomment-region)
@@ -268,7 +281,6 @@ lineups."
   )
 
 ;; menus
-
 
 (if (string-match "XEmacs" emacs-version)
     (defvar verilog-xemacs-menu
@@ -291,6 +303,7 @@ lineups."
 	["Complete word"             verilog-complete-word t]
 	"----"
 	["Submit bug report"         verilog-submit-bug-report t]
+	["Customize Verilog Mode..." verilog-customize t]
 	"XEmacs menu for VERILOG mode."))
   (progn
     (easy-menu-define verilog-menu verilog-mode-map "Menu for Verilog mode"
@@ -313,6 +326,7 @@ lineups."
 			["Complete word"             verilog-complete-word t]
 			"----"
 			["Submit bug report"         verilog-submit-bug-report t]
+			["Customize Verilog Mode..." verilog-customize t]
 			))))
 
 (defvar verilog-mode-abbrev-table nil
@@ -387,6 +401,7 @@ lineups."
   ;; "trior" "supply0" "supply1" "wire" "wor" "wand"
 "\\(\\<\\(defparam\\>\\|event\\>\\|in\\(out\\>\\|put\\>\\|teger\\>\\)\\|output\\>\\|parameter\\>\\|re\\(al\\(\\>\\|time\\>\\)\\|g\\>\\)\\|supply\\(0\\>\\|1\\>\\)\\|t\\(ime\\>\\|ri\\(0\\>\\|1\\>\\|\\>\\|and\\>\\|or\\>\\|reg\\>\\)\\)\\|w\\(and\\>\\|ire\\>\\|or\\>\\)\\)\\)")
 (defconst verilog-declaration-re-1 (concat "^[ \t]*" verilog-declaration-re "[ \t]*\\(\\[[^]]*\\][ \t]*\\)?"))
+(defconst verilog-declaration-re-2 (concat "[ \t]*" verilog-declaration-re "[ \t]*\\(\\[[^]]*\\][ \t]*\\)?"))
 (defconst verilog-defun-re 
   ;;"module" "macromodule" "primitive"
   "\\(\\<\\(m\\(acromodule\\>\\|odule\\>\\)\\|primitive\\>\\)\\)")
@@ -1279,14 +1294,18 @@ area.  See also `verilog-comment-region'."
   (let ((pt (point)))
     
     (while (and (not (looking-at verilog-complete-reg))
+		(setq pt (point))
 		(verilog-backward-token)
+		(setq pt (point))
+		(verilog-backward-syntactic-ws)
 		(not (bolp))
 		(not (= (preceding-char) ?\;)))
       )
-    (setq pt (point))
+    (goto-char pt)
     (while (progn
 	     (setq pt (point))
 	     (and (not (looking-at verilog-complete-reg))
+		  (not (= (preceding-char) ?\;))
 		  (verilog-continued-line))))
     (goto-char pt)
     (verilog-forward-syntactic-ws)
@@ -1959,6 +1978,8 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 	   (list type (verilog-case-indent-level)))
 	  ((eq type 'statement)
 	   (list type (current-column)))
+	  ((eq type 'defun)
+	   (list type 0))
 	  (t
 	   (list type (verilog-indent-level)))))
       )
@@ -2206,7 +2227,8 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 		(setq bol (progn (beginning-of-line) (point))))
 	      (search-backward "//" bol t)
 	      )))
-      )))
+      ))
+  t)
 
 (defun verilog-forward-syntactic-ws (&optional lim)
   ;; forward skip over syntactic whitespace for Emacs 19.
@@ -2503,10 +2525,18 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 	  (indent-to (eval (cdr (assoc type verilog-indent-alist))))
 	  ))))
      
+
      (;-- defun
       (and (eq type 'defun)
-	   (looking-at verilog-zero-indent-re))
+ 	   (looking-at verilog-zero-indent-re))
       (indent-to 0))
+
+     (;-- declaration
+      (and (or 
+	    (eq type 'defun)
+	    (eq type 'block))
+	   (looking-at verilog-declaration-re))
+      (verilog-indent-declaration ind))
 
      (;-- Everything else
       t
@@ -2669,92 +2699,49 @@ column number the line should be indented to."
       )
     )
   )
-(defun verilog-indent-declaration (base-ind &optional arg start end)
-  "Indent current lines as declaration, lining up the variable names"
+(defun verilog-indent-declaration (baseind)
+  "Indent current lines as declaration, lining up the variable names
+   based on previous declaration's indentation."
   (interactive)
   (let ((pos (point-marker))
-	(lim (save-excursion (progn (end-of-line) (point-marker))))
+	(lim (save-excursion 
+	       (verilog-re-search-backward "\\(\\<begin\\>\\)\\|\\(\\<module\\>\\)" nil 'move)  
+	       (point)))
+	(ind)
+	(m1 (make-marker))
 	)
-    (if (and 
-	 (not (or arg start)) 
-	 (not (verilog-re-search-forward verilog-declaration-re lim t)))
-	()
-      (progn
-	(beginning-of-line)
-	(delete-horizontal-space)
-	(indent-to (+ base-ind (eval (cdr (assoc 'declaration verilog-indent-alist)))))
-	(let* ((pos2 (point-marker))
-	       (more 1)
-	       here
-	       (stpos (if start start
-		       (save-excursion
-			 
-			 (goto-char pos2)
-			 (catch 'first
-			   (while more
-			     (setq here (point))
-			     (verilog-backward-syntactic-ws)
-			     (if (= (preceding-char) ?\;)
-				 (backward-char))
-			     (verilog-beg-of-statement)
-			     (if (bobp)
-				 (throw 'first (point-marker)))		
-			     (if (looking-at verilog-declaration-re)
-				 (setq more (/= (point) here))
-			       (throw 'first (point-marker))))
-			   (throw 'first (point-marker)))
-			 )
-		       )
+    ;; Use previous declaration (in this module) as template.
+    (if (verilog-re-search-backward verilog-declaration-re-1 lim t)
+	(progn
+	  (goto-char (match-end 0))
+	  (setq ind (current-column))
+	  (goto-char pos)
+	  (beginning-of-line)
+	  (indent-to (+ baseind (eval (cdr (assoc 'declaration verilog-indent-alist)))))
+	  (if (looking-at verilog-declaration-re-2)
+	      (let ((p (match-end 0)))
+		(set-marker m1 p)
+		(if (verilog-re-search-forward "\\[" p 'move)
+		    (progn
+		      (forward-char -1)
+		      (just-one-space)
+		      (goto-char (marker-position m1))
+		      (just-one-space)
+		      (indent-to ind)
 		      )
-	       (edpos (if end 
-			  (set-marker (make-marker) end)
-			lim))
-	       ind)
-	  (goto-char stpos)
-	  ;; Indent lines in declaration block
-	  (if arg
-	      (while (<= (point) (marker-position edpos))
-		(beginning-of-line)
-		(delete-horizontal-space)
-		(cond 
-		 ((looking-at "^[ \t]*$")
-		  ())
-		 ((not (looking-at verilog-declaration-re))
-		  (indent-to arg))
-		 (t
-		  (indent-to (+ arg verilog-indent-level))))
-		(forward-line 1)))
-	  
-	  ;; Do lineup
-	  (setq ind (verilog-get-lineup-indent stpos edpos))
-	  (goto-char stpos)
-	  (if (> (- edpos stpos) 100)
-	      (message "Lining up declarations..(please stand by)"))
-	  (let (e)
-	    (while (progn (setq e (marker-position edpos))
-			  (< (point) e))
-	      (if (verilog-re-search-forward verilog-declaration-re-1 e 'move)
-		  (just-one-space))
-;;		  (forward-char -1))
-	      (save-excursion
-		(let ((p (point)))
-		  (beginning-of-line)
-		  (if (verilog-re-search-forward "\\[" p 'move)
-		      (progn
-			(forward-char -1)
-			(just-one-space)))
-		  ))
-	      (delete-horizontal-space)
-	      (indent-to ind)
-	      (beginning-of-line)
-	      (delete-horizontal-space)	      
-	      (indent-to (+ base-ind (eval (cdr (assoc 'declaration verilog-indent-alist)))))
-	      (forward-line 1)))))
-	
-      ;; If arg - move point
-      (message "")
-      (if arg (forward-line -1)
-	(goto-char (marker-position pos))))))
+		  (progn
+		    (just-one-space)
+		    (indent-to ind)
+		    )
+		  )
+		)
+	    )
+	  )
+      (indent-to (+ baseind (eval (cdr (assoc 'declaration verilog-indent-alist)))))
+      )
+    (goto-char pos)
+    )
+  )
 
 ;  "Return the indent level that will line up several lines within the region
 ;from b to e nicely. The lineup string is str."
@@ -3280,7 +3267,6 @@ The default is a name found in the buffer around point."
 (defun verilog-submit-bug-report ()
   "Submit via mail a bug report on lazy-lock.el."
   (interactive)
-  (require 'reporter)
   (let ((reporter-prompt-for-summary-p t))
     (reporter-submit-bug-report 
      "verilog-mode-bugs@verilog.com" 
