@@ -380,6 +380,7 @@ lineups."
   '(
     ("^\\s-*function\\>\\s-+\\(\\(\\[[^]]*\\]\\|integer\\|real\\(time\\)?\\|time\\)\\s-+\\)?\\(\\sw+\\)"
      3 'font-lock-function-name-face nil t)
+    ("\\(//\\s-*sv\\s-.*\\)" 1 'font-lock-function-name-face t t)
     ("^\\s-*\\(task\\|module\\|macromodule\\|primitive\\)\\>\\s-*\\(\\sw+\\)"  
      2 'font-lock-function-name-face nil t)
     ("\\(\\\\\\S-*\\s-\\)\\|\\(`\\s-*[A-Za-z][A-Za-z0-9_]*\\)" 
@@ -412,6 +413,7 @@ lineups."
   '(
     ("^\\s-*function\\>\\s-+\\(\\(\\[[^]]*\\]\\|integer\\|real\\(time\\)?\\|time\\)\\s-+\\)?\\(\\sw+\\)"
      3 font-lock-function-name-face)
+    ("\\(//\\s-*sv\\s-.*\\)" 1 font-lock-function-name-face t t)
     ("^\\s-*\\(task\\|module\\|macromodule\\|primitive\\)\\>\\s-*\\(\\sw+\\)"  
      2 font-lock-function-name-face nil t)
     ("\\(\\\\\\S-*\\s-\\)\\|\\(`\\s-*[A-Za-z][A-Za-z0-9_]*\\)" 
@@ -743,7 +745,7 @@ compilation-error-regexp-alist.  This allows \\[next-error] to find the errors."
 		    emacs-major-version))
 	(minor (and (boundp 'emacs-minor-version)
 		    emacs-minor-version))
-	flavor comments)
+	flavor comments flock-syntax)
     ;; figure out version numbers if not already discovered
     (and (or (not major) (not minor))
 	 (string-match "\\([0-9]+\\).\\([0-9]+\\)" emacs-version)
@@ -791,6 +793,15 @@ compilation-error-regexp-alist.  This allows \\[next-error] to find the errors."
 	   ))
       ;; Emacs 18 has no support for dual comments
       (setq comments 'no-dual-comments))
+    ;; determine whether to use old or new font lock syntax
+    ;; We can assume 8-bit syntax table emacsen aupport new syntax, otherwise
+    ;; look for version > 19.30
+    (setq flock-syntax
+        (if (or (equal comments '8-bit)
+                (equal major 'v20)
+                (and (equal major 'v19) (> minor 30)))
+            'flock-syntax-after-1930
+          'flock-syntax-before-1930))
     ;; lets do some minimal sanity checking.
     (if (or
 	 ;; Lemacs before 19.6 had bugs
@@ -827,17 +838,19 @@ on emacs-18."
 "You are running a syntax patched Emacs 18 variant.  While this should
 work for you, you may want to consider upgrading to Emacs 19.
 The syntax patches are no longer supported either for verilog-mode."))))
-    (list major comments))
+    (list major comments flock-syntax))
   "A list of features extant in the Emacs you are using.
 There are many flavors of Emacs out there, each with different
 features supporting those needed by verilog-mode.  Here's the current
 supported list, along with the values for this variable:
 
- Vanilla Emacs 18/Epoch 4:   (v18 no-dual-comments)
- Emacs 18/Epoch 4 (patch2):  (v18 8-bit)
- XEmacs (formerly Lucid) 19: (v19 8-bit)
- XEmacs 20:                  (v20 8-bit)
- Emacs 19,20:                (v19 1-bit).")
+ Vanilla Emacs 18/Epoch 4:   (v18 no-dual-comments flock-syntax-before-1930)
+ Emacs 18/Epoch 4 (patch2):  (v18 8-bit flock-syntax-after-1930)
+ XEmacs (formerly Lucid) 19: (v19 8-bit flock-syntax-after-1930)
+ XEmacs 20:                  (v20 8-bit flock-syntax-after-1930)
+ Emacs 19.1-19.30:           (v19 8-bit flock-syntax-before-1930)
+ Emacs 19.31-19.xx:          (v19 8-bit flock-syntax-after-1930)
+ Emacs20        :            (v20 1-bit flock-syntax-after-1930).")
 
 (defconst verilog-comment-start-regexp "//\\|/\\*"
   "Dual comment value for `comment-start-regexp'.")
@@ -890,8 +903,7 @@ supported list, along with the values for this variable:
 (if verilog-font-lock-keywords
     ()
   (cond
-   ;; We can assume 8-bit syntax table emacsen aupport new syntax
-   ((memq '8-bit verilog-emacs-features)
+   ((memq 'flock-syntax-after-1930 verilog-emacs-features)
     (setq verilog-font-lock-keywords verilog-font-lock-keywords-after-1930
 	  verilog-font-lock-keywords-1 verilog-font-lock-keywords-after-1930
 	  verilog-font-lock-keywords-2 verilog-font-lock-keywords-after-1930
