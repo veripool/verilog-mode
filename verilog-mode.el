@@ -176,6 +176,12 @@
 	(defmacro defcustom (var value doc &rest args)
 	  (` (defvar (, var) (, value) (, doc))))
 	)
+      (if (fboundp 'defface)
+	  nil ; great!
+	(defmacro defface (var value doc &rest args)
+	  (` (make-face (, var))))
+	)
+
       (if (and (featurep 'custom) (fboundp 'customize-group))
 	  nil ;; We've got what we needed
 	;; We have an intermediate custom-library, hack around it!
