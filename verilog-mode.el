@@ -72,223 +72,116 @@
 ;; This variable will always hold the version number of the mode
 (defconst verilog-mode-version "$$Revision$$"
   "Version of this verilog mode.")
-(condition-case nil
-    (progn
+
+;;
+;; A hack so we can support either custom, or the old defvar
+;;
+(eval-and-compile
+  (condition-case ()
       (require 'custom)
-      (defgroup verilog-mode nil
-	"Faciliates easy editing of Verilog source text"
-	:group 'languages)
+    (error nil))
+  (if (and (featurep 'custom) (fboundp 'custom-declare-variable))
+      nil ;; We've got what we needed
+    ;; We have the old custom-library, hack around it!
+    (defmacro defgroup (&rest args)
+      nil)
+    (defmacro defcustom (var value doc &rest args) 
+      (` (defvar (, var) (, value) (, doc))))))
+
+(defgroup verilog-mode nil
+  "Faciliates easy editing of Verilog source text"
+  :group 'languages)
       
-      (defcustom verilog-indent-level 3
-	"*Indentation of Verilog statements with respect to containing block."
-	:group 'verilog-mode
-	:type 'integer 
-	)
-      
-      (defcustom verilog-indent-level-module 3
-	"* Indentation of Module level Verilog statements. (eg always, initial)
-    Set to 0 to get initial and always statements lined up 
-    on the left side of your screen."
-	:group 'verilog-mode
-	:type 'integer 
-	)
-      
-      (defcustom verilog-indent-level-declaration 3
-	"*Indentation of declarations with respect to containing block. 
-    Set to 0 to get them list right under containing block."
-	:group 'verilog-mode
-	:type 'integer 
-	)
-      
-      (defcustom verilog-indent-level-behavorial 3
-	"*Absolute indentation of first begin in a task or function block
-    Set to 0 to get such code to start at the left side of the screen."
-	:group 'verilog-mode
-	:type 'integer 
-	)
-      
-      (defcustom verilog-cexp-indent 1
-	"*Indentation of Verilog statements split across lines."
-	:group 'verilog-mode
-	:type 'integer 
-	)
-      
-      (defcustom verilog-case-indent 2
-	"*Indentation for case statements."
-	:group 'verilog-mode
-	:type 'integer 
-	)
-      
-      (defcustom verilog-auto-newline t
-	"*Non-nil means automatically newline after semicolons"
-	:group 'verilog-mode
-	:type 'integer 
-	)
-      
-      (defcustom verilog-auto-indent-on-newline t
-	"*Non-nil means automatically indent line after newline"
-	:group 'verilog-mode
-	:type 'integer 
-	)
-      
-      (defcustom verilog-tab-always-indent t
-	"*Non-nil means TAB in Verilog mode should always reindent the
-  current line, regardless of where in the line point is when the TAB
-  command is used."
-	:group 'verilog-mode
-	:type 'integer 
-	)
-      
-      (defcustom verilog-indent-begin-after-if t
-	"*If true, indent begin statements following if, else, while, for
-  and repeat.  otherwise, line them up."
-	:group 'verilog-mode
-	:type 'boolean )
-      
-      (defcustom verilog-auto-endcomments t
-	"*Non-nil means a comment /* ... */ is set after the ends which ends
-  cases and functions. The name of the function or case will be set
-  between the braces."
-	:group 'verilog-mode
-	:type 'boolean )
-	   
-      (defcustom verilog-minimum-comment-distance 40
-	"*Minimum distance between begin and end required before a comment
-  will be inserted.  Setting this variable to zero results in every
-  end aquiring a comment; the default avoids too many redundanet
-  comments in tight quarters"
-	:group 'verilog-mode
-	:type 'integer 
-	)
-      )
-  (error
-   (progn
-     (defvar verilog-indent-level 3
-       "*Indentation of Verilog statements with respect to containing block.")
-
-     (defvar verilog-indent-level-module 3
-       "* Indentation of Module level Verilog statements. (eg always, initial)
-    Set to 0 to get initial and always statements lined up 
-    on the left side of your screen.")
-
-     (defvar verilog-indent-level-declaration 3
-       "*Indentation of declarations with respect to containing block. 
-    Set to 0 to get them list right under containing block.")
-
-     (defvar verilog-indent-level-behavorial 3
-       "*Absolute indentation of first begin in a task or function block
-    Set to 0 to get such code to start at the left side of the screen.")
-
-     (defvar verilog-cexp-indent 1
-       "*Indentation of Verilog statements split across lines.")
-
-     (defvar verilog-case-indent 2
-       "*Indentation for case statements.")
-
-     (defvar verilog-auto-newline t
-       "*Non-nil means automatically newline after semicolons")
-
-     (defvar verilog-auto-indent-on-newline t
-       "*Non-nil means automatically indent line after newline")
-
-     (defvar verilog-tab-always-indent t
-       "*Non-nil means TAB in Verilog mode should always reindent the
-  current line, regardless of where in the line point is when the TAB
-  command is used."
-       )
-
-     (defvar verilog-indent-begin-after-if t
-       "*If true, indent begin statements following if, else, while, for
-  and repeat.  otherwise, line them up."
-       )
-
-     (defvar verilog-auto-endcomments t
-       "*Non-nil means a comment /* ... */ is set after the ends which ends
-  cases and functions. The name of the function or case will be set
-  between the braces."
-       )
-
-     (defvar verilog-minimum-comment-distance 40
-       "*Minimum distance between begin and end required before a comment
-  will be inserted.  Setting this variable to zero results in every
-  end aquiring a comment; the default avoids too many redundanet
-  comments in tight quarters"
-       )
-
-     (defvar verilog-auto-lineup '(all) 
-       "*List of contexts where auto lineup of :'s or ='s should be done.
-Elements can be of type: 'declaration' or 'case', which will do auto
-lineup in declarations or case-statements respectively. The word 'all'
-will do all lineups. '(case declaration) for instance will do lineup
-in case-statements and parameterlist, while '(all) will do all
-lineups."
-       )
-     
-     )
-   )
+(defcustom verilog-indent-level 3
+  "*Indentation of Verilog statements with respect to containing block."
+  :group 'verilog-mode
+  :type 'integer 
   )
 
-
-(defvar verilog-indent-level 3
-  "*Indentation of Verilog statements with respect to containing block.")
-
-(defvar verilog-indent-level-module 3
+(defcustom verilog-indent-level-module 3
   "* Indentation of Module level Verilog statements. (eg always, initial)
     Set to 0 to get initial and always statements lined up 
-    on the left side of your screen.")
+    on the left side of your screen."
+  :group 'verilog-mode
+  :type 'integer 
+  )
 
-(defvar verilog-indent-level-declaration 3
+(defcustom verilog-indent-level-declaration 3
   "*Indentation of declarations with respect to containing block. 
-    Set to 0 to get them list right under containing block.")
+    Set to 0 to get them list right under containing block."
+  :group 'verilog-mode
+  :type 'integer 
+  )
 
-(defvar verilog-indent-level-behavorial 3
+(defcustom verilog-indent-level-behavorial 3
   "*Absolute indentation of first begin in a task or function block
-    Set to 0 to get such code to start at the left side of the screen.")
+    Set to 0 to get such code to start at the left side of the screen."
+  :group 'verilog-mode
+  :type 'integer 
+  )
 
-(defvar verilog-cexp-indent 1
-  "*Indentation of Verilog statements split across lines.")
+(defcustom verilog-cexp-indent 1
+  "*Indentation of Verilog statements split across lines."
+  :group 'verilog-mode
+  :type 'integer 
+  )
 
-(defvar verilog-case-indent 2
-  "*Indentation for case statements.")
+(defcustom verilog-case-indent 2
+  "*Indentation for case statements."
+  :group 'verilog-mode
+  :type 'integer 
+  )
 
-(defvar verilog-auto-newline t
-  "*Non-nil means automatically newline after semicolons")
+(defcustom verilog-auto-newline t
+  "*Non-nil means automatically newline after semicolons"
+  :group 'verilog-mode
+  :type 'integer 
+  )
 
-(defvar verilog-auto-indent-on-newline t
-  "*Non-nil means automatically indent line after newline")
+(defcustom verilog-auto-indent-on-newline t
+  "*Non-nil means automatically indent line after newline"
+  :group 'verilog-mode
+  :type 'integer 
+  )
 
-(defvar verilog-tab-always-indent t
+(defcustom verilog-tab-always-indent t
   "*Non-nil means TAB in Verilog mode should always reindent the
   current line, regardless of where in the line point is when the TAB
   command is used."
-)
+  :group 'verilog-mode
+  :type 'integer 
+  )
 
-(defvar verilog-indent-begin-after-if t
+(defcustom verilog-indent-begin-after-if t
   "*If true, indent begin statements following if, else, while, for
   and repeat.  otherwise, line them up."
-)
+  :group 'verilog-mode
+  :type 'boolean )
 
-(defvar verilog-auto-endcomments t
+(defcustom verilog-auto-endcomments t
   "*Non-nil means a comment /* ... */ is set after the ends which ends
   cases and functions. The name of the function or case will be set
   between the braces."
-)
+  :group 'verilog-mode
+  :type 'boolean )
 
-(defvar verilog-minimum-comment-distance 40
+(defcustom verilog-minimum-comment-distance 40
   "*Minimum distance between begin and end required before a comment
   will be inserted.  Setting this variable to zero results in every
   end aquiring a comment; the default avoids too many redundanet
   comments in tight quarters"
-)
+  :group 'verilog-mode
+  :type 'integer 
+  )
 
 (defvar verilog-auto-lineup '(all) 
-"*List of contexts where auto lineup of :'s or ='s should be done.
+  "*List of contexts where auto lineup of :'s or ='s should be done.
 Elements can be of type: 'declaration' or 'case', which will do auto
 lineup in declarations or case-statements respectively. The word 'all'
 will do all lineups. '(case declaration) for instance will do lineup
 in case-statements and parameterlist, while '(all) will do all
 lineups."
- )
+  )
 
 (defvar verilog-mode-abbrev-table nil
   "Abbrev table in use in Verilog-mode buffers.")
@@ -693,15 +586,31 @@ supported list, along with the values for this variable:
 
 (defvar verilog-font-lock-keywords nil
   "keyword highlighting used in verilog-mode buffers.")
+(defvar verilog-font-lock-keywords-1 nil
+  "keyword highlighting used in verilog-mode buffers.")
+(defvar verilog-font-lock-keywords-2 nil
+  "keyword highlighting used in verilog-mode buffers.")
+(defvar verilog-font-lock-keywords-3 nil
+  "keyword highlighting used in verilog-mode buffers.")
+(defvar verilog-font-lock-keywords-4 nil
+  "keyword highlighting used in verilog-mode buffers.")
 (if verilog-font-lock-keywords
     ()
   (cond
    ;; We can assume 8-bit syntax table emacsen aupport new syntax
    ((memq '8-bit verilog-emacs-features)
-    (setq verilog-font-lock-keywords verilog-font-lock-keywords-after-1930)
+    (setq verilog-font-lock-keywords verilog-font-lock-keywords-after-1930
+	  verilog-font-lock-keywords-1 verilog-font-lock-keywords-after-1930
+	  verilog-font-lock-keywords-2 verilog-font-lock-keywords-after-1930
+	  verilog-font-lock-keywords-3 verilog-font-lock-keywords-after-1930
+	  verilog-font-lock-keywords-4 verilog-font-lock-keywords-after-1930)
     )
    (t
-    (setq verilog-font-lock-keywords verilog-font-lock-keywords-before-1930)
+    (setq verilog-font-lock-keywords   verilog-font-lock-keywords-before-1930
+	  verilog-font-lock-keywords-1 verilog-font-lock-keywords-before-1930
+	  verilog-font-lock-keywords-2 verilog-font-lock-keywords-before-1930
+	  verilog-font-lock-keywords-3 verilog-font-lock-keywords-before-1930
+	  verilog-font-lock-keywords-4 verilog-font-lock-keywords-before-1930)
     )
    )
   )
@@ -1336,7 +1245,6 @@ area.  See also `verilog-comment-region'."
 	(message  "%d lines autocommented" cnt))
     )
   )
-
 (defun verilog-beg-of-statement ()
   "Move backward to beginning of statement"
   (interactive)
@@ -1355,6 +1263,26 @@ area.  See also `verilog-comment-region'."
 	     (and (not (looking-at verilog-complete-reg))
 		  (verilog-continued-line))))
     (goto-char last)
+    (verilog-forward-syntactic-ws)
+    )
+  )
+
+(defun verilog-beg-of-statement-1 ()
+  "Move backward to beginning of statement"
+  (interactive)
+  (let ((pt (point)))
+    
+    (while (and (not (looking-at verilog-complete-reg))
+		(verilog-backward-token)
+		(not (bolp))
+		(not (= (preceding-char) ?\;)))
+      )
+    (setq pt (point))
+    (while (progn
+	     (setq pt (point))
+	     (and (not (looking-at verilog-complete-reg))
+		  (verilog-continued-line))))
+    (goto-char pt)
     (verilog-forward-syntactic-ws)
     )
   )
@@ -2644,19 +2572,20 @@ column number the line should be indented to."
   (interactive)
   (save-excursion
     (if (progn
-	  (verilog-beg-of-statement)
+	  (verilog-beg-of-statement-1)
 	  (looking-at verilog-declaration-re))
-	(let* ((e) (r)
+	(let* ((m1 (make-marker))
+	       (e) (r)
 	       (here (point))
 	       (start
 		(progn
-		  (verilog-beg-of-statement)
+		  (verilog-beg-of-statement-1)
 		  (while (looking-at verilog-declaration-re)
 		    (beginning-of-line)
 		    (setq e (point))
 		    (verilog-backward-syntactic-ws)
 		    (backward-char)
-		    (verilog-beg-of-statement))
+		    (verilog-beg-of-statement-1))
 		  e))
 	       (end
 		(progn
@@ -2703,11 +2632,12 @@ column number the line should be indented to."
 	    (cond
 	     ((looking-at verilog-declaration-re-1)
 	      (let ((p (match-end 0)))
+		(set-marker m1 p)
 		(if (verilog-re-search-forward "\\[" p 'move)
 		    (progn
 		      (forward-char -1)
 		      (just-one-space)
-		      (goto-char p)
+		      (goto-char (marker-position m1))
 		      (just-one-space)
 		      (indent-to ind)
 		      )
@@ -2720,8 +2650,11 @@ column number the line should be indented to."
 	      (goto-char e)
 	      (delete-horizontal-space)
 	      (indent-to ind))
-	     (t
-	      (goto-char e))		; Must be comment or white space
+	     (t 	; Must be comment or white space
+	      (goto-char e)
+	      (verilog-forward-ws&directives)
+	      (forward-line -1)
+	      )	
 	     )
 	    (forward-line 1)
 	    )
