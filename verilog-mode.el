@@ -683,8 +683,8 @@ format (e.g. 09/17/1997) is not supported.")
      ["Verilint error to comment"	verilog-verilint-off t]
      )
     "----"
-    ["Compile"				compile]
-    ["AUTO, Save, Compile"		verilog-auto-save-compile]
+    ["Compile"				compile t]
+    ["AUTO, Save, Compile"		verilog-auto-save-compile t]
     ["Next Compile Error"		next-error t]
     "----"
     ["Line up declarations around point"	verilog-pretty-declarations t]
@@ -4210,7 +4210,7 @@ and verilog-library-extensions."
 // Description :
 // <description>
 //-----------------------------------------------------------------------------
-// Copyright (c) 1998 by <company> This model is the confidential and
+// Copyright (c) <copydate> by <company> This model is the confidential and
 // proprietary property of <company> and the possession or use of this
 // file requires a written license from <company>.
 //------------------------------------------------------------------------------
@@ -4229,6 +4229,8 @@ and verilog-library-extensions."
     (insert-date)
     (search-forward "<moddate>") (replace-match "" t t)
     (insert-date)
+    (search-forward "<copydate>") (replace-match "" t t)
+    (insert-year)
     (search-forward "<modhist>") (replace-match "" t t)
     (insert-date)
     (insert " : created")
@@ -4270,7 +4272,17 @@ and verilog-library-extensions."
     (end-of-line))
     (delete-char 1)
   )
-
+(defun insert-year ()
+  "Insert year from the system."
+  (interactive)
+  (let ((timpos))
+    (setq timpos (point))
+    (shell-command  "date \"+@%Y\"" t)
+    (search-forward "@")
+    (delete-region timpos (point))
+    (end-of-line))
+  (delete-char 1)
+  )
 
 ;;;
 ;;; Signal list parsing
