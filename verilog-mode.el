@@ -57,32 +57,35 @@
 ;; 
 ;; $Header$
 ;; $Log$
-;; Revision 1.97  1996/01/25 21:39:47  mac
-;; 1) major change is smart auto-end-comments. (Thanks to
-;;    Nadim.Saeed@amd.com for the suggestion) Basically, much like I was
-;;    doing at every endcase, now at every end, I parse back to find the
-;;    reason for this block.  I.E., if you had:
+;; Revision 1.98  1996/01/26 00:27:25  mac
+;; missing )
 ;;
-;;    while (true) begin
-;; 	/* do stuff */
-;;    end
-;;
-;;    I insert a comment after the end as follows: /* while (true) */
-;;
-;;    This greatly enhances readability of code...
-;;
-;; 2) cleanup of usage of font-lock on dumb terminals
-;; 3) macromodule added where appropriate
-;; 4) comment indentation cleanups
-;; 5) a ; in a for(i = 1; no longer triggers a newline
-;; 6) start of work on a indent-line-relative, which would examine only a
-;;    few lines of code to determine indent level, which would be bound
-;;    to <CR>; allowing quick entry of source. An occasional <TAB> which
-;;    would invoke the expensive ((order N logN) where N is number of
-;;    lines in the module) verilog-indent-line to get indentation
-;;    "perfect".
-;; 7) some more work on completion.
-;;
+; Revision 1.97  1996/01/25  21:39:47  mac
+; 1) major change is smart auto-end-comments. (Thanks to
+;    Nadim.Saeed@amd.com for the suggestion) Basically, much like I was
+;    doing at every endcase, now at every end, I parse back to find the
+;    reason for this block.  I.E., if you had:
+;
+;    while (true) begin
+; 	/* do stuff */
+;    end
+;
+;    I insert a comment after the end as follows: /* while (true) */
+;
+;    This greatly enhances readability of code...
+;
+; 2) cleanup of usage of font-lock on dumb terminals
+; 3) macromodule added where appropriate
+; 4) comment indentation cleanups
+; 5) a ; in a for(i = 1; no longer triggers a newline
+; 6) start of work on a indent-line-relative, which would examine only a
+;    few lines of code to determine indent level, which would be bound
+;    to <CR>; allowing quick entry of source. An occasional <TAB> which
+;    would invoke the expensive ((order N logN) where N is number of
+;    lines in the module) verilog-indent-line to get indentation
+;    "perfect".
+; 7) some more work on completion.
+;
 ; Revision 1.96  1996/01/11  23:21:49  mac
 ; Changed comment at top of file to say "verilog-mode.el" instead of
 ; "verilog.el", as I want you to call this file verilog-mode.el
@@ -1940,19 +1943,19 @@ Verilog program are completed runtime and should not be added to this list.")
 (defun verilog-var-completion ()
   "Calculate all possible completions for variables (or constants)."
   nil)
-;  Not done yet; in 1.95 perhaps
-  (let ((start (point))
-	goon twice)
-    ;; Search for all reachable var declarations
-    (while (or (verilog-beg-of-defun)
-	       (setq goon (not goon)))
-      (save-excursion
-	(if (> start (prog1 (save-excursion (verilog-end-of-defun)
-					    (point))))
-	    () ; Declarations not reacable
-	  (cond ((and (verilog-re-search-forward  verilog-declaration-re start t)
-		      ;; Check var/const declarations
-		      (verilog-get-completion-decl)))))))))
+;  Not done yet; in 1.99 perhaps
+;  (let ((start (point))
+;	goon twice)
+;    ;; Search for all reachable var declarations
+;    (while (or (verilog-beg-of-defun)
+;	       (setq goon (not goon)))
+;      (save-excursion
+;	(if (> start (prog1 (save-excursion (verilog-end-of-defun)
+;					    (point))))
+;	    () ; Declarations not reacable
+;	  (cond ((and (verilog-re-search-forward  verilog-declaration-re start t)
+;		      ;; Check var/const declarations
+;		      (verilog-get-completion-decl)))))))))
 
 
 (defun verilog-keyword-completion (keyword-list)
