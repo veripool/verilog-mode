@@ -252,6 +252,13 @@
   :type 'boolean 
   )
 
+(defcustom verilog-tab-to-comment nil
+  "*Non-nil means TAB in Verilog mode should move to the right hand
+  column in preparation for a comment."
+  :group 'verilog-mode
+  :type 'boolean 
+  )
+
 (defcustom verilog-indent-begin-after-if t
   "*If true, indent begin statements following if, else, while, for
   and repeat.  otherwise, line them up."
@@ -272,11 +279,11 @@
   :group 'verilog-mode
   :type 'boolean )
 
-(defcustom verilog-minimum-comment-distance 40
-  "*Minimum distance between begin and end required before a comment
-  will be inserted.  Setting this variable to zero results in every
-  end acquiring a comment; the default avoids too many redundant
-  comments in tight quarters"
+(defcustom verilog-minimum-comment-distance 10
+  "*Minimum distance (in lines) between begin and end required before
+a comment will be inserted.  Setting this variable to zero results in
+every end acquiring a comment; the default avoids too many redundant
+comments in tight quarters"
   :group 'verilog-mode
   :type 'integer 
   )
@@ -346,8 +353,10 @@ lineups."
 
 (defvar verilog-font-lock-keywords-after-1930
   '(
-   ("^\\s-*\\(function\\|task\\|module\\|macromodule\\|primitive\\)\\>\\s-*\\(\\sw+\\)"  
+   ("^\\s-*\\(task\\|module\\|macromodule\\|primitive\\)\\>\\s-*\\(\\sw+\\)"  
     2 'font-lock-function-name-face nil t)
+   ("^\\s-*function\\>\\s-+\\(\\s-*\\(\\[[^]]*\\]\\)\\|\\(real\\(time\\)?\\)\\|\\(integer\\)\\|\\(time\\)\\)?\\(\\sw+\\)"  
+    1 'font-lock-function-name-face nil t)
    ("\\(\\\\\\S-*\\s-\\)\\|\\(`\\s-*[A-Za-z][A-Za-z0-9_]*\\)" 0 'font-lock-function-name-face)
    ("\\(@\\)\\|\\(#\\s-*\\(\\(\[0-9_\]+\\('[hdxbo][0-9_xz]*\\)?\\)\\|\\((\[^)\]*)\\|\\sw+\\)\\)\\)" 0 'font-lock-type-face)
 ; "integer" "input" "inout" "parameter" "defparam" "output" "supply0" "supply1" "supply" "tri0" "tri1" "trireg"
@@ -509,9 +518,6 @@ format (e.g. 09/17/1997) is not supported.")
 		   (concat verilog-compiler
 			   (or buffer-file-name ""))))))
 
-;; Eliminate compile warning
-(eval-when-compile
-  (defvar error-regexp-alist nil "Local let; here for warning elim."))
   
 (add-hook 'verilog-mode-hook 'verilog-compile)
 
@@ -525,8 +531,8 @@ compilation-error-regexp-alist.  This allows \\[next-error] to find the errors."
 	   ;; Probably buffer local at this point; maybe also in let; change all three
 	   (set (make-local-variable 'compilation-error-regexp-alist)
 		(append compilation-error-regexp-alist verilog-error-regexp))
-	   (setq error-regexp-alist
-		 (append error-regexp-alist verilog-error-regexp))
+	   (setq compilation-error-regexp-alist
+		 (append compilation-error-regexp-alist verilog-error-regexp))
 	   (setq-default compilation-error-regexp-alist
 			 (append (default-value 'compilation-error-regexp-alist) verilog-error-regexp)))))
 
@@ -1169,8 +1175,8 @@ Variables controlling indentation/edit style:
     Non-nil means a comment /* ... */ is set after the ends which ends 
       cases, tasks, functions and modules.
     The type and name of the object will be set between the braces.
- verilog-minimum-comment-distance (default 40)
-    Minimum distance between begin and end required before a comment
+ verilog-minimum-comment-distance (default 10)
+    Minimum distance (in lines) between begin and end required before a comment
     will be inserted.  Setting this variable to zero results in every
     end aquiring a comment; the default avoids too many redundanet
     comments in tight quarters. 
@@ -1400,23 +1406,19 @@ Other useful functions are:
 		(point))))
         (if (< (point) boi-point)
             (back-to-indentation)
-	  (if (not (eolp))
-	      (end-of-line)
-	    (progn
-	      (indent-for-comment)
-	      (if (and (eolp) (= oldpnt (point)))
-		  (progn	; kill existing comment
-		    (beginning-of-line)
-		    (re-search-forward comment-start-skip oldpnt 'move)
-		    (goto-char (match-beginning 0))
-		    (skip-chars-backward " \t")
-		    (kill-region (point) oldpnt)
-		    )
-		)
-	      )
-	    )
-					;					 )
-	  )
+	  (cond ((not verilog-tab-to-comment))
+		((not (eolp))
+		 (end-of-line))
+		(t
+		 (indent-for-comment)
+		 (when (and (eolp) (= oldpnt (point)))
+					; kill existing comment
+		   (beginning-of-line)
+		   (re-search-forward comment-start-skip oldpnt 'move)
+		   (goto-char (match-beginning 0))
+		   (skip-chars-backward " \t")
+		   (kill-region (point) oldpnt)
+		   ))))
 	)
     (progn (insert "\t"))
     )
@@ -1876,7 +1878,7 @@ Insert `// NAME ' if this line ends a module or primitive named NAME."
 			(point)
 			))))
 	(if b
-	    (if (> (- (point) b) verilog-minimum-comment-distance)
+	    (if (> (count-lines (point) b) verilog-minimum-comment-distance)
 		(insert (concat (if 
 				    (= else 0)
 				    " // ifdef " 
@@ -2103,7 +2105,7 @@ Insert `// NAME ' if this line ends a module or primitive named NAME."
 		  (cond 
 		   ((match-end 5) 
 		    (setq reg "\\(\\<function\\>\\)\\|\\(\\<\\(endfunction\\|task\\|\\(macro\\)?module\\|primitive\\)\\>\\)")
-		    (setq width "\\([ \t]*\\[[^]]*\\]\\)?")
+		    (setq width "\\(\\s-*\\(\\[[^]]*\\]\\)\\|\\(real\\(time\\)?\\)\\|\\(integer\\)\\|\\(time\\)\\)?")
 		    )
 		   ((match-end 6) 
 		    (setq reg "\\(\\<task\\>\\)\\|\\(\\<\\(endtask\\|function\\|\\(macro\\)?module\\|primitive\\)\\>\\)"))
@@ -4300,11 +4302,22 @@ component library to determine connectivity of the design."
 		       (string-match "^\\$" keywd))	;; PLI task
 		   (setq ignore-next nil))
 		  (t
+		   (when (string-match "^`" keywd)
+		     ;; This only will work if the define is a simple signal, not
+		     ;; something like a[b].  Sorry, it should be substituted into the parser
+		     (setq keywd
+			   (verilog-string-replace-matches
+			    "\[[^0-9: \t]+\]" "" nil nil
+			    (or (verilog-symbol-detick keywd nil) keywd)))
+		     (if (string-match "^[0-9 \t]+$" keywd)
+			 (setq keywd nil))
+		     )
 		   (if got-sig (if got-rvalue
 				   (setq sigs-in (cons got-sig sigs-in))
 				 (setq sigs-out (cons got-sig sigs-out))))
 		   (setq got-rvalue rvalue
-			 got-sig (if (assoc keywd (if got-rvalue sigs-in sigs-out))
+			 got-sig (if (or (not keywd)
+					 (assoc keywd (if got-rvalue sigs-in sigs-out)))
 				     nil (list keywd nil nil))
 			 sig-tolk t)))
 	    (skip-syntax-forward "w_"))
@@ -5291,6 +5304,7 @@ Typing \\[verilog-auto] will make this into:
 		      (append (verilog-modi-get-inputs modi)
 			      (verilog-modi-get-inouts modi)
 			      (verilog-modi-get-wires modi)
+			      (verilog-modi-get-regs modi)
 			      (verilog-modi-get-consts modi)
 			      (verilog-modi-get-sub-outputs modi)
 			      (verilog-modi-get-sub-inouts modi)
