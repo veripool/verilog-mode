@@ -273,12 +273,15 @@ lineups."
 (if (string-match "XEmacs" emacs-version)
     (defvar verilog-xemacs-menu
       '("Verilog"
-	["Lineup declaration"        verilog-pretty-declarations t]
-	["Redo auto comments/labels" verilog-label-be t]
+	["Line up declarations around point"        verilog-pretty-declarations t]
+	["Redo/insert comments on every end" verilog-label-be t]
 	"----"
 	["Beginning of function"     verilog-beg-of-defun t]
 	["End of function"           verilog-end-of-defun t]
 	["Mark function"             verilog-mark-defun t]
+	"----"
+	["Move to beginning of block" electric-verilog-backward-sexp t]
+	["Move to end of block"      electric-verilog-forward-sexp t]
 	"----" 
 	["Comment Region"            verilog-comment-region t]
 	["UnComment Region"          verilog-uncomment-region t]
@@ -287,17 +290,20 @@ lineups."
 	["Insert begin-end block"    verilog-insert-block t]
 	["Complete word"             verilog-complete-word t]
 	"----"
-	["Imenu - for easy movement" imenu (fboundp 'imenu)]
+	["Submit bug report"         verilog-submit-bug-report t]
 	"XEmacs menu for VERILOG mode."))
   (progn
     (easy-menu-define verilog-menu verilog-mode-map "Menu for Verilog mode"
 		      '("Verilog"
-			["Lineup declaration"        verilog-pretty-declarations t]
-			["Redo auto comments/labels" verilog-label-be t]
+			["Line up declarations around point"        verilog-pretty-declarations t]
+			["Redo/insert comments on every end" verilog-label-be t]
 			"----"
 			["Beginning of function"     verilog-beg-of-defun t]
 			["End of function"           verilog-end-of-defun t]
 			["Mark function"             verilog-mark-defun t]
+			"----" 
+			["Move to beginning of block" electric-verilog-backward-sexp t]
+			["Move to end of block"      electric-verilog-forward-sexp t]
 			"----" 
 			["Comment Region"            verilog-comment-region t]
 			["UnComment Region"          verilog-uncomment-region t]
@@ -306,7 +312,7 @@ lineups."
 			["Insert begin-end block"    verilog-insert-block t]
 			["Complete word"             verilog-complete-word t]
 			"----"
-			["Imenu - for easy movement" imenu (fboundp 'imenu)]
+			["Submit bug report"         verilog-submit-bug-report t]
 			))))
 
 (defvar verilog-mode-abbrev-table nil
