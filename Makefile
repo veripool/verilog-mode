@@ -42,14 +42,14 @@ $(S)bits/verilog-mode.el : verilog-mode.el
 	cp $? $@
 
 x/verilog-mode.elc : verilog-mode.el
-	@-rm -rf x
-	@-mkdir x
+	rm -rf x
+	mkdir x
 	cp verilog-mode.el x/verilog-mode.el
 	$(XEMACS) $(ELC) x/verilog-mode.el
 
 e/verilog-mode.elc : verilog-mode.el
-	@-rm -rf e
-	@-mkdir e
+	-rm -rf e
+	-mkdir e
 	cp verilog-mode.el e/verilog-mode.el
 	$(EMACS) $(ELC) e/verilog-mode.el
 
