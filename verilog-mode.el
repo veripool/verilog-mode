@@ -5,7 +5,8 @@
 ;; Copyright (C) 1996 Free Software Foundation, Inc.
 
 ;; Author: Michael McNamara (mac@verilog.com) 
-;; President, Silicon Sorcery
+;; President, SureFire Verification, Inc.
+;; (company was previously known as Silicon Sorcery)
 ;; Keywords: languages
 
 ;; This file is part of GNU Emacs.
@@ -989,7 +990,7 @@ Other useful functions are:
   (setq local-abbrev-table verilog-mode-abbrev-table)
   (set-syntax-table verilog-mode-syntax-table)
   (make-local-variable 'indent-line-function)
-  (setq indent-line-function 'verilog-indent-line)
+  (setq indent-line-function 'verilog-indent-line-relative)
   (setq comment-indent-function 'verilog-comment-indent)
   (make-local-variable 'parse-sexp-ignore-comments)
   (setq parse-sexp-ignore-comments nil)
@@ -2516,24 +2517,26 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
   "Cheap version of indent line that only looks at
   a few lines to determine indent level"
   (interactive)
-  (let ((indent-str))
-    (save-excursion
-      (beginning-of-line)
-      (if (looking-at "^[ \t]*$")
-	  (cond  ;- A blank line; No need to be too smart.
-	   ((bobp)
-	    (setq indent-str (list 'cpp 0)))
-	   ((verilog-continued-line)
-	    (let ((sp (point)))
-	      (if (verilog-continued-line)
-		  (progn (goto-char sp)
-			 (setq indent-str (list 'statement (verilog-indent-level))))
-		(goto-char sp)
-		(setq indent-str (list 'block (verilog-indent-level))))))
-	   (t
-	    (setq indent-str (verilog-calculate-indent))))
-	(setq indent-str (verilog-calculate-indent))
-	)
+  (let ((indent-str)
+	(sp (point)))
+    (if (looking-at "^[ \t]*$")
+	(cond  ;- A blank line; No need to be too smart.
+	 ((bobp)
+	  (setq indent-str (list 'cpp 0)))
+	 ((verilog-continued-line)
+	  (let ((sp1 (point)))
+	    (if (verilog-continued-line)
+		(progn (goto-char sp)
+		       (setq indent-str (list 'statement (verilog-indent-level))))
+	      (goto-char sp1)
+	      (setq indent-str (list 'block (verilog-indent-level))))
+	    )
+	  (goto-char sp)
+	  )
+	 ((goto-char sp)
+	  (setq indent-str (verilog-calculate-indent))))
+      (progn (skip-chars-forward " \t")
+	     (setq indent-str (verilog-calculate-indent)))
       )
     (verilog-do-indent indent-str)
     )
