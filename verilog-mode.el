@@ -204,15 +204,21 @@
 ;;; bugs. Please report any and all bugs to me at mac@verilog.com.
 ;; 
 ;; $Log$
-;; Revision 2.4  1996/03/27 21:29:02  mac
-;; 1) Reorganized varaible definitions
-;; 2) added verilog-indent-begin-after-if variable
-;;    (if true (default) indent begin following if/else/while et cetera)
-;; 3) added verilog-auto-indent-on-newline variable
-;;    (if true (default) indent new line after user hits ^m)
-;; 4) added \M-\r which updates end comment
-;; 5) work on case item auto comments
+;; Revision 2.5  1996/03/28 01:12:20  mac
+;; 1) added more special case indent of pre processor directives.
+;; 2) avoided overflow in regexp matcher for big case items.
+;; 3) made auto indent better for "snippets": incomplete verilog that
+;;    folks like to `include
 ;;
+; Revision 2.4  1996/03/27  21:29:02  mac
+; 1) Reorganized varaible definitions
+; 2) added verilog-indent-begin-after-if variable
+;    (if true (default) indent begin following if/else/while et cetera)
+; 3) added verilog-auto-indent-on-newline variable
+;    (if true (default) indent new line after user hits ^m)
+; 4) added \M-\r which updates end comment
+; 5) work on case item auto comments
+;
 ; Revision 2.3  1996/03/12  22:35:23  mac
 ; 1) Moved highlight specific initialization out of this mode, and added
 ;    comments telling folks how to use it.
@@ -1912,7 +1918,7 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
   )
 (defun verilog-indent-line ()
   "Indent for special part of code."
-  (if (looking-at "\\(`else\\)\\|\\(`ifdef\\)\\|\\(`endif\\)")
+  (if (looking-at "\\(`else\\)\\|\\(`ifdef\\)\\|\\(`endif\\)\\|\\(`define\\)\\|\\(`undef\\)\\|\\(`include\\)")
       ;; We could nicely nest `ifdef's, but...
       (progn
 	(delete-horizontal-space)
@@ -1940,14 +1946,11 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 	 ((looking-at "\\<endcase\\>")
 	  (indent-to ind))
 	 (t
-	  (if (and (or (memq 'all verilog-auto-lineup)
-		       (memq 'case verilog-auto-lineup))
-		   (looking-at verilog-case-item-re)
-		   (not (looking-at verilog-named-block-re)))
-	      (progn (indent-to (eval (cdr (assoc type verilog-indent-alist))))
-		     (verilog-indent-case))
-	    (indent-to (eval (cdr (assoc type verilog-indent-alist))))
-	    )))))
+	  (indent-to (eval (cdr (assoc type verilog-indent-alist))))
+	  (if (or (memq 'all verilog-auto-lineup)
+		  (memq 'case verilog-auto-lineup))
+	      (verilog-indent-case))
+	  ))))
      
      (;-- Handle the ends
       (looking-at verilog-end-block-re-1)
@@ -2037,6 +2040,7 @@ column number the line should be indented to."
 	(ind 0))
     ;; Get right indent
     (while (< (point) (marker-position end))
+      ;; XXX I get regexp stack overflow here for big cases
       (if (verilog-re-search-forward  verilog-case-item-re  (marker-position end) 'move)
 	  (forward-char -1))
       (delete-horizontal-space)
@@ -2085,6 +2089,8 @@ column number the line should be indented to."
 			   (while t
 			     (verilog-backward-syntactic-ws)
 			     (beginning-of-line)
+			     (if (bobp)
+				 (throw 'first (point-marker)))				 
 			     (verilog-forward-syntactic-ws)
 			     (if (looking-at verilog-declaration-re)
 				 ()
