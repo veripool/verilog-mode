@@ -86,19 +86,43 @@
 ;;
 ;; A hack so we can support either custom, or the old defvar
 ;;
-(eval-and-compile
-  (condition-case ()
-      (require 'custom)
-    (error nil))
-  (if (and (featurep 'custom) (fboundp 'custom-declare-variable))
-      nil ;; We've got what we needed
-    ;; We have the old custom-library, hack around it!
-    (defmacro defgroup (&rest args)
-      nil)
-    (defmacro customize (&rest args)
-      (message "Sorry, Customize is not available with this version of emacs"))
-    (defmacro defcustom (var value doc &rest args) 
-      (` (defvar (, var) (, value) (, doc))))))
+;; Insure we have certain packages, and deal with it if we don't
+
+(if (fboundp 'eval-when-compile)
+    (eval-when-compile
+      (condition-case nil
+          (require 'imenu)
+        (error nil))
+      (condition-case nil
+	  (require 'reporter)
+        (error nil))
+      (condition-case nil
+          (require 'easymenu)
+        (error nil))
+      (condition-case nil
+	  (if (fboundp 'current-menubar)
+	      nil ;; great
+	    (defmacro set-buffer-menubar (&rest args) nil)
+	    (defmacro add-submenu (&rest args) nil))
+	(error nil))
+      (condition-case nil
+	  (if (fboundp 'zmacs-activate-region)
+	      nil ;; great
+	    (defmacro zmacs-activate-region (&rest args) nil))
+	(error nil))
+      (condition-case nil
+	  (require 'custom)
+	(error nil))
+      (if (and (featurep 'custom) (fboundp 'custom-declare-variable))
+	  nil ;; We've got what we needed
+	;; We have the old custom-library, hack around it!
+	(defmacro defgroup (&rest args)  nil)
+	(defmacro customize (&rest args)
+	  (message "Sorry, Customize is not available with this version of emacs"))
+	(defmacro defcustom (var value doc &rest args) 
+	  (` (defvar (, var) (, value) (, doc))))
+	)
+      ))
 
 (defun verilog-customize ()
   "Link to customize screen for Verilog"
@@ -206,10 +230,9 @@ lineups."
 
 (defvar verilog-font-lock-keywords-after-1930
   '(
-    ;;
    ("^\\s-*\\(function\\|task\\|module\\|macromodule\\|primitive\\)\\>\\s-*\\(\\sw+\\)"  
     2 'font-lock-function-name-face nil t)
-   ("\\(\\\\\\S-*\s-\\)\\|\\(`\\s-*[A-Za-z][A-Za-z0-9_]*\\)" 0 'font-lock-function-name-face)
+   ("\\(\\\\\\S-*\\s-\\)\\|\\(`\\s-*[A-Za-z][A-Za-z0-9_]*\\)" 0 'font-lock-function-name-face)
    ("\\(@\\)\\|\\(#\\s-*\\(\\(\[0-9\]+\\('[hdxbo][0-9_xz]*\\)?\\)\\|\\((\[^)\]*)\\|\\sw+\\)\\)\\)" 0 'font-lock-type-face)
 ; "integer" "input" "inout" "parameter" "defparam" "output" "supply0" "supply1" "supply" "tri0" "tri1" "trireg"
 ; "triand" trior" "wire" "wor" "wand" "time" "real" "realtime" "reg" "signed" "vectored"
@@ -219,6 +242,7 @@ lineups."
 ; "primitive" "endprimitive" "specify" "endspecify" "table" "endtable" 
 ; "function" "endfunction" "task" "endtask" "module" "macromodule""endmodule"
  ("\\<\\$[a-zA-Z][a-zA-Z0-9_\\$]*\\|\\(a\\(lways\\|ssign\\)\\|begin\\|case\\(\\|[xz]\\)\\|default\\|e\\(lse\\|nd\\(\\|case\\|function\\|module\\|primitive\\|specify\\|ta\\(ble\\|sk\\)\\)\\)\\|f\\(or\\(\\|ce\\|ever\\|k\\)\\|unction\\)\\|i\\(f\\|nitial\\)\\|join\\|m\\(acromodule\\|odule\\)\\|negedge\\|p\\(osedge\\|rimitive\\)\\|repeat\\|specify\\|ta\\(ble\\|sk\\)\\|w\\(ait\\|hile\\)\\)\\>" 0 'font-lock-keyword-face)
+
    )
 )
 
@@ -226,7 +250,7 @@ lineups."
   '(
     ("^\\s-*\\(function\\|task\\|module\\|macromodule\\|primitive\\)\\>\\s-*\\(\\sw+\\)"  
      2 font-lock-function-name-face nil t)
-    ("\\(\\\\\\s-*\\)\\|\\(`[ \t]*[A-Za-z][A-Za-z0-9_]*\\)" 0 font-lock-function-name-face)
+    ("\\(\\\\\\S-*\\s-\\)\\|\\(`\\s-*[A-Za-z][A-Za-z0-9_]*\\)" 0 font-lock-function-name-face)
     ("[@#]" . font-lock-type-face)
 ; "integer" "input" "inout" "parameter" "defparam" "output" "supply0" "supply1" "supply" "tri0" "tri1" "trireg"
 ; "triand" trior" "wire" "wor" "wand" "time" "real" "realtime" "reg" "signed" "vectored"
@@ -238,20 +262,6 @@ lineups."
    ("\\<\\$[a-zA-Z][a-zA-Z0-9_\\$]*\\|\\(a\\(lways\\|ssign\\)\\|begin\\|case\\(\\|[xz]\\)\\|default\\|e\\(lse\\|nd\\(\\|case\\|function\\|module\\|primitive\\|specify\\|ta\\(ble\\|sk\\)\\)\\)\\|f\\(or\\(\\|ce\\|ever\\|k\\)\\|unction\\)\\|i\\(f\\|nitial\\)\\|join\\|m\\(acromodule\\|odule\\)\\|negedge\\|p\\(osedge\\|rimitive\\)\\|repeat\\|specify\\|ta\\(ble\\|sk\\)\\|w\\(ait\\|hile\\)\\)\\>" 0 font-lock-keyword-face)
     )
 )
-
-;; Insure we have certain packages
-
-(if (fboundp 'eval-when-compile)
-    (eval-when-compile
-      (condition-case nil
-          (require 'imenu)
-        (error nil))
-      (condition-case nil
-	  (require 'reporter)
-        (error nil))
-      (condition-case nil
-          (require 'easymenu)
-        (error nil))))
 
 (defvar verilog-imenu-generic-expression
   '((nil "^\\s-*\\(\\(m\\(odule\\|acromodule\\)\\)\\|primitive\\)\\s-+\\([a-zA-Z0-9_.:]+\\)" 3)
@@ -962,6 +972,7 @@ Other useful functions are:
 				      verilog-font-lock-keywords-3 
 				      verilog-font-lock-keywords-4) 
 	  nil t)) 
+
   ;; Tell imenu how to handle verilog. 
   (make-local-variable 'imenu-generic-expression) 
   (setq imenu-generic-expression verilog-imenu-generic-expression) 
@@ -1162,8 +1173,7 @@ This puts the mark at the end, and point at the beginning."
   (verilog-end-of-defun)
   (push-mark (point))
   (verilog-beg-of-defun)
-  (if (fboundp 'zmacs-activate-region)
-      (zmacs-activate-region)))
+  (zmacs-activate-region))
 
 (defun verilog-comment-region (start end)
   "Put the region into a Verilog comment.
