@@ -34,7 +34,7 @@
 ;;; C-h f <Name of function you want described>
 
 ;;; to set up auto mode, include stuff like this in your .emacs:
-: (autoload 'verilog-mode "verilog-mode" "Verilog mode" t )
+; (autoload 'verilog-mode "verilog-mode" "Verilog mode" t )
 ; (setq auto-mode-alist (cons  '("\\.v\\'" . verilog-mode) auto-mode-alist))
 ; (setq auto-mode-alist (cons  '("\\.dv\\'" . verilog-mode) auto-mode-alist))
 ;;; to get pretty colors:
@@ -68,44 +68,48 @@
 ;; 
 ;; $Header$
 ;; $Log$
-;; Revision 1.92  1996/01/03 21:40:50  mac
-;; Fix a few bugs:
-;;  a typo, hints to use autoload, incorrect indentation of module as
-;;  typed, named blocks where not handled. [ Thanks Drew!]
+;; Revision 1.93  1996/01/03 22:21:24  mac
+;; Fix some silly typos; for now on I promise to _at least_ byte-compile
+;; and load the file before I send it out...
 ;;
-;; There was a bug in the auto endcomment for `else and `endif (comment
-;;  went to the wrong spot)
-;;
-;; Changed some features:
-;; The auto comments used to add comments like:
-;;  endmodule /* module: foo */
-;;  endfunction /* function: bar */
-;;
-;;  I deleted the "module:" and "function:" parts as they are rather obvious...
-;;
-;; The end for named blocks is now marked.
-;;
-;; Added some features:
-;;  Now M-C-t (esc tab) does some reasonable completion;
-;;  it tries to get appropriate keywords based on scope;
-;;  it tries to get tasks based on scope;
-;;  it tires to get modules based on scope.
-;;
-;;  eg,
-;;  module foo;
-;;    ini<M-TAB> fills with initail
-;;
-;;  module barinsky;
-;;  endmodule
-;;
-;;  module foo;
-;;
-;;   ba<M-TAB> fills with barinsky
-;;
-;; and so on.
-;;
-;; However, it still needs more work (vestiges of pascal mode remain)
-;;
+; Revision 1.92  1996/01/03  21:40:50  mac
+; Fix a few bugs:
+;  a typo, hints to use autoload, incorrect indentation of module as
+;  typed, named blocks where not handled. [ Thanks Drew!]
+;
+; There was a bug in the auto endcomment for `else and `endif (comment
+;  went to the wrong spot)
+;
+; Changed some features:
+; The auto comments used to add comments like:
+;  endmodule /* module: foo */
+;  endfunction /* function: bar */
+;
+;  I deleted the "module:" and "function:" parts as they are rather obvious...
+;
+; The end for named blocks is now marked.
+;
+; Added some features:
+;  Now M-C-t (esc tab) does some reasonable completion;
+;  it tries to get appropriate keywords based on scope;
+;  it tries to get tasks based on scope;
+;  it tires to get modules based on scope.
+;
+;  eg,
+;  module foo;
+;    ini<M-TAB> fills with initial
+;
+;  module barinsky;
+;  endmodule
+;
+;  module foo;
+;
+;   ba<M-TAB> fills with barinsky
+;
+; and so on.
+;
+; However, it still needs more work (vestiges of pascal mode remain)
+;
 ; Revision 1.91  1996/01/03  17:19:02  mac
 ; Base of publically released version
 ;
@@ -217,12 +221,12 @@
 	    (setq comments '1-bit)))
       (setq comments 'no-dual-comments))
     ;; lets do some minimal sanity checking.
-    (if (and (or
-	      ;; Lemacs before 19.6 had bugs
-	      (and (eq major 'v19) (eq flavor 'XEmacs) (< minor 6))
-	      ;; Emacs 19 before 19.21 has known bugs
-	      (and (eq major 'v19) (eq flavor 'FSF) (< minor 21)))
-	     (not c-inhibit-startup-warnings-p))
+    (if (or
+	 ;; Lemacs before 19.6 had bugs
+	 (and (eq major 'v19) (eq flavor 'XEmacs) (< minor 6))
+	 ;; Emacs 19 before 19.21 has known bugs
+	 (and (eq major 'v19) (eq flavor 'FSF) (< minor 21))
+	 )
 	(with-output-to-temp-buffer "*verilog-mode warnings*"
 	  (print (format
 "The version of Emacs that you are running, %s,
@@ -232,29 +236,21 @@ latest available version.  verilog-mode may continue to work, after a
 fashion, but strange indentation errors could be encountered."
 		     emacs-version))))
     ;; Emacs 18, with no patch is not too good
-    (if (and (eq major 'v18) (eq comments 'no-dual-comments)
-	     (not c-inhibit-startup-warnings-p))
+    (if (and (eq major 'v18) (eq comments 'no-dual-comments))
 	(with-output-to-temp-buffer "*verilog-mode warnings*"
 	  (print (format
 "The version of Emacs 18 you are running, %s,
-has known deficiencies in its ability to handle dual C++ comments,
-i.e. C++ line style comments and C block style comments.  This will
-not be much of a problem for you if you are only editing C code, but
-if you are doing much C++ editing, you should strongly consider
-upgrading to one of the latest Emacs 19's.  In Emacs 18, you may also
-experience performance degradations. Emacs 19 has some new built-in
-routines which will speed things up for you.
-
-Because of these inherent problems, verilog-mode is no longer being
-actively maintained for Emacs 18, however, until you can upgrade to
-Emacs 19, you may want to look at verilog-mode-18.el in the verilog-mode
-distribution.  THIS FILE IS COMPLETELY UNSUPPORTED!  If you use it,
-you are on your own, although patch contributions will be folded into
-the main release."
+has known deficiencies in its ability to handle the dual verilog 
+(and C++) comments, (e.g. the // and /* */ comments). This will
+not be much of a problem for you if you only use the /* */ comments,
+but you really should strongly consider upgrading to one of the latest 
+Emacs 19's.  In Emacs 18, you may also experience performance degradations. 
+Emacs 19 has some new built-in routines which will speed things up for you.
+Because of these inherent problems, verilog-mode is not supported 
+on emacs-18."
 			    emacs-version))))
     ;; Emacs 18 with the syntax patches are no longer supported
-    (if (and (eq major 'v18) (not (eq comments 'no-dual-comments))
-	     (not c-inhibit-startup-warnings-p))
+    (if (and (eq major 'v18) (not (eq comments 'no-dual-comments)))
 	(with-output-to-temp-buffer "*verilog-mode warnings*"
 	  (print (format
 "You are running a syntax patched Emacs 18 variant.  While this should
@@ -704,30 +700,31 @@ area.  See also `verilog-comment-area'."
 (defun verilog-end-of-defun ()
   "Move forward to the end of the current function or procedure."
   (interactive)
-  (if (looking-at "\\s ")
-      (forward-sexp 1))
-  (if (not (looking-at verilog-defun-re-1))
-      (progn
-	(verilog-beg-of-defun)
-	(looking-at verilog-defun-re-1))
-    )
-  (cond
-   ((match-end 1)
-    (setq reg "\\<endmodule\\>"))
-   ((match-end 2)
-    (setq reg "\\<endprimitive\\>"))
-   )
-  (catch 'found 
-    (while (re-search-forward reg nil 'move)
-      (cond ((let ((state (save-excursion
-			    (parse-partial-sexp (point-min) (point)))))
-	       (or (nth 3 state) (nth 4 state))) ; Inside string or comment
-	     ())
-	    ((match-end 0)
-	     (throw 'found t))
-	    (t
-	     (throw 'found nil)))))
-  (forward-line 1))
+  (let (reg)
+    (if (looking-at "\\s ")
+	(forward-sexp 1))
+    (if (not (looking-at verilog-defun-re-1))
+	(progn
+	  (verilog-beg-of-defun)
+	  (looking-at verilog-defun-re-1))
+      )
+    (cond
+     ((match-end 1)
+      (setq reg "\\<endmodule\\>"))
+     ((match-end 2)
+      (setq reg "\\<endprimitive\\>"))
+     )
+    (catch 'found 
+      (while (re-search-forward reg nil 'move)
+	(cond ((let ((state (save-excursion
+			      (parse-partial-sexp (point-min) (point)))))
+		 (or (nth 3 state) (nth 4 state))) ; Inside string or comment
+	       ())
+	      ((match-end 0)
+	       (throw 'found t))
+	      (t
+	       (throw 'found nil)))))
+    (forward-line 1)))
 
 (defun verilog-label-be (&optional arg)
 "Label matching begin ... end, fork ... join and case ... endcase statements in this module;
@@ -1276,30 +1273,29 @@ type. Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 
 (defun verilog-do-indent-line (indent-str)
   "Indent current line as a Verilog statement."
-    (let* ((type (car indent-str))
-	   (ind (car (cdr indent-str))))
-      (if (looking-at "^[0-9a-zA-Z]+[ \t]*:[^=]")
-	  (search-forward ":" nil t))
-      (delete-horizontal-space)
-      (cond 
-       ((or (and (eq type 'block) 
-		 (looking-at verilog-end-block-re-1))
-	    (and (eq type 'case) 
-		 (looking-at "\\<endcase\\>"))
-	    (and (eq type 'behavorial)
-		 (or (looking-at verilog-behavorial-re)
-		     (looking-at verilog-beg-tf-re))))
-	(indent-to ind))
-       ((and (eq type 'defun)
-	     (looking-at (concat verilog-defun-re "\\|" verilog-end-defun-re)))
-	(indent-to 0))      
-       (t
-	(let ((val (eval (cdr (assoc type verilog-indent-alist)))))
-	  ;;	(verilog-comment-depth type val)
-	  (indent-to val)
-	  ))
-       )
-      )
+  (let* ((type (car indent-str))
+	 (ind (car (cdr indent-str))))
+    (if (looking-at "^[0-9a-zA-Z]+[ \t]*:[^=]")
+	(search-forward ":" nil t))
+    (delete-horizontal-space)
+    (cond 
+     ((or (and (eq type 'block) 
+	       (looking-at verilog-end-block-re-1))
+	  (and (eq type 'case) 
+	       (looking-at "\\<endcase\\>"))
+	  (and (eq type 'behavorial)
+	       (or (looking-at verilog-behavorial-re)
+		   (looking-at verilog-beg-tf-re))))
+      (indent-to ind))
+     ((and (eq type 'defun)
+	   (looking-at (concat verilog-defun-re "\\|" verilog-end-defun-re)))
+      (indent-to 0))      
+     (t
+      (let ((val (eval (cdr (assoc type verilog-indent-alist)))))
+	;;	(verilog-comment-depth type val)
+	(indent-to val)
+	))
+     )
     )
   )
 
@@ -1796,7 +1792,7 @@ Verilog program are completed runtime and should not be added to this list.")
 	    ;; on completing the label.
 	    ((and (not (null (cdr allcomp))) (= (length verilog-str)
 						(length match)))
-	     (with-outpu-tot-temp-buffer "*Completions*"
+	     (with-output-to-temp-buffer "*Completions*"
 	       (display-completion-list allcomp))
 	     ;; Wait for a keypress. Then delete *Completion*  window
 	     (momentary-string-display "" (point))
