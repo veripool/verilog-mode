@@ -244,7 +244,7 @@ Call 'regexp-opt' on A and B."
   "Customize AUTO actions when expanding verilog source text"
   :group 'verilog-mode)
 
-(defcustom verilog-linter "surelint --std --synth --style --sim --race --fsm --solve --msglimit=none "
+(defcustom verilog-linter "surelint --std --synth --style --sim --race --fsm --msglimit=none "
   "*Unix program and arguments to call to run a lint checker on verilog source.
 Invoked when you type \\[compile].  \\[next-error] will take you to
    the next lint error as expected."
@@ -266,14 +266,7 @@ Invoked when you type \\[compile].  \\[next-error] will take you to
   :type 'string
   :group 'verilog-mode-actions)
 
-(defvar verilog-which-tool 1)
-(defcustom verilog-tool 'verilog-linter
-  "*Lisp function to call when \\[compile] is invoked on verilog source."
-  :type '(radio (variable-item verilog-linter)
-		(variable-item verilog-coverage)
-		(variable-item verilog-simulator)
-                (symbol :tag "Other"))
-  :group 'verilog-mode-actions)
+(defvar verilog-tool 'verilog-linter)
 
 (defcustom verilog-highlight-translate-off nil
   "*Non-nil means background-highlight code excluded from translation.
@@ -419,7 +412,7 @@ sub-module's port list has changed."
  verilog-error-regexp
   '(
 	; SureLint
-    ("[^\n]*\\[\\([^:]+\\):\\([0-9]+\\)\\]" 1 2)
+;;    ("[^\n]*\\[\\([^:]+\\):\\([0-9]+\\)\\]" 1 2)
 	; Most SureFire tools
     ("\\(WARNING\\|ERROR\\|INFO\\)[^:]*: \\([^,]+\\), line \\([0-9]+\\):" 2 3 )
     ("\
@@ -443,8 +436,8 @@ sub-module's port list has changed."
     ("[^\n]*\\[\\([^:]+\\):\\([0-9]+\\)\\]" 1 bold t)
     ("[^\n]*\\[\\([^:]+\\):\\([0-9]+\\)\\]" 2 bold t)
 
-    ("\\(WARNING\\|ERROR\\): \\([^,]+\\), line \\([0-9]+\\):" 2 bold t)
-    ("\\(WARNING\\|ERROR\\): \\([^,]+\\), line \\([0-9]+\\):" 3 bold t)
+    ("\\(WARNING\\|ERROR\\|INFO\\): \\([^,]+\\), line \\([0-9]+\\):" 2 bold t)
+    ("\\(WARNING\\|ERROR\\|INFO\\): \\([^,]+\\), line \\([0-9]+\\):" 3 bold t)
 
     ("\
 \\([a-zA-Z]?:?[^:( \t\n]+\\)[:(][ \t]*\\([0-9]+\\)\\([) \t]\\|\
@@ -573,7 +566,7 @@ lineups.")
 
 (defvar verilog-imenu-generic-expression
   '((nil "^\\s-*\\(\\(m\\(odule\\|acromodule\\)\\)\\|primitive\\)\\s-+\\([a-zA-Z0-9_.:]+\\)" 4)
-    ("*Vars*" "^\\s-*\\(reg\\|wire\\)\\s-+\\(\\|\\[[^\\]]+\\]\\s-+\\)\\([A-Za-z0-9_]+\\)" 3))
+    ("*Vars*" "^\\s-*\\(reg\\|wire\\)\\s-+\\(\\|\\[[^]]+\\]\\s-+\\)\\([A-Za-z0-9_]+\\)" 3))
   "Imenu expression for Verilog-mode.  See `imenu-generic-expression'.")
 
 (defvar verilog-mode-abbrev-table nil
@@ -621,8 +614,8 @@ If set will become buffer local.")
 		      (interactive) (electric-verilog-terminate-line 1))))
   (define-key verilog-mode-map "\M-\t"    'verilog-complete-word)
   (define-key verilog-mode-map "\M-?"     'verilog-show-completions)
-  (define-key verilog-mode-map "\M-\C-h"  'verilog-mark-defun)
-  (define-key verilog-mode-map "\C-c`"    'verilog-verilint-off)
+  (define-key verilog-mode-map [(meta control h)] 'verilog-mark-defun)
+  (define-key verilog-mode-map "\C-c`"    'verilog-surelint-off)
   (define-key verilog-mode-map "\C-c\C-r" 'verilog-label-be)
   (define-key verilog-mode-map "\C-c\C-i" 'verilog-pretty-declarations)
   (define-key verilog-mode-map "\C-c\C-b" 'verilog-submit-bug-report)
@@ -640,6 +633,7 @@ If set will become buffer local.")
   )
 
 ;; menus
+(defvar verilog-which-tool 1)
 (defvar verilog-xemacs-menu
   '("Verilog"
     ("Choose Compilation Action"
@@ -647,7 +641,6 @@ If set will become buffer local.")
       (progn
 	(setq verilog-tool 'verilog-linter)
 	(setq verilog-which-tool 1)
-	(customize-set-variable 'verilog-tool verilog-linter)
 	(verilog-set-compile-command))
       :style radio
       :selected (= verilog-which-tool 1)]
@@ -655,7 +648,6 @@ If set will become buffer local.")
       (progn
 	(setq verilog-tool 'verilog-coverage)
 	(setq verilog-which-tool 2)
-	(customize-set-variable 'verilog-tool verilog-coverage)
 	(verilog-set-compile-command))
       :style radio
       :selected (= verilog-which-tool 2)]
@@ -663,7 +655,6 @@ If set will become buffer local.")
       (progn
 	(setq verilog-tool 'verilog-simulator)
 	(setq verilog-which-tool 3)
-	(customize-set-variable 'verilog-tool verilog-simulator)
 	(verilog-set-compile-command))
       :style radio
       :selected (= verilog-which-tool 3)]
@@ -671,7 +662,6 @@ If set will become buffer local.")
       (progn
 	(setq verilog-tool 'verilog-compiler)
 	(setq verilog-which-tool 4)
-	(customize-set-variable 'verilog-tool verilog-compiler)
 	(verilog-set-compile-command))
       :style radio
       :selected (= verilog-which-tool 4)]
@@ -688,7 +678,7 @@ If set will become buffer local.")
      ["Comment Region"			verilog-comment-region t]
      ["UnComment Region"			verilog-uncomment-region t]
      ["Multi-line comment insert"	verilog-star-comment t]
-     ["Verilint error to comment"	verilog-verilint-off t]
+     ["SureLint error to comment"	verilog-surelint-off t]
      )
     "----"
     ["Compile"				compile t]
@@ -1657,6 +1647,8 @@ Other useful functions are:
 	comment-start-skip "/\\*+ *\\|// *"
 	comment-multi-line nil)
   ;; Set up for compilation
+  (setq verilog-which-tool 1)
+  (setq verilog-tool 'verilog-linter)
   (verilog-set-compile-command)
 
   ;; Setting up things for font-lock
@@ -2724,22 +2716,71 @@ Useful for creating tri's and other expanded fields."
   (while (re-search-forward "\\([^;]\\)[ \t]*\n[ \t]*" nil t)
 	(replace-match "\\1 " nil nil)))
 
-(defun verilog-verilint-off ()
-  "Convert a verilint warning line into a disable statement.
+(defun verilog-surelint-off ()
+  "Convert a SureLint warning line into a disable statement.
+Run from Verilog source window; assumes there is a *compile* buffer
+with point set appropriately.
 For example:
-	(W240)  pci_bfm_null.v, line  46: Unused input: pci_rst_
+ WARNING [STD-UDDONX]: xx.v, line 8: output out is never assigned.
 becomes:
-	//Verilint 240 off // WARNING: Unused input"
+	// surefire lint_line_off UDDONX"
   (interactive)
   (save-excursion
+    (switch-to-buffer compilation-last-buffer)
     (beginning-of-line)
-    (when (looking-at "\\(.*\\)([WE]\\([0-9A-Z]+\\)).*,\\s +line\\s +[0-9]+:\\s +\\([^:\n]+\\):?.*$")
-      (replace-match (format
-		      ;; %3s makes numbers 1-999 line up nicely
-		      "\\1//Verilint %3s off // WARNING: \\3"
-		      (match-string 2)))
-      (beginning-of-line)
-      (verilog-indent-line))))
+    (when 
+	(looking-at "\\(INFO\\|WARNING\\|ERROR\\) \\[[^-]+-\\([^]]+\\)\\]: \\([^,]+\\), line \\([0-9]+\\): \\(.*\\)$")
+      (let* ((type (match-string 1))
+	     (code (match-string 2))
+	     (file (match-string 3))
+	     (line (match-string 4))
+	     (text (match-string 5))
+	     (buffer (get-buffer(file-name-nondirectory file)))
+	     dir filename)
+	(unless (compare-file-to-buffer buffer file)
+	  (progn
+	    (setq buffer
+		  (and (file-exists-p file)
+		       (find-file-noselect file)))
+	    (or buffer
+		(let* ((pop-up-windows t))
+		  (let ((name (expand-file-name
+			       (read-file-name
+				(format "Find this error in: (default %s) "
+					file)
+				dir file t))))
+		    (if (file-directory-p name)
+			(setq name (expand-file-name filename name)))
+		    (setq buffer
+			  (and (file-exists-p name)
+			       (find-file-noselect name))))))))
+	(switch-to-buffer buffer)
+	(goto-line (string-to-number line))
+	(end-of-line)
+	(catch 'already
+	  (cond
+	   ((verilog-in-slash-comment-p)
+	    (re-search-backward "//")
+	    (cond 
+	     ((looking-at "// surefire lint_off_line ")
+	      (goto-char (match-end 0))
+	      (let ((lim (save-excursion (end-of-line) (point))))
+		(if (re-search-forward code lim 'move) 
+		    (throw 'already t)
+		  (insert-string (concat " " code)))))
+	     (t
+	      )))
+	   ((verilog-in-star-comment-p)
+	    (re-search-backward "/\*")
+	    (insert-string (format " // surefire lint_off_line %6s" code ))
+	    )
+	   (t
+	    (insert-string (format " // surefire lint_off_line %6s" code ))
+	    ))
+;;	  (electric-verilog-terminate-line)
+;;	  (insert-string (format " // %s: %s" type text)) 
+	  )))))
+
 
 (defun verilog-auto-save-compile ()
   "Update automatics with \\[verilog-auto], save the buffer, and compile."
@@ -3251,6 +3292,13 @@ Optional BOUND limits search."
 	(save-excursion
 	  (parse-partial-sexp (point-min) (point)))))
    (nth 4 state)))
+
+(defun verilog-in-slash-comment-p ()
+ "Return true if in a star comment."
+ (let ((state
+	(save-excursion
+	  (parse-partial-sexp (point-min) (point)))))
+   (nth 7 state)))
 
 (defun verilog-in-comment-or-string-p ()
  "Return true if in a string or comment."
