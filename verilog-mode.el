@@ -1,4 +1,4 @@
-;;; verilog.el --- major mode for editing verilog source in Emacs
+;;; verilog-mode.el --- major mode for editing verilog source in Emacs
 
 ;; Copyright (C) 1996 Free Software Foundation, Inc.
 
@@ -57,39 +57,43 @@
 ;; 
 ;; $Header$
 ;; $Log$
-;; Revision 1.95  1996/01/11 23:04:24  mac
-;; 1) Reworked color, borrowing ideas from gnus, so we pick either a
-;;    light or dark color scheme, based on the background color of the
-;;    frame. Also made it all work on a monochrome X screen as well.
-;; 2) Tuned the auto-indent case feature to handle all the stuff that is
-;;    legal as a case item.  Still doesn't work "right" for nested cases
-;; 3) Added verilog-re-search-{forward,backward} which are like their
-;;    base versions, except they never match in strings or comments of
-;;    either form; changed most searches to use these.
-;; 4) Reworked electric-terminate-line to be faster, and better.
-;; 5) Reworked electric-tick to be not zero indent user text macros; just
-;;    the verilog preprocessor symbols.
-;; 6) Re worked set-auto-comments to be more efficient (mostly by
-;;    eliminating redundant calls to verilog-calculate indent, an
-;;    expensive function, but also other cleanup)
-;; 7) sped up verilog-calcualte-indent
-;; 8) sped up verilog-continued-line (used by the above)
-;; 9) reorganized and centralized "in-comment" decision code based on
-;;    more complete understanding of parse-partial-sexp
-;; 10) fixed bugs in indent-declaration that caused infinate loops given
-;;    type names in comments (eg reg, wire, input, et al)
+;; Revision 1.96  1996/01/11 23:21:49  mac
+;; Changed comment at top of file to say "verilog-mode.el" instead of
+;; "verilog.el", as I want you to call this file verilog-mode.el
 ;;
-;; ToDo:
-;; 1) Handle auto lineup correctly in nested cases.
-;; 2) Re think when to do auto line up; (at present, we do it if you ever
-;;    reindent a declaration or case item; and we reindent all the way
-;;    back to the nearest previous non declaration or case statement;
-;;    which is a lose should you have 100 declarations in a row, and you
-;;    type M-C-\ to reindent region.)
-;; 3) Support completion of declared wires and registers; again, need to
-;;    cache lookup, as rebuilding every time a user trys to complete is a
-;;    lose.
-;;
+; Revision 1.95  1996/01/11  23:04:24  mac
+; 1) Reworked color, borrowing ideas from gnus, so we pick either a
+;    light or dark color scheme, based on the background color of the
+;    frame. Also made it all work on a monochrome X screen as well.
+; 2) Tuned the auto-indent case feature to handle all the stuff that is
+;    legal as a case item.  Still doesn't work "right" for nested cases
+; 3) Added verilog-re-search-{forward,backward} which are like their
+;    base versions, except they never match in strings or comments of
+;    either form; changed most searches to use these.
+; 4) Reworked electric-terminate-line to be faster, and better.
+; 5) Reworked electric-tick to be not zero indent user text macros; just
+;    the verilog preprocessor symbols.
+; 6) Re worked set-auto-comments to be more efficient (mostly by
+;    eliminating redundant calls to verilog-calculate indent, an
+;    expensive function, but also other cleanup)
+; 7) sped up verilog-calcualte-indent
+; 8) sped up verilog-continued-line (used by the above)
+; 9) reorganized and centralized "in-comment" decision code based on
+;    more complete understanding of parse-partial-sexp
+; 10) fixed bugs in indent-declaration that caused infinate loops given
+;    type names in comments (eg reg, wire, input, et al)
+;
+; ToDo:
+; 1) Handle auto lineup correctly in nested cases.
+; 2) Re think when to do auto line up; (at present, we do it if you ever
+;    reindent a declaration or case item; and we reindent all the way
+;    back to the nearest previous non declaration or case statement;
+;    which is a lose should you have 100 declarations in a row, and you
+;    type M-C-\ to reindent region.)
+; 3) Support completion of declared wires and registers; again, need to
+;    cache lookup, as rebuilding every time a user trys to complete is a
+;    lose.
+;
 ; Revision 1.94  1996/01/06  02:22:21  mac
 ; Many changes; the major one is that indent calculation is much faster.
 ; Also some colorization changes, and bug fixes
