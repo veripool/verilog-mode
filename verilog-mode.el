@@ -765,13 +765,13 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
   (if (not verilog-error-regexp-add-didit)
       (progn
 	(setq verilog-error-regexp-add-didit t)
-	(setq compilation-error-regexp-alist verilog-error-regexp)
-	;; Probably buffer local at this point; maybe also in let; change all three
-	(set (make-local-variable 'compilation-error-regexp-alist)
-	     (setq compilation-error-regexp-alist verilog-error-regexp))
 	(setq-default compilation-error-regexp-alist
 		      (append (default-value 'compilation-error-regexp-alist)
 			      verilog-error-regexp))
+	;; Could be buffer local at this point; maybe also in let; change all three
+	(setq compilation-error-regexp-alist (default-value 'compilation-error-regexp-alist))
+	(set (make-local-variable 'compilation-error-regexp-alist)
+	     (default-value 'compilation-error-regexp-alist))
 	)))
 
 (add-hook 'compilation-mode-hook 'verilog-error-regexp-add)
@@ -5233,7 +5233,9 @@ If found returns the signal name connections.  Return nil or list of
 						(match-string 2))
 					       tpl-sig-list)))
 		     ;; Regexp form??
-		     ((looking-at "\\s-*\\.\\(\\([][+@^.*?---a-zA-Z0-9`_$]+\\|\\\\[()]\\)+\\)\\s-*(\\(.*\\))\\s-*\\(,\\|)\\s-*;\\)")
+		     ((looking-at
+		       ;; Regexp bug in xemacs disallows ][ inside [], and wants + last
+		       "\\s-*\\.\\(\\([a-zA-Z0-9`_$+@^.*?---]+\\|[][]\\|\\\\[()]\\)+\\)\\s-*(\\(.*\\))\\s-*\\(,\\|)\\s-*;\\)")
 		      (setq rep (match-string 3))
 		      (setq tpl-wild-list
 			    (cons (list
@@ -6150,11 +6152,11 @@ Templates go ABOVE the instantiation(s).  When a instantiation is expanded
 multiple templates for the same module, just alternate between the template
 for a instantiation and the instantiation itself.
 
-The @ character should be replaced by the instantiation number.  The
-module name must be the same as the name of the module in the instantiation
-name, and the code \"AUTO_TEMPLATE\" must be in these exact words and
-capitalized.  Only signals that must be different for each instantiation
-need to be listed.
+The @ character should be replaced by the instantiation number; the first
+digits found in the cell's instantiation name.  The module name must be the
+same as the name of the module in the instantiation name, and the code
+\"AUTO_TEMPLATE\" must be in these exact words and capitalized.  Only
+signals that must be different for each instantiation need to be listed.
 
 The above template will convert:
 
@@ -6180,22 +6182,22 @@ it is a single bit signal.  See PTL_BUS becoming PTL_BUSNEW above.
 Regexp templates:
 
   A template entry of the form
-	    .pci_req\([0-9]+\)_l	(pci_req_jtag_[\1]),
+	    .pci_req\\([0-9]+\\)_l	(pci_req_jtag_[\\1]),
 
   will apply a Emacs style regular expression search for any port beginning
   in pci_req followed by numbers and ending in _l and connecting that to
   the pci_req_jtag_[] net, with the bus subscript coming from what matches
-  inside the first set of \( \).  Thus pci_req2_l becomes pci_req_jtag_[2].
+  inside the first set of \\( \\).  Thus pci_req2_l becomes pci_req_jtag_[2].
 
-  Since \([0-9]+\) is so common and ugly to read, a @ does the same thing
-  (Note a @ in replacement text is completely different -- still use \1
+  Since \\([0-9]+\\) is so common and ugly to read, a @ does the same thing
+  (Note a @ in replacement text is completely different -- still use \\1
   there!)  Thus this is the same as the above template:
 
-	    .pci_req@_l		(pci_req_jtag_[\1]),
+	    .pci_req@_l		(pci_req_jtag_[\\1]),
 
   Here's another example to remove the _l, if naming conventions specify _
   alone to mean active low.  Note the use of [] to keep the bus subscript:
-	    .\(.*\)_l		(\1_[]),
+	    .\\(.*\\)_l		(\\1_[]),
 
 Lisp templates:
 
@@ -6244,8 +6246,8 @@ Lisp templates:
       (when (setq submodi (verilog-modi-lookup submod t))
 	;; If there's a number in the instantiation, it may be a argument to the
 	;; automatic variable instantiation program.
-	(setq tpl-num (if (string-match "[0-9]+" inst)
-			  (substring inst (match-beginning 0) (match-end 0))
+	(setq tpl-num (if (string-match "\\([0-9]+\\)" inst)
+			  (substring inst (match-beginning 1) (match-end 1))
 			"")
 	      tpl-list (verilog-read-auto-template submod))
 	;; Find submodule's signals and dump
