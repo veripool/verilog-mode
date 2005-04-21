@@ -608,6 +608,12 @@ regular use to prevent large numbers of merge conflicts."
   :group 'verilog-mode-auto
   :type 'boolean )
 
+(defcustom verilog-typedef-regexp nil
+  "*If non-nil, regular expression that matches Verilog-2001 typedef names.
+For example, \"_t$\" matches typedefs named with _t, as in the C language."
+  :group 'verilog-mode-auto
+  :type 'string )
+
 (defcustom verilog-mode-hook   'verilog-set-compile-command
   "*Hook (List of functions) run after verilog mode is loaded."
   :type 'hook
@@ -742,7 +748,7 @@ If set will become buffer local.")
      ["Beginning of function"		verilog-beg-of-defun t]
      ["End of function"			verilog-end-of-defun t]
      ["Mark function"			verilog-mark-defun t]
-     ["Goto function"			verilog-goto-defun t]
+     ["Goto function/module"		verilog-goto-defun t]
      ["Move to beginning of block"	electric-verilog-backward-sexp t]
      ["Move to end of block"		electric-verilog-forward-sexp t]
      )
@@ -3660,6 +3666,11 @@ Optional BOUND limits search."
 	       (search-backward "/*")
 	       (skip-chars-backward " \t\n")
 	       t)
+	      ((and (= (char-before) ?\/)
+		    (= (char-before (1- (point))) ?\*)
+		    )
+	       (goto-char (- (point) 2))
+	       t)
 	      (t
 	       (skip-chars-backward " \t\n")
 	       nil)))))))
@@ -4967,7 +4978,7 @@ Duplicate signals are also removed.  For example A[2] and A[1] become A[2:1]."
 	out-list
 	sig highbit lowbit		; Temp information about current signal
 	sv-name sv-highbit sv-lowbit	; Details about signal we are forming
-	sv-comment sv-memory sv-enum sv-signed sv-busstring
+	sv-comment sv-memory sv-enum sv-signed sv-type sv-busstring
 	bus)
     ;; Shove signals so duplicated signals will be adjacent
     (setq in-list (sort in-list `verilog-signals-sort-compare))
@@ -4982,6 +4993,7 @@ Duplicate signals are also removed.  For example A[2] and A[1] become A[2:1]."
 	      sv-memory  (verilog-sig-memory sig)
 	      sv-enum    (verilog-sig-enum sig)
 	      sv-signed  (verilog-sig-signed sig)
+	      sv-type    (verilog-sig-type sig)
 	      combo ""
 	      ))
       ;; Extract bus details
@@ -5014,7 +5026,8 @@ Duplicate signals are also removed.  For example A[2] and A[1] become A[2:1]."
 	     (if (verilog-sig-comment sig) (setq combo ", ..."))
 	     (setq sv-memory (or sv-memory (verilog-sig-memory sig))
 		   sv-enum   (or sv-enum   (verilog-sig-enum sig))
-		   sv-signed (or sv-signed (verilog-sig-signed sig))))
+		   sv-signed (or sv-signed (verilog-sig-signed sig))
+                   sv-type   (or sv-type (verilog-sig-type sig))))
 	    ;; Doesn't match next signal, add to que, zero in prep for next
 	    ;; Note sig may also be nil for the last signal in the list
 	    (t
@@ -5024,7 +5037,7 @@ Duplicate signals are also removed.  For example A[2] and A[1] become A[2:1]."
 				   (if sv-highbit
 				       (concat "[" (int-to-string sv-highbit) ":" (int-to-string sv-lowbit) "]")))
 			       (concat sv-comment combo)
-			       sv-memory sv-enum sv-signed)
+			       sv-memory sv-enum sv-signed sv-type)
 			 out-list)
 		   sv-name nil)))
       )
@@ -5097,7 +5110,7 @@ Return a array of [outputs inouts inputs wire reg assign const]."
   (let ((end-mod-point (or (verilog-get-end-of-defun t) (point-max)))
 	(functask 0) (paren 0)
 	sigs-in sigs-out sigs-inout sigs-wire sigs-reg sigs-assign sigs-const
-	vec expect-signal keywd newsig rvalue enum io signed)
+	vec expect-signal keywd newsig rvalue enum io signed typedefed)
     (save-excursion
       (verilog-beg-of-defun)
       (setq sigs-const (verilog-read-auto-constants (point) end-mod-point))
@@ -5153,25 +5166,25 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 	  (when (string-match "^\\\\" keywd)
 	    (setq keywd (concat keywd " ")))  ;; Escaped ID needs space at end
 	  (cond ((equal keywd "input")
-		 (setq vec nil enum nil  rvalue nil  newsig nil  signed nil  io t  expect-signal 'sigs-in))
+		 (setq vec nil enum nil  rvalue nil  newsig nil  signed nil  typedefed nil  io t  expect-signal 'sigs-in))
 		((equal keywd "output")
-		 (setq vec nil enum nil  rvalue nil  newsig nil  signed nil  io t  expect-signal 'sigs-out))
+		 (setq vec nil enum nil  rvalue nil  newsig nil  signed nil  typedefed nil  io t  expect-signal 'sigs-out))
 		((equal keywd "inout")
-		 (setq vec nil enum nil  rvalue nil  newsig nil  signed nil  io t  expect-signal 'sigs-inout))
+		 (setq vec nil enum nil  rvalue nil  newsig nil  signed nil  typedefed nil  io t  expect-signal 'sigs-inout))
  		((or (equal keywd "wire")
  		     (equal keywd "tri"))
-		 (unless io (setq vec nil  enum nil  rvalue nil  signed nil  expect-signal 'sigs-wire)))
+		 (unless io (setq vec nil  enum nil  rvalue nil  signed nil  typedefed nil  expect-signal 'sigs-wire)))
  		((or (equal keywd "reg")
  		     (equal keywd "trireg"))
-		 (unless io (setq vec nil  enum nil  rvalue nil  signed nil  expect-signal 'sigs-reg)))
+		 (unless io (setq vec nil  enum nil  rvalue nil  signed nil  typedefed nil  expect-signal 'sigs-reg)))
 		((equal keywd "assign")
-		 (setq vec nil  enum nil  rvalue nil  signed nil  expect-signal 'sigs-assign))
+		 (setq vec nil  enum nil  rvalue nil  signed nil  typedefed nil  expect-signal 'sigs-assign))
 		((or (equal keywd "supply0")
 		     (equal keywd "supply1")
 		     (equal keywd "supply")
 		     (equal keywd "parameter")
 		     (equal keywd "localparam"))
-		 (unless io (setq vec nil  enum nil  rvalue nil  signed nil  expect-signal 'sigs-const)))
+		 (unless io (setq vec nil  enum nil  rvalue nil  signed nil  typedefed nil  expect-signal 'sigs-const)))
 		((equal keywd "signed")
 		 (setq signed "signed"))
 		((or (equal keywd "function")
@@ -5183,12 +5196,14 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 		((or (equal keywd "`ifdef")
 		     (equal keywd "`ifndef"))
 		 (setq rvalue t))
+		((verilog-typedef-name-p keywd)
+		 (setq typedefed keywd))
 		((and expect-signal
 		      (eq functask 0)
 		      (not (member keywd verilog-keywords))
 		      (not rvalue))
 		 ;; Add new signal to expect-signal's variable
-		 (setq newsig (list keywd vec nil nil enum signed))
+		 (setq newsig (list keywd vec nil nil enum signed typedefed))
 		 (set expect-signal (cons newsig
 					  (symbol-value expect-signal))))))
 	 (t
@@ -5250,13 +5265,16 @@ Return the list of signals found, using submodi to look up each port."
 			(equal sig ""))  ;; Ignore .foo(1'b1) assignments
 	      (cond ((setq portdata (assoc port (verilog-modi-get-inouts submodi)))
 		     (setq sigs-inout (cons (list sig vec (concat "To/From " comment) nil nil
-		   				  (verilog-sig-signed portdata)) sigs-inout)))
+		   				  (verilog-sig-signed portdata)
+						  (verilog-sig-type portdata)) sigs-inout)))
 		    ((setq portdata (assoc port (verilog-modi-get-outputs submodi)))
 		     (setq sigs-out   (cons (list sig vec (concat "From " comment) nil nil
-						  (verilog-sig-signed portdata)) sigs-out)))
+						  (verilog-sig-signed portdata)
+						  (verilog-sig-type portdata)) sigs-out)))
 		    ((setq portdata (assoc port (verilog-modi-get-inputs submodi)))
 		     (setq sigs-in    (cons (list sig vec (concat "To " comment) nil nil
-						  (verilog-sig-signed portdata)) sigs-in)))
+						  (verilog-sig-signed portdata)
+						  (verilog-sig-type portdata)) sigs-in)))
 		    ;; (t  -- warning pin isn't defined.)   ; Leave for lint tool
 		    )
 	      )))
@@ -6118,6 +6136,8 @@ and invalidating the cache."
   (nth 4 sig))
 (defsubst verilog-sig-signed (sig)
   (nth 5 sig))
+(defsubst verilog-sig-type (sig)
+  (nth 6 sig))
 (defsubst verilog-sig-width (sig)
   (verilog-make-width-expression (verilog-sig-bits sig)))
 
@@ -6198,16 +6218,22 @@ and invalidating the cache."
 	       (verilog-inside-comment-p)))
 	(funcall func))))
 
-(defun verilog-insert-definition (sigs type indent-pt &optional dont-sort)
-  "Print out a definition for a list of SIGS of the given TYPE,
+(defun verilog-insert-definition (sigs direction indent-pt &optional dont-sort)
+  "Print out a definition for a list of SIGS of the given DIRECTION,
 with appropriate INDENT-PT indentation.  Sort unless DONT-SORT.
-TYPE is normally wire/reg/output."
+DIRECTION is normally wire/reg/output."
   (or dont-sort
       (setq sigs (sort (copy-alist sigs) `verilog-signals-sort-compare)))
   (while sigs
     (let ((sig (car sigs)))
       (indent-to indent-pt)
-      (insert type)
+      ;; Want "type x" or "output type x", not "wire type x"
+      (cond ((verilog-sig-type sig)
+	     (if (not (equal direction "wire"))
+		 (insert direction " "))
+	     (insert (verilog-sig-type sig)))
+	    (t
+	     (insert direction)))
       (when (verilog-sig-signed sig)
 	(insert " " (verilog-sig-signed sig)))
       (when (verilog-sig-bits sig)
@@ -6269,6 +6295,10 @@ Presumes that any newlines end a list element."
 	       (t nil)))))
 ;;(verilog-make-width-expression "`A:`B")
 
+(defun verilog-typedef-name-p (variable-name)
+  "Return true if the VARIABLE-NAME is a type definition."
+  (when verilog-typedef-regexp
+    (string-match verilog-typedef-regexp variable-name)))
 
 ;;
 ;; Auto deletion
@@ -6407,7 +6437,8 @@ instantiating the resulting module.  Long lines are split based
 on the `fill-column', see \\[set-fill-column].
 
 Limitations:
-   Concatenation and outputting partial busses is not supported.
+  Concatenation and outputting partial busses is not supported.
+  Typedefs must match verilog-typedef-regexp, which is disabled by default.
 
 For example:
 
@@ -6552,6 +6583,8 @@ Limitations:
 
   In templates you must have one signal per line, ending in a ), or ));,
   and have proper () nesting, including a final ); to end the template.
+
+  Typedefs must match verilog-typedef-regexp, which is disabled by default.
 
 For example, first take the submodule inst.v:
 
@@ -6947,6 +6980,8 @@ Limitations:
   If any concatenation, or bit-subscripts are missing in the AUTOINSTant's
   instantiation, all bets are off.  (For example due to a AUTO_TEMPLATE).
 
+  Typedefs must match verilog-typedef-regexp, which is disabled by default.
+
 A simple example (see `verilog-auto-inst' for what else is going on here):
 
 	module ex_output (ov,i)
@@ -7047,6 +7082,8 @@ Limitations:
   If any concatenation, or bit-subscripts are missing in the AUTOINSTant's
   instantiation, all bets are off.  (For example due to a AUTO_TEMPLATE).
 
+  Typedefs must match verilog-typedef-regexp, which is disabled by default.
+
 A simple example (see `verilog-auto-inst' for what else is going on here):
 
 	module ex_input (ov,i)
@@ -7099,6 +7136,8 @@ Limitations:
 
   If any concatenation, or bit-subscripts are missing in the AUTOINSTant's
   instantiation, all bets are off.  (For example due to a AUTO_TEMPLATE).
+
+  Typedefs must match verilog-typedef-regexp, which is disabled by default.
 
 A simple example (see `verilog-auto-inst' for what else is going on here):
 
