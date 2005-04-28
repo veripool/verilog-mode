@@ -13,22 +13,26 @@
 			----------------
 General News:
 
-During _some_ of the time I am not enhancing the verilog mode :-), I
-serve as the Senior VP of Simulation at Verisity Design
-<http://www.verisity.com>, the home of SpeXsim, a native code compiles
-simulator which supports Verilog, VHDL, SystemC and Specman execution
-all with a direct kernel interface; and supports execution on
-workstations running Solaris or Linux and running on our hardware
-accelerators (Xcite, Xtreme and Xtreme Server).
+As I write this we are a few weeks into the Verisity - Cadence merger.
 
-We have openings for developers, application engineers and for
-customers; if interested, send me an email at <mac@verilog.com>
+Hence I find myself employed at the place that made the simulator we
+dethroned as the little startup called Chronologic, some dozen years
+ago.  Life is truly stranger than fiction.
+
+On another issue, I moved to a new ISP, as the former one was very
+unreliable during the past 4 months. I aplogize for the downtime, and
+thank the users who let me know the site was broken in the various
+ways each time.  
+
+The new ISP is at my house (Shhh! don't tell my wife!)
 
 Now back to the verilog-mode:
 
 Major changes: 
 
-1) Beginning of support for System Verilog!
+1) More System Verilog support. Many improvements to
+indentation. Improvements to some v2k features. Many smaller
+contributed fixes and ideas from users (Thanks!)
 
 2) The AUTO mode gained some new enhancements, many as suggested (and
 contributed) by users.  As always, more is forthcoming.
