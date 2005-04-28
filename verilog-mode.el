@@ -824,13 +824,19 @@ substituted for the %s.
 Where __FILE__ appears in the string, the buffer-file-name of the current
 buffer, without the directory portion, will be substituted."
   (interactive)
-  (or (file-exists-p "makefile")	;If there is a makefile, use it
-      (file-exists-p "Makefile")
-      (progn (make-local-variable 'compile-command)
-	     (setq compile-command
-		   (if (string-match "%s" (eval verilog-tool))
-		       (format (eval verilog-tool) (or buffer-file-name ""))
-		     (concat (eval verilog-tool) " " (or buffer-file-name ""))))))
+  (cond
+   ((or (file-exists-p "makefile")	;If there is a makefile, use it
+	(file-exists-p "Makefile"))
+    (make-local-variable 'compile-command)
+    (setq compile-command "make "))
+   (t
+    (make-local-variable 'compile-command)
+    (setq compile-command
+	  (if (string-match "%s" (eval verilog-tool))
+	      (format (eval verilog-tool) (or buffer-file-name ""))
+	    (concat (eval verilog-tool) " " (or buffer-file-name ""))))
+    )
+   )
   (verilog-modify-compile-command))
 
 (defun verilog-modify-compile-command ()
@@ -982,24 +988,28 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
        "tri" "tri0" "tri1" "triand" "trior" "trireg" "wand" "wire" "typedef"
        "struct" "logic" "bit" "genvar" "wor"))))
 (defconst verilog-range-re "\\[[^]]*\\]")
+(defconst verilog-optional-signed-re "\\s-*\\(signed\\)?")
+(defconst verilog-optional-signed-range-re 
+  (concat 
+   "\\s-*\\(signed\\s-*\\)?\\(" verilog-range-re "\\)?"))
 (defconst verilog-macroexp-re "`\\sw+")
 (defconst verilog-delay-re "#\\s-*\\(\\([0-9_]+\\('s?[hdxbo][0-9a-fA-F_xz]+\\)?\\)\\|\\(([^)]*)\\)\\|\\(\\sw+\\)\\)")
 (defconst verilog-declaration-re-2-no-macro
   (concat "\\s-*" verilog-declaration-re
-	  "\\s-*\\(\\(" verilog-range-re "\\)\\|\\(" verilog-delay-re "\\)"
+	  "\\s-*\\(\\(" verilog-optional-signed-range-re "\\)\\|\\(" verilog-delay-re "\\)"
 ;	  "\\|\\(" verilog-macroexp-re "\\)"
 	  "\\)?"))
 (defconst verilog-declaration-re-2-macro
   (concat "\\s-*" verilog-declaration-re
-	  "\\s-*\\(\\(" verilog-range-re "\\)\\|\\(" verilog-delay-re "\\)"
+	  "\\s-*\\(\\(" verilog-optional-signed-range-re "\\)\\|\\(" verilog-delay-re "\\)"
 	  "\\|\\(" verilog-macroexp-re "\\)"
 	  "\\)?"))
 (defconst verilog-declaration-re-1-macro (concat "^" verilog-declaration-re-2-macro))
 (defconst verilog-declaration-re-1-no-macro (concat "^" verilog-declaration-re-2-no-macro))
 (defconst verilog-defun-re
-  (eval-when-compile (verilog-regexp-words `("macromodule" "module" "interface" "package" "primitive"))))
+  (eval-when-compile (verilog-regexp-words `("macromodule" "module" "interface" "package" "primitive" "config"))))
 (defconst verilog-end-defun-re
-  (eval-when-compile (verilog-regexp-words `("endmodule" "endinterface" "endpackage" "endprimitive"))))
+  (eval-when-compile (verilog-regexp-words `("endmodule" "endinterface" "endpackage" "endprimitive" "endconfig"))))
 (defconst verilog-zero-indent-re
   (concat verilog-defun-re "\\|" verilog-end-defun-re))
 
@@ -1019,16 +1029,37 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
    ;;	  "\\|\\(\\<if\\>\\|\\<else\\>\\)"
    ))
 (defconst verilog-indent-re
-  (concat
-   "\\(\\<\\(always\\(_latch\\|_ff\\|_comb\\)?\\>\\|begin\\>\\|case\\(\\>\\|x\\>\\|z\\>\\)\\|"
-   "end\\(\\>\\|case\\>\\|function\\>\\|generate\\>\\|module\\>\\|primitive\\>\\|interface\\>\\|package\\>\\|specify\\>\\|ta\\(ble\\>\\|sk\\>\\)\\)"
-   "\\|f\\(ork\\>\\|unction\\>\\)\\|generate\\|initial\\>\\|join\\(_any\\|_none\\)?\\>\\|m\\(acromodule\\>\\|odule\\>\\)"
-   "\\|primitive\\>\\|interface\\>\\|package\\>\\|specify\\>\\|ta\\(ble\\>\\|sk\\>\\)\\)"
-   "\\|" verilog-directive-re "\\)"))
+  (eval-when-compile
+    (verilog-regexp-words
+     `(
+       "always" "always_latch" "always_ff" "always_comb" "begin"
+       "case" "casex" "casez" "config" "end" "endcase" "endconfig"
+       "endfunction" "endgenerate" "endmodule" "endprimative" "endinterface"
+       "endpackage" "endspecify" "endtable" "endtask" "fork" "function"
+       "final" "generate" "initial" "join" "join_any" "join_none"
+       "macromodule" "module" "primitive" "interface" "package" "specify"
+       "table" "task"
+       "`case" "`default" "`define" "`define" "`else" "`endfor" "`endif"
+       "`endprotect" "`endswitch" "`endwhile" "`for" "`format" "`if" "`ifdef"
+       "`ifndef" "`include" "`let" "`protect" "`switch" "`timescale"
+       "`time_scale" "`undef" "`while"
+       ))))
+
+;(defconst verilog-indent-re
+;  (concat
+;   "\\(\\<\\(always\\(_latch\\|_ff\\|_comb\\)?\\>\\|begin\\>\\|case\\(\\>\\|x\\>\\|z\\>\\)\\|"
+;   "end\\(\\>\\|case\\>\\|function\\>\\|generate\\>\\|module\\>\\|primitive\\>\\|interface\\>\\|package\\>\\|specify\\>\\|ta\\(ble\\>\\|sk\\>\\)\\)"
+;   "\\|f\\(ork\\>\\|unction\\>\\)\\|generate\\|initial\\>\\|join\\(_any\\|_none\\)?\\>\\|m\\(acromodule\\>\\|odule\\>\\)"
+;   "\\|primitive\\>\\|interface\\>\\|package\\>\\|specify\\>\\|ta\\(ble\\>\\|sk\\>\\)\\)"
+;   "\\|" verilog-directive-re "\\)"))
 
 (defconst verilog-defun-level-re
-  ;; "module" "macromodule" "primitive" "initial" "final" "always" "always_comb" "always_ff" "always_latch" "endtask" "endfunction"
-  "\\(end\\(function\\>\\|task\\>\\)\\|final\\|initial\\>\\|m\\(acromodule\\>\\|odule\\>\\)\\|primitive\\>\\|interface\\>\\|package\\>\\)")
+  (eval-when-compile
+    (verilog-regexp-words
+     `(
+       "module" "macromodule" "primitive" "initial" "final" "always" "always_comb" "always_ff" "always_latch" "endtask" "endfunction"
+       "config"))))
+;  "\\(end\\(function\\>\\|task\\>\\)\\|final\\|initial\\>\\|m\\(acromodule\\>\\|odule\\>\\)\\|primitive\\>\\|interface\\>\\|package\\>\\)") 
 (defconst verilog-cpp-level-re
  ;;"endmodule" "endprimitive"
   "\\(\\<end\\(module\\>\\|primitive\\>\\|interface\\>\\|package\\>\\)\\)")
@@ -1838,7 +1869,8 @@ Other useful functions are:
 \\[verilog-sk-state-machine]  Insert a state machine definition, prompting for details!
 \\[verilog-sk-inout]  Insert an inout declaration, prompting for details
 \\[verilog-sk-wire]  Insert a wire declaration, prompting for details
-\\[verilog-sk-reg]  Insert a register declaration, prompting for details"
+\\[verilog-sk-reg]  Insert a register declaration, prompting for details
+\\[verilog-sk-define-signal]  Define signal under point as a register at the top of the module"
   (interactive)
   (kill-all-local-variables)
   (use-local-map verilog-mode-map)
@@ -7733,6 +7765,7 @@ and/or see http://www.veripool.org"
   (define-key verilog-mp "=" 'verilog-sk-inout)
   (define-key verilog-mp "W" 'verilog-sk-wire)
   (define-key verilog-mp "R" 'verilog-sk-reg)
+  (define-key verilog-mp "D" 'verilog-sk-define-signal)
   (setq verilog-template-map verilog-mp))
 
 ;;
@@ -7792,9 +7825,10 @@ and/or see http://www.veripool.org"
 (define-skeleton verilog-sk-prompt-width
   "Prompt for a width specification."
   ()
-  (progn (setq verilog-sk-p (point)) nil)
-  (verilog-sk-prompt-msb)
-  (if (> (point) verilog-sk-p) "] " " "))
+  (progn 
+    (setq verilog-sk-p (point))
+    (verilog-sk-prompt-msb)  
+    (if (> (point) verilog-sk-p) "] " " ")))
 
 (defun verilog-sk-header ()
   "Insert a descriptive header at the top of the file."
@@ -7960,15 +7994,47 @@ and the case items."
   ()
   > "inout  [" (verilog-sk-datadef))
 
-(define-skeleton verilog-sk-reg
+(defvar verilog-sk-signal nil)
+(define-skeleton verilog-sk-def-reg
   "Insert a reg definition."
   ()
-  > "reg    [" (verilog-sk-datadef))
+  > "reg    [" (verilog-sk-prompt-width) | -1 verilog-sk-signal ";" \n (verilog-pretty-declarations) )
+
+(defun verilog-sk-define-signal ()
+  "Insert a definition of signal under point at top of module."
+  (interactive "*")
+  (let* (
+	 (sig-re "[a-zA-Z0-9_]*")
+	 (v1 (buffer-substring
+	       (save-excursion
+		 (skip-chars-backward sig-re)
+		 (point))
+	       (save-excursion
+		 (skip-chars-forward sig-re)
+		 (point))))
+	 )
+    (if (not (member v1 verilog-keywords))
+	(save-excursion
+	  (setq verilog-sk-signal v1)
+	  (verilog-beg-of-defun)
+	  (verilog-end-of-statement)
+	  (verilog-forward-syntactic-ws)
+	  (verilog-sk-def-reg)
+	  (message "signal at point is %s" v1))
+      (message "object at point (%s) is a keyword" v1))
+    )
+  )
+
 
 (define-skeleton verilog-sk-wire
   "Insert a wire definition."
   ()
   > "wire   [" (verilog-sk-datadef))
+
+(define-skeleton verilog-sk-reg
+  "Insert a reg definition."
+  ()
+  > "reg   [" (verilog-sk-datadef))
 
 (define-skeleton verilog-sk-assign
   "Insert a skeleton assign statement."
@@ -8051,6 +8117,7 @@ and the case items."
 		      ["Inout"		verilog-sk-inout t]
 		      ["Wire"		verilog-sk-wire t]
 		      ["Reg"		verilog-sk-reg t]
+		      ["Define thing under point as a register" verilog-sk-define-signal t]
 		      "----"
 		      ["Initial"	verilog-sk-initial t]
 		      ["Always" 	verilog-sk-always t]
