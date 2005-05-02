@@ -14,7 +14,7 @@ local:  verilog-mode.el
 	cp verilog-mode.el /usr/local/share/emacs/site-lisp/verilog-mode.elc
 	$(EMACS) $(ELC) /usr/local/share/emacs/site-lisp/verilog-mode.elc
 
-install : $(D)/mmencoded_verilog-mode $(D)/emacs-version.h\
+install : test $(D)/mmencoded_verilog-mode $(D)/emacs-version.h\
 	 $(S)ChangeLog.txt ftp email $(S)bits/verilog-mode.el
 
 ftp:	$(F) mmencoded_verilog-mode verilog-mode.el README
