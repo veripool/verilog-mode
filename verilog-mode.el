@@ -987,11 +987,11 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
        "parameter" "real" "realtime" "reg" "supply" "supply0" "supply1" "time"
        "tri" "tri0" "tri1" "triand" "trior" "trireg" "wand" "wire" "typedef"
        "struct" "logic" "bit" "genvar" "wor"))))
-(defconst verilog-range-re "\\[[^]]*\\]")
+!(defconst verilog-range-re "\\(\\[[^]]*\\]\\)+")
 (defconst verilog-optional-signed-re "\\s-*\\(signed\\)?")
 (defconst verilog-optional-signed-range-re 
   (concat 
-   "\\s-*\\(signed\\s-*\\)?\\(" verilog-range-re "\\)?"))
+   "\\s-*\\(\\(reg\\|wire\\)\\s-*\\)?\\(signed\\s-*\\)?\\(" verilog-range-re "\\)?"))
 (defconst verilog-macroexp-re "`\\sw+")
 (defconst verilog-delay-re "#\\s-*\\(\\([0-9_]+\\('s?[hdxbo][0-9a-fA-F_xz]+\\)?\\)\\|\\(([^)]*)\\)\\|\\(\\sw+\\)\\)")
 (defconst verilog-declaration-re-2-no-macro
@@ -3823,7 +3823,10 @@ Only look at a few lines to determine indent level."
 		   (forward-char 1)
 		   (skip-chars-forward " \t")
 		   (current-column))))
-	(indent-line-to val)))
+	(indent-line-to val)
+	(if (looking-at verilog-declaration-re)
+	    (verilog-indent-declaration ind))
+	))
 
      (;-- Handle the ends
       (looking-at verilog-end-block-re )
