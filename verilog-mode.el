@@ -912,7 +912,8 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
    "\\(\\<endspecify\\>\\)\\|"		; 7
    "\\(\\<endtable\\>\\)\\|"		; 8
    "\\(\\<endgenerate\\>\\)\\|"         ; 9
-   "\\(\\<join\\(_any\\|_none\\)?\\>\\)" ; 10
+   "\\(\\<join\\(_any\\|_none\\)?\\>\\)\\|" ; 10
+   "\\(\\<endclass\\>\\)"               ; 11
    ))
 
 (defconst verilog-autoindent-lines-re
@@ -924,7 +925,7 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
   (concat "\\("
 	  verilog-directive-re
 	  "\\|\\(\\<begin\\>\\|"
-	  "e\\(lse\\>\\|nd\\(\\>\\|case\\>\\|function\\>\\|module\\>\\|primitive\\>\\|interface\\>\\|package\\>"
+	  "e\\(lse\\>\\|nd\\(\\>\\|c\\(ase\\|lass\\)\\>\\|function\\>\\|module\\>\\|primitive\\>\\|interface\\>\\|package\\>"
 	  "\\|specify\\>\\|ta\\(ble\\>\\|sk\\>\\)\\)\\)\\|"
 	  "join\\(_any\\|_none\\)?\\>\\|m\\(acromodule\\>\\|odule\\>\\)\\|primitive\\>\\|interface\\>\\|package\\>\\)\\)" ))
 
@@ -939,7 +940,8 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
 	  "\\(module\\)\\|"        ; 7
 	  "\\(primitive\\)\\|"     ; 8
 	  "\\(interface\\)\\|"     ; 9
-	  "\\(package\\)"          ; 10
+	  "\\(package\\)\\|"       ; 10
+	  "\\(class\\)"            ; 11
 	  "\\)\\>\\)"))
 
 (defconst verilog-endcomment-reason-re
@@ -974,10 +976,10 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
        "specify" "table" "task"))))
 
 (defconst verilog-beg-block-re-1
-  "\\<\\(begin\\)\\|\\(case[xz]?\\)\\|\\(fork\\)\\|\\(table\\)\\|\\(specify\\)\\|\\(function\\)\\|\\(task\\)\\|\\(generate\\)\\>")
+  "\\<\\(begin\\)\\|\\(case[xz]?\\)\\|\\(fork\\)\\|\\(class\\)\\|\\(table\\)\\|\\(specify\\)\\|\\(function\\)\\|\\(task\\)\\|\\(generate\\)\\>")
 (defconst verilog-end-block-re
   ;; "end" "join" "endcase" "endtable" "endspecify" "endtask" "endfunction" "endgenerate"
-  "\\<\\(end\\(\\>\\|case\\>\\|function\\>\\|generate\\>\\|specify\\>\\|ta\\(ble\\>\\|sk\\>\\)\\)\\|join\\(_any\\|_none\\)?\\>\\)")
+  "\\<\\(end\\(\\>\\|c\\(ase\\|lass\\)\\>\\|function\\>\\|generate\\>\\|specify\\>\\|ta\\(ble\\>\\|sk\\>\\)\\)\\|join\\(_any\\|_none\\)?\\>\\)")
 
 (defconst verilog-end-block-re-1 "\\(\\<end\\>\\)\\|\\(\\<endcase\\>\\)\\|\\(\\<join\\>\\)\\|\\(\\<endtable\\>\\)\\|\\(\\<endspecify\\>\\)\\|\\(\\<endfunction\\>\\)\\|\\(\\<endgenerate\\>\\)\\|\\(\\<endtask\\>\\)")
 (defconst verilog-declaration-re
@@ -987,7 +989,7 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
        "parameter" "real" "realtime" "reg" "supply" "supply0" "supply1" "time"
        "tri" "tri0" "tri1" "triand" "trior" "trireg" "wand" "wire" "typedef"
        "struct" "logic" "bit" "genvar" "wor"))))
-!(defconst verilog-range-re "\\(\\[[^]]*\\]\\)+")
+(defconst verilog-range-re "\\(\\[[^]]*\\]\\)+")
 (defconst verilog-optional-signed-re "\\s-*\\(signed\\)?")
 (defconst verilog-optional-signed-range-re 
   (concat 
@@ -1019,7 +1021,8 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
 (defconst verilog-indent-reg
   (concat
    "\\(\\<begin\\>\\|\\<case[xz]?\\>\\|\\<specify\\>\\|\\<fork\\>\\|\\<table\\>\\)\\|"
-   "\\(\\<end\\>\\|\\<join\\(_any\\|_none\\)?\\>\\|\\<endcase\\>\\|\\<endtable\\>\\|\\<endspecify\\>\\)\\|"
+   "\\<join\\(_any\\|_none\\)?\\>\\|"
+   "\\(\\<end\\(c\\(lass\\|ase\\)\\|table\\|specify\\)?\\>\\)\\|"
    "\\(\\<module\\>\\|\\<macromodule\\>\\|\\<primitive\\>\\|\\<interface\\>\\|\\<package\\>\\|\\<initial\\>\\|\\<final\\>\\|"
    "\\<always\\>\\|\\<always_comb\\>\\|\\<always_ff\\>\\|\\<always_latch\\>\\)\\|"
    "\\(\\<endmodule\\>\\|\\<endprimitive\\>\\|\\<endinterface\\>\\|\\<endpackage\\>\\)\\|"
@@ -1033,8 +1036,8 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
     (verilog-regexp-words
      `(
        "always" "always_latch" "always_ff" "always_comb" "begin"
-       "case" "casex" "casez" "config" "end" "endcase" "endconfig"
-       "endfunction" "endgenerate" "endmodule" "endprimative" "endinterface"
+       "case" "casex" "casez" "class" "config" "end" "endcase" "endconfig"
+       "endclass" "endfunction" "endgenerate" "endmodule" "endprimative" "endinterface"
        "endpackage" "endspecify" "endtable" "endtask" "fork" "function"
        "final" "generate" "initial" "join" "join_any" "join_none"
        "macromodule" "module" "primitive" "interface" "package" "specify"
@@ -1318,7 +1321,7 @@ See also `verilog-font-lock-extra-types'.")
      (:foreground "DarkOrange3" :bold t ))
     (((class color)
       (background dark))
-     (:foreground "gray10" :bold t ))
+     (:foreground "orange1" :bold t ))
     (t (:italic t)))
   "Font lock mode face used to highlight P1800 keywords."
   :group 'font-lock-highlighting-faces)
@@ -1639,7 +1642,7 @@ Use filename, if current buffer being edited shorten to just buffer name."
      ((verilog-skip-forward-comment-or-string)
       (verilog-forward-syntactic-ws)
       )
-     ((looking-at verilog-beg-block-re-1);; begin|case|fork|table|specify|function|task|generate
+     ((looking-at verilog-beg-block-re-1);; begin|case|fork|class|table|specify|function|task|generate
       (cond
        ((match-end 1) ; end
 	;; Search forward for matching begin
@@ -1650,19 +1653,22 @@ Use filename, if current buffer being edited shorten to just buffer name."
        ((match-end 3) ; join
 	;; Search forward for matching fork
 	(setq reg "\\(\\<fork\\>\\)\\|\\(\\<join\\(_any\\|_none\\)?\\>\\)" ))
-       ((match-end 4) ; endtable
+       ((match-end 4) ; endclass
+	;; Search forward for matching class
+	(setq reg "\\(\\<class\\>\\)\\|\\(\\<endclass\\>\\)" ))
+       ((match-end 5) ; endtable
 	;; Search forward for matching table
 	(setq reg "\\(\\<table\\>\\)\\|\\(\\<endtable\\>\\)" ))
-       ((match-end 5) ; endspecify
+       ((match-end 6) ; endspecify
 	;; Search forward for matching specify
 	(setq reg "\\(\\<specify\\>\\)\\|\\(\\<endspecify\\>\\)" ))
-       ((match-end 6) ; endfunction
+       ((match-end 7) ; endfunction
 	;; Search forward for matching function
 	(setq reg "\\(\\<function\\>\\)\\|\\(\\<endfunction\\>\\)" ))
-       ((match-end 7) ; endspecify
+       ((match-end 8) ; endspecify
 	;; Search forward for matching task
 	(setq reg "\\(\\<task\\>\\)\\|\\(\\<endtask\\>\\)" ))
-       ((match-end 8) ; endgenerate
+       ((match-end 9) ; endgenerate
 	;; Search forward for matching generate
 	(setq reg "\\(\\<generate\\>\\)\\|\\(\\<endgenerate\\>\\)" ))
        )
@@ -2600,7 +2606,7 @@ Insert `// NAME ' if this line ends a function, task, module, primitive or inter
 	    (ding 't))
 	  )))
 
-     (; Comment close case/function/task/module and named block
+     (; Comment close case/class/function/task/module and named block
       (and (looking-at "\\<end")
 	   (or kill-existing-comment
 	       (not (save-excursion
@@ -2796,8 +2802,46 @@ Insert `// NAME ' if this line ends a function, task, module, primitive or inter
 			  (insert str))
 		      (if err (ding 't))
 		      ))))
+	       (;- this is endclass, which can be nested
+		(match-end 11) ;; of verilog-enders-re
+		;;(goto-char there)
+		(let ((nest 0)
+		      ( reg "\\<\\(class\\)\\|\\(endclass\\)\\|\\(package\\|primitive\\|\\(macro\\)?module\\)\\>")
+		      )
+		  (save-excursion
+		    (catch 'skip
+		      (while (verilog-re-search-backward reg nil 'move)
+			(cond
+			 ((match-end 3)	; endclass
+			  (ding 't)
+			  (setq string "unmatched endclass")
+			  (throw 'skip 1))
 
-	       (;- this is end{function,generate,task,module,primitive,table,generate}
+			 ((match-end 2)	; endclass
+			  (setq nest (1+ nest)))
+
+			 ((match-end 1) ; class
+			  (setq nest (1- nest))
+			  (if (< nest 0)
+			      (progn
+				(goto-char (match-end 0))
+				(let (b e)
+				  (setq b (progn
+					    (skip-chars-forward "^ \t")
+					    (verilog-forward-ws&directives)
+					    (point))
+					e (progn
+					    (skip-chars-forward "a-zA-Z0-9_")
+					    (point)))
+				  (setq string (buffer-substring b e)))
+				(throw 'skip 1))))
+			 ))))
+		  (end-of-line)
+		  (insert (concat " // " string )))
+		)
+	      
+	       (;- this is end{function,generate,task,module,primitive,table,generate} 
+		;- which can not be nested.
 		t
 		(let (string reg (width nil))
 		  (end-of-line)
@@ -2842,7 +2886,7 @@ Insert `// NAME ' if this line ends a function, task, module, primitive or inter
 			(setq string (buffer-substring b e)))
 		       (t
 			(ding 't)
-			(setq string "unmatched end(function|task|module|primitive|interface|package)")))))
+			(setq string "unmatched end(function|task|module|primitive|interface|package|class)")))))
 		  (end-of-line)
 		  (insert (concat " // " string )))
 		))))))))))
@@ -3148,15 +3192,12 @@ type.  Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 
 		   ;; if we are in a parenthesized list, and the user likes to indent
 		   ;; these, return.
- 		   (if (and verilog-indent-lists
-			    (verilog-in-paren))
-		       (progn (setq par 1) (throw 'nesting 'block)))
+ 		   (if (and verilog-indent-lists (verilog-in-paren))		       (progn (setq par 1) (throw 'nesting 'block)))
 ;		   (if (/= 0 (verilog-parenthesis-depth)) (progn (setq par 1) (throw 'nesting 'block)))
 
 		   ;; if we have a directive, done.
-		   (if (save-excursion
-			 (beginning-of-line)
-			 (looking-at verilog-directive-re-1))
+		   (if (save-excursion (beginning-of-line) 
+				       (looking-at verilog-directive-re-1))
 		       (throw 'nesting 'directive))
 
 		   ;; See if we are continuing a previous line
@@ -3207,7 +3248,7 @@ type.  Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 				; indent level changing tokens then immediately
 				; previous line governs indentation.
 			       (let (( reg) (nest 1))
-;;	 verilog-ends =>  else|if|end|join(_any|_none|)|endcase|endtable|endspecify|endfunction|endtask|endgenerate
+;;	 verilog-ends =>  else|if|end|join(_any|_none|)|endcase|endclass|endtable|endspecify|endfunction|endtask|endgenerate
 				 (cond
 				  ((match-end 3) ; end
 				   ;; Search back for matching begin
@@ -3230,9 +3271,12 @@ type.  Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 				  ((match-end 9) ; endgenerate
 				   ;; Search back for matching generate
 				   (setq reg "\\(\\<generate\\>\\)\\|\\(\\<endgenerate\\>\\)" ))
-				  ((match-end 10) ; join
+				  ((match-end 10) ; joins
 				   ;; Search back for matching fork
 				   (setq reg "\\(\\<fork\\>\\)\\|\\(\\<join\\(_any\\|none\\)?\\>\\)" ))
+				  ((match-end 11) ; class
+				   ;; Search back for matching class
+				   (setq reg "\\(\\<class\\>\\)\\|\\(\\<endclass\\>\\)" ))
 				  )
 				 (catch 'skip
 				   (while (verilog-re-search-backward reg nil 'move)
@@ -3272,8 +3316,8 @@ type.  Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
   (catch 'nesting
     (while (verilog-re-search-backward verilog-indent-re nil 'move)
       (cond
-       ((looking-at verilog-behavioral-level-re)
-	(throw 'nesting 'behavioral))
+       ;;((looking-at verilog-behavioral-level-re)
+       ;;(throw 'nesting 'behavioral))
 
        ((looking-at verilog-beg-block-re-1)
 	(cond
@@ -3362,6 +3406,9 @@ from endcase to matching case, and so on."
      ((looking-at "\\<join\\(_any\\|_none\\)?\\>")
       ;; Search back for matching fork
       (setq reg "\\(\\<fork\\>\\)\\|\\(\\<join\\(_any\\|_none\\)?\\>\\)" ))
+     ((looking-at "\\<endclass\\>")
+      ;; Search back for matching class
+      (setq reg "\\(\\<class\\>\\)\\|\\(\\<endclass\\>\\)" ))
      ((looking-at "\\<endtable\\>")
       ;; Search back for matching table
       (setq reg "\\(\\<table\\>\\)\\|\\(\\<endtable\\>\\)" ))
