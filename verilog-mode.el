@@ -995,7 +995,7 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
   (concat 
    "\\s-*\\(\\(reg\\|wire\\)\\s-*\\)?\\(signed\\s-*\\)?\\(" verilog-range-re "\\)?"))
 (defconst verilog-macroexp-re "`\\sw+")
-(defconst verilog-delay-re "#\\s-*\\(\\([0-9_]+\\('s?[hdxbo][0-9a-fA-F_xz]+\\)?\\)\\|\\(([^)]*)\\)\\|\\(\\sw+\\)\\)")
+(defconst verilog-delay-re "#\\s-*\\(\\([0-9_]+\\('s?[hdxbo][0-9a-fA-F_xz]+\\)?\\)\\|\\(([^()]*)\\)\\|\\(\\sw+\\)\\)")
 (defconst verilog-declaration-re-2-no-macro
   (concat "\\s-*" verilog-declaration-re
 	  "\\s-*\\(\\(" verilog-optional-signed-range-re "\\)\\|\\(" verilog-delay-re "\\)"
@@ -1436,8 +1436,11 @@ See also `verilog-font-lock-extra-types'.")
 		 ;; Fontify macro definitions/ uses
 		 '("`\\s-*[A-Za-z][A-Za-z0-9_]*" 0 font-lock-function-name-face)
 		 ;; Fontify delays/numbers
-		 '("\\(@\\)\\|\\(#\\s-*\\(\\(\[0-9_.\]+\\('s?[hdxbo][0-9a-fA-F_xz]*\\)?\\)\\|\\(([^)]+)\\|\\sw+\\)\\)\\)"
+		 '("\\(@\\)\\|\\(#\\s-*\\(\\(\[0-9_.\]+\\('s?[hdxbo][0-9a-fA-F_xz]*\\)?\\)\\|\\(([^()]+)\\|\\sw+\\)\\)\\)"
 		   0 font-lock-type-face append)
+		 ;; Fontify instantiation names
+		 '("\\([A-Za-z][A-Za-z0-9_]+\\)\\s-*(" 1 font-lock-function-name-face)
+
 		 )))
 
   (setq verilog-font-lock-keywords-3
@@ -2807,6 +2810,7 @@ Insert `// NAME ' if this line ends a function, task, module, primitive or inter
 		;;(goto-char there)
 		(let ((nest 0)
 		      ( reg "\\<\\(class\\)\\|\\(endclass\\)\\|\\(package\\|primitive\\|\\(macro\\)?module\\)\\>")
+		      string 
 		      )
 		  (save-excursion
 		    (catch 'skip
@@ -3188,16 +3192,17 @@ type.  Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 		   ;; 2) are we in a block scope (begin..end)
 
 		   ;; if we are in a comment, done.
-		   (if (verilog-in-star-comment-p)   (throw 'nesting 'comment))
+		   (if (verilog-in-star-comment-p)   
+		       (throw 'nesting 'comment))
 
-		   ;; if we are in a parenthesized list, and the user likes to indent
-		   ;; these, return.
- 		   (if (and verilog-indent-lists (verilog-in-paren))		       (progn (setq par 1) (throw 'nesting 'block)))
-;		   (if (/= 0 (verilog-parenthesis-depth)) (progn (setq par 1) (throw 'nesting 'block)))
+		   ;; if we are in a parenthesized list, and the user likes to indent these, return.
+ 		   (if (and verilog-indent-lists (verilog-in-paren)) 
+		       (progn (setq par 1) (throw 'nesting 'block)))
+
+		   ;;(if (/= 0 (verilog-parenthesis-depth)) (progn (setq par 1) (throw 'nesting 'block)))
 
 		   ;; if we have a directive, done.
-		   (if (save-excursion (beginning-of-line) 
-				       (looking-at verilog-directive-re-1))
+		   (if (save-excursion (beginning-of-line) (looking-at verilog-directive-re-1)) 
 		       (throw 'nesting 'directive))
 
 		   ;; See if we are continuing a previous line
@@ -3212,6 +3217,7 @@ type.  Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 				(verilog-continued-line-1 lim))
 			       (progn (goto-char sp)
 				      (throw 'nesting 'cexp))
+
 			     (goto-char sp))
 
 			   (if (and begin
@@ -3291,7 +3297,10 @@ type.  Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 				 ))
 			      ))))
 		     (throw 'nesting (verilog-calc-1))
-		     ))))
+		     )
+		   );; catch nesting
+		 );; type
+	   )
       ;; Return type of block and indent level.
       (if (not type)
 	  (setq type 'cpp))
@@ -3690,6 +3699,7 @@ Optional BOUND limits search."
  "Return non zero if in parenthetical-expression."
  (save-excursion
    (nth 1 (parse-partial-sexp (point-min) (point)))))
+ 
 
 (defun verilog-skip-forward-comment-or-string ()
  "Return true if in a string or comment."
@@ -3856,7 +3866,8 @@ Only look at a few lines to determine indent level."
 	  (goto-char here)
 	  (let ((val))
 	    (verilog-beg-of-statement-1)
-	    (if (verilog-re-search-forward "=[ \\t]*" here 'move)
+	    (if (and (< (point) here)
+		     (verilog-re-search-forward "=[ \\t]*" here 'move))
 		(setq val (current-column))
 	      (setq val (eval (cdr (assoc type verilog-indent-alist)))))
 	    (goto-char here)
