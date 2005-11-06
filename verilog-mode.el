@@ -890,7 +890,7 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
 ;; Regular expressions used to calculate indent, etc.
 ;;
 (defconst verilog-symbol-re      "\\<[a-zA-Z_][a-zA-Z_0-9.]*\\>")
-(defconst verilog-case-re        "\\(\\<case[xz]?\\>\\)")
+(defconst verilog-case-re        "\\(\\<case[xz]?\\>\\|\\<randcase\\>\\)")
 ;; Want to match
 ;; aa :
 ;; aa,bb :
@@ -972,11 +972,11 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
 (defconst verilog-beg-block-re
   (eval-when-compile
     (verilog-regexp-words
-     `("begin" "case" "casex" "casez" "generate" "fork" "function"
+     `("begin" "case" "casex" "casez" "randcase" "generate" "fork" "function"
        "specify" "table" "task"))))
 
 (defconst verilog-beg-block-re-1
-  "\\<\\(begin\\)\\|\\(case[xz]?\\)\\|\\(fork\\)\\|\\(class\\)\\|\\(table\\)\\|\\(specify\\)\\|\\(function\\)\\|\\(task\\)\\|\\(generate\\)\\>")
+  "\\<\\(begin\\)\\|\\(randcase\\>\\|\\<case[xz]?\\)\\|\\(fork\\)\\|\\(class\\)\\|\\(table\\)\\|\\(specify\\)\\|\\(function\\)\\|\\(task\\)\\|\\(generate\\)\\>")
 (defconst verilog-end-block-re
   ;; "end" "join" "endcase" "endtable" "endspecify" "endtask" "endfunction" "endgenerate"
   "\\<\\(end\\(\\>\\|c\\(ase\\|lass\\)\\>\\|function\\>\\|generate\\>\\|specify\\>\\|ta\\(ble\\>\\|sk\\>\\)\\)\\|join\\(_any\\|_none\\)?\\>\\)")
@@ -1020,7 +1020,7 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
 	  "\\<always_latch\\>\\|\\<function\\>\\|\\<task\\>\\)"))
 (defconst verilog-indent-reg
   (concat
-   "\\(\\<begin\\>\\|\\<case[xz]?\\>\\|\\<specify\\>\\|\\<fork\\>\\|\\<table\\>\\)\\|"
+   "\\(\\<begin\\>\\|\\<randcase\\>\\|\\<case[xz]?\\>\\|\\<specify\\>\\|\\<fork\\>\\|\\<table\\>\\)\\|"
    "\\<join\\(_any\\|_none\\)?\\>\\|"
    "\\(\\<end\\(c\\(lass\\|ase\\)\\|table\\|specify\\)?\\>\\)\\|"
    "\\(\\<module\\>\\|\\<macromodule\\>\\|\\<primitive\\>\\|\\<interface\\>\\|\\<package\\>\\|\\<initial\\>\\|\\<final\\>\\|"
@@ -1036,7 +1036,7 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
     (verilog-regexp-words
      `(
        "always" "always_latch" "always_ff" "always_comb" "begin"
-       "case" "casex" "casez" "class" "config" "end" "endcase" "endconfig"
+       "case" "casex" "casez" "randcase" "class" "config" "end" "endcase" "endconfig"
        "endclass" "endfunction" "endgenerate" "endmodule" "endprimative" "endinterface"
        "endpackage" "endspecify" "endtable" "endtask" "fork" "function"
        "final" "generate" "initial" "join" "join_any" "join_none"
@@ -1047,14 +1047,6 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
        "`ifndef" "`include" "`let" "`protect" "`switch" "`timescale"
        "`time_scale" "`undef" "`while"
        ))))
-
-;(defconst verilog-indent-re
-;  (concat
-;   "\\(\\<\\(always\\(_latch\\|_ff\\|_comb\\)?\\>\\|begin\\>\\|case\\(\\>\\|x\\>\\|z\\>\\)\\|"
-;   "end\\(\\>\\|case\\>\\|function\\>\\|generate\\>\\|module\\>\\|primitive\\>\\|interface\\>\\|package\\>\\|specify\\>\\|ta\\(ble\\>\\|sk\\>\\)\\)"
-;   "\\|f\\(ork\\>\\|unction\\>\\)\\|generate\\|initial\\>\\|join\\(_any\\|_none\\)?\\>\\|m\\(acromodule\\>\\|odule\\>\\)"
-;   "\\|primitive\\>\\|interface\\>\\|package\\>\\|specify\\>\\|ta\\(ble\\>\\|sk\\>\\)\\)"
-;   "\\|" verilog-directive-re "\\)"))
 
 (defconst verilog-defun-level-re
   (eval-when-compile
@@ -1073,7 +1065,7 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
   (eval-when-compile
     (verilog-regexp-words
      `("always" "assign" "always_latch" "always_ff" "always_comb" "initial"
-       "final" "repeat" "case" "casex" "casez" "while" "if" "for" "forever"
+       "final" "repeat" "case" "casex" "casez" "randcase" "while" "if" "for" "forever"
        "else" "parameter"))))
 (defconst verilog-end-statement-re
   (concat "\\(" verilog-beg-block-re "\\)\\|\\("
@@ -1376,7 +1368,7 @@ See also `verilog-font-lock-extra-types'.")
 	(eval-when-compile
 	  (verilog-regexp-opt
 	   '(
-	     "assign" "begin" "case" "casex" "casez" "deassign"
+	     "assign" "begin" "case" "casex" "casez" "randcase" "deassign"
 	     "default" "disable" "else" "end" "endcase" "endfunction"
 	     "endgenerate" "endinterface" "endmodule" "endprimitive"
 	     "endspecify" "endtable" "endtask" "final" "for" "force" "return" "break" "continue"
@@ -1652,7 +1644,7 @@ Use filename, if current buffer being edited shorten to just buffer name."
 	(setq reg "\\(\\<begin\\>\\)\\|\\(\\<end\\>\\)" ))
        ((match-end 2) ; endcase
 	;; Search forward for matching case
-	(setq reg "\\(\\<case[xz]?\\>[^:]\\)\\|\\(\\<endcase\\>\\)" ))
+	(setq reg "\\(\\<randcase\\>\\|\\<case[xz]?\\>[^:]\\)\\|\\(\\<endcase\\>\\)" ))
        ((match-end 3) ; join
 	;; Search forward for matching fork
 	(setq reg "\\(\\<fork\\>\\)\\|\\(\\<join\\(_any\\|_none\\)?\\>\\)" ))
@@ -2423,7 +2415,7 @@ more specifically, point @ in the line foo : @ begin"
 	  (let ((nest 1))
 	    (while t
 	      (verilog-re-search-backward
-	       (concat "\\(\\<module\\>\\)\\|\\(\\<case[xz]?\\>[^:]\\)\\|"
+	       (concat "\\(\\<module\\>\\)\\|\\(\\<randcase\\>\\|\\<case[xz]?\\>[^:]\\)\\|"
 		       "\\(\\<endcase\\>\\)\\>")
 	       nil 'move)
 	      (cond
@@ -2627,12 +2619,16 @@ Insert `// NAME ' if this line ends a function, task, module, primitive or inter
 		      (str "UNMATCHED!!"))
 		  (save-excursion
 		    (verilog-leap-to-head)
-		    (if (match-end 0)
-			(progn
-			  (goto-char (match-end 1))
-			  (setq str (concat (buffer-substring (match-beginning 1) (match-end 1))
-					    (verilog-get-expr)))
-			  (setq err nil))))
+		    (cond
+		     ((looking-at "\\<randcase\\>")
+		      (setq str "randcase")
+		      (setq err nil)
+		      )
+		     ((match-end 0)
+		      (goto-char (match-end 1))
+		      (setq str (concat (buffer-substring (match-beginning 1) (match-end 1))
+					(verilog-get-expr)))
+		      (setq err nil))))
 		  (end-of-line)
 		  (if kill-existing-comment
 		      (kill-existing-comment))
@@ -3261,7 +3257,7 @@ type.  Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 				   (setq reg "\\(\\<begin\\>\\)\\|\\(\\<end\\>\\)" ))
 				  ((match-end 4) ; endcase
 				   ;; Search back for matching case
-				   (setq reg "\\(\\<case[xz]?\\>[^:]\\)\\|\\(\\<endcase\\>\\)" ))
+				   (setq reg "\\(\\<randcase\\>\\|\\<case[xz]?\\>[^:]\\)\\|\\(\\<endcase\\>\\)" ))
 				  ((match-end 5) ; endfunction
 				   ;; Search back for matching function
 				   (setq reg "\\(\\<function\\>\\)\\|\\(\\<endfunction\\>\\)" ))
@@ -3387,7 +3383,7 @@ of the appropriate enclosing block."
 (defun verilog-leap-to-case-head ()
   (let ((nest 1))
     (while (/= 0 nest)
-      (verilog-re-search-backward "\\(\\<case[xz]?\\>[^:]\\)\\|\\(\\<endcase\\>\\)" nil 'move)
+      (verilog-re-search-backward "\\(\\<randcase\\>\\|\\<case[xz]?\\>[^:]\\)\\|\\(\\<endcase\\>\\)" nil 'move)
       (cond
        ((match-end 1)
 	(setq nest (1- nest)))
@@ -3411,7 +3407,7 @@ from endcase to matching case, and so on."
 
      ((looking-at "\\<endcase\\>")
       ;; Search back for matching case
-      (setq reg "\\(\\<case[xz]?\\>\\)\\|\\(\\<endcase\\>\\)" ))
+      (setq reg "\\(\\<randcase\\>\\|\\<case[xz]?\\>\\)\\|\\(\\<endcase\\>\\)" ))
      ((looking-at "\\<join\\(_any\\|_none\\)?\\>")
       ;; Search back for matching fork
       (setq reg "\\(\\<fork\\>\\)\\|\\(\\<join\\(_any\\|_none\\)?\\>\\)" ))
@@ -3453,7 +3449,7 @@ from endcase to matching case, and so on."
 	    (setq snest nest)
 	    (setq nest (1+ nest))
 	    (setq sreg reg)
-	    (setq reg "\\(\\<case[xz]?\\>[^:]\\)\\|\\(\\<endcase\\>\\)" ))
+	    (setq reg "\\(\\<randcase\\>\\|\\<case[xz]?\\>[^:]\\)\\|\\(\\<endcase\\>\\)" ))
 	   ((match-end 4)
 	    ;; join, jump to fork
 	    (setq snest nest)
@@ -3505,7 +3501,7 @@ Set point to where line starts"
 	(forward-word -1)
 	(cond
 	 ((looking-at "\\<\\(always\\(_latch\\|_ff\\|_comb\\)?\\|case\\(\\|[xz]\\)\\|for\\(\\|ever\\)\\|i\\(f\\|nitial\\)\\|repeat\\|while\\)\\>")
-	  (not (looking-at "\\<case[xz]?\\>[^:]")))
+	  (not (looking-at "\\<randcase\\>\\|\\<case[xz]?\\>[^:]")))
 	 (t
 	  (goto-char back)
 	  (cond
