@@ -1,15 +1,27 @@
-#!/usr/local/bin/perl
+#!/usr/bin/perl
 
 unlink("log");
 $attach_name = "verilog-mode.el.gz";
 $encoded_data = `gzip -c9 verilog-mode.el | mmencode `;
-system("cvs log verilog-mode.el > log");
-open(LOG,"<log");
-while(<LOG>) {
-  if (/^head: ([\d\.]+)$/) {
-    $rev = $1;
-  }
-  last if (/^description:$/);
+if ( -d ".svn") {
+    system("svn log verilog-mode.el > log");
+    open(LOG,"<log");
+    while(<LOG>) {
+	if (/^r([\d\.]+)/) {
+	    $rev = $1;
+	    last;
+	}
+    }
+
+} else {
+    system("cvs log verilog-mode.el > log");
+    open(LOG,"<log");
+    while(<LOG>) {
+	if (/^head: ([\d\.]+)$/) {
+	    $rev = $1;
+	}
+	last if (/^description:$/);
+    }
 }
 open(O,">emacs-version.h");
 open(C,">ChangeLog.txt");
