@@ -1,14 +1,24 @@
-#!/usr/local/bin/perl
+#!/usr/bin/perl
 $owner = "mac";
-$destination = "<verilog-mode-list\@webnexus.com>";
-$verilog =  "/home/mac/Verilog-Mode/verilog-mode/verilog-mode/mmencoded_verilog-mode";
+$destination = "mac\@verilog.com";
+$verilog =  "/home/mac/development/www.verilog.com/src/data/mmencoded_verilog-mode";
 
-open(LOG,"<log");
-while(<LOG>) {
-  if (/^head: ([\d\.]+)$/) {
-    $rev = $1;
-  }
-  last if (/^description:$/);
+if ( -d ".svn") {
+    open(LOG,"<log");
+    while(<LOG>) {
+	if (/^r([\d\.]+)/) {
+	    $rev = $1;
+	    last;
+	}
+    }
+} else {
+    open(LOG,"<log");
+    while(<LOG>) {
+	if (/^head: ([\d\.]+)$/) {
+	    $rev = $1;
+	}
+	last if (/^description:$/);
+    }
 }
 open(VM, "< $verilog") || die "Can not open $verilog\n";
 open(SM, "|/usr/lib/sendmail -bm -f $owner -F \"Mike McNamara\" -t");
