@@ -1,30 +1,9 @@
-+----------------------------------------------------------------+
-|  To stop getting these messages send email like the following: |
-|                                                                |
-|  To: <majordomo@webnexus.com>                                  |
-|  Subject:                                                      |
-|                                                                |
-|  unsubscribe verilog-mode-list me@mycompany.com                |
-|                                                                |
-+----------------------------------------------------------------+
-| -->>> If you can't decode this file, fetch a copy from  <<<--  |
-|  ftp://www.surefirev.com/pub/Verilog-mode/verilog-mode.el      |
-+----------------------------------------------------------------+
-			----------------
 General News:
 
-As I write this we are a few weeks into the Verisity - Cadence merger.
-
-Hence I find myself employed at the place that made the simulator
-(Verilog-XL) we dethroned as the little startup called Chronologic,
-some dozen years ago.  Life is truly stranger than fiction.
-
-On another issue, I moved www.verilog.com to a new ISP, as the former
-one has been very unreliable during the past 4 months. I aplogize for
-the downtime, and thank the users who let me know the site was broken
-in the various ways each time.
-
-The new ISP is at my house (Shhh! Don't tell my wife!)
+Now I have converted completely to using subversion for change
+management, and the user visible bit is that version numbers are no
+longer monotonically increasing per file (instead are so per "change
+checked in", and the current version is like, 142.
 
 Now back to the verilog-mode:
 
@@ -53,8 +32,7 @@ To learn more on installing this file, go to
 
 and read the directions.
 
-If you have any problems with the file, feel free to send mail to
-verilog-mode-bugs\@verilog.com and your mail will be entered in our
-bug tracking system.
+If you have any problems with the file, feel free to send mail to mac
+at verilog dot com and I will take a look.
 
 -------------------------------------------------------------------
