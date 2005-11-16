@@ -13,8 +13,8 @@ install : test $(D)/mmencoded_verilog-mode $(D)/emacs-version.h\
 test:	x/verilog-mode.elc e/verilog-mode.elc mmencoded_verilog-mode verilog.info
 
 local:  verilog-mode.el
-	#-cp verilog-mode.el /usr/local/lib/xemacs/site-lisp/verilog-mode.el
-	#$(XEMACS) $(ELC) /usr/local/lib/xemacs/site-lisp/verilog-mode.el
+	cp verilog-mode.el /usr/local/lib/xemacs/site-lisp/verilog-mode.el
+	$(XEMACS) $(ELC) /usr/local/lib/xemacs/site-lisp/verilog-mode.el
 	cp verilog-mode.el /usr/share/emacs/site-lisp/verilog-mode.el
 	$(EMACS) $(ELC) /usr/share/emacs/site-lisp/verilog-mode.el
 
@@ -46,7 +46,7 @@ x/verilog-mode.elc : verilog-mode.el
 	rm -rf x
 	mkdir x
 	cp verilog-mode.el x/verilog-mode.el
-	#$(XEMACS) $(ELC) x/verilog-mode.el
+	$(XEMACS) $(ELC) x/verilog-mode.el
 
 e/verilog-mode.elc : verilog-mode.el
 	-rm -rf e
