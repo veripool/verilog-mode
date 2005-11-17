@@ -25,9 +25,13 @@ if ( -d ".svn") {
 }
 open(O,">emacs-version.h");
 open(C,">ChangeLog.txt");
+$release_date = `date +"%D"`;
 print O <<"X";
 <define-tag emacs-vid>
 $rev
+</define-tag>
+<define-tag emacs-release-date>
+$release_date
 </define-tag>
 X
 close(O);
