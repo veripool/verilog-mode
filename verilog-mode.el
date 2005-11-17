@@ -1001,6 +1001,15 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
   ;; "end" "join" "endcase" "endtable" "endspecify" "endtask" "endfunction" "endgenerate"
   "\\<\\(end\\(\\>\\|c\\(ase\\|lass\\)\\>\\|function\\>\\|generate\\>\\|specify\\>\\|ta\\(ble\\>\\|sk\\>\\)\\)\\|join\\(_any\\|_none\\)?\\>\\)")
 
+(defconst verilog-nameable-item-re
+  (eval-when-compile
+    (verilog-regexp-words
+     `("begin" "join" "join_any" "join_none" "end" "endcase" "endconfig" "endclass"
+       "endfunction" "endgenerate" "endmodule" "endprimative" "endinterface"
+       "endpackage" "endspecify" "endtable" "endtask" "fork" )
+     )))
+
+
 (defconst verilog-end-block-re-1 "\\(\\<end\\>\\)\\|\\(\\<endcase\\>\\)\\|\\(\\<join\\>\\)\\|\\(\\<endtable\\>\\)\\|\\(\\<endspecify\\>\\)\\|\\(\\<endfunction\\>\\)\\|\\(\\<endgenerate\\>\\)\\|\\(\\<endtask\\>\\)")
 (defconst verilog-declaration-re
   (eval-when-compile
@@ -1072,29 +1081,38 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
   (eval-when-compile
     (verilog-regexp-words
      `(
-       "module" "macromodule" "primitive" "initial" "final" "always" "always_comb" "always_ff" "always_latch" "endtask" "endfunction"
+       "module" "macromodule" "primitive" "initial" "final" "always" "always_comb" 
+       "always_ff" "always_latch" "endtask" "endfunction" "interface" "package"
        "config"))))
-;  "\\(end\\(function\\>\\|task\\>\\)\\|final\\|initial\\>\\|m\\(acromodule\\>\\|odule\\>\\)\\|primitive\\>\\|interface\\>\\|package\\>\\)") 
+
 (defconst verilog-cpp-level-re
- ;;"endmodule" "endprimitive"
-  "\\(\\<end\\(module\\>\\|primitive\\>\\|interface\\>\\|package\\>\\)\\)")
+  (eval-when-compile
+    (verilog-regexp-words
+     `(
+       "endmodule" "endprimitive" "endinterface" "endpackage"
+       ))))
+
 (defconst verilog-behavioral-level-re
   ;; "function" "task"
   "\\(\\<\\(function\\>\\|task\\>\\)\\)")
+
 (defconst verilog-complete-reg
   (eval-when-compile
     (verilog-regexp-words
      `("always" "assign" "always_latch" "always_ff" "always_comb" "initial"
        "final" "repeat" "case" "casex" "casez" "randcase" "while" "if" "for" "forever"
        "else" "parameter"))))
+
 (defconst verilog-end-statement-re
   (concat "\\(" verilog-beg-block-re "\\)\\|\\("
 	  verilog-end-block-re "\\)"))
+
 (defconst verilog-endcase-re
   (concat verilog-case-re "\\|"
 	  "\\(endcase\\)\\|"
 	  verilog-defun-re
 	  ))
+
 ;; Strings used to mark beginning and end of excluded text
 (defconst verilog-exclude-str-start "/* -----\\/----- EXCLUDED -----\\/-----")
 (defconst verilog-exclude-str-end " -----/\\----- EXCLUDED -----/\\----- */")
@@ -3553,7 +3571,7 @@ Set point to where line starts"
 	  (backward-char)
 	  (verilog-backward-syntactic-ws)
 	  (backward-sexp)
-	  (if (looking-at "begin")
+	  (if (looking-at verilog-nameable-item-re )
 	      nil
 	    t)
 	  )
