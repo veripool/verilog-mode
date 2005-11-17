@@ -100,6 +100,7 @@
 ;; Insure we have certain packages, and deal with it if we don't
 (if (fboundp 'eval-when-compile)
     (eval-when-compile
+      (require 'verilog-mode)
       (condition-case nil
           (require 'imenu)
         (error nil))
@@ -110,7 +111,13 @@
           (require 'easymenu)
         (error nil))
       (condition-case nil
+          (require 'regexp-opt)
+        (error nil))
+      (condition-case nil
 	  (load "skeleton") ;; bug in 19.28 through 19.30 skeleton.el, not provided.
+        (error nil))
+      (condition-case nil
+	  (require 'vc)
         (error nil))
       (condition-case nil
           (if (fboundp 'when)
@@ -198,25 +205,38 @@
 	)
 
       ))
+;; Provide a regular expression optimization routine, using regexp-opt
+;; if provided by the user's elisp libraries
 (eval-and-compile
   (if (fboundp 'regexp-opt)
-      (defun verilog-regexp-opt (strings &optional paren shy)
-	(let ((open (if paren "\\(" "")) (close (if paren "\\)" "")))
-	  (concat open (mapconcat 'regexp-quote strings "\\|") close)))
-    (if (fboundp 'function-min-args)
-	(if (= 3 (function-min-args `regexp-opt))
-	    (defun verilog-regexp-opt (a b)
-	      "Deal with differing number of required arguments for  `regexp-opt'.
+      ;; regexp-opt is defined, does it take 3 or 2 arguments? 
+      (if (fboundp 'function-max-args)
+	  (case (function-max-args `regexp-opt)
+	    ( 3 ;; It takes 3
+	      (condition-case nil	; Hide this defun from emacses 
+					;with just a two input regexp 
+		  (defun verilog-regexp-opt (a b)
+		    "Deal with differing number of required arguments for  `regexp-opt'.
          Call 'regexp-opt' on A and B."
-	      (regexp-opt a b 't))
-	  (defun verilog-regexp-opt (a b)
-	    "Call 'regexp-opt' on A and B."
-	    (regexp-opt a b))
-	  )
-      (defun verilog-regexp-opt (a b)
-	"Call 'regexp-opt' on A and B."
-	(regexp-opt a b))
-      )
+		    (regexp-opt a b 't)
+		    )
+		(error nil))
+	      )
+	      ( 2 ;; It takes 2
+	      (defun verilog-regexp-opt (a b)
+		"Call 'regexp-opt' on A and B."
+		(regexp-opt a b))
+	      )
+	    ( t nil))
+	;; We can't tell; assume it takes 2
+	(defun verilog-regexp-opt (a b)
+	  "Call 'regexp-opt' on A and B."
+	  (regexp-opt a b))
+	)
+    ;; There is no regexp-opt, provide our own
+    (defun verilog-regexp-opt (strings &optional paren shy)
+      (let ((open (if paren "\\(" "")) (close (if paren "\\)" "")))
+	(concat open (mapconcat 'regexp-quote strings "\\|") close)))
     ))
 
 (eval-when-compile
@@ -1446,93 +1466,6 @@ See also `verilog-font-lock-extra-types'.")
   )
 
 
-;;
-;;  Macros
-;;
-
-(defsubst verilog-string-replace-matches (from-string to-string fixedcase literal string)
-  "Replace occurrences of FROM-STRING with TO-STRING.
-FIXEDCASE and LITERAL as in `replace-match`.  STRING is what to replace.
-The case (verilog-string-replace-matches \"o\" \"oo\" nil nil \"foobar\")
-will break, as the o's continuously replace.  xa -> x works ok though."
-  ;; Hopefully soon to a emacs built-in
-  (let ((start 0))
-    (while (string-match from-string string start)
-      (setq string (replace-match to-string fixedcase literal string)
-	    start (min (length string) (match-end 0))))
-    string))
-
-(defsubst verilog-string-remove-spaces (string)
-  "Remove spaces surrounding STRING."
-  (save-match-data
-    (setq string (verilog-string-replace-matches "^\\s-+" "" nil nil string))
-    (setq string (verilog-string-replace-matches "\\s-+$" "" nil nil string))
-    string))
-
-(defsubst verilog-re-search-forward (REGEXP BOUND NOERROR)
-  ; checkdoc-params: (REGEXP BOUND NOERROR)
-  "Like `re-search-forward', but skips over match in comments or strings."
-  (store-match-data '(nil nil))
-  (while (and
-	  (re-search-forward REGEXP BOUND NOERROR)
-	  (and (verilog-skip-forward-comment-or-string)
-	       (progn
-		 (store-match-data '(nil nil))
-		 (if BOUND
-		     (< (point) BOUND)
-		   t)
-		 ))))
-  (match-end 0))
-
-(defsubst verilog-re-search-backward (REGEXP BOUND NOERROR)
-  ; checkdoc-params: (REGEXP BOUND NOERROR)
-  "Like `re-search-backward', but skips over match in comments or strings."
-  (store-match-data '(nil nil))
-  (while (and
-	  (re-search-backward REGEXP BOUND NOERROR)
-	  (and (verilog-skip-backward-comment-or-string)
-	       (progn
-		 (store-match-data '(nil nil))
-		 (if BOUND
-		     (> (point) BOUND)
-		   t)
-		 ))))
-  (match-end 0))
-
-(defsubst verilog-re-search-forward-quick (regexp bound noerror)
-  "Like `verilog-re-search-forward', including use of REGEXP BOUND and NOERROR,
-but trashes match data and is faster for REGEXP that doesn't match often.
-This may at some point use text properties to ignore comments,
-so there may be a large up front penalty for the first search."
-  (let (pt)
-    (while (and (not pt)
-		(re-search-forward regexp bound noerror))
-      (if (not (verilog-inside-comment-p))
-	  (setq pt (match-end 0))))
-    pt))
-
-(defsubst verilog-re-search-backward-quick (regexp bound noerror)
-  ; checkdoc-params: (REGEXP BOUND NOERROR)
-  "Like `verilog-re-search-backward', including use of REGEXP BOUND and NOERROR,
-but trashes match data and is faster for REGEXP that doesn't match often.
-This may at some point use text properties to ignore comments,
-so there may be a large up front penalty for the first search."
-  (let (pt)
-    (while (and (not pt)
-		(re-search-backward regexp bound noerror))
-      (if (not (verilog-inside-comment-p))
-	  (setq pt (match-end 0))))
-    pt))
-
-(defsubst verilog-get-beg-of-line (&optional arg)
-  (save-excursion
-    (beginning-of-line arg)
-    (point)))
-
-(defsubst verilog-get-end-of-line (&optional arg)
-  (save-excursion
-    (end-of-line arg)
-    (point)))
 
 (defun verilog-inside-comment-p ()
   "Check if point inside a nested comment."
@@ -1705,6 +1638,94 @@ Use filename, if current buffer being edited shorten to just buffer name."
 
 (defun verilog-declaration-beg ()
   (verilog-re-search-backward verilog-declaration-re (bobp) t))
+
+;;
+;;  Macros
+;;
+
+(defsubst verilog-string-replace-matches (from-string to-string fixedcase literal string)
+  "Replace occurrences of FROM-STRING with TO-STRING.
+FIXEDCASE and LITERAL as in `replace-match`.  STRING is what to replace.
+The case (verilog-string-replace-matches \"o\" \"oo\" nil nil \"foobar\")
+will break, as the o's continuously replace.  xa -> x works ok though."
+  ;; Hopefully soon to a emacs built-in
+  (let ((start 0))
+    (while (string-match from-string string start)
+      (setq string (replace-match to-string fixedcase literal string)
+	    start (min (length string) (match-end 0))))
+    string))
+
+(defsubst verilog-string-remove-spaces (string)
+  "Remove spaces surrounding STRING."
+  (save-match-data
+    (setq string (verilog-string-replace-matches "^\\s-+" "" nil nil string))
+    (setq string (verilog-string-replace-matches "\\s-+$" "" nil nil string))
+    string))
+
+(defsubst verilog-re-search-forward (REGEXP BOUND NOERROR)
+  ; checkdoc-params: (REGEXP BOUND NOERROR)
+  "Like `re-search-forward', but skips over match in comments or strings."
+  (store-match-data '(nil nil))
+  (while (and
+	  (re-search-forward REGEXP BOUND NOERROR)
+	  (and (verilog-skip-forward-comment-or-string)
+	       (progn
+		 (store-match-data '(nil nil))
+		 (if BOUND
+		     (< (point) BOUND)
+		   t)
+		 ))))
+  (match-end 0))
+
+(defsubst verilog-re-search-backward (REGEXP BOUND NOERROR)
+  ; checkdoc-params: (REGEXP BOUND NOERROR)
+  "Like `re-search-backward', but skips over match in comments or strings."
+  (store-match-data '(nil nil))
+  (while (and
+	  (re-search-backward REGEXP BOUND NOERROR)
+	  (and (verilog-skip-backward-comment-or-string)
+	       (progn
+		 (store-match-data '(nil nil))
+		 (if BOUND
+		     (> (point) BOUND)
+		   t)
+		 ))))
+  (match-end 0))
+
+(defsubst verilog-re-search-forward-quick (regexp bound noerror)
+  "Like `verilog-re-search-forward', including use of REGEXP BOUND and NOERROR,
+but trashes match data and is faster for REGEXP that doesn't match often.
+This may at some point use text properties to ignore comments,
+so there may be a large up front penalty for the first search."
+  (let (pt)
+    (while (and (not pt)
+		(re-search-forward regexp bound noerror))
+      (if (not (verilog-inside-comment-p))
+	  (setq pt (match-end 0))))
+    pt))
+
+(defsubst verilog-re-search-backward-quick (regexp bound noerror)
+  ; checkdoc-params: (REGEXP BOUND NOERROR)
+  "Like `verilog-re-search-backward', including use of REGEXP BOUND and NOERROR,
+but trashes match data and is faster for REGEXP that doesn't match often.
+This may at some point use text properties to ignore comments,
+so there may be a large up front penalty for the first search."
+  (let (pt)
+    (while (and (not pt)
+		(re-search-backward regexp bound noerror))
+      (if (not (verilog-inside-comment-p))
+	  (setq pt (match-end 0))))
+    pt))
+
+(defsubst verilog-get-beg-of-line (&optional arg)
+  (save-excursion
+    (beginning-of-line arg)
+    (point)))
+
+(defsubst verilog-get-end-of-line (&optional arg)
+  (save-excursion
+    (end-of-line arg)
+    (point)))
 
 (defsubst verilog-within-string ()
   (save-excursion
@@ -1909,7 +1930,7 @@ Other useful functions are:
         (if (and current-menubar
                  (not (assoc "Verilog" current-menubar)))
             (progn
-             ;; (set-buffer-menubar (copy-sequence current-menubar))
+	      ;; (set-buffer-menubar (copy-sequence current-menubar))
               (add-submenu nil verilog-xemacs-menu))) ))
   ;; Stuff for GNU emacs
   (make-local-variable 'font-lock-defaults)
@@ -5060,6 +5081,30 @@ numeric constants."
 	(setq out-list (cons (car in-list) out-list)))
       (setq in-list (cdr in-list)))
     (nreverse out-list)))
+;; Elements of a signal list
+(defsubst verilog-sig-name (sig)
+  (car sig))
+(defsubst verilog-sig-bits (sig)
+  (nth 1 sig))
+(defsubst verilog-sig-comment (sig)
+  (nth 2 sig))
+(defsubst verilog-sig-memory (sig)
+  (nth 3 sig))
+(defsubst verilog-sig-enum (sig)
+  (nth 4 sig))
+(defsubst verilog-sig-signed (sig)
+  (nth 5 sig))
+(defsubst verilog-sig-type (sig)
+  (nth 6 sig))
+(defsubst verilog-sig-width (sig)
+  (verilog-make-width-expression (verilog-sig-bits sig)))
+
+(defsubst verilog-alw-get-inputs (sigs)
+  (nth 2 sigs))
+(defsubst verilog-alw-get-outputs (sigs)
+  (nth 0 sigs))
+(defsubst verilog-alw-get-uses-delayed (sigs)
+  (nth 3 sigs))
 
 (defun verilog-signals-combine-bus (in-list)
   "Return a list of signals in IN-LIST, with busses combined.
@@ -6213,30 +6258,6 @@ and invalidating the cache."
 (defsubst verilog-modi-get-sub-inputs (modi)
   (aref (verilog-modi-get-sub-decls modi) 2))
 
-;; Elements of a signal list
-(defsubst verilog-sig-name (sig)
-  (car sig))
-(defsubst verilog-sig-bits (sig)
-  (nth 1 sig))
-(defsubst verilog-sig-comment (sig)
-  (nth 2 sig))
-(defsubst verilog-sig-memory (sig)
-  (nth 3 sig))
-(defsubst verilog-sig-enum (sig)
-  (nth 4 sig))
-(defsubst verilog-sig-signed (sig)
-  (nth 5 sig))
-(defsubst verilog-sig-type (sig)
-  (nth 6 sig))
-(defsubst verilog-sig-width (sig)
-  (verilog-make-width-expression (verilog-sig-bits sig)))
-
-(defsubst verilog-alw-get-inputs (sigs)
-  (nth 2 sigs))
-(defsubst verilog-alw-get-outputs (sigs)
-  (nth 0 sigs))
-(defsubst verilog-alw-get-uses-delayed (sigs)
-  (nth 3 sigs))
 
 (defun verilog-signals-matching-enum (in-list enum)
   "Return all signals in IN-LIST matching the given ENUM."
