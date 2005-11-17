@@ -6,6 +6,7 @@ XEMACS  = xemacs
 EMACS   = emacs
 ELC	= -batch -f batch-byte-compile
 
+release : install
 install : test $(D)/mmencoded_verilog-mode $(D)/emacs-version.h\
 	 $(S)ChangeLog.txt email $(S)bits/verilog-mode.el local \
 	#ftp
