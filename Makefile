@@ -9,7 +9,7 @@ ELC	= -batch -f batch-byte-compile
 release : install
 install : test $(D)/mmencoded_verilog-mode $(D)/emacs-version.h\
 	 $(S)ChangeLog.txt email $(S)bits/verilog-mode.el local \
-	#ftp
+	#ftp  
 
 test:	x/verilog-mode.elc e/verilog-mode.elc mmencoded_verilog-mode verilog.info
 
