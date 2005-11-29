@@ -1,4 +1,4 @@
-;; $Id:$
+;; $Id$
 
 (progn
   (save-excursion
@@ -49,11 +49,14 @@
       (let* ((status
 	      (call-process "diff"
 			    nil (current-buffer) nil
-			    "-w" (concat "tests_ok/" file)
+			    "-w"
+			    (concat "tests_ok/" file)
 			    temp-file)))
 	;(delete-file temp-file)
 	(cond ((not (equal status 0))
+	       (message (concat "diff tests_ok/" file " " temp-file))
 	       (message "<Golden Reference File\n>Generated Test File")
+	       (message (concat "#if OK: cp " temp-file " tests_ok/" file))
 	       (message (buffer-string))
 	       (error "%%Error: Didn't Verify %s (status %d)" file status))
 	      (t
