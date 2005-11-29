@@ -4,14 +4,16 @@ F=/home/mac/external_webpage/src/verilog.com/ftp
 # the directory where the .elc files will be installed
 XEMACS  = xemacs
 EMACS   = emacs
-ELC	= -batch -f batch-byte-compile
+ELC	= -batch -q -l verilog-mode.el -f batch-byte-compile
 
 release : install
 install : test $(D)/mmencoded_verilog-mode $(D)/emacs-version.h\
 	 $(S)ChangeLog.txt email $(S)bits/verilog-mode.el local \
-	#ftp  
+#	ftp  
 
 test:	x/verilog-mode.elc e/verilog-mode.elc mmencoded_verilog-mode verilog.info
+	$(EMACS)  --batch -q -l e/verilog-mode.elc -l 0test.el
+#broken	$(XEMACS) --batch -q -l x/verilog-mode.elc -l 0test.el
 
 local:  verilog-mode.el
 	cp verilog-mode.el /usr/local/lib/xemacs/site-lisp/verilog-mode.el

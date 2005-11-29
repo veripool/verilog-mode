@@ -209,12 +209,12 @@
 ;; if provided by the user's elisp libraries
 (eval-and-compile
   (if (fboundp 'regexp-opt)
-      ;; regexp-opt is defined, does it take 3 or 2 arguments? 
+      ;; regexp-opt is defined, does it take 3 or 2 arguments?
       (if (fboundp 'function-max-args)
 	  (case (function-max-args `regexp-opt)
 	    ( 3 ;; It takes 3
-	      (condition-case nil	; Hide this defun from emacses 
-					;with just a two input regexp 
+	      (condition-case nil	; Hide this defun from emacses
+					;with just a two input regexp
 		  (defun verilog-regexp-opt (a b)
 		    "Deal with differing number of required arguments for  `regexp-opt'.
          Call 'regexp-opt' on A and B."
@@ -1076,8 +1076,8 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
        "struct" "logic" "bit" "genvar" "wor"))))
 (defconst verilog-range-re "\\(\\[[^]]*\\]\\)+")
 (defconst verilog-optional-signed-re "\\s-*\\(signed\\)?")
-(defconst verilog-optional-signed-range-re 
-  (concat 
+(defconst verilog-optional-signed-range-re
+  (concat
    "\\s-*\\(\\(reg\\|wire\\)\\s-*\\)?\\(signed\\s-*\\)?\\(" verilog-range-re "\\)?"))
 (defconst verilog-macroexp-re "`\\sw+")
 (defconst verilog-delay-re "#\\s-*\\(\\([0-9_]+\\('s?[hdxbo][0-9a-fA-F_xz]+\\)?\\)\\|\\(([^()]*)\\)\\|\\(\\sw+\\)\\)")
@@ -1137,7 +1137,7 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
   (eval-when-compile
     (verilog-regexp-words
      `(
-       "module" "macromodule" "primitive" "initial" "final" "always" "always_comb" 
+       "module" "macromodule" "primitive" "initial" "final" "always" "always_comb"
        "always_ff" "always_latch" "endtask" "endfunction" "interface" "package"
        "config"))))
 
@@ -1175,7 +1175,7 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
 
 (defconst verilog-keywords
   '( "`define" "`else" "`endif" "`ifdef"
-     "`include" "`timescale" "`undef" 
+     "`include" "`timescale" "`undef"
      "alias" "always" "always_comb" "always_ff" "always_latch" "and"
      "assert" "assign" "assume" "automatic" "before" "begin" "bind"
      "bins" "binsof" "bit" "break" "buf" "bufif0" "bufif1" "byte"
@@ -2902,7 +2902,7 @@ Insert `// NAME ' if this line ends a function, task, module, primitive or inter
 		;;(goto-char there)
 		(let ((nest 0)
 		      ( reg "\\<\\(class\\)\\|\\(endclass\\)\\|\\(package\\|primitive\\|\\(macro\\)?module\\)\\>")
-		      string 
+		      string
 		      )
 		  (save-excursion
 		    (catch 'skip
@@ -2935,8 +2935,8 @@ Insert `// NAME ' if this line ends a function, task, module, primitive or inter
 		  (end-of-line)
 		  (insert (concat " // " string )))
 		)
-	      
-	       (;- this is end{function,generate,task,module,primitive,table,generate} 
+
+	       (;- this is end{function,generate,task,module,primitive,table,generate}
 		;- which can not be nested.
 		t
 		(let (string reg (width nil))
@@ -3284,17 +3284,17 @@ type.  Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 		   ;; 2) are we in a block scope (begin..end)
 
 		   ;; if we are in a comment, done.
-		   (if (verilog-in-star-comment-p)   
+		   (if (verilog-in-star-comment-p)
 		       (throw 'nesting 'comment))
 
 		   ;; if we are in a parenthesized list, and the user likes to indent these, return.
- 		   (if (and verilog-indent-lists (verilog-in-paren)) 
+ 		   (if (and verilog-indent-lists (verilog-in-paren))
 		       (progn (setq par 1) (throw 'nesting 'block)))
 
 		   ;;(if (/= 0 (verilog-parenthesis-depth)) (progn (setq par 1) (throw 'nesting 'block)))
 
 		   ;; if we have a directive, done.
-		   (if (save-excursion (beginning-of-line) (looking-at verilog-directive-re-1)) 
+		   (if (save-excursion (beginning-of-line) (looking-at verilog-directive-re-1))
 		       (throw 'nesting 'directive))
 
 		   ;; See if we are continuing a previous line
@@ -3791,7 +3791,7 @@ Optional BOUND limits search."
  "Return non zero if in parenthetical-expression."
  (save-excursion
    (nth 1 (parse-partial-sexp (point-min) (point)))))
- 
+
 
 (defun verilog-skip-forward-comment-or-string ()
  "Return true if in a string or comment."
@@ -3833,7 +3833,7 @@ Optional BOUND limits search."
  "Return true if a comment was skipped"
  (let ((more t))
    (while more
-     (setq more 
+     (setq more
 	   (let ((state
 		  (save-excursion
 		    (parse-partial-sexp (point-min) (point)))))
@@ -5265,7 +5265,7 @@ Duplicate signals are also removed.  For example A[2] and A[1] become A[2:1]."
     (while (looking-at "\\]")
       (verilog-backward-open-bracket)
       (verilog-re-search-backward-quick "\\(\\b[a-zA-Z0-9`_\$]\\|\\]\\)" nil nil))
-    (skip-chars-backward "a-zA-Z0-9`_$"))  
+    (skip-chars-backward "a-zA-Z0-9`_$"))
 
 (defun verilog-read-inst-module ()
   "Return module_name when point is inside instantiation."
@@ -5849,7 +5849,7 @@ If found returns the signal name connections.  Return nil or list of
     (let ((mac (intern (concat "vh-" defname))))
       ;;(message "Define %s=%s" defname defvalue) (sleep-for 1)
       ;; Need to define to a constant if no value given
-      (set (make-variable-buffer-local mac) 
+      (set (make-variable-buffer-local mac)
 	   (if (equal defvalue "") "1" defvalue)))
     (if enumname
 	(let ((enumvar (intern (concat "venum-" enumname))))
@@ -6769,7 +6769,7 @@ be replaced with /*AS*/ comments.
 Any cells will get /*AUTOINST*/ added to the end of the pin list.  Pins with
 have identical names will be deleted.
 
-Argument lists will not be deleted, /*AUTOARG*/ will only be inserted to 
+Argument lists will not be deleted, /*AUTOARG*/ will only be inserted to
 support adding new ports.  You may wish to delete older ports yourself.
 
 For example:
@@ -7574,7 +7574,7 @@ Typing \\[verilog-auto] will make this into:
 			      (verilog-modi-get-sub-inouts modi)
 			      ))))
       (if verilog-auto-output-ignore-regexp
-	  (setq sig-list (verilog-signals-not-matching-regexp 
+	  (setq sig-list (verilog-signals-not-matching-regexp
 			  sig-list verilog-auto-output-ignore-regexp)))
       (forward-line 1)
       (verilog-insert-indent "// Beginning of automatic outputs (from unused autoinst outputs)\n")
@@ -8377,9 +8377,9 @@ and/or see http://www.veripool.org"
 (define-skeleton verilog-sk-prompt-width
   "Prompt for a width specification."
   ()
-  (progn 
+  (progn
     (setq verilog-sk-p (point))
-    (verilog-sk-prompt-msb)  
+    (verilog-sk-prompt-msb)
     (if (> (point) verilog-sk-p) "] " " ")))
 
 (defun verilog-sk-header ()
