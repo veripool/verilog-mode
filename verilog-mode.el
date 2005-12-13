@@ -5438,10 +5438,34 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 (defvar sigs-inout nil) ; Prevent compile warning
 (defvar sigs-out nil) ; Prevent compile warning
 
+(defun verilog-read-sub-decls-sig (submodi comment port sig vec)
+  "For verilog-read-sub-decls-line, add a signal"
+  (let (portdata)
+    (when sig
+      (setq port (verilog-symbol-detick-denumber port))
+      (setq sig  (verilog-symbol-detick-denumber sig))
+      (if vec (setq vec  (verilog-symbol-detick-denumber vec)))
+      (unless (or (not sig)
+		  (equal sig ""))  ;; Ignore .foo(1'b1) assignments
+	(cond ((setq portdata (assoc port (verilog-modi-get-inouts submodi)))
+	       (setq sigs-inout (cons (list sig vec (concat "To/From " comment) nil nil
+					    (verilog-sig-signed portdata)
+					    (verilog-sig-type portdata)) sigs-inout)))
+	      ((setq portdata (assoc port (verilog-modi-get-outputs submodi)))
+	       (setq sigs-out   (cons (list sig vec (concat "From " comment) nil nil
+					    (verilog-sig-signed portdata)
+					    (verilog-sig-type portdata)) sigs-out)))
+	      ((setq portdata (assoc port (verilog-modi-get-inputs submodi)))
+	       (setq sigs-in    (cons (list sig vec (concat "To " comment) nil nil
+					    (verilog-sig-signed portdata)
+					    (verilog-sig-type portdata)) sigs-in)))
+	      ;; (t  -- warning pin isn't defined.)   ; Leave for lint tool
+	      )))))
+
 (defun verilog-read-sub-decls-line (submodi comment)
   "For read-sub-decls, read lines of port defs until none match anymore.
 Return the list of signals found, using submodi to look up each port."
-  (let (done port portdata sig vec)
+  (let (done port sig vec)
     (save-excursion
       (forward-line 1)
       (while (not done)
@@ -5469,30 +5493,31 @@ Return the list of signals found, using submodi to look up each port."
 		       vec nil))
 		((looking-at "\\([^[({).]*\\)\\s-*\\(\\[[^]]+\\]\\)\\s-*)")
 		 (setq sig (verilog-string-remove-spaces (match-string 1))
-		       vec (verilog-symbol-detick-denumber (match-string 2))))
+		       vec (match-string 2)))
+		((looking-at "{\\(.*\\)}.*\\s-*)")
+		 (let ((mlst (split-string (match-string 1) ","))
+		       mstr)
+		   (while (setq mstr (pop mlst))
+		     ;;(unless noninteractive (message "sig: %s " mstr))
+		     (cond
+		      ((string-match "\\([a-zA-Z0-9_$]+\\)\\s-*$" mstr)
+		       (setq sig (verilog-string-remove-spaces (match-string 1 mstr))
+			     vec nil)
+		       ;;(unless noninteractive (message "concat sig1: %s %s" mstr (match-string 1 mstr)))
+		       )
+		      ((string-match "\\([^[({).]+\\)\\s-*\\(\\[[^]]+\\]\\)\\s-*" mstr)
+		       (setq sig (verilog-string-remove-spaces (match-string 1 mstr))
+			     vec (match-string 2 mstr))
+		       ;;(unless noninteractive (message "concat sig2: '%s' '%s' '%s'" mstr (match-string 1 mstr) (match-string 2 mstr)))
+		       )
+		      (t
+		       (setq sig nil)))
+		     ;; Process signals
+		     (verilog-read-sub-decls-sig submodi comment port sig vec))))
 		(t
 		 (setq sig nil)))
 	  ;; Process signals
-	  (when sig
-	    (setq port (verilog-symbol-detick-denumber port))
-	    (setq sig  (verilog-symbol-detick-denumber sig))
-	    (unless (or (not sig)
-			(equal sig ""))  ;; Ignore .foo(1'b1) assignments
-	      (cond ((setq portdata (assoc port (verilog-modi-get-inouts submodi)))
-		     (setq sigs-inout (cons (list sig vec (concat "To/From " comment) nil nil
-		   				  (verilog-sig-signed portdata)
-						  (verilog-sig-type portdata)) sigs-inout)))
-		    ((setq portdata (assoc port (verilog-modi-get-outputs submodi)))
-		     (setq sigs-out   (cons (list sig vec (concat "From " comment) nil nil
-						  (verilog-sig-signed portdata)
-						  (verilog-sig-type portdata)) sigs-out)))
-		    ((setq portdata (assoc port (verilog-modi-get-inputs submodi)))
-		     (setq sigs-in    (cons (list sig vec (concat "To " comment) nil nil
-						  (verilog-sig-signed portdata)
-						  (verilog-sig-type portdata)) sigs-in)))
-		    ;; (t  -- warning pin isn't defined.)   ; Leave for lint tool
-		    )
-	      )))
+	  (verilog-read-sub-decls-sig submodi comment port sig vec))
 	;;
 	(forward-line 1)))))
 
@@ -5858,7 +5883,7 @@ If found returns the signal name connections.  Return nil or list of
 	  (add-to-list enumvar defname)))
     ))
 
-(defun verilog-read-defines (&optional filename recurse)
+(defun verilog-read-defines (&optional filename recurse subcall)
   "Read `defines and parameters for the current file, or optional FILENAME.
 If the filename is provided, `verilog-library-flags' will be used to
 resolve it.  If optional RECURSE is non-nil, recurse through `includes.
@@ -5902,6 +5927,7 @@ warning message, you need to add to your .emacs file:
 "
   (let ((origbuf (current-buffer)))
     (save-excursion
+      (unless subcall (verilog-getopt-flags))
       (when filename
 	(let ((fns (verilog-library-filenames filename (buffer-file-name))))
 	  (if fns
@@ -5913,7 +5939,7 @@ warning message, you need to add to your .emacs file:
 	(while (re-search-forward "^\\s-*`include\\s-+\\([^ \t\n]+\\)" nil t)
 	  (let ((inc (verilog-string-replace-matches "\"" "" nil nil (match-string-no-properties 1))))
 	    (unless (verilog-inside-comment-p)
-	      (verilog-read-defines inc recurse)))))
+	      (verilog-read-defines inc recurse t)))))
       ;; Read `defines
       ;; note we don't use verilog-re... it's faster this way, and that
       ;; function has problems when comments are at the end of the define
@@ -5974,10 +6000,11 @@ foo.v (a include):
 	`endif // _FOO_V"
 ;;slow:  (verilog-read-defines nil t))
   (save-excursion
+    (verilog-getopt-flags)
     (goto-char (point-min))
     (while (re-search-forward "^\\s-*`include\\s-+\\([^ \t\n]+\\)" nil t)
       (let ((inc (verilog-string-replace-matches "\"" "" nil nil (match-string 1))))
-	(verilog-read-defines inc)))))
+	(verilog-read-defines inc nil t)))))
 
 (defun verilog-read-signals (&optional start end)
   "Return a simple list of all possible signals in the file.
@@ -8228,7 +8255,7 @@ and/or see http://www.veripool.org"
 	  ;; These two may seem obvious to do always, but on large includes it can be way too slow
 	  (when verilog-auto-read-includes
 	    (verilog-read-includes)
-	    (verilog-read-defines))
+	    (verilog-read-defines nil nil t))
 	  ;; This particular ordering is important
 	  ;; INST: Lower modules correct, no internal dependencies, FIRST
 	  (verilog-preserve-cache
