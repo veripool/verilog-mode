@@ -3330,15 +3330,15 @@ type.  Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 		   (if (verilog-in-star-comment-p)
 		       (throw 'nesting 'comment))
 
+		   ;; if we have a directive, done.
+		   (if (save-excursion (beginning-of-line) (looking-at verilog-directive-re-1))
+		       (throw 'nesting 'directive))
+
 		   ;; if we are in a parenthesized list, and the user likes to indent these, return.
  		   (if (and verilog-indent-lists (verilog-in-paren))
 		       (progn (setq par 1) (throw 'nesting 'block)))
 
 		   ;;(if (/= 0 (verilog-parenthesis-depth)) (progn (setq par 1) (throw 'nesting 'block)))
-
-		   ;; if we have a directive, done.
-		   (if (save-excursion (beginning-of-line) (looking-at verilog-directive-re-1))
-		       (throw 'nesting 'directive))
 
 		   ;; See if we are continuing a previous line
 		   (while t
