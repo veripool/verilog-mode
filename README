@@ -1,9 +1,11 @@
 General News:
 
-Now I have converted completely to using subversion for change
-management, and the user visible bit is that version numbers are no
-longer monotonically increasing per file (instead are so per "change
-checked in", and the current version is like, 142.
+Now that I have converted completely to using subversion for change
+management, the user visible bit is that version numbers are no longer
+monotonically increasing per file (instead increase by leaps and
+bounds as each change I make to any file in the verilog-mode build
+hierarchy (tests, Makefiles, et cetera) increments the number) hence
+version 206 might be just a little better than version 183.
 
 Now back to the verilog-mode:
 
