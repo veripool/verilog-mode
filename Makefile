@@ -3,28 +3,38 @@ D=$(S)data
 F=/home/mac/external_webpage/src/verilog.com/ftp
 # the directory where the .elc files will be installed
 XEMACS  = xemacs
+XEMACS_DEST = /usr/local/lib/xemacs/xemacs-packages/lisp/prog-modes/
 EMACS   = emacs
+EMACS_DEST = /usr/share/emacs/site-lisp/
 ELC	= -batch -q -l verilog-mode.el -f batch-byte-compile
 
-release : install
-install : test $(D)/mmencoded_verilog-mode $(D)/emacs-version.h\
+release : dirs install
+install : dirs test $(D)/mmencoded_verilog-mode $(D)/emacs-version.h\
 	 $(S)ChangeLog.txt email $(S)bits/verilog-mode.el local \
 #	ftp  
-
-test:	x/verilog-mode.elc e/verilog-mode.elc mmencoded_verilog-mode verilog.info
+	@echo Installation up to date
+dirs:	
+	@mkdir -p .timestamps
+test:	.timestamps/test
+.timestamps/test: x/verilog-mode.elc e/verilog-mode.elc mmencoded_verilog-mode verilog.info
 	$(EMACS)  --batch -q -l e/verilog-mode.elc -l 0test.el
 #broken	$(XEMACS) --batch -q -l x/verilog-mode.elc -l 0test.el
+	@touch $@
 
-local:  verilog-mode.el
-	cp verilog-mode.el /usr/local/lib/xemacs/site-lisp/verilog-mode.el
-	$(XEMACS) $(ELC) /usr/local/lib/xemacs/site-lisp/verilog-mode.el
-	cp verilog-mode.el /usr/share/emacs/site-lisp/verilog-mode.el
-	$(EMACS) $(ELC) /usr/share/emacs/site-lisp/verilog-mode.el
+local:	.timestamps/local
+.timestamps/local:  verilog-mode.el
+	cp verilog-mode.el $(XEMACS_DEST)verilog-mode.el
+	$(XEMACS) $(ELC) $(XEMACS_DEST)verilog-mode.el
+	cp verilog-mode.el $(EMACS_DEST)verilog-mode.el
+	$(EMACS) $(ELC) $(EMACS_DEST)verilog-mode.el
+	@touch $@
 
-ftp:	$(F) mmencoded_verilog-mode verilog-mode.el README
+ftp:	.timestamps/ftp
+.timestamps/ftp:	$(F) mmencoded_verilog-mode verilog-mode.el README
 	cp mmencoded_verilog-mode $(F)
 	cp verilog-mode.el $(F)
 	cp README $(F)/.message
+	@touch $@
 
 $(F):
 	mkdir $(F)
@@ -32,8 +42,10 @@ $(F):
 mmencoded_verilog-mode : make_log.pl verilog-mode.el README
 	./make_log.pl	
 
-email: mmencoded_verilog-mode
+email:	.timestamps/email
+.timestamps/email: mmencoded_verilog-mode
 	./make_mail.pl
+	@touch $@
 
 $(D)/mmencoded_verilog-mode : mmencoded_verilog-mode
 	cp $? $@
