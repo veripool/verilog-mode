@@ -139,8 +139,10 @@
       (condition-case nil
 	  (if (boundp 'current-menubar)
 	      nil ;; great
-	    (defmacro set-buffer-menubar (&rest args) nil)
-	    (defmacro add-submenu (&rest args) nil))
+	    (progn
+	     (defmacro set-buffer-menubar (&rest args) nil)
+	     (defmacro add-submenu (&rest args) nil))
+	    )
 	(error nil))
       (condition-case nil
 	  (if (fboundp 'zmacs-activate-region)
@@ -877,9 +879,46 @@ If set will become buffer local.")
     )
   "Emacs menu for VERILOG mode."
   )
-(unless verilog-running-on-xemacs
-    (easy-menu-define verilog-menu verilog-mode-map "Menu for Verilog mode"
-		      verilog-xemacs-menu))
+(defvar verilog-statement-menu
+  '("Statements"
+    ["Header"		verilog-sk-header  t]
+    ["Comment"	verilog-sk-comment t]
+    "----"
+    ["Module"		verilog-sk-module t]
+    ["Primitive"	verilog-sk-primitive t]
+    "----"
+    ["Input"		verilog-sk-input t]
+    ["Output"		verilog-sk-output t]
+    ["Inout"		verilog-sk-inout t]
+    ["Wire"		verilog-sk-wire t]
+    ["Reg"		verilog-sk-reg t]
+    ["Define thing under point as a register" verilog-sk-define-signal t]
+    "----"
+    ["Initial"	verilog-sk-initial t]
+    ["Always" 	verilog-sk-always t]
+    ["Function"	verilog-sk-function t]
+    ["Task" 		verilog-sk-task t]
+    ["Specify"	verilog-sk-specify t]
+    ["Generate"	verilog-sk-generate t]
+    "----"
+    ["Begin"		verilog-sk-begin t]
+    ["If" 		verilog-sk-if t]
+    ["(if) else"	verilog-sk-else-if t]
+    ["For" 		verilog-sk-for t]
+    ["While" 		verilog-sk-while t]
+    ["Fork" 		verilog-sk-fork t]
+    ["Repeat" 	verilog-sk-repeat t]
+    ["Case" 		verilog-sk-case t]
+    ["Casex" 		verilog-sk-casex t]
+    ["Casez" 		verilog-sk-casez t]
+    )
+  "Menu for statement templates in Verilog."
+  )
+
+(easy-menu-define verilog-menu verilog-mode-map "Menu for Verilog mode"
+		  verilog-xemacs-menu)
+(easy-menu-define verilog-stmt-menu verilog-mode-map "Menu for statement templates in Verilog."
+		  verilog-statement-menu)
 
 (defvar verilog-mode-abbrev-table nil
   "Abbrev table in use in Verilog-mode buffers.")
@@ -1078,7 +1117,7 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
 (defconst verilog-optional-signed-re "\\s-*\\(signed\\)?")
 (defconst verilog-optional-signed-range-re
   (concat
-   "\\s-*\\(\\(reg\\|wire\\)\\s-*\\)?\\(signed\\s-*\\)?\\(" verilog-range-re "\\)?"))
+   "\\s-*\\<\\(\\(reg\\|wire\\)\\>\\s-*\\)?\\(\\<signed\\>\\s-*\\)?\\(" verilog-range-re "\\)?"))
 (defconst verilog-macroexp-re "`\\sw+")
 (defconst verilog-delay-re "#\\s-*\\(\\([0-9_]+\\('s?[hdxbo][0-9a-fA-F_xz]+\\)?\\)\\|\\(([^()]*)\\)\\|\\(\\sw+\\)\\)")
 (defconst verilog-declaration-re-2-no-macro
@@ -2005,7 +2044,11 @@ Other useful functions are:
                  (not (assoc "Verilog" current-menubar)))
             (progn
 	      ;; (set-buffer-menubar (copy-sequence current-menubar))
-              (add-submenu nil verilog-xemacs-menu))) ))
+              (add-submenu nil verilog-xemacs-menu)
+              (add-submenu nil verilog-stmt-menu)
+	      )
+	  ) 
+	))
   ;; Stuff for GNU emacs
   (make-local-variable 'font-lock-defaults)
   ;;------------------------------------------------------------
@@ -3029,12 +3072,12 @@ Insert `// NAME ' if this line ends a function, task, module, primitive or inter
 		   ((match-end 2)
 		    (setq par (1- par)))))
 		(verilog-forward-syntactic-ws)
-		(skip-chars-forward "^ \t\n")
+		(skip-chars-forward "^ \t\n\f")
 		(point))
 	       ((looking-at "/[/\\*]")
 		b)
 	       ('t
-		(skip-chars-forward "^: \t\n")
+		(skip-chars-forward "^: \t\n\f")
 		(point)
 		))))
 	 (str (buffer-substring b e)))
@@ -3775,7 +3818,7 @@ Optional BOUND limits search."
  "Return true if in an escaped name."
  (save-excursion
    (backward-char)
-   (skip-chars-backward "^ \t\n")
+   (skip-chars-backward "^ \t\n\f")
    (if (= (char-after (point) ) ?\\ )
        t
      nil)))
@@ -3841,11 +3884,11 @@ Optional BOUND limits search."
 	      ((nth 7 state)			;Inside // comment
 	       (search-backward "//")
 	       (skip-chars-backward "/")
-	       (skip-chars-backward " \t\n")
+	       (skip-chars-backward " \t\n\f")
 	       t)
 	      ((nth 4 state)			;Inside /* */ comment
 	       (search-backward "/*")
-	       (skip-chars-backward " \t\n")
+	       (skip-chars-backward " \t\n\f")
 	       t)
 	      ((and (not (bobp))
 		    (= (char-before) ?\/)
@@ -3854,7 +3897,7 @@ Optional BOUND limits search."
 	       (goto-char (- (point) 2))
 	       t)
 	      (t
-	       (skip-chars-backward " \t\n")
+	       (skip-chars-backward " \t\n\f")
 	       nil)))))))
 
 (defun verilog-skip-forward-comment-p ()
@@ -5375,7 +5418,7 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 		 (setq vec (verilog-string-replace-matches
 			    "\\s-+" "" nil nil (match-string 1))))))
 	 ;; Normal or escaped identifier -- note we remember the \ if escaped
-	 ((looking-at "\\s-*\\([a-zA-Z0-9`_$]+\\|\\\\[^ \t\n]+\\)")
+	 ((looking-at "\\s-*\\([a-zA-Z0-9`_$]+\\|\\\\[^ \t\n\f]+\\)")
 	  (goto-char (match-end 0))
 	  (setq keywd (match-string 1))
 	  (when (string-match "^\\\\" keywd)
@@ -5473,7 +5516,7 @@ Return the list of signals found, using submodi to look up each port."
 	(cond ((looking-at "\\s-*\\.\\s-*\\([a-zA-Z0-9`_$]*\\)\\s-*(\\s-*")
 	       (setq port (match-string 1))
 	       (goto-char (match-end 0)))
-	      ((looking-at "\\s-*\\.\\s-*\\(\\\\[^ \t\n]*\\)\\s-*(\\s-*")
+	      ((looking-at "\\s-*\\.\\s-*\\(\\\\[^ \t\n\f]*\\)\\s-*(\\s-*")
 	       (setq port (concat (match-string 1) " ")) ;; escaped id's need trailing space
 	       (goto-char (match-end 0)))
 	      ((looking-at "\\s-*\\.[^(]*(")
@@ -5483,7 +5526,7 @@ Return the list of signals found, using submodi to look up each port."
 	       (setq port nil  done t))) ;; Unknown, ignore rest of line
 	;; Get signal name
 	(when port
-	  (cond ((looking-at "\\(\\\\[^ \t\n]*\\)\\s-*)")
+	  (cond ((looking-at "\\(\\\\[^ \t\n\f]*\\)\\s-*)")
 		 (setq sig (concat (match-string 1) " ") ;; escaped id's need trailing space
 		       vec nil))
 		; We intentionally ignore (non-escaped) signals with .s in them
@@ -5582,7 +5625,7 @@ For example if declare A A (.B(SIG)) then B will be included in the list."
     (let ((end-mod-point (point))	;; presume at /*AUTOINST*/ point
 	  pins pin)
       (verilog-backward-open-paren)
-      (while (re-search-forward "\\.\\([^( \t\n]*\\)\\s-*(" end-mod-point t)
+      (while (re-search-forward "\\.\\([^( \t\n\f]*\\)\\s-*(" end-mod-point t)
 	(setq pin (match-string 1))
 	(unless (verilog-inside-comment-p)
 	  (setq pins (cons (list pin) pins))))
@@ -5670,7 +5713,7 @@ IGNORE-NEXT is true to ignore next token, fake from inside case statement."
 	    ;; no forward movement, want to see else in lower loop
 	    (setq end-else-check nil))
 	   ;; End at top level loop
-	   ((and end-else-check (looking-at "[^ \t\n]"))
+	   ((and end-else-check (looking-at "[^ \t\n\f]"))
 	    ;;(if dbg (setq dbg (concat dbg (format "\tif-check-else-other %s\n" keywd))))
 	    (setq gotend t))
 	   ;; Final statement?
@@ -5936,7 +5979,7 @@ warning message, you need to add to your .emacs file:
 			   ": Can't find verilog-read-defines file: " filename)))))
       (when recurse
 	(goto-char (point-min))
-	(while (re-search-forward "^\\s-*`include\\s-+\\([^ \t\n]+\\)" nil t)
+	(while (re-search-forward "^\\s-*`include\\s-+\\([^ \t\n\f]+\\)" nil t)
 	  (let ((inc (verilog-string-replace-matches "\"" "" nil nil (match-string-no-properties 1))))
 	    (unless (verilog-inside-comment-p)
 	      (verilog-read-defines inc recurse t)))))
@@ -6002,7 +6045,7 @@ foo.v (a include):
   (save-excursion
     (verilog-getopt-flags)
     (goto-char (point-min))
-    (while (re-search-forward "^\\s-*`include\\s-+\\([^ \t\n]+\\)" nil t)
+    (while (re-search-forward "^\\s-*`include\\s-+\\([^ \t\n\f]+\\)" nil t)
       (let ((inc (verilog-string-replace-matches "\"" "" nil nil (match-string 1))))
 	(verilog-read-defines inc nil t)))))
 
@@ -6047,7 +6090,7 @@ Some macros and such are also found and included.  For dinotrace.el"
     (while arglist
       (setq arg (car arglist)
 	    arglist (cdr arglist))
-      (while (string-match "^\\([^ \t\n]+\\)[ \t\n]*\\(.*$\\)" arg)
+      (while (string-match "^\\([^ \t\n\f]+\\)[ \t\n\f]*\\(.*$\\)" arg)
 	(setq space-args (append space-args
 				 (list (match-string 1 arg))))
 	(setq arg (match-string 2 arg))))
@@ -6709,7 +6752,7 @@ Deletion stops at the matching end parenthesis."
   "Return if a .* AUTOINST is safe to delete or expand.
 It was created by the AUTOS themselves, or by the user."
   (and verilog-auto-star-expand
-       (looking-at "[ \t\n,]*\\([)]\\|// \\(Outputs\\|Inouts\\|Inputs\\)\\)")))
+       (looking-at "[ \t\n\f,]*\\([)]\\|// \\(Outputs\\|Inouts\\|Inputs\\)\\)")))
 
 (defun verilog-delete-auto-star-all ()
   "Delete a .* AUTOINST, if it is safe."
@@ -6749,7 +6792,7 @@ removed."
 	  (let ((rtn-pt (point)))
 	    (save-excursion
 	      (while (progn (backward-char 1)
-			    (looking-at "[ \t\n]")))
+			    (looking-at "[ \t\n\f]")))
 	      (when (looking-at ",")
 		(delete-region (+ 1 (point)) rtn-pt))))
 	  (when (bolp)
@@ -6884,13 +6927,13 @@ Typing \\[verilog-inject-auto] will make this into:
 	       (while (verilog-re-search-forward "\\.\\s *\\([a-zA-Z0-9`_\$]+\\)*\\s *(\\s *\\1*\\s *)\\s *" end-pt t)
 		 (delete-region (match-beginning 0) (match-end 0))
 		 (setq end-pt (- end-pt (- (match-end 0) (match-beginning 0)))) ;; Keep it correct
-		 (while (or (looking-at "[ \t\n,]+")
+		 (while (or (looking-at "[ \t\n\f,]+")
 		       (looking-at "//[^\n]*"))
 		   (delete-region (match-beginning 0) (match-end 0))
 		   (setq end-pt (- end-pt (- (match-end 0) (match-beginning 0))))))
 	       (verilog-forward-close-paren)
 	       (backward-char 1)
-	       (while (verilog-re-search-backward "[ \t\n]+" (- (point) 1) t)
+	       (while (verilog-re-search-backward "[ \t\n\f]+" (- (point) 1) t)
 		 (delete-region (match-beginning 0) (match-end 0)))
 	       (insert "\n")
 	       (indent-to indent-pt)
@@ -7116,7 +7159,7 @@ Insert to INDENT-PT, use template TPL-LIST.
 	  (for-star
 	   (indent-to (+ (if (< verilog-auto-inst-column 48) 24 16)
 			 verilog-auto-inst-column))
-	   (insert " // Implicit .*")))
+	   (insert " // Implicit .\*"))) ;For some reason the . or * must be escaped...
     (insert "\n")))
 ;;(verilog-auto-inst-port (list "foo" "[5:0]") 10 (list (list "foo" "a@\"(% (+ @ 1) 4)\"a")) "3")
 ;;(x "incom[@\"(+ (* 8 @) 7)\":@\"(* 8 @)\"]")
@@ -8682,43 +8725,10 @@ and the case items."
 ;; ---- add menu 'Statements' in Verilog mode (MH)
 (defun verilog-add-statement-menu ()
   "Add the menu 'Statements' to the menu bar in Verilog mode."
-  (easy-menu-define verilog-stmt-menu verilog-mode-map
-		    "Menu for statement templates in Verilog."
-		    '("Statements"
-		      ["Header"		verilog-sk-header  t]
-		      ["Comment"	verilog-sk-comment t]
-		      "----"
-		      ["Module"		verilog-sk-module t]
-		      ["Primitive"	verilog-sk-primitive t]
-		      "----"
-		      ["Input"		verilog-sk-input t]
-		      ["Output"		verilog-sk-output t]
-		      ["Inout"		verilog-sk-inout t]
-		      ["Wire"		verilog-sk-wire t]
-		      ["Reg"		verilog-sk-reg t]
-		      ["Define thing under point as a register" verilog-sk-define-signal t]
-		      "----"
-		      ["Initial"	verilog-sk-initial t]
-		      ["Always" 	verilog-sk-always t]
-		      ["Function"	verilog-sk-function t]
-		      ["Task" 		verilog-sk-task t]
-		      ["Specify"	verilog-sk-specify t]
-		      ["Generate"	verilog-sk-generate t]
-		      "----"
-		      ["Begin"		verilog-sk-begin t]
-		      ["If" 		verilog-sk-if t]
-		      ["(if) else"	verilog-sk-else-if t]
-		      ["For" 		verilog-sk-for t]
-		      ["While" 		verilog-sk-while t]
-		      ["Fork" 		verilog-sk-fork t]
-		      ["Repeat" 	verilog-sk-repeat t]
-		      ["Case" 		verilog-sk-case t]
-		      ["Casex" 		verilog-sk-casex t]
-		      ["Casez" 		verilog-sk-casez t]
-		      ))
   (if verilog-running-on-xemacs
       (progn
 	(easy-menu-add verilog-stmt-menu)
+	(easy-menu-add verilog-menu)
 	(setq mode-popup-menu (cons "Verilog Mode" verilog-stmt-menu)))))
 
 (add-hook 'verilog-mode-hook 'verilog-add-statement-menu)
