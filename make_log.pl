@@ -50,7 +50,8 @@ Content-description: Mail message body
 
 
 +----------------------------------------------------------------+
-|         Here is version $rev of verilog-mode for emacs!        |
+|         Here is version $rev of verilog-mode for emacs!         |
++----------------------------------------------------------------+
 XX
 open(IO, "<README");
 while (<IO>){
