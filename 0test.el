@@ -7,6 +7,7 @@
 
   ;; Setup
   (require `compile)
+  (setq running-on-xemacs (string-match "XEmacs" emacs-version))
   (setq make-backup-files nil)
   (setq-default make-backup-files nil)
   (setq enable-local-variables t)
@@ -65,12 +66,23 @@
   (defun verilog-test ()
     (let ((files (directory-files "tests")))
       (while files
-  	(cond ((equal "." (car files)))
-  	      ((equal ".." (car files)))
-	      ((file-directory-p (concat "tests/" (car files))))
-  	      (t
-  	       (verilog-test-file (car files) "tests_ok/0temp.v")))
-  	(setq files (cdr files))))
+	(setq file (car files))
+	(cond ((equal "." file))
+	      ((equal ".." file))
+	      ((file-directory-p (concat "tests/" file)))
+	      (t
+	       (message (concat "Considering test " file ))
+	       (if running-on-xemacs 
+		   (progn
+		     (setq cf (concat "skip_for_xemacs/" file))
+		     (if (file-exists-p cf ) ; 
+			 (message (concat "Skipping testing " file " on Xemacs because file " cf "exists"))
+		       (verilog-test-file file "tests_ok/0temp.v")
+		       ))
+		 (verilog-test-file file "tests_ok/0temp.v")
+		 )
+	       ))
+	(setq files (cdr files))))
     (message "Tests Passed")
     "Tests Passed")
     
