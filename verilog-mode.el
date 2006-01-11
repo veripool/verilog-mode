@@ -1113,12 +1113,13 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
        "parameter" "real" "realtime" "reg" "supply" "supply0" "supply1" "time"
        "tri" "tri0" "tri1" "triand" "trior" "trireg" "wand" "wire" "typedef"
        "struct" "logic" "bit" "genvar" "wor"))))
-(defconst verilog-range-re "\\(\\[[^]]*\\]\\)+")
+(defconst verilog-range-re "\\(\\[[^]]*\\]\\s-*\\)+")
 (defconst verilog-optional-signed-re "\\s-*\\(signed\\)?")
 (defconst verilog-optional-signed-range-re
   (concat
-   "\\s-*\\<\\(\\(reg\\|wire\\)\\>\\s-*\\)?\\(\\<signed\\>\\s-*\\)?\\(" verilog-range-re "\\)?"))
+   "\\s-*\\(\\<\\(reg\\|wire\\)\\>\\s-*\\)?\\(\\<signed\\>\\s-*\\)?\\(" verilog-range-re "\\)?"))
 (defconst verilog-macroexp-re "`\\sw+")
+
 (defconst verilog-delay-re "#\\s-*\\(\\([0-9_]+\\('s?[hdxbo][0-9a-fA-F_xz]+\\)?\\)\\|\\(([^()]*)\\)\\|\\(\\sw+\\)\\)")
 (defconst verilog-declaration-re-2-no-macro
   (concat "\\s-*" verilog-declaration-re
@@ -1130,7 +1131,27 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
 	  "\\s-*\\(\\(" verilog-optional-signed-range-re "\\)\\|\\(" verilog-delay-re "\\)"
 	  "\\|\\(" verilog-macroexp-re "\\)"
 	  "\\)?"))
-(defconst verilog-declaration-re-1-macro (concat "^" verilog-declaration-re-2-macro))
+(defconst verilog-declaration-re-1-macro 
+  (concat "^" verilog-declaration-re-2-macro))
+;  (concat 
+;   "^\\s-*\\<\\(in\\(?:out\\|put\\|teger\\)\\|output\\|re\\(?:al\\(?:time\\)?\\|g\\)\\|t\\(?:ime\\|ri\\(?:and\\|or\\|reg\\|[01]\\)?\\|ypedef\\)\\|w\\(?:and\\|ire\\|or\\)\\)\\>"
+;   "\\s-*"
+;   "\\("
+;   "\\("
+;   "\\(\\<\\(reg\\|wire\\)\\>\\s-*\\)?"
+;   "\\(\\<signed\\>\\s-*\\)?"
+;   "\\(\\(\\[[^]]*\\]\\)+\\)?"
+;   "\\)"
+;   "\\|"
+;     "\\(#\\s-*\\("
+;       "\\([0-9_]+\\('s?[hdxbo][0-9a-fA-F_xz]+\\)?\\)"
+;       "\\|\\(([^()]*)\\)"
+;       "\\|\\(\\sw+\\)"
+;     "\\)"
+;   "\\)"
+;   "\\|\\(`\\sw+\\)\\)?"
+;   ))
+
 (defconst verilog-declaration-re-1-no-macro (concat "^" verilog-declaration-re-2-no-macro))
 (defconst verilog-defun-re
   (eval-when-compile (verilog-regexp-words `("macromodule" "module" "interface" "package" "primitive" "config"))))
@@ -4198,8 +4219,21 @@ ARG is ignored, for `comment-indent-function' compatibility."
 	  ;; Get the beginning of line indent first
 	  (while (progn (setq e (marker-position edpos))
 			(< (point) e))
-	    (indent-line-to base-ind)
-	    (forward-line))
+	    (cond
+	     ( (save-excursion (skip-chars-backward " \t")
+			       (bolp))
+	       (verilog-forward-ws&directives)
+	       (indent-line-to base-ind)
+	       (verilog-forward-ws&directives)
+	       (verilog-re-search-forward "[ \t\n\f]" e 'move)
+	       )
+	     (t
+	      (just-one-space)
+	      (verilog-re-search-forward "[ \t\n\f]" e 'move)
+	      )
+	     )
+	    )
+	    ;;(forward-line))
 	  ;; Now find biggest prefix
 	  (setq ind (verilog-get-lineup-indent start edpos))
 	  ;; Now indent each line.
@@ -6164,7 +6198,7 @@ Some macros and such are also found and included.  For dinotrace.el"
 (defun verilog-getopt-flags ()
   "Convert `verilog-library-flags' into standard library variables."
   ;; If the flags are local, then all the outputs should be local also
-  (when (local-variable-p `verilog-library-flags)
+  (when (local-variable-p `verilog-library-flags (current-buffer))
     (make-variable-buffer-local 'verilog-library-extensions)
     (make-variable-buffer-local 'verilog-library-directories)
     (make-variable-buffer-local 'verilog-library-files)
