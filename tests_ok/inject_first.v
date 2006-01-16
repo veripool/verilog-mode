@@ -1,4 +1,4 @@
-module ex_inject (i, o/*AUTOARG*/,
+module ex_inject (i, o,/*AUTOARG*/
    // Inputs
    j
    );

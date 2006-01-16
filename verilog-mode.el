@@ -6633,10 +6633,10 @@ and invalidating the cache."
 	       (verilog-inside-comment-p)))
 	(funcall func))))
 
-(defun verilog-insert-definition (sigs direction indent-pt &optional dont-sort)
+(defun verilog-insert-definition (sigs direction indent-pt v2k &optional dont-sort)
   "Print out a definition for a list of SIGS of the given DIRECTION,
-with appropriate INDENT-PT indentation.  Sort unless DONT-SORT.
-DIRECTION is normally wire/reg/output."
+with appropriate INDENT-PT indentation.  If V2K, use Verilog 2001 I/O
+format.  Sort unless DONT-SORT.  DIRECTION is normally wire/reg/output."
   (or dont-sort
       (setq sigs (sort (copy-alist sigs) `verilog-signals-sort-compare)))
   (while sigs
@@ -6654,7 +6654,7 @@ DIRECTION is normally wire/reg/output."
       (when (verilog-sig-bits sig)
 	(insert " " (verilog-sig-bits sig)))
       (indent-to (max 24 (+ indent-pt 16)))
-      (insert (concat (verilog-sig-name sig) ";"))
+      (insert (concat (verilog-sig-name sig) (if v2k "," ";")))
       (if (or (not (verilog-sig-comment sig))
 	      (equal "" (verilog-sig-comment sig)))
 	  (insert "\n")
@@ -6677,6 +6677,31 @@ Presumes that any newlines end a list element."
       (setq need-indent (string-match "\n$" (car stuff))
 	    stuff (cdr stuff)))))
 ;;(let ((indent-pt 10)) (verilog-insert-indent "hello\n" "addon" "there\n"))
+
+(defun verilog-repair-open-comma ()
+  "If backwards-from-point contains other then a open parenthesis, insert
+a comma."
+  (save-excursion
+    (verilog-backward-syntactic-ws)
+    (when (save-excursion
+	  (backward-char 1)
+	  (and (not (looking-at "[(,]"))
+	       (progn
+		 (verilog-re-search-backward "[(`]" nil t)
+		 (looking-at "("))))
+    (insert ","))))
+
+(defun verilog-repair-close-comma (point-limit)
+  "If point contains a comma followed by a close parenthesis, presume it
+was mis-inserted by a AUTOARG, and remove it"
+  ;; It would be much nicer if Verilog allowed extra commas like Perl does!
+  (save-excursion
+    (when (re-search-backward "," point-limit t)
+      (when (save-excursion
+	      (forward-char 1)
+	      (verilog-forward-syntactic-ws)
+	      (and (looking-at "[),]")))
+	(delete-char 1)))))
 
 (defun verilog-get-list (start end)
   "Return the elements of a comma separated list."
@@ -7084,14 +7109,7 @@ Avoid declaring ports manually, as it makes code harder to maintain."
     (let ((modi (verilog-modi-current))
 	  (skip-pins (aref (verilog-read-arg-pins) 0))
 	  (pt (point)))
-      (when (save-excursion
-	      (verilog-backward-syntactic-ws)
-	      (backward-char 1)
-	      (and (not (looking-at "[(,]"))
-		   (progn
-		     (verilog-re-search-backward "[(`]" nil t)
-		     (looking-at "("))))
-	(insert ","))
+      (verilog-repair-open-comma)
       (verilog-auto-arg-ports (verilog-signals-not-in
 			       (verilog-modi-get-outputs modi)
 			       skip-pins)
@@ -7107,9 +7125,7 @@ Avoid declaring ports manually, as it makes code harder to maintain."
 			       skip-pins)
 			      "// Inputs"
 			      verilog-indent-level-declaration)
-      (save-excursion
-	(if (re-search-backward "," pt t)
-	    (delete-char 1)))
+      (verilog-repair-close-comma pt)
       (unless (eq (char-before) ?/ )
 	(insert "\n"))
       (indent-to verilog-indent-level-declaration)
@@ -7517,7 +7533,7 @@ Typing \\[verilog-auto] will make this into:
 			      ))))
       (forward-line 1)
       (verilog-insert-indent "// Beginning of automatic regs (for this module's undeclared outputs)\n")
-      (verilog-insert-definition sig-list "reg" indent-pt)
+      (verilog-insert-definition sig-list "reg" indent-pt nil)
       (verilog-modi-cache-add-regs modi sig-list)
       (verilog-insert-indent "// End of automatics\n")
       )))
@@ -7568,7 +7584,7 @@ Typing \\[verilog-auto] will make this into:
 		       ))))
       (forward-line 1)
       (verilog-insert-indent "// Beginning of automatic reg inputs (for undeclared instantiated-module inputs)\n")
-      (verilog-insert-definition sig-list "reg" indent-pt)
+      (verilog-insert-definition sig-list "reg" indent-pt nil)
       (verilog-modi-cache-add-wires modi sig-list)
       (verilog-insert-indent "// End of automatics\n")
       )))
@@ -7619,7 +7635,7 @@ Typing \\[verilog-auto] will make this into:
 		       ))))
       (forward-line 1)
       (verilog-insert-indent "// Beginning of automatic wires (for undeclared instantiated-module outputs)\n")
-      (verilog-insert-definition sig-list "wire" indent-pt)
+      (verilog-insert-definition sig-list "wire" indent-pt nil)
       (verilog-modi-cache-add-wires modi sig-list)
       (verilog-insert-indent "// End of automatics\n")
       (when nil	;; Too slow on huge modules, plus makes everyone's module change
@@ -7638,6 +7654,9 @@ only instantiate other modules.
 
 Limitations:
   This ONLY detects outputs of AUTOINSTants (see `verilog-read-sub-decls').
+
+  If placed inside the parenthesis of a module declaration, it creates
+  Verilog 2001 style, else uses Verilog 1995 style.
 
   If any concatenation, or bit-subscripts are missing in the AUTOINSTant's
   instantiation, all bets are off.  (For example due to a AUTO_TEMPLATE).
@@ -7669,6 +7688,8 @@ Typing \\[verilog-auto] will make this into:
   (save-excursion
     ;; Point must be at insertion point.
     (let* ((indent-pt (current-indentation))
+	   (pt   (point))
+	   (v2k  (verilog-in-paren))
 	   (modi (verilog-modi-current))
 	   (sig-list (verilog-signals-not-in
 		      (verilog-modi-get-sub-outputs modi)
@@ -7681,10 +7702,12 @@ Typing \\[verilog-auto] will make this into:
 	  (setq sig-list (verilog-signals-not-matching-regexp
 			  sig-list verilog-auto-output-ignore-regexp)))
       (forward-line 1)
+      (when v2k (verilog-repair-open-comma))
       (verilog-insert-indent "// Beginning of automatic outputs (from unused autoinst outputs)\n")
-      (verilog-insert-definition sig-list "output" indent-pt)
+      (verilog-insert-definition sig-list "output" indent-pt v2k)
       (verilog-modi-cache-add-outputs modi sig-list)
       (verilog-insert-indent "// End of automatics\n")
+      (when v2k (verilog-repair-close-comma pt))
       )))
 
 (defun verilog-auto-output-every ()
@@ -7722,6 +7745,8 @@ Typing \\[verilog-auto] will make this into:
   (save-excursion
     ;;Point must be at insertion point
     (let* ((indent-pt (current-indentation))
+	   (pt   (point))
+	   (v2k  (verilog-in-paren))
 	   (modi (verilog-modi-current))
 	   (sig-list (verilog-signals-combine-bus
 		      (verilog-signals-not-in
@@ -7729,10 +7754,12 @@ Typing \\[verilog-auto] will make this into:
 		       (verilog-modi-get-ports modi)
 		       ))))
       (forward-line 1)
+      (when v2k (verilog-repair-open-comma))
       (verilog-insert-indent "// Beginning of automatic outputs (every signal)\n")
-      (verilog-insert-definition sig-list "output" indent-pt)
+      (verilog-insert-definition sig-list "output" indent-pt v2k)
       (verilog-modi-cache-add-outputs modi sig-list)
       (verilog-insert-indent "// End of automatics\n")
+      (when v2k (verilog-repair-close-comma pt))
       )))
 
 (defun verilog-auto-input ()
@@ -7743,6 +7770,9 @@ only instantiate other modules.
 
 Limitations:
   This ONLY detects outputs of AUTOINSTants (see `verilog-read-sub-decls').
+
+  If placed inside the parenthesis of a module declaration, it creates
+  Verilog 2001 style, else uses Verilog 1995 style.
 
   If any concatenation, or bit-subscripts are missing in the AUTOINSTant's
   instantiation, all bets are off.  (For example due to a AUTO_TEMPLATE).
@@ -7773,6 +7803,8 @@ Typing \\[verilog-auto] will make this into:
 	endmodule"
   (save-excursion
     (let* ((indent-pt (current-indentation))
+	   (pt   (point))
+	   (v2k  (verilog-in-paren))
 	   (modi (verilog-modi-current))
 	   (sig-list (verilog-signals-not-in
 		      (verilog-modi-get-sub-inputs modi)
@@ -7785,10 +7817,12 @@ Typing \\[verilog-auto] will make this into:
 			      (verilog-modi-get-sub-inouts modi)
 			      ))))
       (forward-line 1)
+      (when v2k (verilog-repair-open-comma))
       (verilog-insert-indent "// Beginning of automatic inputs (from unused autoinst inputs)\n")
-      (verilog-insert-definition sig-list "input" indent-pt)
+      (verilog-insert-definition sig-list "input" indent-pt v2k)
       (verilog-modi-cache-add-inputs modi sig-list)
       (verilog-insert-indent "// End of automatics\n")
+      (when v2k (verilog-repair-close-comma pt))
       )))
 
 (defun verilog-auto-inout ()
@@ -7798,6 +7832,9 @@ isn't declared elsewhere inside the module.
 
 Limitations:
   This ONLY detects outputs of AUTOINSTants (see `verilog-read-sub-decls').
+
+  If placed inside the parenthesis of a module declaration, it creates
+  Verilog 2001 style, else uses Verilog 1995 style.
 
   If any concatenation, or bit-subscripts are missing in the AUTOINSTant's
   instantiation, all bets are off.  (For example due to a AUTO_TEMPLATE).
@@ -7829,6 +7866,8 @@ Typing \\[verilog-auto] will make this into:
   (save-excursion
     ;; Point must be at insertion point.
     (let* ((indent-pt (current-indentation))
+	   (pt   (point))
+	   (v2k  (verilog-in-paren))
 	   (modi (verilog-modi-current))
 	   (sig-list (verilog-signals-not-in
 		      (verilog-modi-get-sub-inouts modi)
@@ -7839,10 +7878,12 @@ Typing \\[verilog-auto] will make this into:
 			      (verilog-modi-get-sub-outputs modi)
 			      ))))
       (forward-line 1)
+      (when v2k (verilog-repair-open-comma))
       (verilog-insert-indent "// Beginning of automatic inouts (from unused autoinst inouts)\n")
-      (verilog-insert-definition sig-list "inout" indent-pt)
+      (verilog-insert-definition sig-list "inout" indent-pt v2k)
       (verilog-modi-cache-add-inouts modi sig-list)
       (verilog-insert-indent "// End of automatics\n")
+      (when v2k (verilog-repair-close-comma pt))
       )))
 
 (defun verilog-auto-inout-module ()
@@ -7853,8 +7894,13 @@ shell modules which need to have identical I/O with another module.  Any
 I/O which are already defined in this module will not be redefined.
 
 Limitations:
+  If placed inside the parenthesis of a module declaration, it creates
+  Verilog 2001 style, else uses Verilog 1995 style.
+
   Concatenation and outputting partial busses is not supported.
+
   Module names must be resolvable to filenames.  See `verilog-auto-inst'.
+
   Signals are not inserted in the same order as in the original module,
   though they will appear to be in the same order to a AUTOINST
   instantiating either module.
@@ -7887,6 +7933,8 @@ Typing \\[verilog-auto] will make this into:
       ;; Note this may raise an error
       (when (setq submodi (verilog-modi-lookup submod t))
 	(let* ((indent-pt (current-indentation))
+	       (pt   (point))
+	       (v2k  (verilog-in-paren))
 	       (modi (verilog-modi-current))
 	       (sig-list-i  (verilog-signals-not-in
 			     (verilog-modi-get-inputs submodi)
@@ -7898,15 +7946,17 @@ Typing \\[verilog-auto] will make this into:
 			     (verilog-modi-get-inouts submodi)
 			     (append (verilog-modi-get-inouts modi)))))
 	  (forward-line 1)
+	  (when v2k (verilog-repair-open-comma))
 	  (verilog-insert-indent "// Beginning of automatic in/out/inouts (from specific module)\n")
 	  ;; Don't sort them so a upper AUTOINST will match the main module
-	  (verilog-insert-definition sig-list-o  "output" indent-pt t)
-	  (verilog-insert-definition sig-list-io "inout" indent-pt t)
-	  (verilog-insert-definition sig-list-i  "input" indent-pt t)
+	  (verilog-insert-definition sig-list-o  "output" indent-pt v2k t)
+	  (verilog-insert-definition sig-list-io "inout" indent-pt v2k t)
+	  (verilog-insert-definition sig-list-i  "input" indent-pt v2k t)
 	  (verilog-modi-cache-add-inputs modi sig-list-i)
 	  (verilog-modi-cache-add-outputs modi sig-list-o)
 	  (verilog-modi-cache-add-inouts modi sig-list-io)
 	  (verilog-insert-indent "// End of automatics\n")
+	  (when v2k (verilog-repair-close-comma pt))
 	  )))))
 
 (defun verilog-auto-sense-sigs (modi presense-sigs)
@@ -8203,7 +8253,7 @@ Typing \\[verilog-auto] will make this into:
       (verilog-insert-indent "// Beginning of automatic ASCII enum decoding\n")
       (let ((decode-sig-list (list (list ascii-name (format "[%d:0]" (- (* ascii-chars 8) 1))
 					 (concat "Decode of " undecode-name) nil nil))))
-	(verilog-insert-definition decode-sig-list "reg" indent-pt)
+	(verilog-insert-definition decode-sig-list "reg" indent-pt nil)
 	(verilog-modi-cache-add-regs modi decode-sig-list))
       ;;
       (verilog-insert-indent "always @(" undecode-name ") begin\n")
