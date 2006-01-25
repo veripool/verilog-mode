@@ -642,12 +642,12 @@ of each verilog file that requires it, rather then being set globally."
   :type 'boolean
   :group 'verilog-mode-auto)
 
-(defcustom verilog-auto-reset-widths nil
+(defcustom verilog-auto-reset-widths t
   "*If true, AUTORESET should determine the width of signals and use it
 to widen the zero (32'h0 for example).  This is required by some lint
-tools that aren't smart enough to ignore widths of the constant zero.
-This is not on my default, as it results in ugly code when parameters
-determine the MSB or LSB of a signal inside a AUTORESET."
+tools that aren't smart enough to ignore widths of the constant zero.  
+This may result in ugly code when parameters determine the MSB or LSB of a
+signal inside a AUTORESET."
   :type 'boolean
   :group 'verilog-mode-auto)
 
@@ -8070,6 +8070,10 @@ Limitations:
 begin/case/if statement and the AUTORESET comment are being reset manually
 and should not be automatically reset.  This includes omitting any signals
 used on the right hand side of assignments.
+
+By default, AUTORESET will include the width of the signal in the autos
+(this is a recent change.)  To control this behavior, see
+`verilog-auto-reset-widths'.
 
 A simple example:
 
