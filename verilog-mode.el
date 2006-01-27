@@ -1215,9 +1215,11 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
 (defconst verilog-complete-reg
   (eval-when-compile
     (verilog-regexp-words
-     `("always" "assign" "always_latch" "always_ff" "always_comb" "initial"
-       "final" "repeat" "case" "casex" "casez" "randcase" "while" "if" "for" "forever"
-       "else" "parameter"))))
+     `(
+       "always" "assign" "always_latch" "always_ff" "always_comb" "extern"
+       "initial" "final" "repeat" "case" "casex" "casez" "randcase" "while"
+       "if" "for" "forever" "else" "parameter"
+       ))))
 
 (defconst verilog-end-statement-re
   (concat "\\(" verilog-beg-block-re "\\)\\|\\("
@@ -3487,6 +3489,13 @@ type.  Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
        ((looking-at verilog-beg-block-re-1)
 	(cond
 	 ((match-end 2)  (throw 'nesting 'case))
+	 ((looking-at "\\<function\\|task\\>") ;*sigh* could have extern function a();
+	  (let ((here (point)))
+	    (save-excursion
+	      (verilog-beg-of-statement) 
+	      (if (= (point) here)
+		  (throw 'nesting 'block))		  
+	      )))
 	 (t              (throw 'nesting 'block))))
 
        ((looking-at verilog-end-block-re)
