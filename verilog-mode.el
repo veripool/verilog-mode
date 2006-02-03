@@ -1091,7 +1091,7 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
        "specify" "table" "task"))))
 
 (defconst verilog-beg-block-re-1
-  "\\<\\(begin\\)\\|\\(randcase\\>\\|\\<case[xz]?\\)\\|\\(fork\\)\\|\\(class\\)\\|\\(table\\)\\|\\(specify\\)\\|\\(function\\)\\|\\(task\\)\\|\\(generate\\)\\>")
+  "\\<\\(begin\\)\\|\\(randcase\\|case[xz]?\\)\\|\\(fork\\)\\|\\(class\\)\\|\\(table\\)\\|\\(specify\\)\\|\\(function\\)\\|\\(task\\)\\|\\(generate\\)\\>")
 (defconst verilog-end-block-re
   ;; "end" "join" "endcase" "endtable" "endspecify" "endtask" "endfunction" "endgenerate"
   "\\<\\(end\\(\\>\\|c\\(ase\\|lass\\)\\>\\|function\\>\\|generate\\>\\|specify\\>\\|ta\\(ble\\>\\|sk\\>\\)\\)\\|join\\(_any\\|_none\\)?\\>\\)")
@@ -1218,7 +1218,7 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
      `(
        "always" "assign" "always_latch" "always_ff" "always_comb" "extern"
        "initial" "final" "repeat" "case" "casex" "casez" "randcase" "while"
-       "if" "for" "forever" "else" "parameter"
+       "if" "for" "forever" "else" "parameter" "task" "function"
        ))))
 
 (defconst verilog-end-statement-re
@@ -2493,7 +2493,12 @@ With ARG, first kill any existing labels."
   (interactive)
   (while (save-excursion
 	   (and
-	    (not (looking-at verilog-complete-reg))
+	    (or 
+	     (and (looking-at "\\<function\\|task\\>")
+		  (save-excursion
+		    (verilog-backward-token)
+		    (looking-at "extern")))
+	     (not (looking-at verilog-complete-reg)))
 	    (verilog-backward-syntactic-ws)
 	    (not (or (bolp) (= (preceding-char) ?\;)))
 	    ))
