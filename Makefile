@@ -17,9 +17,14 @@ dirs:
 	@mkdir -p .timestamps
 test:	.timestamps/test
 .timestamps/test: x/verilog-mode.elc e/verilog-mode.elc mmencoded_verilog-mode verilog.info 0test.el
-	$(EMACS)  --batch -q -l e/verilog-mode.elc -l 0test.el
-	$(XEMACS) --batch -q -l x/verilog-mode.elc -l 0test.el
+	$(MAKE) test_emacs
+	$(MAKE) test_xemacs
 	@touch $@
+
+test_emacs:
+	$(EMACS)  --batch -q -l e/verilog-mode.elc -l 0test.el
+test_xemacs:
+	$(XEMACS) --batch -q -l x/verilog-mode.elc -l 0test.el
 
 local:	.timestamps/local
 .timestamps/local:  verilog-mode.el

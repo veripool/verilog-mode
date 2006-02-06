@@ -5611,7 +5611,7 @@ Return the list of signals found, using submodi to look up each port."
 		   (while (setq mstr (pop mlst))
 		     ;;(unless noninteractive (message "sig: %s " mstr))
 		     (cond
-		      ((string-match "\\([a-zA-Z0-9_$]+\\)\\s-*$" mstr)
+		      ((string-match "\\(['`a-zA-Z0-9_$]+\\)\\s-*$" mstr)
 		       (setq sig (verilog-string-remove-spaces (match-string 1 mstr))
 			     vec nil)
 		       ;;(unless noninteractive (message "concat sig1: %s %s" mstr (match-string 1 mstr)))
