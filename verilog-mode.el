@@ -5912,17 +5912,27 @@ IGNORE-NEXT is true to ignore next token, fake from inside case statement."
 
 (defun verilog-read-auto-template (module)
   "Look for a auto_template for the instantiation of the given MODULE.
-If found returns the signal name connections.  Return nil or list of
- ( (signal_name connection_name)... )"
+If found returns the signal name connections.  Return REGEXP and
+list of ( (signal_name connection_name)... )"
   (save-excursion
     ;; Find beginning
-    (let (tpl-sig-list tpl-wild-list tpl-end-pt rep (lineno 0) (templateno 0))
+    (let ((tpl-regexp "\\([0-9]+\\)")
+	  (lineno 0)
+	  (templateno 0)
+	  tpl-sig-list tpl-wild-list tpl-end-pt rep)
       (cond ((or
 	       (re-search-backward (concat "^\\s-*/?\\*?\\s-*" module "\\s-+AUTO_TEMPLATE") nil t)
 	       (progn
 		 (goto-char (point-min))
 		 (re-search-forward (concat "^\\s-*/?\\*?\\s-*" module "\\s-+AUTO_TEMPLATE") nil t)))
+	     (goto-char (match-end 0))
+	     ;; Parse "REGEXP"
+	     ;; We reserve @"..." for future lisp expressions that evaluate once-per-AUTOINST
+	     (when (looking-at "\\s-*\"\\([^\"]*)\\)\"")
+	       (setq tpl-regexp (match-string 1))
+	       (goto-char (match-end 0)))
 	     (search-forward "(")
+	     ;; Parse lines in the template
 	     (when verilog-auto-inst-template-numbers
 	       (save-excursion
 		 (goto-char (point-min))
@@ -5973,9 +5983,11 @@ If found returns the signal name connections.  Return nil or list of
 			     (verilog-point-text)
 			     (progn (looking-at ".*$") (match-string 0))))
 		     ))
-	     ;;
-	     (list tpl-sig-list tpl-wild-list)
-	     )))))
+	     ;; Return
+	     (vector tpl-regexp
+		     (list tpl-sig-list tpl-wild-list)))
+	    ;; If no template found
+	    (t (vector tpl-regexp nil))))))
 ;;(progn (find-file "auto-template.v") (verilog-read-auto-template "ptl_entry"))
 
 (defun verilog-set-define (defname defvalue &optional buffer enumname)
@@ -7326,8 +7338,8 @@ something trivial like a adder, DO NOT CHANGE SIGNAL NAMES ACROSS HIERARCHY.
 It just makes for unmaintainable code.  To sanitize signal names, try
 vrename from http://www.veripool.org
 
-When you need to violate this suggestion there are several ways to list
-exceptions.
+When you need to violate this suggestion there are two ways to list
+exceptions, placing them before the AUTOINST, or using templates.
 
 Any ports defined before the /*AUTOINST*/ are not included in the list of
 automatics.  This is similar to making a template as described below, but
@@ -7336,59 +7348,130 @@ that any signals before the AUTOINST will only be picked up by AUTOWIRE if
 you have the appropriate // Input or // Output comment, and exactly the
 same line formatting as AUTOINST itself uses.
 
-	   inst inst (// Inputs
-		      .i			(my_i_dont_mess_with_it),
-		      /*AUTOINST*/
-		      // Outputs
-		      .ov			(ov[31:0]));
+	inst inst (// Inputs
+		   .i		(my_i_dont_mess_with_it),
+		   /*AUTOINST*/
+		   // Outputs
+		   .ov		(ov[31:0]));
 
 
-Auto Templates:
+Templates:
 
-For multiple instantiations based upon a single template, create a
-commented out template:
-	/* psm_mas AUTO_TEMPLATE (
-		.PTL_MAPVALIDX		(PTL_MAPVALID[@]),
-		.PTL_MAPVALIDP1X	(PTL_MAPVALID[@\"(% (+ 1 @) 4)\"]),
-		.PTL_BUS		(PTL_BUSNEW[]),
+  For multiple instantiations based upon a single template, create a
+  commented out template:
+
+	/* instantiating_module_name AUTO_TEMPLATE (
+		.sig3	(sigz[]),
 		);
 	*/
 
-Templates go ABOVE the instantiation(s).  When a instantiation is expanded
-`verilog-mode' simply searches up for the closest template.  Thus you can have
-multiple templates for the same module, just alternate between the template
-for a instantiation and the instantiation itself.
+  Templates go ABOVE the instantiation(s).  When a instantiation is
+  expanded `verilog-mode' simply searches up for the closest template.
+  Thus you can have multiple templates for the same module, just alternate
+  between the template for a instantiation and the instantiation itself.
 
-The @ character should be replaced by the instantiation number; the first
-digits found in the cell's instantiation name.  The module name must be the
-same as the name of the module in the instantiation name, and the code
-\"AUTO_TEMPLATE\" must be in these exact words and capitalized.  Only
-signals that must be different for each instantiation need to be listed.
+  The module name must be the same as the name of the module in the
+  instantiation name, and the code \"AUTO_TEMPLATE\" must be in these exact
+  words and capitalized.  Only signals that must be different for each
+  instantiation need to be listed.
 
-The above template will convert:
+  Inside a template, a [] in a connection name (with nothing else inside
+  the brackets) will be replaced by the same bus subscript as it is being
+  connected to, or the [] will be removed if it is a single bit signal.
+  Generally it is a good idea to do this for all connections in a template,
+  as then they will work for any width signal.  See PTL_BUS becoming
+  PTL_BUSNEW below.
 
+  If you have a complicated template, set `verilog-auto-inst-template-numbers'
+  to see which regexps are matching.  Don't leave that mode set after
+  debugging is completed though, it will result in lots of extra differences
+  and merge conflicts.
+
+  For example:
+
+	/* psm_mas AUTO_TEMPLATE (
+		.ptl_bus	(ptl_busnew[]),
+ 		);
+ 	*/
 	psm_mas ms2m (/*AUTOINST*/);
 
-Typing \\[verilog-auto] will make this into:
+  Typing \\[verilog-auto] will make this into:
 
 	psm_mas ms2m (/*AUTOINST*/
 	    // Outputs
-	    .INSTDATAOUT		(INSTDATAOUT),
-	    .PTL_MAPVALIDX		(PTL_MAPVALID[2]),
-	    .PTL_MAPVALIDP1X		(PTL_MAPVALID[3]),
-  	    .PTL_BUS			(PTL_BUSNEW[3:0]),
+	    .NotInTemplate	(NotInTemplate),
+  	    .ptl_bus		(ptl_busnew[3:0]),  // Templated
 	    ....
-
-Note the @ character was replaced with the 2 from \"ms2m\".  Also, if a
-signal wasn't in the template, it is assumed to be a direct connection.
-
-A [] in a template (with nothing else inside the brackets) will be replaced
-by the same bus subscript as it is being connected to, or \"\" (nothing) if
-it is a single bit signal.  See PTL_BUS becoming PTL_BUSNEW above.
 
-Regexp templates:
+@ Templates:
+
+  It is common to instantiate a cell multiple times, so templates make it
+  trivial to substitute part of the cell name into the connection name.
+
+	/* cell_type AUTO_TEMPLATE <optional \"REGEXP\"> (
+		.sig1	(sigx[@]),
+		.sig2	(sigy[@\"(% (+ 1 @) 4)\"]),
+		);
+	*/
+
+  If no regular expression is provided immediately after the AUTO_TEMPLATE
+  keyword, then the @ character in any connection names will be replaced
+  with the instantiation number; the first digits found in the cell's
+  instantiation name.
+
+  If a regular expression is provided, the @ character will be replaced
+  with the first \(\) grouping that matches against the cell name.  Using a
+  regexp of \"\\([0-9]+\\)\" provides identical values for @ as when no
+  regexp is provided.  If you use multiple layers of parenthesis,
+  \"test\\([^0-9]+\\)_\\([0-9]+\\)\" would replace @ with non-number
+  characters after test and before _, whereas
+  \"\\(test\\([a-z]+\\)_\\([0-9]+\\)\\)\" would replace @ with the entire
+  match.
+
+  For example:
+
+	/* psm_mas AUTO_TEMPLATE (
+		.ptl_mapvalidx		(ptl_mapvalid[@]),
+		.ptl_mapvalidp1x	(ptl_mapvalid[@\"(% (+ 1 @) 4)\"]),
+ 		);
+ 	*/
+	psm_mas ms2m (/*AUTOINST*/);
+
+  Typing \\[verilog-auto] will make this into:
+
+	psm_mas ms2m (/*AUTOINST*/
+	    // Outputs
+	    .ptl_mapvalidx		(ptl_mapvalid[2]),
+	    .ptl_mapvalidp1x		(ptl_mapvalid[3]));
+
+  Note the @ character was replaced with the 2 from \"ms2m\".
+
+  Alternatively, using a regular expression for @:
+
+	/* psm_mas AUTO_TEMPLATE \"_\\([a-z]+\\)\" (
+		.ptl_mapvalidx		(@_ptl_mapvalid),
+		.ptl_mapvalidp1x	(ptl_mapvalid_@),
+		);
+	*/
+	psm_mas ms2_FOO (/*AUTOINST*/);
+	psm_mas ms2_BAR (/*AUTOINST*/);
+
+  Typing \\[verilog-auto] will make this into:
+
+	psm_mas ms2_FOO (/*AUTOINST*/
+	    // Outputs
+	    .ptl_mapvalidx		(FOO_ptl_mapvalid),
+	    .ptl_mapvalidp1x		(ptl_mapvalid_FOO));
+	psm_mas ms2_BAR (/*AUTOINST*/
+	    // Outputs
+	    .ptl_mapvalidx		(BAR_ptl_mapvalid),
+	    .ptl_mapvalidp1x		(ptl_mapvalid_BAR));
+
+
+Regexp Templates:
 
   A template entry of the form
+  
 	    .pci_req\\([0-9]+\\)_l	(pci_req_jtag_[\\1]),
 
   will apply a Emacs style regular expression search for any port beginning
@@ -7396,31 +7479,30 @@ Regexp templates:
   the pci_req_jtag_[] net, with the bus subscript coming from what matches
   inside the first set of \\( \\).  Thus pci_req2_l becomes pci_req_jtag_[2].
 
-  Since \\([0-9]+\\) is so common and ugly to read, a @ does the same thing
-  (Note a @ in replacement text is completely different -- still use \\1
-  there!)  Thus this is the same as the above template:
+  Since \\([0-9]+\\) is so common and ugly to read, a @ in the port name
+  does the same thing. (Note a @ in the connection/replacement text is
+  completely different -- still use \\1 there!)  Thus this is the same as
+  the above template:
 
 	    .pci_req@_l		(pci_req_jtag_[\\1]),
 
-  Here's another example to remove the _l, if naming conventions specify _
-  alone to mean active low.  Note the use of [] to keep the bus subscript:
-	    .\\(.*\\)_l		(\\1_[]),
-
-  If you have a complicated template, set `verilog-auto-inst-template-numbers'
-  to see which regexps are matching.  Don't leave that mode set after
-  debugging is completed though, it will result in lots of extra differences
-  and merge conflicts.
+  Here's another example to remove the _l, useful when naming conventions
+  specify _ alone to mean active low.  Note the use of [] to keep the bus
+  subscript:
+  
+	    .\\(.*\\)_l 	(\\1_[]),
 
-Lisp templates:
+Lisp Templates:
 
   First any regular expression template is expanded.
 
-  If the syntax @\"( ... )\" is found, the expression in quotes will be
-  evaluated as a Lisp expression, with @ replaced by the instantiation
-  number.  The MAPVALIDP1X example above would put @+1 modulo 4 into the
-  brackets.  Quote all double-quotes inside the expression with a leading
-  backslash (\\\").  There are special variables defined that are useful
-  in these Lisp functions:
+  If the syntax @\"( ... )\" is found in a connection, the expression in
+  quotes will be evaluated as a Lisp expression, with @ replaced by the
+  instantiation number.  The MAPVALIDP1X example above would put @+1 modulo
+  4 into the brackets.  Quote all double-quotes inside the expression with
+  a leading backslash (\\\").  There are special variables defined that are
+  useful in these Lisp functions:
+
 	vl-name        Name portion of the input/output port
 	vl-bits        Bus bits portion of the input/output port ('[2:0]')
 	vl-width       Width of the input/output port ('3' for [2:0])
@@ -7438,6 +7520,10 @@ Lisp templates:
   will evaluate any Lisp expression inside the parenthesis between the
   beginning of the buffer and the point of the AUTOINST.  This allows
   functions to be defined or variables to be changed between instantiations.
+
+  Note that when using lisp expressions errors may occur when @ is not a
+  number, you may need to use the standard Emacs Lisp functions
+  `number-to-string' and `string-to-number'.
 
   After the evaluation is completed, @ substitution and [] substitution
   occur."
@@ -7468,10 +7554,12 @@ Lisp templates:
       (when (setq submodi (verilog-modi-lookup submod t))
 	;; If there's a number in the instantiation, it may be a argument to the
 	;; automatic variable instantiation program.
-	(setq tpl-num (if (string-match "\\([0-9]+\\)" inst)
-			  (substring inst (match-beginning 1) (match-end 1))
-			"")
-	      tpl-list (verilog-read-auto-template submod))
+	(let* ((tpl-info (verilog-read-auto-template submod))
+	       (tpl-regexp (aref tpl-info 0)))
+	  (setq tpl-num (if (string-match tpl-regexp inst)
+			    (match-string 1 inst)
+			  "")
+		tpl-list (aref tpl-info 1)))
 	;; .* needs a trailing comma
 	(when for-star (insert ","))
 	;; Find submodule's signals and dump
