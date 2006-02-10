@@ -3316,6 +3316,35 @@ becomes:
   (verilog-auto)	; Always do it for safety
   (save-buffer)
   (compile compile-command))
+
+(defun verilog-batch-auto ()
+  "For use with --batch, setup appropriate verilog-mode enviornment, update automatics
+with \\[verilog-auto] on all command-line files, and save the buffers.  For proper results,
+multiple filenames need to be passed on the command line in bottom-up order."
+  (unless noninteractive
+    (error "Use verilog-batch-auto only with --batch"))  ;; Otherwise we'd mess up buffer modes
+  ;; General globals needed
+  (setq make-backup-files nil)
+  (setq-default make-backup-files nil)
+  (setq enable-local-variables t)
+  (setq enable-local-eval t)
+  ;; Make sure any sub-files we read get proper mode
+  (setq default-major-mode `verilog-mode)
+  ;; Ditto files already read in
+  (mapcar '(lambda (buf)
+	     (when (buffer-file-name buf)
+	       (save-excursion
+		 (set-buffer buf)
+		 (verilog-mode))))
+	  (buffer-list))
+  ;; Process the files
+  (mapcar '(lambda (buf)
+	     (when (buffer-file-name buf)
+	       (save-excursion
+		 (set-buffer buf)
+		 (verilog-auto)
+		 (save-buffer))))
+	  (buffer-list)))
 
 
 ;;
@@ -8454,14 +8483,7 @@ For example:
 	somesub sub (/*AUTOINST*/);
 
 You can also update the AUTOs from the shell using:
-	emacs --batch $FILENAME_V -f verilog-auto -f save-buffer
-
-If using batch mode with --no-site-file, note you'll still require a
-startup file with the initalization lines:
-
-    (autoload 'verilog-mode \"verilog-mode\" \"Verilog mode\" t )
-    (setq auto-mode-alist (cons  '(\"\\.v\\'\" . verilog-mode) auto-mode-alist))
-    (setq auto-mode-alist (cons  '(\"\\.dv\\'\" . verilog-mode) auto-mode-alist))
+	emacs --batch -f verilog-batch-auto $FILENAME_V
 
 Using \\[describe-function], see also:
    `verilog-auto-arg'          for AUTOARG module instantiations
@@ -8501,6 +8523,9 @@ and/or see http://www.veripool.org"
 		      t)))
     (unwind-protect
 	(save-excursion
+	  ;; If we're not in verilog-mode, change syntax table so parsing works right
+	  (unless (eq major-mode `verilog-mode) (verilog-mode))
+	  ;; Allow user to customize
 	  (run-hooks 'verilog-before-auto-hook)
 	  ;; Try to save the user from needing to revert-file to reread file local-variables
 	  (verilog-auto-reeval-locals)
