@@ -676,6 +676,16 @@ regular use to prevent large numbers of merge conflicts."
 (defvar verilog-auto-inst-column 40
   "Column number for first part of auto-inst")
 
+(defcustom verilog-auto-input-ignore-regexp nil
+  "*If set, when creating AUTOINPUT list, ignore signals matching this regexp."
+  :group 'verilog-mode-auto
+  :type 'string )
+
+(defcustom verilog-auto-inout-ignore-regexp nil
+  "*If set, when creating AUTOINOUT list, ignore signals matching this regexp."
+  :group 'verilog-mode-auto
+  :type 'string )
+
 (defcustom verilog-auto-output-ignore-regexp nil
   "*If set, when creating AUTOOUTPUT list, ignore signals matching this regexp."
   :group 'verilog-mode-auto
@@ -7968,6 +7978,9 @@ Typing \\[verilog-auto] will make this into:
 			      (verilog-modi-get-sub-outputs modi)
 			      (verilog-modi-get-sub-inouts modi)
 			      ))))
+      (if verilog-auto-input-ignore-regexp
+	  (setq sig-list (verilog-signals-not-matching-regexp
+			  sig-list verilog-auto-input-ignore-regexp)))
       (forward-line 1)
       (when v2k (verilog-repair-open-comma))
       (verilog-insert-indent "// Beginning of automatic inputs (from unused autoinst inputs)\n")
@@ -8029,6 +8042,9 @@ Typing \\[verilog-auto] will make this into:
 			      (verilog-modi-get-sub-inputs modi)
 			      (verilog-modi-get-sub-outputs modi)
 			      ))))
+      (if verilog-auto-inout-ignore-regexp
+	  (setq sig-list (verilog-signals-not-matching-regexp
+			  sig-list verilog-auto-inout-ignore-regexp)))
       (forward-line 1)
       (when v2k (verilog-repair-open-comma))
       (verilog-insert-indent "// Beginning of automatic inouts (from unused autoinst inouts)\n")
