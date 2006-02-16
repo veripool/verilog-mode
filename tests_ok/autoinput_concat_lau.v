@@ -27,7 +27,7 @@ module autoinput_concat_lau
 
    /* sub1 AUTO_TEMPLATE (
 	      .busout	({2'b0,fooout[1:0]}),
-	      .bus1	({2'b0,foo[1:0]}),
+	      .bus1	({2'b0,~foo[1:0]}),
     );
     */
 
@@ -35,7 +35,7 @@ module autoinput_concat_lau
 	      // Inouts
 	      .busout			({2'b0,fooout[1:0]}),	 // Templated
 	      // Inputs
-	      .bus1			({2'b0,foo[1:0]}));	 // Templated
+	      .bus1			({2'b0,~foo[1:0]}));	 // Templated
 
 endmodule
 

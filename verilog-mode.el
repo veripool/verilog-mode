@@ -5584,6 +5584,7 @@ Return a array of [outputs inouts inputs wire reg assign const]."
     (when sig
       (setq port (verilog-symbol-detick-denumber port))
       (setq sig  (verilog-symbol-detick-denumber sig))
+      (if sig (setq sig  (verilog-string-replace-matches "^[---+~!|&]+" "" nil nil sig)))
       (if vec (setq vec  (verilog-symbol-detick-denumber vec)))
       (unless (or (not sig)
 		  (equal sig ""))  ;; Ignore .foo(1'b1) assignments
