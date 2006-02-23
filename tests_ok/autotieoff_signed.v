@@ -49,6 +49,9 @@ module autotieoff_signed (/*AUTOARG*/
    // lint_checking SCX_UNUSED OFF
    wire _unused_ok = &{1'b0,
 		       /*AUTOUNUSED*/
+		       // Beginning of automatic unused inputs
+		       ExtraIn,
+		       // End of automatics
 		       1'b0};
    // lint_checking SCX_UNUSED OFF
 

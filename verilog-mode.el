@@ -890,6 +890,7 @@ If set will become buffer local.")
      ["AUTORESET"			(describe-function 'verilog-auto-reset) t]
      ["AUTOSENSE"			(describe-function 'verilog-auto-sense) t]
      ["AUTOTIEOFF"			(describe-function 'verilog-auto-tieoff) t]
+     ["AUTOUNUSED"			(describe-function 'verilog-auto-unused) t]
      ["AUTOWIRE"			(describe-function 'verilog-auto-wire) t]
      )
     "----"
@@ -6989,7 +6990,7 @@ Use \\[verilog-auto] to re-insert the updated AUTOs."
     (if (buffer-file-name)
 	(find-file-noselect (buffer-file-name)))	;; To check we have latest version
     ;; Remove those that have multi-line insertions
-    (verilog-auto-re-search-do "/\\*AUTO\\(OUTPUTEVERY\\|CONCATCOMMENT\\|WIRE\\|REG\\|DEFINEVALUE\\|REGINPUT\\|INPUT\\|OUTPUT\\|INOUT\\|RESET\\|TIEOFF\\)\\*/"
+    (verilog-auto-re-search-do "/\\*AUTO\\(OUTPUTEVERY\\|CONCATCOMMENT\\|WIRE\\|REG\\|DEFINEVALUE\\|REGINPUT\\|INPUT\\|OUTPUT\\|INOUT\\|RESET\\|TIEOFF\\|UNUSED\\)\\*/"
 			       'verilog-delete-autos-lined)
     ;; Remove those that have multi-line insertions with parameters
     (verilog-auto-re-search-do "/\\*AUTO\\(INOUTMODULE\\|ASCIIENUM\\)([^)]*)\\*/"
@@ -8372,6 +8373,11 @@ A example of making a stub for another module:
     module FooStub (/*AUTOINST*/);
 	/*AUTOINOUTMODULE(\"Foo\")*/
         /*AUTOTIEOFF*/
+        // verilator lint_off UNUSED
+        wire _unused_ok = &{1'b0,
+                            /*AUTOUNUSED*/
+                            1'b0};
+        // verilator lint_on  UNUSED
     endmodule
 
 Typing \\[verilog-auto] will make this into:
@@ -8386,6 +8392,7 @@ Typing \\[verilog-auto] will make this into:
         // Beginning of autotieoff
         wire [2:0] foo = 3'b0;
         // End of automatics
+        ...
     endmodule"
   (interactive)
   (save-excursion
@@ -8401,19 +8408,89 @@ Typing \\[verilog-auto] will make this into:
 			      (verilog-modi-get-sub-outputs modi)
 			      (verilog-modi-get-sub-inouts modi)
 			      ))))
-      (forward-line 1)
-      (verilog-insert-indent "// Beginning of automatic tieoffs (for this module's unterminated outputs)\n")
-      (setq sig-list (sort (copy-alist sig-list) `verilog-signals-sort-compare))
-      (verilog-modi-cache-add-wires modi sig-list)  ; Before we trash list
-      (while sig-list
-	(let ((sig (car sig-list)))
-	  (verilog-insert-one-definition sig "wire" indent-pt)
-	  (indent-to (max 48 (+ indent-pt 40)))
-	  (insert "= " (verilog-sig-tieoff sig)
-		  ";\n")
-	  (setq sig-list (cdr sig-list))))
-      (verilog-insert-indent "// End of automatics\n")
-      )))
+      (when sig-list
+	(forward-line 1)
+	(verilog-insert-indent "// Beginning of automatic tieoffs (for this module's unterminated outputs)\n")
+	(setq sig-list (sort (copy-alist sig-list) `verilog-signals-sort-compare))
+	(verilog-modi-cache-add-wires modi sig-list)  ; Before we trash list
+	(while sig-list
+	  (let ((sig (car sig-list)))
+	    (verilog-insert-one-definition sig "wire" indent-pt)
+	    (indent-to (max 48 (+ indent-pt 40)))
+	    (insert "= " (verilog-sig-tieoff sig)
+		    ";\n")
+	    (setq sig-list (cdr sig-list))))
+	(verilog-insert-indent "// End of automatics\n")
+	))))
+
+(defun verilog-auto-unused ()
+  "Expand AUTOUNUSED statements, as part of \\[verilog-auto].
+Replace the /*AUTOUNUSED*/ comment with a comma separated list of all unused
+input and inout signals.
+
+/*AUTOUNUSED*/ is used to make stub modules; modules that have the same
+input/output list as another module, but no internals.  Specifically, it
+finds all inputs and inouts in the module, and if that input is not otherwise
+used, adds it to a comma separated list.
+
+The comma separated list is intented to be used to create a unused_ok
+signal.  To reduce simulation time, the unused_ok should be forced to a
+constant to prevent wiggling.  The easiest thing to do is use a
+reduction-and with 1'b0.
+
+This way all unused signals are in one place.  If the unused_ok signal
+appears in any lint messages as \"unused,\" you will know it is a false
+warning.  Even better, use your tool's specific pragmas around the
+assignment to disable the unused message.
+
+A example of making a stub for another module:
+
+    module FooStub (/*AUTOINST*/);
+	/*AUTOINOUTMODULE(\"Foo\")*/
+        /*AUTOTIEOFF*/
+        // verilator lint_off UNUSED
+        wire _unused_ok = &{1'b0,
+                            /*AUTOUNUSED*/
+                            1'b0};
+        // verilator lint_on  UNUSED
+    endmodule
+
+Typing \\[verilog-auto] will make this into:
+
+        ...
+        // verilator lint_off UNUSED
+        wire _unused_ok = &{1'b0,
+                            /*AUTOUNUSED*/
+			    // Beginning of automatics
+			    unused_input_a,
+			    unused_input_b,
+			    unused_input_c,
+			    // End of automatics
+                            1'b0};
+        // verilator lint_on  UNUSED
+    endmodule"
+  (interactive)
+  (save-excursion
+    ;; Find beginning
+    (let* ((indent-pt (progn (search-backward "/*") (current-column)))
+	   (modi (verilog-modi-current))
+	   (sig-list (verilog-signals-not-in
+		      (append (verilog-modi-get-inputs modi)
+			      (verilog-modi-get-inouts modi))
+		      (append (verilog-modi-get-sub-inputs modi)
+			      (verilog-modi-get-sub-inouts modi)
+			      ))))
+      (when sig-list
+	(forward-line 1)
+	(verilog-insert-indent "// Beginning of automatic unused inputs\n")
+	(setq sig-list (sort (copy-alist sig-list) `verilog-signals-sort-compare))
+	(while sig-list
+	  (let ((sig (car sig-list)))
+	    (indent-to indent-pt)
+	    (insert (verilog-sig-name sig) ",\n")
+	    (setq sig-list (cdr sig-list))))
+	(verilog-insert-indent "// End of automatics\n")
+	))))
 
 (defun verilog-enum-ascii (signm elim-regexp)
   "Convert a enum name SIGNM to a ascii string for insertion.
@@ -8613,6 +8690,7 @@ Using \\[describe-function], see also:
    `verilog-auto-reset'        for AUTORESET flop resets
    `verilog-auto-sense'        for AUTOSENSE always sensitivity lists
    `verilog-auto-tieoff'       for AUTOTIEOFF output tieoffs
+   `verilog-auto-unused'       for AUTOUNUSED unused inputs/inouts
    `verilog-auto-wire'         for AUTOWIRE instantiation wires
 
    `verilog-read-defines'      for reading `define values
@@ -8681,6 +8759,8 @@ and/or see http://www.veripool.org"
 	   (verilog-auto-search-do "/*AUTOREGINPUT*/" 'verilog-auto-reg-input)
 	   ;; outputevery needs autooutputs done first
 	   (verilog-auto-search-do "/*AUTOOUTPUTEVERY*/" 'verilog-auto-output-every)
+	   ;; After we've created all new variables
+	   (verilog-auto-search-do "/*AUTOUNUSED*/" 'verilog-auto-unused)
 	   ;; Must be after all inputs outputs are generated
 	   (verilog-auto-search-do "/*AUTOARG*/" 'verilog-auto-arg)
 	   ;; Fix line numbers (comments only)
