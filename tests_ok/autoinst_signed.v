@@ -1,4 +1,4 @@
-module foo
+module autoinst_signed
   (/*AUTOARG*/
    // Outputs
    another_output2, another_output, an_outputpre, an_output2

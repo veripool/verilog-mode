@@ -1,10 +1,7 @@
 // $Revision: #70 $$Date: 2002/10/19 $$Author: wsnyder $ -*- Verilog -*-
 //====================================================================
 
-module CmpEng (/*AUTOARG*/
-   // Inputs
-   clk, reset_l
-   );
+module CmpEng (/*AUTOARG*/);
 
    input clk;
    input reset_l;
@@ -12,11 +9,7 @@ module CmpEng (/*AUTOARG*/
    // ****************************************************************
 
    /*AUTOREG*/
-   // Beginning of automatic regs (for this module's undeclared outputs)
-   // End of automatics
    /*AUTOWIRE*/
-   // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   // End of automatics
 
    // ********* Prefetch FSM definitions ****************************
 
@@ -26,7 +19,7 @@ module CmpEng (/*AUTOARG*/
 
    reg	     m_wid1_r;
    reg [2:0] m_wid3_r;
-   reg [5:2] m_wid4_r;
+   reg [5:2] m_wid4_r_l;
 
 `define M 2
 `define L 1
@@ -41,18 +34,11 @@ module CmpEng (/*AUTOARG*/
 	 m_cac_state_r <= CAC_IDLE;
 	 m_cac_sel_r <= CSEL_PF;
 	 /*AUTORESET*/
-	 // Beginning of autoreset for uninitialized flops
-	 m_def2_r <= {(1+(`M)-(`L)){1'b0}};
-	 m_param_r <= {(1+(MS)-(LS)){1'b0}};
-	 m_wid1_r <= 1'h0;
-	 m_wid3_r <= 3'h0;
-	 m_wid4_r <= 4'h0;
-	 // End of automatics
       end
       else begin
 	 m_wid1_r <= 0;
 	 m_wid3_r <= 0;
-	 m_wid4_r <= 0;
+	 m_wid4_r_l <= 0;
 	 m_param_r <= 0;
 	 m_def2_r <= 0;
       end
@@ -64,4 +50,5 @@ endmodule
 // eval:(verilog-read-defines)
 // verilog-auto-sense-defines-constant: t
 // verilog-auto-reset-widths: t
+// verilog-active-low-regexp: "_l$"
 // End:

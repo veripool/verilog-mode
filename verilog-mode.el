@@ -577,7 +577,9 @@ Verilog-mode attempts to detect changes to this local variable, but they
 are only insured to be correct when the file is first visited. Thus if you
 have problems, use \\[find-alternate-file] RET to have these take effect.
 
-See also the variables mentioned above.")
+See also the variables mentioned above."
+  :group 'verilog-mode-auto
+  :type '(repeat string))
 
 (defcustom verilog-library-directories '(".")
   "*List of directories when looking for files for /*AUTOINST*/.
@@ -626,6 +628,13 @@ See also `verilog-library-flags', `verilog-library-directories'."
 See also `verilog-library-flags', `verilog-library-directories'."
   :type '(repeat string)
   :group 'verilog-mode-auto)
+
+(defcustom verilog-active-low-regexp nil
+  "*If set, treat signals matching this regexp as active low.
+This is used for AUTORESET and other autos.  For proper behavior,
+you will probably also need `verilog-auto-reset-widths' set."
+  :group 'verilog-mode-auto
+  :type 'string)
 
 (defcustom verilog-auto-sense-include-inputs nil
   "*If true, AUTOSENSE should include all inputs.
@@ -5404,6 +5413,21 @@ Duplicate signals are also removed.  For example A[2] and A[1] become A[2:1]."
     ;;
     out-list))
 
+(defun verilog-sig-tieoff (sig &optional no-width)
+  "Return tieoff expression for given SIGNAL, with appropriate width
+unless NO-WIDTH is set."
+  (let* ((width (if no-width nil (verilog-sig-width sig))))
+    (concat
+     (if (and verilog-active-low-regexp
+	      (string-match verilog-active-low-regexp (verilog-sig-name sig)))
+	 "~" "")
+     (cond ((not width)
+	    "0")
+	   ((string-match "^[0-9]+$" width)
+	    (concat width "'h0"))
+	   (t
+	    (concat "{" width "{1'b0}}"))))))
+
 ;;
 ;; Port/Wire/Etc Reading
 ;;
@@ -8239,9 +8263,13 @@ begin/case/if statement and the AUTORESET comment are being reset manually
 and should not be automatically reset.  This includes omitting any signals
 used on the right hand side of assignments.
 
-By default, AUTORESET will include the width of the signal in the autos
-(this is a recent change.)  To control this behavior, see
+By default, AUTORESET will include the width of the signal in the autos,
+this is a recent change.  To control this behavior, see
 `verilog-auto-reset-widths'.
+
+AUTORESET ties signals to deasserted, which is presumed to be zero.
+Signals that match `verilog-active-low-regexp' will be deasserted by tieing
+them to a one.
 
 A simple example:
 
@@ -8304,16 +8332,12 @@ Typing \\[verilog-auto] will make this into:
       (insert "// Beginning of autoreset for uninitialized flops\n");
       (indent-to indent-pt)
       (while sig-list
-	(let* ((defn-sig (if verilog-auto-reset-widths
-			     (assoc (verilog-sig-name (car sig-list)) all-list)))
-	       (width (if defn-sig (verilog-sig-width defn-sig))))
-	  (insert (verilog-sig-name (car sig-list)))
-	  (cond ((not width)
-		 (insert assignment-str "0;\n"))
-		((string-match "^[0-9]+$" width)
-		 (insert assignment-str (verilog-sig-width defn-sig) "'h0;\n" ))
-		(t
-		 (insert assignment-str "{" (verilog-sig-width defn-sig) "{1'b0}};\n" )))
+	(let ((sig (or (assoc (verilog-sig-name (car sig-list)) all-list) ;; As sig-list has no widths
+		       sig)))
+	  (insert (verilog-sig-name sig)
+		  assignment-str
+		  (verilog-sig-tieoff sig (not verilog-auto-reset-widths))
+		  ";\n")
 	  (indent-to indent-pt)
 	  (setq sig-list (cdr sig-list))))
       (insert "// End of automatics")
