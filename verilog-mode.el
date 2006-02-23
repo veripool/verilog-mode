@@ -631,7 +631,7 @@ See also `verilog-library-flags', `verilog-library-directories'."
 
 (defcustom verilog-active-low-regexp nil
   "*If set, treat signals matching this regexp as active low.
-This is used for AUTORESET and other autos.  For proper behavior,
+This is used for AUTORESET and AUTOTIEOFF.  For proper behavior,
 you will probably also need `verilog-auto-reset-widths' set."
   :group 'verilog-mode-auto
   :type 'string)
@@ -889,6 +889,7 @@ If set will become buffer local.")
      ["AUTOREGINPUT"			(describe-function 'verilog-auto-reg-input) t]
      ["AUTORESET"			(describe-function 'verilog-auto-reset) t]
      ["AUTOSENSE"			(describe-function 'verilog-auto-sense) t]
+     ["AUTOTIEOFF"			(describe-function 'verilog-auto-tieoff) t]
      ["AUTOWIRE"			(describe-function 'verilog-auto-wire) t]
      )
     "----"
@@ -5424,7 +5425,7 @@ unless NO-WIDTH is set."
      (cond ((not width)
 	    "0")
 	   ((string-match "^[0-9]+$" width)
-	    (concat width "'h0"))
+	    (concat width (if (verilog-sig-signed sig) "'sh0" "'h0")))
 	   (t
 	    (concat "{" width "{1'b0}}"))))))
 
@@ -6743,6 +6744,18 @@ and invalidating the cache."
 	       (verilog-inside-comment-p)))
 	(funcall func))))
 
+(defun verilog-insert-one-definition (sig type indent-pt)
+  "Print out a definition for SIGNAL of the given TYPE,
+with appropriate INDENT-PT indentation."
+  (indent-to indent-pt)
+  (insert type)
+  (when (verilog-sig-signed sig)
+    (insert " " (verilog-sig-signed sig)))
+  (when (verilog-sig-bits sig)
+    (insert " " (verilog-sig-bits sig)))
+  (indent-to (max 24 (+ indent-pt 16)))
+  (insert (verilog-sig-name sig)))
+
 (defun verilog-insert-definition (sigs direction indent-pt v2k &optional dont-sort)
   "Print out a definition for a list of SIGS of the given DIRECTION,
 with appropriate INDENT-PT indentation.  If V2K, use Verilog 2001 I/O
@@ -6751,20 +6764,17 @@ format.  Sort unless DONT-SORT.  DIRECTION is normally wire/reg/output."
       (setq sigs (sort (copy-alist sigs) `verilog-signals-sort-compare)))
   (while sigs
     (let ((sig (car sigs)))
-      (indent-to indent-pt)
-      ;; Want "type x" or "output type x", not "wire type x"
-      (cond ((verilog-sig-type sig)
-	     (if (not (equal direction "wire"))
-		 (insert direction " "))
-	     (insert (verilog-sig-type sig)))
-	    (t
-	     (insert direction)))
-      (when (verilog-sig-signed sig)
-	(insert " " (verilog-sig-signed sig)))
-      (when (verilog-sig-bits sig)
-	(insert " " (verilog-sig-bits sig)))
-      (indent-to (max 24 (+ indent-pt 16)))
-      (insert (concat (verilog-sig-name sig) (if v2k "," ";")))
+      (verilog-insert-one-definition
+       sig
+       ;; Want "type x" or "output type x", not "wire type x"
+       (cond ((verilog-sig-type sig)
+	      (concat
+	       (if (not (equal direction "wire"))
+		   (concat direction " "))
+	       (verilog-sig-type sig)))
+	     (t direction))
+       indent-pt)
+      (insert (if v2k "," ";"))
       (if (or (not (verilog-sig-comment sig))
 	      (equal "" (verilog-sig-comment sig)))
 	  (insert "\n")
@@ -6979,7 +6989,7 @@ Use \\[verilog-auto] to re-insert the updated AUTOs."
     (if (buffer-file-name)
 	(find-file-noselect (buffer-file-name)))	;; To check we have latest version
     ;; Remove those that have multi-line insertions
-    (verilog-auto-re-search-do "/\\*AUTO\\(OUTPUTEVERY\\|CONCATCOMMENT\\|WIRE\\|REG\\|DEFINEVALUE\\|REGINPUT\\|INPUT\\|OUTPUT\\|INOUT\\|RESET\\)\\*/"
+    (verilog-auto-re-search-do "/\\*AUTO\\(OUTPUTEVERY\\|CONCATCOMMENT\\|WIRE\\|REG\\|DEFINEVALUE\\|REGINPUT\\|INPUT\\|OUTPUT\\|INOUT\\|RESET\\|TIEOFF\\)\\*/"
 			       'verilog-delete-autos-lined)
     ;; Remove those that have multi-line insertions with parameters
     (verilog-auto-re-search-do "/\\*AUTO\\(INOUTMODULE\\|ASCIIENUM\\)([^)]*)\\*/"
@@ -7771,7 +7781,7 @@ Typing \\[verilog-auto] will make this into:
       (forward-line 1)
       (verilog-insert-indent "// Beginning of automatic reg inputs (for undeclared instantiated-module inputs)\n")
       (verilog-insert-definition sig-list "reg" indent-pt nil)
-      (verilog-modi-cache-add-wires modi sig-list)
+      (verilog-modi-cache-add-regs modi sig-list)
       (verilog-insert-indent "// End of automatics\n")
       )))
 
@@ -8343,6 +8353,68 @@ Typing \\[verilog-auto] will make this into:
       (insert "// End of automatics")
       )))
 
+(defun verilog-auto-tieoff ()
+  "Expand AUTOTIEOFF statements, as part of \\[verilog-auto].
+Replace the /*AUTOTIEOFF*/ comment with code to wire-tie all unused output
+signals to deasserted.
+
+/*AUTOTIEOFF*/ is used to make stub modules; modules that have the same
+input/output list as another module, but no internals.  Specifically, it
+finds all outputs in the module, and if that input is not otherwise declared
+as a register or wire, creates a tieoff.
+
+AUTORESET ties signals to deasserted, which is presumed to be zero.
+Signals that match `verilog-active-low-regexp' will be deasserted by tieing
+them to a one.
+
+A example of making a stub for another module:
+
+    module FooStub (/*AUTOINST*/);
+	/*AUTOINOUTMODULE(\"Foo\")*/
+        /*AUTOTIEOFF*/
+    endmodule
+
+Typing \\[verilog-auto] will make this into:
+
+    module FooStub (/*AUTOINST*/...);
+	/*AUTOINOUTMODULE(\"Foo\")*/
+        // Beginning of autotieoff
+        output [2:0] foo;
+        // End of automatics
+
+        /*AUTOTIEOFF*/
+        // Beginning of autotieoff
+        wire [2:0] foo = 3'b0;
+        // End of automatics
+    endmodule"
+  (interactive)
+  (save-excursion
+    ;; Find beginning
+    (let* ((indent-pt (current-indentation))
+	   (modi (verilog-modi-current))
+	   (sig-list (verilog-signals-not-in
+		      (verilog-modi-get-outputs modi)
+		      (append (verilog-modi-get-wires modi)
+			      (verilog-modi-get-regs modi)
+			      (verilog-modi-get-assigns modi)
+			      (verilog-modi-get-consts modi)
+			      (verilog-modi-get-sub-outputs modi)
+			      (verilog-modi-get-sub-inouts modi)
+			      ))))
+      (forward-line 1)
+      (verilog-insert-indent "// Beginning of automatic tieoffs (for this module's unterminated outputs)\n")
+      (setq sig-list (sort (copy-alist sig-list) `verilog-signals-sort-compare))
+      (verilog-modi-cache-add-wires modi sig-list)  ; Before we trash list
+      (while sig-list
+	(let ((sig (car sig-list)))
+	  (verilog-insert-one-definition sig "wire" indent-pt)
+	  (indent-to (max 48 (+ indent-pt 40)))
+	  (insert "= " (verilog-sig-tieoff sig)
+		  ";\n")
+	  (setq sig-list (cdr sig-list))))
+      (verilog-insert-indent "// End of automatics\n")
+      )))
+
 (defun verilog-enum-ascii (signm elim-regexp)
   "Convert a enum name SIGNM to a ascii string for insertion.
 Remove user provided prefix ELIM-REGEXP."
@@ -8540,6 +8612,7 @@ Using \\[describe-function], see also:
    `verilog-auto-reg-input'    for AUTOREGINPUT instantiation registers
    `verilog-auto-reset'        for AUTORESET flop resets
    `verilog-auto-sense'        for AUTOSENSE always sensitivity lists
+   `verilog-auto-tieoff'       for AUTOTIEOFF output tieoffs
    `verilog-auto-wire'         for AUTOWIRE instantiation wires
 
    `verilog-read-defines'      for reading `define values
@@ -8600,6 +8673,8 @@ and/or see http://www.veripool.org"
 	   (verilog-auto-search-do "/*AUTOOUTPUT*/" 'verilog-auto-output)
 	   (verilog-auto-search-do "/*AUTOINPUT*/" 'verilog-auto-input)
 	   (verilog-auto-search-do "/*AUTOINOUT*/" 'verilog-auto-inout)
+	   ;; Then tie off those in/outs
+	   (verilog-auto-search-do "/*AUTOTIEOFF*/" 'verilog-auto-tieoff)
 	   ;; Wires/regs must be after inputs/outputs
 	   (verilog-auto-search-do "/*AUTOWIRE*/" 'verilog-auto-wire)
 	   (verilog-auto-search-do "/*AUTOREG*/" 'verilog-auto-reg)
