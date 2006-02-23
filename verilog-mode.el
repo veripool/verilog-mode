@@ -7729,10 +7729,11 @@ Typing \\[verilog-auto] will make this into:
 			      (verilog-modi-get-sub-inouts modi)
 			      ))))
       (forward-line 1)
-      (verilog-insert-indent "// Beginning of automatic regs (for this module's undeclared outputs)\n")
-      (verilog-insert-definition sig-list "reg" indent-pt nil)
-      (verilog-modi-cache-add-regs modi sig-list)
-      (verilog-insert-indent "// End of automatics\n")
+      (when sig-list
+	(verilog-insert-indent "// Beginning of automatic regs (for this module's undeclared outputs)\n")
+	(verilog-insert-definition sig-list "reg" indent-pt nil)
+	(verilog-modi-cache-add-regs modi sig-list)
+	(verilog-insert-indent "// End of automatics\n"))
       )))
 
 (defun verilog-auto-reg-input ()
@@ -7780,10 +7781,11 @@ Typing \\[verilog-auto] will make this into:
 		       (verilog-modi-get-signals modi)
 		       ))))
       (forward-line 1)
-      (verilog-insert-indent "// Beginning of automatic reg inputs (for undeclared instantiated-module inputs)\n")
-      (verilog-insert-definition sig-list "reg" indent-pt nil)
-      (verilog-modi-cache-add-regs modi sig-list)
-      (verilog-insert-indent "// End of automatics\n")
+      (when sig-list
+	(verilog-insert-indent "// Beginning of automatic reg inputs (for undeclared instantiated-module inputs)\n")
+	(verilog-insert-definition sig-list "reg" indent-pt nil)
+	(verilog-modi-cache-add-regs modi sig-list)
+	(verilog-insert-indent "// End of automatics\n"))
       )))
 
 (defun verilog-auto-wire ()
@@ -7831,16 +7833,17 @@ Typing \\[verilog-auto] will make this into:
 		       (verilog-modi-get-signals modi)
 		       ))))
       (forward-line 1)
-      (verilog-insert-indent "// Beginning of automatic wires (for undeclared instantiated-module outputs)\n")
-      (verilog-insert-definition sig-list "wire" indent-pt nil)
-      (verilog-modi-cache-add-wires modi sig-list)
-      (verilog-insert-indent "// End of automatics\n")
-      (when nil	;; Too slow on huge modules, plus makes everyone's module change
-	(beginning-of-line)
-	(setq pnt (point))
-	(verilog-pretty-declarations)
-	(goto-char pnt)
-	(verilog-pretty-expr "//"))
+      (when sig-list
+	(verilog-insert-indent "// Beginning of automatic wires (for undeclared instantiated-module outputs)\n")
+	(verilog-insert-definition sig-list "wire" indent-pt nil)
+	(verilog-modi-cache-add-wires modi sig-list)
+	(verilog-insert-indent "// End of automatics\n")
+	(when nil	;; Too slow on huge modules, plus makes everyone's module change
+	  (beginning-of-line)
+	  (setq pnt (point))
+	  (verilog-pretty-declarations)
+	  (goto-char pnt)
+	  (verilog-pretty-expr "//")))
       )))
 
 (defun verilog-auto-output ()
@@ -7900,10 +7903,11 @@ Typing \\[verilog-auto] will make this into:
 			  sig-list verilog-auto-output-ignore-regexp)))
       (forward-line 1)
       (when v2k (verilog-repair-open-comma))
-      (verilog-insert-indent "// Beginning of automatic outputs (from unused autoinst outputs)\n")
-      (verilog-insert-definition sig-list "output" indent-pt v2k)
-      (verilog-modi-cache-add-outputs modi sig-list)
-      (verilog-insert-indent "// End of automatics\n")
+      (when sig-list
+	(verilog-insert-indent "// Beginning of automatic outputs (from unused autoinst outputs)\n")
+	(verilog-insert-definition sig-list "output" indent-pt v2k)
+	(verilog-modi-cache-add-outputs modi sig-list)
+	(verilog-insert-indent "// End of automatics\n"))
       (when v2k (verilog-repair-close-comma pt))
       )))
 
@@ -7952,10 +7956,11 @@ Typing \\[verilog-auto] will make this into:
 		       ))))
       (forward-line 1)
       (when v2k (verilog-repair-open-comma))
-      (verilog-insert-indent "// Beginning of automatic outputs (every signal)\n")
-      (verilog-insert-definition sig-list "output" indent-pt v2k)
-      (verilog-modi-cache-add-outputs modi sig-list)
-      (verilog-insert-indent "// End of automatics\n")
+      (when sig-list
+	(verilog-insert-indent "// Beginning of automatic outputs (every signal)\n")
+	(verilog-insert-definition sig-list "output" indent-pt v2k)
+	(verilog-modi-cache-add-outputs modi sig-list)
+	(verilog-insert-indent "// End of automatics\n"))
       (when v2k (verilog-repair-close-comma pt))
       )))
 
@@ -8018,10 +8023,11 @@ Typing \\[verilog-auto] will make this into:
 			  sig-list verilog-auto-input-ignore-regexp)))
       (forward-line 1)
       (when v2k (verilog-repair-open-comma))
-      (verilog-insert-indent "// Beginning of automatic inputs (from unused autoinst inputs)\n")
-      (verilog-insert-definition sig-list "input" indent-pt v2k)
-      (verilog-modi-cache-add-inputs modi sig-list)
-      (verilog-insert-indent "// End of automatics\n")
+      (when sig-list
+	(verilog-insert-indent "// Beginning of automatic inputs (from unused autoinst inputs)\n")
+	(verilog-insert-definition sig-list "input" indent-pt v2k)
+	(verilog-modi-cache-add-inputs modi sig-list)
+	(verilog-insert-indent "// End of automatics\n"))
       (when v2k (verilog-repair-close-comma pt))
       )))
 
@@ -8082,10 +8088,11 @@ Typing \\[verilog-auto] will make this into:
 			  sig-list verilog-auto-inout-ignore-regexp)))
       (forward-line 1)
       (when v2k (verilog-repair-open-comma))
-      (verilog-insert-indent "// Beginning of automatic inouts (from unused autoinst inouts)\n")
-      (verilog-insert-definition sig-list "inout" indent-pt v2k)
-      (verilog-modi-cache-add-inouts modi sig-list)
-      (verilog-insert-indent "// End of automatics\n")
+      (when sig-list
+	(verilog-insert-indent "// Beginning of automatic inouts (from unused autoinst inouts)\n")
+	(verilog-insert-definition sig-list "inout" indent-pt v2k)
+	(verilog-modi-cache-add-inouts modi sig-list)
+	(verilog-insert-indent "// End of automatics\n"))
       (when v2k (verilog-repair-close-comma pt))
       )))
 
@@ -8150,15 +8157,16 @@ Typing \\[verilog-auto] will make this into:
 			     (append (verilog-modi-get-inouts modi)))))
 	  (forward-line 1)
 	  (when v2k (verilog-repair-open-comma))
-	  (verilog-insert-indent "// Beginning of automatic in/out/inouts (from specific module)\n")
-	  ;; Don't sort them so a upper AUTOINST will match the main module
-	  (verilog-insert-definition sig-list-o  "output" indent-pt v2k t)
-	  (verilog-insert-definition sig-list-io "inout" indent-pt v2k t)
-	  (verilog-insert-definition sig-list-i  "input" indent-pt v2k t)
-	  (verilog-modi-cache-add-inputs modi sig-list-i)
-	  (verilog-modi-cache-add-outputs modi sig-list-o)
-	  (verilog-modi-cache-add-inouts modi sig-list-io)
-	  (verilog-insert-indent "// End of automatics\n")
+	  (when (or sig-list-i sig-list-o sig-list-io)
+	    (verilog-insert-indent "// Beginning of automatic in/out/inouts (from specific module)\n")
+	    ;; Don't sort them so a upper AUTOINST will match the main module
+	    (verilog-insert-definition sig-list-o  "output" indent-pt v2k t)
+	    (verilog-insert-definition sig-list-io "inout" indent-pt v2k t)
+	    (verilog-insert-definition sig-list-i  "input" indent-pt v2k t)
+	    (verilog-modi-cache-add-inputs modi sig-list-i)
+	    (verilog-modi-cache-add-outputs modi sig-list-o)
+	    (verilog-modi-cache-add-inouts modi sig-list-io)
+	    (verilog-insert-indent "// End of automatics\n"))
 	  (when v2k (verilog-repair-close-comma pt))
 	  )))))
 
@@ -8338,20 +8346,21 @@ Typing \\[verilog-auto] will make this into:
       (setq sig-list (verilog-signals-not-in (verilog-alw-get-outputs sigss)
 					     prereset-sigs))
       (setq sig-list (sort sig-list `verilog-signals-sort-compare))
-      (insert "\n");
-      (indent-to indent-pt)
-      (insert "// Beginning of autoreset for uninitialized flops\n");
-      (indent-to indent-pt)
-      (while sig-list
-	(let ((sig (or (assoc (verilog-sig-name (car sig-list)) all-list) ;; As sig-list has no widths
-		       sig)))
-	  (insert (verilog-sig-name sig)
-		  assignment-str
-		  (verilog-sig-tieoff sig (not verilog-auto-reset-widths))
-		  ";\n")
-	  (indent-to indent-pt)
-	  (setq sig-list (cdr sig-list))))
-      (insert "// End of automatics")
+      (when sig-list
+	(insert "\n");
+	(indent-to indent-pt)
+	(insert "// Beginning of autoreset for uninitialized flops\n");
+	(indent-to indent-pt)
+	(while sig-list
+	  (let ((sig (or (assoc (verilog-sig-name (car sig-list)) all-list) ;; As sig-list has no widths
+			 (car sig-list))))
+	    (insert (verilog-sig-name sig)
+		    assignment-str
+		    (verilog-sig-tieoff sig (not verilog-auto-reset-widths))
+		    ";\n")
+	    (indent-to indent-pt)
+	    (setq sig-list (cdr sig-list))))
+	(insert "// End of automatics"))
       )))
 
 (defun verilog-auto-tieoff ()

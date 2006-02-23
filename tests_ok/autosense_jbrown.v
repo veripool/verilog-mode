@@ -12,8 +12,6 @@ module autosense_jbrown(/*AUTOARG*/
    input [`COM_CLDATWID-1:0] 	  com_cldata;     // data bus to clusters
 
    /*autowire*/
-   // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   // End of automatics
 
    reg 				  tmp;
 `define TEST_DEFINE   1'b0

@@ -10,8 +10,6 @@ module xyz (/*AUTOARG*/
    // End of automatics
 
    /*AUTOOUTPUT*/
-   // Beginning of automatic outputs (from unused autoinst outputs)
-   // End of automatics
 
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)

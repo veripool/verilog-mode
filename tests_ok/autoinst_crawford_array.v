@@ -17,8 +17,6 @@ module autoinst_crawford_array(/*AUTOARG*/
    input 			   rst_n;
 
    /*AUTOWIRE*/
-   // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   // End of automatics
 
    // non-arrayed example
    autoinst_crawford_array_a auto_a_0

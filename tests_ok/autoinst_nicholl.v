@@ -32,11 +32,7 @@ module top (/*AUTOARG*/);
    wire [4:7]		bus2;			// From sub3 of sub3.v
 
    /*AUTOINPUT*/
-   // Beginning of automatic inputs (from unused autoinst inputs)
-   // End of automatics
    /*AUTOOUTPUT*/
-   // Beginning of automatic outputs (from unused autoinst outputs)
-   // End of automatics
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire [0:3]		bus1;			// From sub3 of sub3.v

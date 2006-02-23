@@ -21,16 +21,10 @@ module x (/*AUTOARG*/
    input 	HI_P;
 
    /*AUTOREG*/
-   // Beginning of automatic regs (for this module's undeclared outputs)
-   // End of automatics
 
    /*AUTOINPUT*/
-   // Beginning of automatic inputs (from unused autoinst inputs)
-   // End of automatics
 
    /*AUTOOUTPUT*/
-   // Beginning of automatic outputs (from unused autoinst outputs)
-   // End of automatics
 
    always @(/*AUTOSENSE*/MIERHW) begin
 

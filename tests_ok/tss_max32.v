@@ -23,8 +23,6 @@ module tss_max32 (/*AUTOARG*/
    //======================================================================
 
    /*AUTOREG*/
-   // Beginning of automatic regs (for this module's undeclared outputs)
-   // End of automatics
 
    //======================================================================
    // Comparison

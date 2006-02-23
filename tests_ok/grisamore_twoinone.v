@@ -14,11 +14,7 @@ module foo (/*AUTOARG*/
    output		d;			// From foo2 of foo2.v
    // End of automatics
    /*AUTOWIRE*/
-   // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   // End of automatics
    /*AUTOREGINPUT*/
-   // Beginning of automatic reg inputs (for undeclared instantiated-module inputs)
-   // End of automatics
    foo2 foo2 (/*AUTOINST*/
 	      // Outputs
 	      .d			(d),
@@ -36,17 +32,9 @@ module foo2 (/*AUTOARG*/
    a, b
    );
    /*AUTOINPUT*/
-   // Beginning of automatic inputs (from unused autoinst inputs)
-   // End of automatics
    /*AUTOOUTPUT*/
-   // Beginning of automatic outputs (from unused autoinst outputs)
-   // End of automatics
    /*AUTOWIRE*/
-   // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   // End of automatics
    /*AUTOREGINPUT*/
-   // Beginning of automatic reg inputs (for undeclared instantiated-module inputs)
-   // End of automatics
    input a;
    input b;
    output d;
