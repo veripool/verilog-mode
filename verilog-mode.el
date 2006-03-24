@@ -711,14 +711,23 @@ For example, \"_t$\" matches typedefs named with _t, as in the C language."
   :type 'hook
   :group 'verilog-mode)
 
+(defcustom verilog-auto-hook nil
+  "*Hook run after `verilog-mode' updates AUTOs."
+  :type 'hook
+  :group 'verilog-mode-auto)
+
 (defcustom verilog-before-auto-hook nil
   "*Hook run before `verilog-mode' updates AUTOs."
   :type 'hook
-  :group 'verilog-mode-auto
-)
+  :group 'verilog-mode-auto)
 
-(defcustom verilog-auto-hook nil
-  "*Hook run after `verilog-mode' updates AUTOs."
+(defcustom verilog-delete-auto-hook nil
+  "*Hook run after `verilog-mode' deletes AUTOs."
+  :type 'hook
+  :group 'verilog-mode-auto)
+
+(defcustom verilog-before-delete-auto-hook nil
+  "*Hook run before `verilog-mode' deletes AUTOs."
   :type 'hook
   :group 'verilog-mode-auto)
 
@@ -6974,11 +6983,17 @@ removed."
 
 (defun verilog-delete-auto ()
   "Delete the automatic outputs, regs, and wires created by \\[verilog-auto].
-Use \\[verilog-auto] to re-insert the updated AUTOs."
+Use \\[verilog-auto] to re-insert the updated AUTOs.
+
+The hooks `verilog-before-delete-auto-hook' and `verilog-delete-auto-hook' are
+called before and after this function, respectively."
   (interactive)
   (save-excursion
     (if (buffer-file-name)
 	(find-file-noselect (buffer-file-name)))	;; To check we have latest version
+    ;; Allow user to customize
+    (run-hooks 'verilog-before-delete-auto-hook)
+
     ;; Remove those that have multi-line insertions
     (verilog-auto-re-search-do "/\\*AUTO\\(OUTPUTEVERY\\|CONCATCOMMENT\\|WIRE\\|REG\\|DEFINEVALUE\\|REGINPUT\\|INPUT\\|OUTPUT\\|INOUT\\|RESET\\|TIEOFF\\|UNUSED\\)\\*/"
 			       'verilog-delete-autos-lined)
@@ -6994,7 +7009,10 @@ Use \\[verilog-auto] to re-insert the updated AUTOs."
     ;; Remove template comments ... anywhere in case was pasted after AUTOINST removed
     (goto-char (point-min))
     (while (re-search-forward "\\s-*// \\(Templated\\|Implicit \\.\\*\\)[ \tLT0-9]*$" nil t)
-      (replace-match ""))))
+      (replace-match ""))
+
+    ;; Final customize
+    (run-hooks 'verilog-delete-auto-hook)))
 
 ;;
 ;; Auto inject
