@@ -7463,8 +7463,8 @@ Templates:
   the brackets) will be replaced by the same bus subscript as it is being
   connected to, or the [] will be removed if it is a single bit signal.
   Generally it is a good idea to do this for all connections in a template,
-  as then they will work for any width signal.  See PTL_BUS becoming
-  PTL_BUSNEW below.
+  as then they will work for any width signal, and with AUTOWIRE.  See
+  PTL_BUS becoming PTL_BUSNEW below.
 
   If you have a complicated template, set `verilog-auto-inst-template-numbers'
   to see which regexps are matching.  Don't leave that mode set after
@@ -7803,7 +7803,10 @@ Make wire statements for instantiations outputs that aren't
 already declared.
 
 Limitations:
-  This ONLY detects outputs of AUTOINSTants (see `verilog-read-sub-decls').
+  This ONLY detects outputs of AUTOINSTants (see `verilog-read-sub-decls'),
+  and all busses must have widths, such as those from AUTOINST, or using []
+  in AUTO_TEMPLATEs.
+  
   This does NOT work on memories, declare those yourself.
 
 A simple example (see `verilog-auto-inst' for what else is going on here):
