@@ -5676,7 +5676,9 @@ Return the list of signals found, using submodi to look up each port."
 		((looking-at "{\\(.*\\)}.*\\s-*)")
 		 (let ((mlst (split-string (match-string 1) ","))
 		       mstr)
-		   (while (setq mstr (pop mlst))
+		   (while mlst
+		     (setq mstr (car mlst)
+			   mlst (cdr mlst))
 		     ;;(unless noninteractive (message "sig: %s " mstr))
 		     (cond
 		      ((string-match "\\(['`a-zA-Z0-9_$]+\\)\\s-*$" mstr)
