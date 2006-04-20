@@ -420,6 +420,43 @@ Setting this variable to zero results in every end acquiring a comment; the
 default avoids too many redundant comments in tight quarters"
   :group 'verilog-mode-indent
   :type 'integer)
+(defcustom verilog-auto-lineup '(declaration)
+  "*If this list contains the symbol 'all', then all line ups described below are done.
+
+If this list contains the symbol 'declaration', then declarations are lined up
+with any preceding declarations, taking into account widths and the like, so
+for example the code:
+   reg [31:0] a;
+   reg b;
+would become
+   reg [31:0] a;
+   reg        b;
+
+If this list contains the symbol 'assignment', then assignments are lined up
+with any preceding assignments, so for example the code
+   a_long_variable = b + c;
+   d = e + f;
+would become
+   a_long_variable = b + c;
+   d               = e + f;
+"
+
+;; The following is not implemented:
+;If this list contains the symbol 'case', then case items are lined up
+;with any preceding case items, so for example the code
+;   case (a) begin
+;    a_long_state : a = 3;
+;    b: a = 4;
+;   endcase
+;would become
+;   case (a) begin
+;    a_long_state : a = 3;
+;    b            : a = 4;
+;   endcase
+;
+
+  :group 'verilog-mode-indent
+  :type 'list )
 
 (defcustom verilog-auto-endcomments t
   "*True means insert a comment /* ... */ after 'end's.
@@ -730,14 +767,6 @@ For example, \"_t$\" matches typedefs named with _t, as in the C language."
   "*Hook run before `verilog-mode' deletes AUTOs."
   :type 'hook
   :group 'verilog-mode-auto)
-
-(defvar verilog-auto-lineup '(all)
-  "*List of contexts where auto lineup of :'s or ='s should be done.
-Elements can be of type: 'declaration' or 'case', which will do auto
-lineup in declarations or case-statements respectively.  The word 'all'
-will do all lineups.  '(case declaration) for instance will do lineup
-in case-statements and parameter list, while '(all) will do all
-lineups.")
 
 (defvar verilog-imenu-generic-expression
   '((nil "^\\s-*\\(\\(m\\(odule\\|acromodule\\)\\)\\|primitive\\)\\s-+\\([a-zA-Z0-9_.:]+\\)" 4)
@@ -1227,6 +1256,12 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
        "module" "macromodule" "primitive" "class" "program" "initial" "final" "always" "always_comb"
        "always_ff" "always_latch" "endtask" "endfunction" "interface" "package"
        "config"))))
+
+(defconst verilog-defun-level-not-generate-re
+  (eval-when-compile
+    (verilog-regexp-words
+     `(
+       "module" "macromodule" "primitive" "class" "program" "interface" "package" "config"))))
 
 (defconst verilog-cpp-level-re
   (eval-when-compile
@@ -2016,7 +2051,7 @@ Variables controlling indentation/edit style:
     end acquiring a comment; the default avoids too many redundant
     comments in tight quarters.
  `verilog-auto-lineup'              (default `(all))
-    List of contexts where auto lineup of :'s or ='s should be done.
+    List of contexts where auto lineup of code should be done.
 
 Turning on Verilog mode calls the value of the variable `verilog-mode-hook' with
 no args, if that value is non-nil.
@@ -2176,8 +2211,17 @@ With optional ARG, remove existing end of line comments."
 		 (end-of-line)
 		 (delete-horizontal-space)
 		 't
-		 )))
-	   (newline)
+		 )
+	       )
+	     )
+	   ;; see if we should line up assignments
+	   (progn
+	     (if (or (memq 'all verilog-auto-lineup)
+		     (memq 'assignments verilog-auto-lineup))
+		 (verilog-pretty-expr "=")
+	       )
+	     (newline)
+	     )
 	 (forward-line 1)
 	 )
        ;; Indent next line
@@ -2198,7 +2242,8 @@ With optional ARG, remove existing end of line comments."
     (save-excursion
       (beginning-of-line)
       (verilog-forward-ws&directives)
-      (verilog-indent-line))
+      (verilog-indent-line)
+      )
     (if (and verilog-auto-newline
 	     (not (verilog-parenthesis-depth)))
 	(electric-verilog-terminate-line))))
@@ -2632,6 +2677,25 @@ more specifically, point @ in the line foo : @ begin"
 		(throw 'found (= nest 0)))
 	       ))))
       nil)))
+(defun verilog-in-generate-region-p ()
+  "Return TRUE if in a generate region;
+more specifically, after a generate and before an endgenerate"
+  (interactive)
+  (let ((lim (save-excursion (verilog-beg-of-defun)  (point)))
+	(nest 1)
+	)
+    (save-excursion
+      (while (and
+	      (/= nest 0)
+	      (verilog-re-search-backward "\\<\\(generate\\)\\|\\(endgenerate\\)\\>" lim 'move)
+	      (cond
+	       ((match-end 1) ; generate
+		(setq nest (1- nest)))
+	       ((match-end 2) ; endgenerate
+		(setq nest (1+ nest)))
+	       ))
+	))
+    (= nest 0) )) ; return nest
 
 (defun verilog-in-fork-region-p ()
   "Return true if between a fork and join."
@@ -3580,8 +3644,10 @@ type.  Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 	      (verilog-leap-to-case-head)
 	      (if (looking-at verilog-case-re)
 		  (throw 'nesting 'case)))))
-
-       ((looking-at verilog-defun-level-re)
+       
+       ((looking-at (if (verilog-in-generate-region-p)
+			verilog-defun-level-not-generate-re
+		      verilog-defun-level-re))
 	(throw 'nesting 'defun))
 
        ((looking-at verilog-cpp-level-re)
@@ -4484,54 +4550,60 @@ BASEIND is the base indent to offset everything."
 	(val)
 	(m1 (make-marker))
 	)
+    (setq val (+ baseind (eval (cdr (assoc 'declaration verilog-indent-alist)))))
+    (indent-line-to val)
+    
     ;; Use previous declaration (in this module) as template.
-    (if (verilog-re-search-backward (or (and verilog-indent-declaration-macros
-					     verilog-declaration-re-1-macro)
-					verilog-declaration-re-1-no-macro) lim t)
-	(progn
-	  (goto-char (match-end 0))
-	  (skip-chars-forward " \t")
-	  (setq ind (current-column))
-	  (goto-char pos)
-	  (setq val (+ baseind (eval (cdr (assoc 'declaration verilog-indent-alist)))))
-	  (indent-line-to val)
-	  (if (and verilog-indent-declaration-macros
-		   (looking-at verilog-declaration-re-2-macro))
-	      (let ((p (match-end 0)))
-		(set-marker m1 p)
-		(if (verilog-re-search-forward "[[#`]" p 'move)
-		    (progn
-		      (forward-char -1)
-		      (just-one-space)
-		      (goto-char (marker-position m1))
-		      (just-one-space)
-		      (indent-to ind)
-		      )
-		  (if (/= (current-column) ind)
-		      (progn
-			(just-one-space)
-			(indent-to ind))
-		    )))
-	    (if (looking-at verilog-declaration-re-2-no-macro)
-		(let ((p (match-end 0)))
-		  (set-marker m1 p)
-		  (if (verilog-re-search-forward "[[`#]" p 'move)
-		      (progn
-			(forward-char -1)
-			(just-one-space)
-			(goto-char (marker-position m1))
-			(just-one-space)
-			(indent-to ind))
-		    (if (/= (current-column) ind)
+    (if (or (memq 'all verilog-auto-lineup)
+	    (memq 'declaration verilog-auto-lineup))
+	(if (verilog-re-search-backward (or (and verilog-indent-declaration-macros
+						 verilog-declaration-re-1-macro)
+					    verilog-declaration-re-1-no-macro) lim t)
+	    (progn
+	      (goto-char (match-end 0))
+	      (skip-chars-forward " \t")
+	      (setq ind (current-column))
+	      (goto-char pos)
+	      (setq val (+ baseind (eval (cdr (assoc 'declaration verilog-indent-alist)))))
+	      (indent-line-to val)
+	      (if (and verilog-indent-declaration-macros
+		       (looking-at verilog-declaration-re-2-macro))
+		  (let ((p (match-end 0)))
+		    (set-marker m1 p)
+		    (if (verilog-re-search-forward "[[#`]" p 'move)
 			(progn
+			  (forward-char -1)
 			  (just-one-space)
-			  (indent-to ind))
-		      )))
-	      )))
-      (let ((val (+ baseind (eval (cdr (assoc 'declaration verilog-indent-alist))))))
-	(indent-line-to val))
+			  (goto-char (marker-position m1))
+			  (just-one-space)
+			  (indent-to ind)
+			  )
+		      (if (/= (current-column) ind)
+			  (progn
+			    (just-one-space)
+			    (indent-to ind))
+			)))
+		(if (looking-at verilog-declaration-re-2-no-macro)
+		    (let ((p (match-end 0)))
+		      (set-marker m1 p)
+		      (if (verilog-re-search-forward "[[`#]" p 'move)
+			  (progn
+			    (forward-char -1)
+			    (just-one-space)
+			    (goto-char (marker-position m1))
+			    (just-one-space)
+			    (indent-to ind))
+			(if (/= (current-column) ind)
+			    (progn
+			      (just-one-space)
+			      (indent-to ind))
+			  )))
+		  )))
+	  )
       )
-    (goto-char pos)))
+    (goto-char pos)
+    )
+  )
 
 (defun verilog-get-lineup-indent (b edpos)
   "Return the indent level that will line up several lines within the region.
@@ -5676,9 +5748,7 @@ Return the list of signals found, using submodi to look up each port."
 		((looking-at "{\\(.*\\)}.*\\s-*)")
 		 (let ((mlst (split-string (match-string 1) ","))
 		       mstr)
-		   (while mlst
-		     (setq mstr (car mlst)
-			   mlst (cdr mlst))
+		   (while (setq mstr (pop mlst))
 		     ;;(unless noninteractive (message "sig: %s " mstr))
 		     (cond
 		      ((string-match "\\(['`a-zA-Z0-9_$]+\\)\\s-*$" mstr)
