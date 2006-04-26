@@ -1,0 +1,717 @@
+<MACRO_SET TITLE="Verilog-Mode FAQ">
+<MACRO_SET CONTENT="Verilog-Mode, Mode, Emacs, Frequently Asked Questions, AUTOINST, AUTOARG">
+<MACRO_SET DESCRIPTION="Verilog-mode for Emacs Frequently Asked Questions">
+<MACRO_SET AUTHOR="by <A HREF=\"mailto:mac@verilog.com\">Michael McNamara</a> (Indentation, Highlighting, etc) and &WSNYDER; (AUTO features)">
+<MACRO_INCLUDE file="headertitle.htp">
+
+<!-- $Id:$ -->
+
+<p>This is the Frequently Asked Questions for &VERILOG_MODE;.  This FAQ is Copyright
+2006 by Michael McNamara and Wilson Snyder.  You may redistribute this
+document in its entirety only, and the links to <A
+HREF="http://www.verilog.com/">www.Verilog.com</A> and <A
+HREF="http://www.veripool.org/">www.Veripool.com</A> must be retained.
+
+<MACRO_CONTENTS level=3>
+
+<hr>   
+
+<a name="2obtaining"></a><h2>Obtaining, and general information</h2>
+
+<a name="3version"></a><h3>Where is the most up to date version of this FAQ?</h3>
+
+   <p>The official released version of this document is the
+   <A HREF="http://www.veripool.org/verilog-mode-faq.html">Verilog-Mode FAQ</A>,
+   from <A HREF="http://www.veripool.org/verilog-mode-faq.html">http://www.veripool.org/verilog-mode-faq.html</a>.
+
+<a name="3where"></a><h3>Where do I get Verilog-Mode?</h3>
+
+   <p>The official released version of Verilog-Mode is distributed by Michael
+   McNamara from his <A HREF="http://www.verilog.com">Verilog site</A>.
+   You can also subscribe to get mailed updates.
+
+   <p>Beta versions are available from the <A HREF="http://www.veripool.org/">Veripool</A>
+   under <A HREF="http://www.veripool.org/verilog-mode.html">Verilog-mode</A>.
+
+<a name="3install"></a><h3>How do I install Verilog-Mode?</h3>
+
+   <p>See <A HREF="http://www.verilog.com/emacs_install.html">Installation</A>.
+
+<a name="3mytool"></a><h3>Can I release Verilog-Mode with my tool?</h3>
+
+   <p>Yes.  Verilog-Mode is released under the GNU General Public License.  See
+   the license for the full legal details, but fundamentally distributing it
+   stand-alone with a commercial tool is no problem, you merely need to insure
+   verilog-mode.el remains available to everyone.  If you didn't make any
+   changes, you're all set, else you'll need to post your version on a public
+   website, or better, feed the changes back to the authors for inclusion in
+   the base version.
+
+<a name="2entering"></a><h2>Entering Verilog-Mode</h2>
+
+<a name="3viper"></a><h3>Using viper, why when I load a verilog file does it loose viper?</h3>
+
+   <p>You need to tell viper that it is ok with you for files in verilog to
+   come up in verilog-mode and viper.
+
+   <p>To do that, type
+<pre>
+M-x customize RET viper-misc
+</pre>
+
+   <p>Then scroll down and find the item <b>Vi State Mode List</b>
+   Left-Click on the triangle to open this up.
+
+   <p>Scroll down through the blizzard of listed modes to the bottom.
+   You should see:
+<pre>
+[INS] [DEL] Symbol: csh-mode
+[INS] [DEL] Symbol: gnus-article-mode
+[INS] [DEL] Symbol: mh-show-mode
+[INS]
+   [State]: this option has been set and saved.
+Major modes that require Vi command state
+</pre>
+   
+   <p>Middle-click on the bare INS; you should get:
+   
+<pre>
+[INS] [DEL] Symbol: mh-show-mode
+[INS] [DEL] Symbol: nil
+[INS]
+   [State]
+</pre>
+   
+   <p>Then left-click on nil, and replace the string 'nil' with verilog-mode
+   You should get:
+   
+<pre>
+[INS] [DEL] Symbol: mh-show-mode
+[INS] [DEL] Symbol: verilog-mode
+[INS]
+   [State]
+</pre>
+   
+   <p>Now middle-click on <b>[State]</b> and a pop up menu appears;
+   select <b>Set for Current Session</b> and then also middle click again
+   and select <b>Save for Future Sessions</b>.
+
+   <p>Now if you are running viper, when you load a verilog file, it
+   will start in viper mode.
+
+<a name="3skeleton"></a><h3>Why do I get the message "File mode specification error: (void-function define-skeleton)"?</h3>
+
+<p>Or, the similar message:
+  
+<pre>
+File mode specification error : (file-error "Cannot open load file" "overlay")
+</pre>
+
+   <p>You need skeleton.el, part of the base package for
+   the first, or overlay.el, part of the fsf-compatibility package
+   for the second, which are both XEmacs lisp packages, which you
+   somehow have not installed, or have not updated.
+
+   <p>Go to <b>Tools -> Packages ->Add download site</b> and
+   pick a site (xemacs.org works for me)
+
+   <p>Then select <b>Tools -> Packages -> List & Install</b>
+
+   <p>Go to the bottom, and click on the line that says <font
+   color="red">xemacs-base</font>. to get the skeleton.el file.  You
+   will see something like:
+   
+<pre>
+                 Latest Installed
+  Package name   Vers.  Vers.   Description
+===============================================================================
+  Sun             1.13   1.13   Support for Sparcworks.
+     ...
+  w3              1.18   1.18   A Web browser.
+* xemacs-base     1.53   1.51   Fundamental XEmacs support, you almost certainly need this.
+- xemacs-devel    1.33   -----  Emacs Lisp developer support.
+- xslt-process    1.03   -----  XSLT processing support.
+  zenirc          1.09   1.09   ZENIRC IRC Client.
+===============================================================================
+</pre>
+
+   <p>For the overlay package, click on the line that says <font
+   color="red">fsf-compat</font>. to get the overlay.el file.  In
+   this case you will see something like:
+   
+<pre>
+                 Latest Installed
+  Package name   Vers.  Vers.   Description
+===============================================================================
+  Sun             1.13   1.13   Support for Sparcworks.
+     ...
+
+  w3              1.18   1.18   A Web browser.
+* fsf-compat      1.12   ----   FSF EMacs compatibility files
+  zenirc          1.09   1.09   ZENIRC IRC Client.
+===============================================================================
+</pre>
+
+   <p>When you click on it, the * changes to a +
+
+   <p>Then type x, which will install the package.
+
+   <p>Then restart XEmacs and things should then work just fine.
+
+<a name="2indentation"></a><h2>Indentation</h2>
+
+<a name="3indentlarge"></a><h3>How do I indent a large region of code?</h3>
+
+   <p>Typing TAB on every line can get old...
+   
+   <p>Use <code>C-M-\</code> to indent a region (selected by
+   setting the point at one end, and having the cursor at the
+   other end, as usual). Perhaps a future version of the emacs
+   mode will include functions that mimic some of C's extra
+   bindings.
+      
+<a name="3tabs"></a><h3>Why when others edit my code does it looks unindented?</h3>
+      
+   This is a general problem sharing files between folks. It also occurs
+   between folks using the same editor, as many editors allow one to set the
+   tab width.  The general solution is for you to add a write file hook that
+   expands tabs to spaces.
+      
+   <p>Add the following to your <b>.emacs</b> file: (or <b>init.el</b> file
+   for XEmacs 21 users.)
+
+<pre>
+(add-hook 'verilog-mode-hook '(lambda ()
+    (add-hook 'local-write-file-hooks (lambda()
+       (untabify (point-min) (point-max))))))
+    </pre>
+
+   <p>This arranges so that any file in verilog mode (the "add-hook
+   'verilog-mode-hook" part) gets added to it's 'local-write-file-hooks' a
+   call to the function 'untabify' with arguments that are the first and last
+   character in the buffer.  Untabify converts all tabs in the region to
+   multiple spaces.
+
+<a name="3instab"></a><h3>Why can't I insert tabs in some places in the file?</h3>
+
+   <p>This is because tab is a electric key that causes reindentation.
+   See another FAQ for how to disable this.
+   
+   <p>If you want to manyally space something out, in general, in Emacs you can escape the
+   special meaning of any key by first typing C-q, which quotes
+   the next key.
+
+<a name="3electab"></a><h3>How do I prevent tab from automatically indenting?</h3>
+
+   <p>Set the verilog-tab-always-indent variable to nil.  If your goal is minimal
+   intrusion of magic keys, you'll probably also want to set
+   verilog-auto-newline to nil.
+
+   <p>Add to your .emacs file:
+
+<pre>
+(add-hook 'verilog-mode-hook
+	  '(lambda ()
+	     (setq verilog-auto-newline nil)
+	     (setq verilog-tab-always-indent nil)
+	  )))
+</pre>
+
+<a name="3endcmt"></a><h3>How do I prevent those // comments at the end of blocks?</h3>
+
+   <p>Set verilog-auto-endcomments to nil:
+
+<pre>
+(setq verilog-auto-endcomments nil)
+</pre>
+
+<a name="3hang"></a><h3>Why does Verilog-Mode hang reading a huge file?</h3>
+
+   <p>To debug the problem, type
+
+<pre>
+M-x eval-expression RET
+(setq debug-on-quit t)
+</pre>
+
+   <p>Then load the file.  After 10 seconds or whatever hit Ctrl-G to stop Emacs.
+   It will show in the debugger what it's doing.
+
+   <p>If you're using a older flavor of Emacs, most of the time it will stop
+   somewhere in "fontification".  Simply disable fontification (coloring) of
+   larger files.  Put into your .emacs:
+
+<pre>
+(setq font-lock-maximum-size 100000)
+</pre>
+
+<a name="2language"></a><h2>Language Support</h2>
+
+<a name="3bit"></a><h3>Why does the signal "bit", "do", "const" get ignored?</h3>
+
+   <p>They're keywords.  Unfortunately the SystemVerilog committee made these
+   into new keywords, but did not provide a way to make Verilog 1995 code
+   forward compatible by leaving them as signal names.  You need to rename
+   your signals.
+
+<a name="3generate"></a><h3>Can I use Verilog-Mode to do 'generate' like code?</h3>
+
+   <p>There's no general way to do this with Verilog-Mode.  Obviously you can use
+   AUTOINST to simplify the code, then ifdef, but that isn't very clean.
+
+   <p>When I've needed to do a true generate, I often read signals with
+   &VERILOG_PERL;, then write the text with printf's or the Perl
+   Text::Template module.  I then pass the output of this through Emacs
+   Verilog-Mode --batch, and walla.
+
+<a name="2movement"></a><h2>Movement</h2>
+
+<a name="3gotodefun"></a><h3>How can I jump the cursor to the file that defines a module?</h3>
+
+   <p>Use <code>\M-x verilog-goto-defun (C-c\C-d)</code>.
+
+<a name="3compile"></a><h3>How can I invoke my compiler?</h3>
+
+   <p>Use <code>M-x compile</code>, or <code>M-x verilog-auto-save-compile (C-c
+   C-s)</code>.  This looks at the verilog-tool setting and chooses your
+   linter, coverage, simulator or compiler.  The verilog-linter is the
+   default.
+
+<p>So, in your .emacs set reasonable defaults for all of them:
+
+<pre>
+(setq verilog-tool 'verilog-linter)
+(setq verilog-linter "vlint ...")
+(setq verilog-coverage "coverage ...)
+(setq verilog-simulator "verilator ... ")
+(setq verilog-compiler "verilator ... "
+</pre>
+
+   <p>Then, if a file needs a special setting, override it at the bottom of each
+   Verilog file:
+
+<pre>
+// Local Variables:
+// verilog-linter:"vlint --local_options __FILE__"
+// End:
+</pre>
+
+<a name="3nexterror"></a><h3>How do I go to the next error?</h3>
+
+   <p>After using <code>M-x compile</code>, or <code>M-x verilog-auto-save-compile
+   (C-c C-s)</code>, you'll get the *compile* buffer.  If errors are printed
+   there, you can jump to the line number the message mentions with <code>M-x
+   next-error (C-x `)</code>.  Or, place the cursor over the error message and
+   press return.
+
+   <p>If this does not work with your tool, the tool probably does not produce
+   errors in a standard way.  You'll need to tweak the verilog-error-regexp
+   variable.  This contains a regular expression which matches a error message
+   and returns the file and line number.
+
+<a name="2autos"></a><h2>Autos</h2>
+
+<a name="3firstauto"></a><h3>How do I start using the autos for the first time?</h3>
+
+   <p>There are two easy ways to get started.  The first is to convert an
+   existing file, and the second is covered in the next FAQ.
+
+   <p>To convert an existing file to use the autos, use <code>M-x
+   verilog-auto-inject (C-c C-z)</code>.  Then, expand them with <code>M-x
+   verilog-auto (C-c C-s)</code>.
+
+<a name="3whatauto"></a><h3>What AUTOs should I use for a new file?</h3>
+
+   <p>Here's a good template for a first file:
+
+<pre>
+module Modname (/*AUTOARG*/);
+
+   // Input/output
+   //input signal;	// Comment on signal
+
+   // Automatics
+   /*AUTOWIRE*/
+   /*AUTOREG*/
+
+   // Body
+   //statements, etc go here.
+
+   // Linting
+   wire _unused_ok = &amp;{1'b0,
+		       // Put list of unused signals here
+		       1'b0};
+endmodule
+</pre>
+
+   <p>You'd then add cells using AUTOINST:
+
+<pre>
+   subfile subcell (
+	/*AUTOINST*/);
+</pre>
+
+   <p>[The newline after the open parenthesis is suggested for larger
+   instantiations to make the lines look nicer.]
+
+<p>And add sensitivity blocks using AUTOSENSE (aka AS):
+
+<pre>
+   always @(/*AS*/) begin   // or, @* if using Verilog-2001
+      ...
+   end
+</pre>
+
+<a name="3stub"></a><h3>How do I make a Stub module?</h3>
+
+   <p>A stub is a module with the same input/output as another module, but it
+   simply ignores all the inputs and drives zeros for outputs.  This is often
+   useful for replacing modules that aren't needed for a simulation.
+
+   <p>By using several Autos, the entire stub can be created for you:
+
+<pre>
+module ModnameStub (/*AUTOARG*/);
+   /*AUTOINOUTMODULE("Modname")*/
+
+   /*AUTOWIRE*/
+   /*AUTOREG*/
+
+   /*AUTOTIEOFF*/
+
+   wire _unused_ok = &amp;{1'b0,
+		       /*AUTOUNUSED*/
+		       1'b0};
+endmodule
+</pre>
+
+   <p>This presumes Modname.v already exists and you want to copy the entire I/O
+   list from it.  Otherwise, remove the AUTOINOUTMODULE and add the I/O list
+   yourself.
+
+<a name="3autobatch"></a><h3>How do I update AUTOs from the command line?</h3>
+
+   <p>Use the following command:
+
+<pre>
+emacs --batch -f verilog-batch-auto {filenames...}
+</pre>
+
+   <p>This will load the file, update the automatics, and re-save the file.  The
+   filenames need to be provided in a bottom-up order.  For a utility to
+   determine the hierarchy of a design, see vhier in &VERILOG_PERL;.
+
+   <p>Additional information is in Emacs under M-x describe-function
+   verilog-batch-auto.
+
+<a name="3dirs"></a><h3>How do I tell the AUTOs what directories my files are in?</h3>
+
+   <p>The cleanest way is to use standard Verilog-XL style flags at the
+   bottom of your Verilog file:
+
+<pre>
+// Local Variables:
+// verilog-library-flags:("-y incdir1/ -y incdir2/")
+// End:
+</pre>
+
+   <p>You'll also often see files that do it in the way that old Verilog-Mode
+   versions required:
+
+<pre>
+// Local Variables:
+// verilog-library-directories:("." "dir1" "dir2" ...)
+// End:
+</pre>
+
+   <p>If you find yourself adding the same flags to many files, you can create
+   a file with all of your include directories in it, then point Emacs to it.
+   All of your Verilog files would contain:
+
+<pre>
+// Local Variables:
+// verilog-library-directories:("-f ../../up_to_top/include/input.vc")
+// End:
+</pre>
+
+   <p>Then input.vc contains the list of flags:
+
+<pre>
+-y incdir1
+-y incdir2
+...
+</pre>
+
+   <p>Note reading a file of command flags with the -f argument is also supported
+   by Verilog-XL, VCS, Verilator and most other Verilog related tools.  Thus
+   you can write a single input.vc with all of the directories specified and
+   feed it to all of your tools.
+
+<a name="3envvar"></a><h3>How do I use environment variables for a filename, etc?</h3>
+
+   <p>Emacs only expands $'s when you ask it to do so by using
+   substitute-in-file-name.  So, if you want to substitute $ENV into a Local
+   Variables in the bottom of your file, you need something like:
+
+<pre>
+// Local Variables:
+// eval:(setq verilog-library-directories (list (substitute-in-file-name "$W") ))
+// End:
+</pre>
+
+<a name="3modsearch"></a><h3>In what order does Verilog-Mode search for modules?</h3>
+
+   <p>It first searches the current file, then searches for the module.v in each
+   directory you provided in the order you provided.  If the module isn't
+   found, it searches any libraries specified.
+
+   <p>Generally it's a really really bad idea to have files with the same name in
+   different directories... But you probably know that. :)
+
+<a name="3groupdef"></a><h3>How do I make defaults common for my entire design team?</h3>
+
+   <p>First, you may not want to.  If you're distributing IP you're much better
+   off using the Local Variables at the bottom of the file, and insuring all
+   of your file paths are relative.  That way your clients can modify the
+   AUTOs without any tweaks.
+
+   <p>That said, add the following to site-start.el in your global Emacs
+   distribution:
+
+<pre>
+(add-hook 'verilog-mode-hook '(lambda ()
+				(setq verilog-auto-newline nil
+				      verilog-tab-always-indent nil
+				      verilog-auto-endcomments nil
+				      verilog-compiler "verilator "
+				      ;; etc, etc...
+				      )))
+</pre>
+
+   <p>Alternatively, add the above to a group-start.el file and have all users
+   add a group-startup to their .emacs files:
+
+<pre>
+(when (file-exists-p "/path/to/group/group-start.el")
+          (load-file "/path/to/group/group-start.el"))
+</pre>
+
+<a name="2autoprob"></a><h2>AUTO problems</h2>
+
+<a name="3v2kports"></a><h3>How do I use Verilog 2001 style port lists?</h3>
+
+   <p>Place AUTOINPUT/AUTOOUTPUT etc inside the module () parenthesis.
+
+<a name="3noninstwire"></a><h3>Does anything help declare non-instance wires and regs?</h3>
+
+   <p>No.  AUTOWIRE and AUTOREG all assume that somewhere in your design you've
+   declared the signal.  This is based on the belief that there should be at
+   least one point where you've declared the signal, and hopefully documented
+   it on the same line.
+
+<a name="3evalhook"></a><h3>Why does Emacs keep asking "Process `eval' or hook local variables in file?"</h3>
+
+   <p>You need to put in your global .emacs
+
+<pre>
+(setq enable-local-eval t)
+</pre>
+
+<a name="3defines"></a><h3>Why does AUTOSENSE add `defines to the list?</h3>
+
+   <p>Call it a misfeature. :-)
+
+   <p>Take the case where you have
+
+<pre>
+always @(/*AS*/)
+   ...
+   a = `b;
+</pre>
+
+   <p>and b isn't defined.  Is b a constant, or another signal?  No way to tell,
+   it's safest to put it in the always.  Granted, b could simply be defined
+   in the file.  If so, you can tell Verilog-Mode to read defines in the current
+   file, and any `includes using:
+
+<pre>
+// Local Variables:
+// eval:(verilog-read-defines)
+// eval:(verilog-read-includes)
+// End:
+</pre>
+
+   <p>If you only use defines to represent constants, it's easier to just tell
+   Verilog-Mode that fact, and it will exclude all of them:
+
+<pre>
+// Local Variables:
+// verilog-auto-sense-defines-constant: t
+// End:
+</pre>
+
+<a name="3svtypes"></a><h3>Why do the AUTOs treat SystemVerilog types as signals?</h3>
+
+   <p>You need to tell Verilog-Mode how to recognize a type.  All of your types
+   should match some convention, a _t suffix is probably the most common.
+   Then add to your files:
+
+<pre>
+// Local Variables:
+// verilog-typedef-regexp:"_t$"
+// End:
+</pre>
+
+<a name="3ifdefs"></a><h3>Why do the AUTOS ignore my ifdefs?</h3>
+
+   <p>Verilog-Mode simply pretends all ifdefs don't exist.  This is done because
+   the permutations across multiple ifdefs quickly results in code that's way
+   too messy.  The work around is all the AUTOs ignore declarations that
+   already exist, or are done before the AUTO itself.
+
+   <p>For example:
+
+<pre>
+   module foo (
+`ifdef something
+	things,
+`endif
+	/*AUTOARG*/);
+
+   subfile subcell (
+`ifdef something
+	things,
+`endif
+	/*AUTOINST*/);
+</pre>
+
+   <p>If your ifdefing around signals for only debug, there's rarely a need to do
+   so.  Synthesis programs will remove irrelevant logic and ignore PLI calls.
+
+   <p>An alternative technique to have a fake "mode" input wire, rather then a
+   ifdef or parameter. This also prevents having to lint or run other
+   translators in 2 different `define modes, thus reducing bugs.  This also
+   relies on your synthesis program's removal of irrelevant stuff.  For
+   example a unneeded input and output can always be present, and instead:
+
+<pre>
+	input	      FPGA;
+	input         fpga_only_input;
+	output [31:0] fpga_only_output;
+
+	if (fpga_only_input &amp;&amp; FPGA) ...
+	fpga_only_output = {32{FPGA}} &amp; {value_for_output}.
+</pre>
+
+   <p>Both will be stripped when FPGA=0, and present when FPGA=1.
+
+<a name="3dlyreset"></a><h3>Can I put delays into /*AUTORESET*/?</h3>
+
+   <p>That is,
+
+<pre>
+/*AUTORESET*/
+foo <= #1 signal;
+</pre>
+
+   <p>No.  I'm too stubborn to support this style, as you really shouldn't be
+   using delays on your assignments, it's bad style, and slows down
+   simulation.
+
+<a name="3pragmas"></a><h3>Can AUTOASCIIENUM be changed to put translate_off pragmas around the code?</h3>
+
+   <p>No.  First of all, you're better using "`ifdef synthesis" as that lets the
+   tools pick which version of the code you want.
+
+   <p>Second, there isn't one standard way that supports all tools.
+
+   <p>Third, presuming you never use the value it generates at all (or only in
+   $display's) there's no reason to disable translation, as the synthesis tool
+   will rip it all out through its normal dead code optimization stage.
+
+<a name="2autoinst"></a><h2>Auto Instantiations and Related Issues</h2>
+
+<a name="3wireouts"></a><h3>Why doesn't AUTOWIRE include the outputs from a submodule?</h3>
+
+   <p>AUTOWIRE requires special comments in your instantiations to determine the
+   direction of pins.  Add // Input, // Output or // Inout comments inside
+   each instantiation just before the relevant pins.
+
+<pre>
+   foo foo ( // Outputs
+	    .bfm_output(bfm_output),
+	    ....)	
+</pre>
+
+<a name="3tempwidths"></a><h3>Why doesn't AUTOWIRE create correct widths for AUTO_TEMPLATE signals?</h3>
+
+   <p>You simply need to add [] to the name of the pin connection.  This tells
+   Verilog-Mode to put the bit vectors into the instantiation, where they can
+   be read by AUTOWIRE.
+
+</pre>
+/* celltype AUTO_TEMPLATE (
+    .signal   (signal[]),
+   ); */
+</pre>
+
+<a name="3zeroinputs"></a><h3>How do I use AUTO_TEMPLATE to tie off inputs to zero?</h3>
+
+   <p>Use a LISP format template, and the lisp variable vl-width, which contains
+   the width of the port.
+
+<pre>
+/* celltype AUTO_TEMPLATE (
+    .\(.*\)_test ({@"vl-width"{1'b0}}),
+);
+*/
+</pre>
+
+<a name="3downcase"></a><h3>How do I use AUTO_TEMPLATE to lower case all signals?</h3>
+
+   <p>Use a lisp expression, and the lisp function "downcase".
+
+<pre>
+/* celltype AUTO_TEMPLATE (
+   .IN (@"(downcase vl-name)"[]),
+*/
+</pre>
+
+   <p>If you're trying the reverse, namely to upcase your signal names, did you
+   consider lower case is more readable by 15% or so then all upper case?
+
+<a name="3instname"></a><h3>How do I use AUTO_TEMPLATE to include the instantiation name for pin?</h3>
+
+   <p>Yet another lisp expression:
+
+<pre>
+/* celltype AUTO_TEMPLATE (
+     .a(@"inst"_in[]),
+     .b(@"inst"_out[]),
+     );*/
+
+celltype u_a0(/*AUTOINST*/
+     // Inouts
+     .a	(u_a0_in[bitsa:0]),	 // Templated
+     .b	(u_a0_out[bitsb:0]));	 // Templated
+celltype u_a1(/*AUTOINST*/
+     // Inouts
+     .a	(u_a1_in[bitsa:0]),	 // Templated
+     .b	(u_a1_out[bitsb:0]));	 // Templated
+</pre>
+
+   <p>Oh, but what if I didn't want the u_?
+
+<pre>
+/* celltype AUTO_TEMPLATE (
+     .a(@"(substring inst 2)"_in[]),
+     .b(@"(substring inst 2)"_out[])
+     );*/
+
+celltype u_a0(/*AUTOINST*/
+   // Inouts
+   .a	(a0_in[bitsa:0]),	 // Templated
+   .b	(a0_out[bitsb:0]));	 // Templated
+</pre>
+
+<MACRO_INCLUDE file="trailer.htp">

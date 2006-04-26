@@ -2,7 +2,7 @@
 ;;
 ;; $Id$
 
-;; Copyright (C) 2005 Free Software Foundation, Inc.
+;; Copyright (C) 2006 Free Software Foundation, Inc.
 
 ;; Author: Michael McNamara (mac@verilog.com)
 ;;  http://www.verilog.com
@@ -89,13 +89,13 @@
 (provide 'verilog-mode)
 
 ;; This variable will always hold the version number of the mode
-(defconst verilog-mode-version "$$Revision$$"
+(defconst verilog-mode-version "__VMVERSION__"
   "Version of this verilog mode.")
 (defconst verilog-running-on-xemacs (string-match "XEmacs" emacs-version))
 (defun verilog-version ()
   "Inform caller of the version of this file."
   (interactive)
-  (message (concat "Using verilog-mode version " (substring verilog-mode-version 12 -3 )) ))
+  (message (concat "Using verilog-mode version " verilog-mode-version) ))
 
 ;; Insure we have certain packages, and deal with it if we don't
 (if (fboundp 'eval-when-compile)
@@ -420,6 +420,7 @@ Setting this variable to zero results in every end acquiring a comment; the
 default avoids too many redundant comments in tight quarters"
   :group 'verilog-mode-indent
   :type 'integer)
+
 (defcustom verilog-auto-lineup '(declaration)
   "*If this list contains the symbol 'all', then all line ups described below are done.
 
@@ -438,8 +439,7 @@ with any preceding assignments, so for example the code
    d = e + f;
 would become
    a_long_variable = b + c;
-   d               = e + f;
-"
+   d               = e + f;"
 
 ;; The following is not implemented:
 ;If this list contains the symbol 'case', then case items are lined up
@@ -927,6 +927,7 @@ If set will become buffer local.")
      )
     "----"
     ["Submit bug report"		verilog-submit-bug-report t]
+    ["Version and FAQ"			verilog-faq t]
     ["Customize Verilog Mode..."	verilog-customize t]
     ["Customize Verilog Fonts & Colors"	verilog-font-customize t]
     )
@@ -2002,6 +2003,8 @@ NEWLINE, TAB indents for Verilog code.
 Delete converts tabs to spaces as it moves back.
 Supports highlighting.
 
+Use \\[verilog-faq] for a pointer to frequently asked questions.
+
 Variables controlling indentation/edit style:
 
  variable `verilog-indent-level'      (default 3)
@@ -2677,6 +2680,7 @@ more specifically, point @ in the line foo : @ begin"
 		(throw 'found (= nest 0)))
 	       ))))
       nil)))
+
 (defun verilog-in-generate-region-p ()
   "Return TRUE if in a generate region;
 more specifically, after a generate and before an endgenerate"
@@ -8757,6 +8761,8 @@ Use \\[verilog-delete-auto] to remove the AUTOs.
 
 Use \\[verilog-inject-auto] to insert AUTOs for the first time.
 
+Use \\[verilog-faq] for a pointer to frequently asked questions.
+
 The hooks `verilog-before-auto-hook' and `verilog-auto-hook' are
 called before and after this function, respectively.
 
@@ -9393,13 +9399,26 @@ Files are checked based on `verilog-library-directories'."
 ;; Bug reporting
 ;;
 
+(defun verilog-faq ()
+  "Tell the user their current version, and where to get the FAQ etc."
+  (interactive)
+  (with-output-to-temp-buffer "*verilog-mode help*"
+    (princ (format "You are using verilog-mode %s\n" verilog-mode-version))
+    (princ "\n")
+    (princ "For new releases, see http://www.verilog.com\n")
+    (princ "\n")
+    (princ "For frequently asked questions, see http://www.veripool.org/verilog-mode-faq.html\n")
+    (princ "\n")
+    (princ "To submit a bug, use M-x verilog-submit-bug-report\n")
+    (princ "\n")))
+
 (defun verilog-submit-bug-report ()
-  "Submit via mail a bug report on lazy-lock.el."
+  "Submit via mail a bug report on verilog-mode.el."
   (interactive)
   (let ((reporter-prompt-for-summary-p t))
     (reporter-submit-bug-report
      "mac@verilog.com"
-     (concat "verilog-mode v" (substring verilog-mode-version 12 -3))
+     (concat "verilog-mode v" verilog-mode-version)
      '(
        verilog-align-ifelse
        verilog-auto-endcomments
@@ -9451,13 +9470,14 @@ I save so much time, my files are colored nicely, my co workers respect
 my coding ability... until now.  I'd really appreciate anything you
 could do to help me out with this minor deficiency in the product.
 
+If you have bugs with the AUTO functions, please CC the AUTOAUTHOR Wilson
+Snyder (wsnyder@wsnyder.org) and/or see
+http://www.veripool.org.  You may also want to look at the Verilog-Mode
+FAQ, see http://www.veripool.org/verilog-mode-faq.html.
+
 To reproduce the bug, start a fresh Emacs via " invocation-name "
 -no-init-file -no-site-file'.  In a new buffer, in verilog mode, type
 the code included below.
-
-If you have bugs with the AUTO functions, please CC the AUTOAUTHOR
-Wilson Snyder (wsnyder@wsnyder.org)
-and/or see http://www.veripool.org
 
 Given those lines, I expected [[Fill in here]] to happen;
 but instead, [[Fill in here]] happens!.
