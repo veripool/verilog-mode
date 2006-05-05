@@ -1,12 +1,9 @@
 #!/usr/bin/perl -w
-# $Id:$
+# $Id$
 
 my $tmpdir = "e";
 
-my @tests = qw(
-	       autoinst_lopaz.v
-	       autoinout.v
-	       );
+my @tests = map { s!^.*/!!; $_;} glob("tests_batch_ok/*");
 
 my @tests_args;
 foreach my $test (@tests) {
@@ -15,8 +12,9 @@ foreach my $test (@tests) {
 }
 
 run("emacs --batch --no-site-file -l $tmpdir/verilog-mode.elc"
-    ." -f verilog-batch-auto"
+    ." -l ./batch_test.el"
     ." ".join(' ',@tests_args)
+    ." -f verilog-batch-auto"
     );
 
 foreach my $test (@tests) {

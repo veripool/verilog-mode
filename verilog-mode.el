@@ -3433,6 +3433,7 @@ line in bottom-up order."
   (mapcar '(lambda (buf)
 	     (when (buffer-file-name buf)
 	       (save-excursion
+		 (message (concat "Processing " (buffer-file-name buf)))
 		 (set-buffer buf)
 		 (verilog-auto)
 		 (save-buffer))))
@@ -8775,7 +8776,7 @@ For example:
 	somesub sub (/*AUTOINST*/);
 
 You can also update the AUTOs from the shell using:
-	emacs --batch -f verilog-batch-auto $FILENAME_V
+	emacs --batch  <filenames.v>  -f verilog-batch-auto 
 
 Using \\[describe-function], see also:
    `verilog-auto-arg'          for AUTOARG module instantiations

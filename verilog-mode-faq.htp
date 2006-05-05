@@ -4,7 +4,7 @@
 <MACRO_SET AUTHOR="by <A HREF=\"mailto:mac@verilog.com\">Michael McNamara</a> (Indentation, Highlighting, etc) and &WSNYDER; (AUTO features)">
 <MACRO_INCLUDE file="headertitle.htp">
 
-<!-- $Id:$ -->
+<!-- $Id$ -->
 
 <p>This is the Frequently Asked Questions for &VERILOG_MODE;.  This FAQ is Copyright
 2006 by Michael McNamara and Wilson Snyder.  You may redistribute this
@@ -394,7 +394,7 @@ endmodule
    <p>Use the following command:
 
 <pre>
-emacs --batch -f verilog-batch-auto {filenames...}
+emacs --batch {filenames...} -f verilog-batch-auto
 </pre>
 
    <p>This will load the file, update the automatics, and re-save the file.  The
