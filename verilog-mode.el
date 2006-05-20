@@ -1091,7 +1091,7 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
   ;;
   ;; "macromodule" "module" "primitive" "interface" "end" "endcase" "endfunction"
   ;; "endtask" "endmodule" "endprimitive" "endinterface" "endspecify" "endtable" "join"
-  ;; "begin" "else" "`else" "`ifdef" "`endif" "`define" "`undef" "`include"
+  ;; "begin" "else" `{directives}
   (concat "\\("
 	  verilog-directive-re
 	  "\\|\\(\\<begin\\>\\|"
@@ -1299,8 +1299,11 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
 (defconst verilog-exclude-str-end " -----/\\----- EXCLUDED -----/\\----- */")
 
 (defconst verilog-keywords
-  '( "`define" "`else" "`endif" "`ifdef"
-     "`include" "`timescale" "`undef"
+  '( "`case" "`default" "`define" "`define" "`else" "`endfor" "`endif"
+     "`endprotect" "`endswitch" "`endwhile" "`for" "`format" "`if" "`ifdef"
+     "`ifndef" "`include" "`let" "`protect" "`switch" "`timescale"
+     "`time_scale" "`undef" "`while"
+
      "alias" "always" "always_comb" "always_ff" "always_latch" "and"
      "assert" "assign" "assume" "automatic" "before" "begin" "bind"
      "bins" "binsof" "bit" "break" "buf" "bufif0" "bufif1" "byte"

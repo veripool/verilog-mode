@@ -401,6 +401,10 @@ emacs --batch {filenames...} -f verilog-batch-auto
    filenames need to be provided in a bottom-up order.  For a utility to
    determine the hierarchy of a design, see vhier in &VERILOG_PERL;.
 
+   <p>If your verilog-mode.el is not installed in a site-wide location, or
+   you suspect you are getting the wrong version, try specifing the exact
+   path to Verilog-Mode by adding -l {path}/verilog-mode.el after --batch.
+
    <p>Additional information is in Emacs under M-x describe-function
    verilog-batch-auto.
 
@@ -614,9 +618,15 @@ always @(/*AS*/)
 foo <= #1 signal;
 </pre>
 
-   <p>No.  I'm too stubborn to support this style, as you really shouldn't be
-   using delays on your assignments, it's bad style, and slows down
-   simulation.
+   <p>Do you really want to?  You really shouldn't be using delays on your
+   assignments, as they aren't necessary to prevent races, and slows down
+   simulation.  But if you must:
+
+<pre>
+// Local Variables:
+// verilog-assignment-delay: "#1 "
+// End:
+</pre>   
 
 <a name="3pragmas"></a><h3>Can AUTOASCIIENUM be changed to put translate_off pragmas around the code?</h3>
 
@@ -686,8 +696,8 @@ foo <= #1 signal;
 
 <pre>
 /* celltype AUTO_TEMPLATE (
-     .a(@"inst"_in[]),
-     .b(@"inst"_out[]),
+     .a(@"vl-cell-name"_in[]),
+     .b(@"vl-cell-name"_out[]),
      );*/
 
 celltype u_a0(/*AUTOINST*/
@@ -704,14 +714,72 @@ celltype u_a1(/*AUTOINST*/
 
 <pre>
 /* celltype AUTO_TEMPLATE (
-     .a(@"(substring inst 2)"_in[]),
-     .b(@"(substring inst 2)"_out[])
+     .a(@"(substring vl-cell-name 2)"_in[]),
+     .b(@"(substring vl-cell-name 2)"_out[])
      );*/
 
 celltype u_a0(/*AUTOINST*/
    // Inouts
    .a	(a0_in[bitsa:0]),	 // Templated
    .b	(a0_out[bitsb:0]));	 // Templated
+</pre>
+
+   <p>Substring is very useful in templates.  All of your cell names need to be the
+   same length however.  Often you can simply pad the names by adding zeros, for
+   example use <code>u_00 ... u_15<code>, rather then <code>u_0 ... u_15</code>.
+
+<a name="3instmultd"></a><h3>How do I have AUTO_TEMPLATE use the second number in a instance name?</h3>
+
+   <p>The standard @ sign in a template by default returns the first number
+   in a instance name, so if you want a earlier number, you have three main
+   choices.
+
+   <p>If you only need the second digit, you can define the @ sign to come from
+   the second digits in the module:
+
+<pre>   
+/* celltype AUTO_TEMPLATE ".*[0-9]+.*\([0-9]\)" (
+                             .a (in_@),
+*/
+</pre>
+
+   <p>Next easiest is to use <code>@"(substring vl-cell-name ...)</code> to extract the
+   relevant digits.  See the examples above.
+
+   <p>The most flexible is to define your own function to do the relevant extraction,
+   then call it. For example:
+
+<pre>   
+/* AUTO_LISP(defun getparam2 (strg)
+    (string-match "[^0-9]*[0-9]+[^0-9]*\\([0-9]+\\)" strg)
+    (match-string 1 strg)) */
+
+/* celltype AUTO_TEMPLATE (
+    .in (@"(getparam2 vl-cell-name)"),
+    );
+    */
+</pre>
+
+<a name="3instbytes"></a><h3>How do I use AUTO_TEMPLATE to connect bytes to instances?</h3>
+
+   <p>This is for when you want the first instance to get a[7:0],
+   the second a[15:8], and so on.
+
+   <p>Use a lisp template and a little math.
+
+<pre>
+/* celltype AUTO_TEMPLATE (
+     .a(@in[@"(+ (* 8 @) 7)":@"(* 8 @)"]),
+     );*/
+
+celltype u_a0(/*AUTOINST*/
+     .a	(in[7:0]));	 // Templated
+celltype u_a1(/*AUTOINST*/
+     .a	(in[15:8]));	 // Templated
+celltype u_a2(/*AUTOINST*/
+     .a	(in[23:16]));	 // Templated
+celltype u_a3(/*AUTOINST*/
+     .a	(in[31:24]));	 // Templated
 </pre>
 
 <MACRO_INCLUDE file="trailer.htp">
