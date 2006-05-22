@@ -5987,7 +5987,8 @@ IGNORE-NEXT is true to ignore next token, fake from inside case statement."
 	    (setq ignore-next nil rvalue semi-rvalue)
 	    (if (not exit-keywd) (setq gotend t)))	;; top level begin/end
 	   ((string-match "^[$`a-zA-Z_]" keywd)	;; not exactly word constituent
-	    (cond ((equal keywd "`ifdef")
+	    (cond ((or (equal keywd "`ifdef")
+		       (equal keywd "`ifndef"))
 		   (setq ignore-next t))
 		  ((or ignore-next
 		       (member keywd verilog-keywords)
