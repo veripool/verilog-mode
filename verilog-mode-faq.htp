@@ -405,8 +405,12 @@ emacs --batch {filenames...} -f verilog-batch-auto
    you suspect you are getting the wrong version, try specifing the exact
    path to Verilog-Mode by adding -l {path}/verilog-mode.el after --batch.
 
+   <p>There are similar functions for deleting automatics using
+   verilog-batch-delete-auto, and injecting automatics with
+   verilog-batch-inject-auto.
+
    <p>Additional information is in Emacs under M-x describe-function
-   verilog-batch-auto.
+   verilog-batch-auto, etc.
 
 <a name="3dirs"></a><h3>How do I tell the AUTOs what directories my files are in?</h3>
 

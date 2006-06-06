@@ -14,6 +14,12 @@ foreach my $test (@tests) {
 run("emacs --batch --no-site-file -l $tmpdir/verilog-mode.elc"
     ." -l ./batch_test.el"
     ." ".join(' ',@tests_args)
+    ." -f verilog-batch-delete-auto"
+    );
+
+run("emacs --batch --no-site-file -l $tmpdir/verilog-mode.elc"
+    ." -l ./batch_test.el"
+    ." ".join(' ',@tests_args)
     ." -f verilog-batch-auto"
     );
 

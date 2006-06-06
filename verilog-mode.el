@@ -3410,14 +3410,13 @@ becomes:
   (save-buffer)
   (compile compile-command))
 
-(defun verilog-batch-auto ()
-  "For use with --batch, perform automatic expansions as a stand-alone tool.
-This sets up the appropriate Verilog-Mode enviornment, updates automatics
-with \\[verilog-auto] on all command-line files, and saves the buffers.
-For proper results, multiple filenames need to be passed on the command
-line in bottom-up order."
-  (unless noninteractive
-    (error "Use verilog-batch-auto only with --batch"))  ;; Otherwise we'd mess up buffer modes
+
+
+;;
+;; Batch
+;;
+(defun verilog-batch-execute-func (funref)
+  "Internal processing of a batch command, running FUNREF on all command arguments."
   ;; General globals needed
   (setq make-backup-files nil)
   (setq-default make-backup-files nil)
@@ -3438,9 +3437,37 @@ line in bottom-up order."
 	       (save-excursion
 		 (message (concat "Processing " (buffer-file-name buf)))
 		 (set-buffer buf)
-		 (verilog-auto)
+		 (funcall funref)
 		 (save-buffer))))
 	  (buffer-list)))
+
+(defun verilog-batch-auto ()
+  "For use with --batch, perform automatic expansions as a stand-alone tool.
+This sets up the appropriate Verilog-Mode environment, updates automatics
+with \\[verilog-auto] on all command-line files, and saves the buffers.
+For proper results, multiple filenames need to be passed on the command
+line in bottom-up order."
+  (unless noninteractive
+    (error "Use verilog-batch-auto only with --batch"))  ;; Otherwise we'd mess up buffer modes
+  (verilog-batch-execute-func `verilog-auto))
+
+(defun verilog-batch-delete-auto ()
+  "For use with --batch, perform automatic deletion as a stand-alone tool.
+This sets up the appropriate Verilog-Mode environment, deletes automatics
+with \\[verilog-delete-auto] on all command-line files, and saves the buffers."
+  (unless noninteractive
+    (error "Use verilog-batch-delete-auto only with --batch"))  ;; Otherwise we'd mess up buffer modes
+  (verilog-batch-execute-func `verilog-delete-auto))
+
+(defun verilog-batch-inject-auto ()
+  "For use with --batch, perform automatic injection as a stand-alone tool.
+This sets up the appropriate Verilog-Mode environment, injects new automatics
+with \\[verilog-inject-auto] on all command-line files, and saves the buffers.
+For proper results, multiple filenames need to be passed on the command
+line in bottom-up order."
+  (unless noninteractive
+    (error "Use verilog-batch-inject-auto only with --batch"))  ;; Otherwise we'd mess up buffer modes
+  (verilog-batch-execute-func `verilog-inject-auto))
 
 
 ;;
@@ -8781,6 +8808,9 @@ For example:
 
 You can also update the AUTOs from the shell using:
 	emacs --batch  <filenames.v>  -f verilog-batch-auto 
+Likewise, you can delete or inject them with
+	emacs --batch  <filenames.v>  -f verilog-batch-delete-auto 
+or	emacs --batch  <filenames.v>  -f verilog-batch-inject-auto 
 
 Using \\[describe-function], see also:
    `verilog-auto-arg'          for AUTOARG module instantiations
