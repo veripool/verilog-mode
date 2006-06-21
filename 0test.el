@@ -69,6 +69,7 @@
 	(setq file (car files))
 	(cond ((equal "." file))
 	      ((equal ".." file))
+	      ((string-match "~$" file))
 	      ((file-directory-p (concat "tests/" file)))
 	      (t
 	       (message (concat "Considering test " file ))
