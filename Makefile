@@ -10,7 +10,7 @@ ELC	= -batch -q -l verilog-mode.el -f batch-byte-compile
 
 release : dirs install
 install : dirs test $(D)/mmencoded_verilog-mode $(D)/emacs-version.h\
-	 $(S)ChangeLog.txt email $(S)bits/verilog-mode.el local \
+	$(S)ChangeLog.txt email $(S)bits/verilog-mode.el local \
 #	ftp  
 	@echo Installation up to date
 dirs:	
@@ -47,7 +47,7 @@ ftp:	.timestamps/ftp
 $(F):
 	mkdir $(F)
 
-mmencoded_verilog-mode : make_log.pl verilog-mode.el README
+ChangeLog.txt mmencoded_verilog-mode emacs-version.h : make_log.pl verilog-mode.el README
 	./make_log.pl	
 
 email:	.timestamps/email
