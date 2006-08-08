@@ -2,16 +2,11 @@ module autoarg_comment
 
   // Copyright 1997-1998, blah, blah, blah
 
-  (/*AUTOARG*/
-   // Outputs
-   outgo2,
-   // Inputs
-   income
-   );
+  (/*AUTOARG*/);
 
    //verilint 332 OFF	//* Not all possible cases covered, but default case exists
 
-   input		income;
-   output		outgo2;
+   input (* ATTRIB="val" *) 	income;
+   output			outgo2;
 
 endmodule

@@ -11,7 +11,7 @@ module autoarg_comment
 
    //verilint 332 OFF	//* Not all possible cases covered, but default case exists
 
-   input		income;
-   output		outgo2;
+   input (* ATTRIB="val" *) 	income;
+   output			outgo2;
 
 endmodule
