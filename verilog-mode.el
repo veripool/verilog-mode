@@ -5678,7 +5678,7 @@ Optional NUM-PARAM and MAX-PARAM check for a specific number of parameters."
 Return a array of [outputs inouts inputs wire reg assign const]."
   (let ((end-mod-point (or (verilog-get-end-of-defun t) (point-max)))
 	(functask 0) (paren 0)
-	sigs-in sigs-out sigs-inout sigs-wire sigs-reg sigs-assign sigs-const
+	sigs-in sigs-out sigs-inout sigs-wire sigs-reg sigs-assign sigs-const sigs-gparam
 	vec expect-signal keywd newsig rvalue enum io signed typedefed)
     (save-excursion
       (verilog-beg-of-defun)
@@ -5755,9 +5755,10 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 		((or (equal keywd "supply0")
 		     (equal keywd "supply1")
 		     (equal keywd "supply")
-		     (equal keywd "parameter")
 		     (equal keywd "localparam"))
 		 (unless io (setq vec nil  enum nil  rvalue nil  signed nil  typedefed nil  expect-signal 'sigs-const)))
+		((or (equal keywd "parameter"))
+		 (unless io (setq vec nil  enum nil  rvalue nil  signed nil  typedefed nil  expect-signal 'sigs-gparam)))
 		((equal keywd "signed")
 		 (setq signed "signed"))
 		((or (equal keywd "function")
@@ -5790,6 +5791,7 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 	      (nreverse sigs-reg)
 	      (nreverse sigs-assign)
 	      (nreverse sigs-const)
+	      (nreverse sigs-gparam)
 	      ))))
 
 (defvar sigs-in nil) ; Prevent compile warning
@@ -6844,6 +6846,8 @@ and invalidating the cache."
   (aref (verilog-modi-get-decls modi) 5))
 (defsubst verilog-modi-get-consts (modi)
   (aref (verilog-modi-get-decls modi) 6))
+(defsubst verilog-modi-get-gparams (modi)
+  (aref (verilog-modi-get-decls modi) 7))
 (defsubst verilog-modi-get-sub-outputs (modi)
   (aref (verilog-modi-get-sub-decls modi) 0))
 (defsubst verilog-modi-get-sub-inouts (modi)
@@ -6885,7 +6889,8 @@ and invalidating the cache."
    (verilog-modi-get-wires modi)
    (verilog-modi-get-regs modi)
    (verilog-modi-get-assigns modi)
-   (verilog-modi-get-consts modi)))
+   (verilog-modi-get-consts modi)
+   (verilog-modi-get-gparams modi)))
 
 (defun verilog-modi-get-ports (modi)
   (append
@@ -7552,7 +7557,7 @@ See `verilog-auto-inst' for examples, templates, and more information."
 
 (defun verilog-auto-inst ()
   "Expand AUTOINST statements, as part of \\[verilog-auto].
-Replace the argument calls inside an instantiation with ones
+Replace the pin connections to an instantiation with ones
 automatically derived from the module header of the instantiated netlist.
 
 If `verilog-auto-star-expand' is set, also expand SystemVerilog .* ports,
@@ -7920,6 +7925,7 @@ Typing \\[verilog-auto] will make this into:
 			      (verilog-modi-get-regs modi)
 			      (verilog-modi-get-assigns modi)
 			      (verilog-modi-get-consts modi)
+			      (verilog-modi-get-gparams modi)
 			      (verilog-modi-get-sub-outputs modi)
 			      (verilog-modi-get-sub-inouts modi)
 			      ))))
@@ -8213,6 +8219,7 @@ Typing \\[verilog-auto] will make this into:
 			      (verilog-modi-get-wires modi)
 			      (verilog-modi-get-regs modi)
 			      (verilog-modi-get-consts modi)
+			      (verilog-modi-get-gparams modi)
 			      (verilog-modi-get-sub-outputs modi)
 			      (verilog-modi-get-sub-inouts modi)
 			      ))))
@@ -8376,6 +8383,7 @@ Typing \\[verilog-auto] will make this into:
 					    (append (and (not verilog-auto-sense-include-inputs)
 							 (verilog-alw-get-outputs sigss))
 						    (verilog-modi-get-consts modi)
+						    (verilog-modi-get-gparams modi)
 						    presense-sigs)))))
     sig-list))
 
@@ -8615,6 +8623,7 @@ Typing \\[verilog-auto] will make this into:
 			      (verilog-modi-get-regs modi)
 			      (verilog-modi-get-assigns modi)
 			      (verilog-modi-get-consts modi)
+			      (verilog-modi-get-gparams modi)
 			      (verilog-modi-get-sub-outputs modi)
 			      (verilog-modi-get-sub-inouts modi)
 			      ))))
@@ -8777,7 +8786,8 @@ Typing \\[verilog-auto] will make this into:
 	   (indent-pt (current-indentation))
 	   (modi (verilog-modi-current))
 	   ;;
-	   (sig-list-consts (verilog-modi-get-consts modi))
+	   (sig-list-consts (append (verilog-modi-get-consts modi)
+				    (verilog-modi-get-gparams modi)))
 	   (sig-list-all  (append (verilog-modi-get-regs modi)
 				  (verilog-modi-get-outputs modi)
 				  (verilog-modi-get-inouts modi)
