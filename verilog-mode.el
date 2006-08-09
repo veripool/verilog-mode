@@ -915,6 +915,7 @@ If set will become buffer local.")
      ["AUTOINPUT"			(describe-function 'verilog-auto-input) t]
      ["AUTOINST"			(describe-function 'verilog-auto-inst) t]
      ["AUTOINST (.*)"			(describe-function 'verilog-auto-star) t]
+     ["AUTOINSTPARAM"			(describe-function 'verilog-auto-inst-param) t]
      ["AUTOOUTPUT"			(describe-function 'verilog-auto-output) t]
      ["AUTOOUTPUTEVERY"			(describe-function 'verilog-auto-output-every) t]
      ["AUTOREG"				(describe-function 'verilog-auto-reg) t]
@@ -5615,7 +5616,12 @@ Ignore width if optional NO-WIDTH is set."
 (defun verilog-read-inst-backward-name ()
   "Internal.  Move point back to beginning of inst-name."
     (verilog-backward-open-paren)
-    (verilog-re-search-backward-quick "\\(\\b[a-zA-Z0-9`_\$]\\|\\]\\)" nil nil)  ; ] isn't word boundary
+    (let (done)
+      (while (not done)
+	(verilog-re-search-backward-quick "\\()\\|\\b[a-zA-Z0-9`_\$]\\|\\]\\)" nil nil)  ; ] isn't word boundary
+	(cond ((looking-at ")")
+	       (verilog-backward-open-paren))
+	      (t (setq done t)))))
     (while (looking-at "\\]")
       (verilog-backward-open-bracket)
       (verilog-re-search-backward-quick "\\(\\b[a-zA-Z0-9`_\$]\\|\\]\\)" nil nil))
@@ -7192,7 +7198,7 @@ called before and after this function, respectively."
     (verilog-auto-re-search-do "/\\*AUTO\\(INOUTMODULE\\|ASCIIENUM\\)([^)]*)\\*/"
 			       'verilog-delete-autos-lined)
     ;; Remove those that are in parenthesis
-    (verilog-auto-re-search-do "/\\*\\(AS\\|AUTO\\(ARG\\|CONCATWIDTH\\|INST\\|SENSE\\)\\)\\*/"
+    (verilog-auto-re-search-do "/\\*\\(AS\\|AUTO\\(ARG\\|CONCATWIDTH\\|INST\\|INSTPARAM\\|SENSE\\)\\)\\*/"
 			       'verilog-delete-to-paren)
     ;; Do .* instantiations, but avoid removing any user pins by looking for our magic comments
     (verilog-auto-re-search-do "\\.\\*"
@@ -7879,6 +7885,104 @@ Lisp Templates:
 		 (if (search-forward ")" nil t) ;; From user, moved up a line
 		     (delete-backward-char 1))
 		 (if (search-forward ";" nil t) ;; Don't error if user had syntax error and forgot it
+		     (delete-backward-char 1))
+		 )
+		(t
+		 (delete-backward-char 1)	;; Newline Inserted above
+		 )))
+	))))
+
+(defun verilog-auto-inst-param ()
+  "Expand AUTOINSTPARAM statements, as part of \\[verilog-auto].
+Replace the parameter connections to an instantiation with ones
+automatically derived from the module header of the instantiated netlist.
+
+See \\[verilog-auto-inst] for limitations, and templates to customize the
+output.
+
+For example, first take the submodule inst.v:
+
+	module inst (o,i)
+	   parameter PAR;
+	endmodule
+
+This is then used in a upper level module:
+
+	module ex_inst (o,i)
+	   parameter PAR;
+	   inst inst #(/*AUTOINSTPARAM*/)
+		     (/*AUTOINST*/);
+	endmodule
+
+Typing \\[verilog-auto] will make this into:
+
+	module ex_inst (o,i)
+	   output o;
+	   input i;
+	   inst inst (/*AUTOINSTPARAM*/
+		      // Parameters
+		      .PAR			(PAR));
+		      (/*AUTOINST*/);
+	endmodule
+
+Where the list of parameter connections come from the inst module.
+
+Templates:
+
+  You can customize the parameter connections using AUTO_TEMPLATEs,
+  just as you would with \\[verilog-auto-inst]."
+  (save-excursion
+    ;; Find beginning
+    (let* ((pt (point))
+	   (indent-pt (save-excursion (verilog-backward-open-paren)
+				      (1+ (current-column))))
+	   (verilog-auto-inst-column (max verilog-auto-inst-column
+					  (+ 16 (* 8 (/ (+ indent-pt 7) 8)))))
+	   (modi (verilog-modi-current))
+	   (vector-skip-list (unless verilog-auto-inst-vector
+			       (verilog-modi-get-signals modi)))
+	   submod submodi inst skip-pins tpl-list tpl-num)
+      ;; Find module name that is instantiated
+      (setq submod  (verilog-read-inst-module)
+	    inst (verilog-read-inst-name)
+	    vl-cell-type submod
+	    vl-cell-name inst
+	    skip-pins (aref (verilog-read-inst-pins) 0))
+
+      ;; Parse any AUTO_LISP() before here
+      (verilog-read-auto-lisp (point-min) pt)
+
+      ;; Lookup position, etc of submodule
+      ;; Note this may raise an error
+      (when (setq submodi (verilog-modi-lookup submod t))
+	;; If there's a number in the instantiation, it may be a argument to the
+	;; automatic variable instantiation program.
+	(let* ((tpl-info (verilog-read-auto-template submod))
+	       (tpl-regexp (aref tpl-info 0)))
+	  (setq tpl-num (if (string-match tpl-regexp inst)
+			    (match-string 1 inst)
+			  "")
+		tpl-list (aref tpl-info 1)))
+	;; Find submodule's signals and dump
+	(insert "\n")
+	(let ((sig-list (verilog-signals-not-in
+			 (verilog-modi-get-gparams submodi)
+			 skip-pins))
+	      (vl-dir "parameter"))
+	  (when sig-list
+	    (indent-to indent-pt)
+	    (insert "// Parameters\n")	;; Note these are searched for in verilog-read-sub-decls
+	    (mapcar (function (lambda (port)
+				(verilog-auto-inst-port port indent-pt tpl-list tpl-num nil)))
+		    sig-list)))
+	;; Kill extra semi
+	(save-excursion
+	  (cond ((re-search-backward "," pt t)
+		 (delete-char 1)
+		 (insert ")")
+		 (search-forward "\n")	;; Added by inst-port
+		 (delete-backward-char 1)
+		 (if (search-forward ")" nil t) ;; From user, moved up a line
 		     (delete-backward-char 1))
 		 )
 		(t
@@ -8892,7 +8996,7 @@ For example:
 	/*AUTOOUTPUT*/
 	/*AUTOWIRE*/
 	/*AUTOREG*/
-	somesub sub (/*AUTOINST*/);
+	somesub sub #(/*AUTOINSTPARAM*/) (/*AUTOINST*/);
 
 You can also update the AUTOs from the shell using:
 	emacs --batch  <filenames.v>  -f verilog-batch-auto 
@@ -8908,6 +9012,7 @@ Using \\[describe-function], see also:
    `verilog-auto-input'        for AUTOINPUT making hierarchy inputs
    `verilog-auto-inst'         for AUTOINST instantiation pins
    `verilog-auto-star'         for AUTOINST .* SystemVerilog pins
+   `verilog-auto-inst-param'   for AUTOINSTPARAM instantiation params
    `verilog-auto-output'       for AUTOOUTPUT making hierarchy outputs
    `verilog-auto-output-every' for AUTOOUTPUTEVERY making all outputs
    `verilog-auto-reg'          for AUTOREG registers
@@ -8962,6 +9067,7 @@ and/or see http://www.veripool.org"
 	     (verilog-inject-sense)
 	     (verilog-inject-arg))
 	   ;;
+	   (verilog-auto-search-do "/*AUTOINSTPARAM*/" 'verilog-auto-inst-param)
 	   (verilog-auto-search-do "/*AUTOINST*/" 'verilog-auto-inst)
 	   (verilog-auto-search-do ".*" 'verilog-auto-star)
 	   ;; Doesn't matter when done, but combine it with a common changer

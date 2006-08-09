@@ -593,6 +593,8 @@ always @(/*AS*/)
 	/*AUTOINST*/);
 </pre>
 
+   <p>If your selecting modules, see the next FAQ.
+
    <p>If your ifdefing around signals for only debug, there's rarely a need to do
    so.  Synthesis programs will remove irrelevant logic and ignore PLI calls.
 
@@ -612,6 +614,42 @@ always @(/*AS*/)
 </pre>
 
    <p>Both will be stripped when FPGA=0, and present when FPGA=1.
+
+<a name="3ifdefmod"></a><h3>How do I ifdef select between modules?</h3>
+
+   <p>Often the purpose of an ifdef is to select between two alternate
+   implementations of a module with identical pinouts; perhaps a fast RAM
+   and a slow gate RAM.  Your first attempt may be something similar to:
+
+<pre>
+`ifdef SUB_IS_A_FOOBAR
+   foobar subcell (/*AUTOINST*/);
+`else
+   foobiz subcell (/*AUTOINST*/);
+`endif
+</pre>
+
+  <p>However, Verilog-mode ignores ifdefs.  Assuming the pinout is the same
+  you can use the define to instead select which version:
+
+<pre>
+`ifdef SUB_IS_A_FOOBAR
+ `define SUB_CELL  foobar
+`else
+ `define SUB_CELL  foobiz
+`endif
+   `SUB_CELL subcell (/*AUTOINST*/);
+</pre>
+
+  <p>for this to work, you need to read the defines with the below at the
+  bottom of your file. Verilog-mode will use the last definition of
+  SUB_CELL to determine which one to pickup the pinlist from.
+
+<pre>
+// Local Variables:
+// eval:(verilog-read-defines)
+// End:
+</pre>
 
 <a name="3dlyreset"></a><h3>Can I put delays into /*AUTORESET*/?</h3>
 
