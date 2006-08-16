@@ -2396,7 +2396,8 @@ With optional ARG, remove existing end of line comments."
 ;;
 
 (defun verilog-indent-buffer ()
-  "Indent-region the entire buffer as Verilog code."
+  "Indent-region the entire buffer as Verilog code.
+To call this from the command line, see \\[verilog-batch-indent]."
   (interactive)
   (verilog-mode)
   (indent-region (point-min) (point-max) nil))
@@ -3537,6 +3538,14 @@ line in bottom-up order."
   (unless noninteractive
     (error "Use verilog-batch-inject-auto only with --batch"))  ;; Otherwise we'd mess up buffer modes
   (verilog-batch-execute-func `verilog-inject-auto))
+
+(defun verilog-batch-indent ()
+  "For use with --batch, reindent an a entire file as a stand-alone tool.
+This sets up the appropriate Verilog-Mode environment, calls
+\\[verilog-indent-buffer] on all command-line files, and saves the buffers."
+  (unless noninteractive
+    (error "Use verilog-batch-indent only with --batch"))  ;; Otherwise we'd mess up buffer modes
+  (verilog-batch-execute-func `verilog-indent-buffer))
 
 
 ;;
@@ -9000,9 +9009,11 @@ For example:
 
 You can also update the AUTOs from the shell using:
 	emacs --batch  <filenames.v>  -f verilog-batch-auto 
-Likewise, you can delete or inject them with
+Or fix indentation with:
+	emacs --batch  <filenames.v>  -f verilog-batch-indent
+Likewise, you can delete or inject AUTOs with:
 	emacs --batch  <filenames.v>  -f verilog-batch-delete-auto 
-or	emacs --batch  <filenames.v>  -f verilog-batch-inject-auto 
+	emacs --batch  <filenames.v>  -f verilog-batch-inject-auto 
 
 Using \\[describe-function], see also:
    `verilog-auto-arg'          for AUTOARG module instantiations

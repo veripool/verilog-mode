@@ -1,12 +1,12 @@
 module io1_sub(
 	       /*AUTOARG*/
-   // Outputs
-   lower_out,
-   // Inouts
-   lower_io,
-   // Inputs
-   lower_ina
-   );
+	       // Outputs
+	       lower_out,
+	       // Inouts
+	       lower_io,
+	       // Inputs
+	       lower_ina
+	       );
 
    /*AUTOINPUT*/
    // Beginning of automatic inputs (from unused autoinst inputs)
@@ -39,13 +39,13 @@ module io1_sub(
 endmodule
 
 module instio (/*AUTOARG*/
-   // Outputs
-   lower_out,
-   // Inouts
-   lower_io,
-   // Inputs
-   lower_ina
-   );
+	       // Outputs
+	       lower_out,
+	       // Inouts
+	       lower_io,
+	       // Inputs
+	       lower_ina
+	       );
 
    input lower_ina;
    inout lower_io;

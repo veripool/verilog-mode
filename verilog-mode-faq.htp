@@ -170,6 +170,24 @@ File mode specification error : (file-error "Cannot open load file" "overlay")
    mode will include functions that mimic some of C's extra
    bindings.
       
+<a name="3indentbatch"></a><h3>How do I reindent Verilog code from the command line?</h3>
+
+   <p>You can repair the indentation of a Verilog file from the command line 
+with the following command:
+
+<pre>
+emacs --batch {filenames...} -f verilog-batch-indent
+</pre>
+
+   <p>This will load the file, reindent, and save the file.
+
+   <p>If your verilog-mode.el is not installed in a site-wide location, or
+   you suspect you are getting the wrong version, try specifing the exact
+   path to Verilog-Mode by adding -l {path}/verilog-mode.el after --batch.
+
+   <p>Additional information is in Emacs under M-x describe-function
+   verilog-batch-indent.
+
 <a name="3tabs"></a><h3>Why when others edit my code does it looks unindented?</h3>
       
    This is a general problem sharing files between folks. It also occurs
@@ -406,8 +424,8 @@ emacs --batch {filenames...} -f verilog-batch-auto
    path to Verilog-Mode by adding -l {path}/verilog-mode.el after --batch.
 
    <p>There are similar functions for deleting automatics using
-   verilog-batch-delete-auto, and injecting automatics with
-   verilog-batch-inject-auto.
+   verilog-batch-delete-auto, injecting automatics with
+   verilog-batch-inject-auto, and reindenting with verilog-batch-indent.
 
    <p>Additional information is in Emacs under M-x describe-function
    verilog-batch-auto, etc.

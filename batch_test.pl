@@ -23,6 +23,12 @@ run("emacs --batch --no-site-file -l $tmpdir/verilog-mode.elc"
     ." -f verilog-batch-auto"
     );
 
+run("emacs --batch --no-site-file -l $tmpdir/verilog-mode.elc"
+    ." -l ./batch_test.el"
+    ." ".join(' ',@tests_args)
+    ." -f verilog-batch-indent"
+    );
+
 foreach my $test (@tests) {
     run("diff tests_batch_ok/$test e/$test");
 }
