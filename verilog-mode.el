@@ -6706,19 +6706,21 @@ Use verilog-preserve-cache's to set")
     (vector name (or (buffer-file-name) (current-buffer)) pt)))
 
 (defvar verilog-modi-lookup-last-mod nil "Cache of last module looked up.")
-(defvar verilog-modi-lookup-last-current nil "Cache of last current looked up.")
 (defvar verilog-modi-lookup-last-modi nil "Cache of last modi returned.")
+(defvar verilog-modi-lookup-last-current nil "Cache of last current-buffer looked up.")
+(defvar verilog-modi-lookup-last-tick nil "Cache of last buffer-modified-tick looked up.")
 
 (defun verilog-modi-lookup (module allow-cache)
   "Find the file and point at which MODULE is defined.
 If ALLOW-CACHE is set, check and remember cache of previous lookups.
 Return modi if successful, else print message."
   (let* ((current (or (buffer-file-name) (current-buffer))))
-    (cond ((and (equal verilog-modi-lookup-last-mod module)
-		(equal verilog-modi-lookup-last-current current)
-		verilog-modi-lookup-last-modi
+    (cond ((and verilog-modi-lookup-last-modi
 		verilog-cache-enabled
-		allow-cache)
+		allow-cache
+		(equal verilog-modi-lookup-last-mod module)
+		(equal verilog-modi-lookup-last-current current)
+		(equal verilog-modi-lookup-last-tick (buffer-modified-tick)))
 	   ;; ok as is
 	   )
 	  (t (let* ((realmod (verilog-symbol-detick module t))
@@ -6740,7 +6742,8 @@ Return modi if successful, else print message."
 				       "\n    I looked in (if not listed, doesn't exist):\n\t" (mapconcat 'concat orig-filenames "\n\t"))))
 		     )
 	       (setq verilog-modi-lookup-last-mod module
-		     verilog-modi-lookup-last-current current))))
+		     verilog-modi-lookup-last-current current
+		     verilog-modi-lookup-last-tick (buffer-modified-tick)))))
     verilog-modi-lookup-last-modi
     ))
 
