@@ -5713,7 +5713,8 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 	      (error "%s: Unmatched /* */, at char %d" (verilog-point-text) (point))))
 	 ((looking-at "(\\*")
 	  (forward-char 2)
-	  (or (search-forward "*)")
+	  (or (looking-at "\\s-*)")   ; It's a "always @ (*)"
+	      (search-forward "*)")
 	      (error "%s: Unmatched (* *), at char %d" (verilog-point-text) (point))))
 	 ((eq ?\" (following-char))
 	  (or (re-search-forward "[^\\]\"" nil t)	;; don't forward-char first, since we look for a non backslash first
@@ -6028,7 +6029,8 @@ IGNORE-NEXT is true to ignore next token, fake from inside case statement."
 	(or (search-forward "*/")
 	    (error "%s: Unmatched /* */, at char %d" (verilog-point-text) (point))))
        ((looking-at "(\\*")
-	(or (search-forward "*)")
+	(or (looking-at "(\\*\\s-*)")   ; It's a "always @ (*)"
+	    (search-forward "*)")
 	    (error "%s: Unmatched (* *), at char %d" (verilog-point-text) (point))))
        (t (setq keywd (buffer-substring-no-properties
 		       (point)
@@ -6412,7 +6414,8 @@ Some macros and such are also found and included.  For dinotrace.el"
 	 ((looking-at "/\\*")
 	  (search-forward "*/"))
 	 ((looking-at "(\\*")
-	  (search-forward "*)"))
+	  (or (looking-at "(\\*\\s-*)")   ; It's a "always @ (*)"
+	      (search-forward "*)")))
 	 ((eq ?\" (following-char))
 	  (re-search-forward "[^\\]\""))	;; don't forward-char first, since we look for a non backslash first
 	 ((looking-at "\\s-*\\([a-zA-Z0-9$_.%`]+\\)")

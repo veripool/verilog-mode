@@ -1,9 +1,4 @@
-module autosense (/*AUTOARG*/
-   // Outputs
-   out, out2,
-   // Inputs
-   ina, inb, inc
-   );
+module autosense (/*AUTOARG*/);
 
    input ina;
    input inb;
@@ -12,16 +7,12 @@ module autosense (/*AUTOARG*/
    output 	out2;
 
    /*AUTOREG*/
-   // Beginning of automatic regs (for this module's undeclared outputs)
-   reg [1:0]		out;
-   reg			out2;
-   // End of automatics
 
 `include "autosense_inc_param.v"
 `include "autosense_one.v"
 `define Input ina
 
-   always @(/*AUTOSENSE*/ina or inb or inc) begin
+   always @(/*AUTOSENSE*/) begin
       case (inc)
 	1'b1: out = {`Input ? `one : 1'b0, `Input};
 	default: out = {2{inb}};
@@ -29,8 +20,17 @@ module autosense (/*AUTOARG*/
    end
 
 
-   always @(/*AUTOSENSE*/ina) begin
+   always @(/*AUTOSENSE*/) begin
       out2 = `Input | PARAM_TWO | PARAM_THREE | PARAM_FOUR;
+   end
+
+   always @(*) begin
+      // @ (/*AS*/)
+      out3 = ina;
+   end
+
+   always @* begin
+      out3 = ina;
    end
 
 endmodule

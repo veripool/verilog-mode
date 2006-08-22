@@ -33,6 +33,15 @@ module autosense (/*AUTOARG*/
       out2 = `Input | PARAM_TWO | PARAM_THREE | PARAM_FOUR;
    end
 
+   always @(*) begin
+      // @ (/*AS*/)
+      out3 = ina;
+   end
+
+   always @* begin
+      out3 = ina;
+   end
+
 endmodule
 // Local Variables:
 // eval:(verilog-read-includes)
