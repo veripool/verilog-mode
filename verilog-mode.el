@@ -737,6 +737,11 @@ regular use to prevent large numbers of merge conflicts."
   :group 'verilog-mode-auto
   :type 'string )
 
+(defcustom verilog-auto-unused-ignore-regexp nil
+  "*If set, when creating AUTOUNUSED list, ignore signals matching this regexp."
+  :group 'verilog-mode-auto
+  :type 'string )
+
 (defcustom verilog-typedef-regexp nil
   "*If non-nil, regular expression that matches Verilog-2001 typedef names.
 For example, \"_t$\" matches typedefs named with _t, as in the C language."
@@ -6893,13 +6898,15 @@ and invalidating the cache."
     (nreverse out-list)))
 
 (defun verilog-signals-not-matching-regexp (in-list regexp)
-  "Return all signals in IN-LIST not matching the given REGEXP."
-  (let (out-list)
-    (while in-list
-      (if (not (string-match regexp (verilog-sig-name (car in-list))))
-	  (setq out-list (cons (car in-list) out-list)))
-      (setq in-list (cdr in-list)))
-    (nreverse out-list)))
+  "Return all signals in IN-LIST not matching the given REGEXP, if non-nil."
+  (if (not regexp)
+      in-list
+    (let (out-list)
+      (while in-list
+	(if (not (string-match regexp (verilog-sig-name (car in-list))))
+	    (setq out-list (cons (car in-list) out-list)))
+	(setq in-list (cdr in-list)))
+      (nreverse out-list))))
 
 ;; Combined
 (defun verilog-modi-get-signals (modi)
@@ -8221,9 +8228,8 @@ Typing \\[verilog-auto] will make this into:
 			      (verilog-modi-get-sub-inputs modi)
 			      (verilog-modi-get-sub-inouts modi)
 			      ))))
-      (if verilog-auto-output-ignore-regexp
-	  (setq sig-list (verilog-signals-not-matching-regexp
-			  sig-list verilog-auto-output-ignore-regexp)))
+      (setq sig-list (verilog-signals-not-matching-regexp
+		      sig-list verilog-auto-output-ignore-regexp))
       (forward-line 1)
       (when v2k (verilog-repair-open-comma))
       (when sig-list
@@ -8342,9 +8348,8 @@ Typing \\[verilog-auto] will make this into:
 			      (verilog-modi-get-sub-outputs modi)
 			      (verilog-modi-get-sub-inouts modi)
 			      ))))
-      (if verilog-auto-input-ignore-regexp
-	  (setq sig-list (verilog-signals-not-matching-regexp
-			  sig-list verilog-auto-input-ignore-regexp)))
+      (setq sig-list (verilog-signals-not-matching-regexp
+		      sig-list verilog-auto-input-ignore-regexp))
       (forward-line 1)
       (when v2k (verilog-repair-open-comma))
       (when sig-list
@@ -8407,9 +8412,8 @@ Typing \\[verilog-auto] will make this into:
 			      (verilog-modi-get-sub-inputs modi)
 			      (verilog-modi-get-sub-outputs modi)
 			      ))))
-      (if verilog-auto-inout-ignore-regexp
-	  (setq sig-list (verilog-signals-not-matching-regexp
-			  sig-list verilog-auto-inout-ignore-regexp)))
+      (setq sig-list (verilog-signals-not-matching-regexp
+		      sig-list verilog-auto-inout-ignore-regexp))
       (forward-line 1)
       (when v2k (verilog-repair-open-comma))
       (when sig-list
@@ -8705,7 +8709,7 @@ AUTORESET ties signals to deasserted, which is presumed to be zero.
 Signals that match `verilog-active-low-regexp' will be deasserted by tieing
 them to a one.
 
-A example of making a stub for another module:
+An example of making a stub for another module:
 
     module FooStub (/*AUTOINST*/);
 	/*AUTOINOUTMODULE(\"Foo\")*/
@@ -8771,17 +8775,19 @@ input/output list as another module, but no internals.  Specifically, it
 finds all inputs and inouts in the module, and if that input is not otherwise
 used, adds it to a comma separated list.
 
-The comma separated list is intented to be used to create a unused_ok
-signal.  To reduce simulation time, the unused_ok should be forced to a
+The comma separated list is intented to be used to create a _unused_ok
+signal.  Using the exact name \"_unused_ok\" for name of the temporary
+signal is recommended as it will insure maximum forward compatibility.
+
+To reduce simulation time, the _unused_ok signal should be forced to a
 constant to prevent wiggling.  The easiest thing to do is use a
-reduction-and with 1'b0.
+reduction-and with 1'b0 as shown.
 
-This way all unused signals are in one place.  If the unused_ok signal
-appears in any lint messages as \"unused,\" you will know it is a false
-warning.  Even better, use your tool's specific pragmas around the
-assignment to disable the unused message.
+This way all unused signals are in one place, making it convienient to add
+your tool's specific pragmas around the assignment to disable any unused
+warnings.
 
-A example of making a stub for another module:
+An example of making a stub for another module:
 
     module FooStub (/*AUTOINST*/);
 	/*AUTOINOUTMODULE(\"Foo\")*/
@@ -8818,6 +8824,8 @@ Typing \\[verilog-auto] will make this into:
 		      (append (verilog-modi-get-sub-inputs modi)
 			      (verilog-modi-get-sub-inouts modi)
 			      ))))
+      (setq sig-list (verilog-signals-not-matching-regexp
+		      sig-list verilog-auto-unused-ignore-regexp))
       (when sig-list
 	(forward-line 1)
 	(verilog-insert-indent "// Beginning of automatic unused inputs\n")
