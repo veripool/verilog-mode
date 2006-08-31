@@ -640,7 +640,7 @@ and `verilog-library-extensions'."
   :group 'verilog-mode-auto
   :type '(repeat file))
 
-(defcustom verilog-library-files '(".")
+(defcustom verilog-library-files '()
   "*List of files to search for modules when looking for AUTOINST files.
 This is a complete path, usually to a technology file with many standard
 cells defined in it.
@@ -6645,18 +6645,22 @@ Or, just the existing dirnames themselves if there are no wildcards."
     dirlist))
 ;;(verilog-expand-dirnames (list "." ".." "nonexist" "../*" "/home/wsnyder/*/v"))
 
-(defun verilog-library-filenames (filename current)
+(defun verilog-library-filenames (filename current &optional check-ext)
   "Return a search path to find the given FILENAME name.
 Uses the CURRENT filename, `verilog-library-directories' and
-`verilog-library-extensions' variables to build the path."
+`verilog-library-extensions' variables to build the path.
+With optional CHECK-EXT also check `verilog-library-extensions'."
   (let ((ckdir (verilog-expand-dirnames verilog-library-directories))
 	fn outlist)
     (while ckdir
-      (setq fn (expand-file-name
-		filename
-		(expand-file-name (car ckdir) (file-name-directory current))))
-      (if (file-exists-p fn)
-	  (setq outlist (cons fn outlist)))
+      (let ((ckext (if check-ext verilog-library-extensions `(""))))
+	(while ckext
+	  (setq fn (expand-file-name
+		    (concat filename (car ckext))
+		    (expand-file-name (car ckdir) (file-name-directory current))))
+	  (if (file-exists-p fn)
+	      (setq outlist (cons fn outlist)))
+	  (setq ckext (cdr ckext))))
       (setq ckdir (cdr ckdir)))
     (nreverse outlist)))
 
@@ -6666,16 +6670,9 @@ Uses the CURRENT filename, `verilog-library-extensions',
 `verilog-library-directories' and `verilog-library-files'
 variables to build the path."
   ;; Return search locations for it
-  (append (list current)	; first, current buffer
- 	  (let ((ext verilog-library-extensions) flist)
- 	    (while ext
- 	      (setq flist
- 		    (append (verilog-library-filenames
- 			     (concat module (car ext)) current) flist)
-		    ext (cdr ext)))
-	    flist)
-	  verilog-library-files	 ; finally, any libraries
-	  ))
+  (append (list current)		; first, current buffer
+	  (verilog-library-filenames module current t)
+	  verilog-library-files))	; finally, any libraries
 
 ;;
 ;; Module Information
