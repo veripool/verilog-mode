@@ -1,5 +1,5 @@
 interface simple_bus; // Define the interface
-   logic req, gnt;
+ logic req, gnt;
    logic [7:0] addr, data;
    logic [1:0] mode;
    logic       start, rdy;
