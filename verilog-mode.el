@@ -1093,18 +1093,42 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
    "\\(\\<endgroup\\>\\)"               ; 12
    ))
 
-(defconst verilog-autoindent-lines-re
+(defconst verilog-auto-end-comment-lines-re
   ;; Matches to names in this list cause auto-end-commentation
   ;;
   ;; "macromodule" "module" "primitive" "interface" "end" "endcase" "endfunction"
   ;; "endtask" "endmodule" "endprimitive" "endinterface" "endspecify" "endtable" "join"
   ;; "begin" "else" `{directives}
   (concat "\\("
-	  verilog-directive-re
-	  "\\|\\(\\<begin\\>\\|"
-	  "e\\(lse\\>\\|nd\\(\\>\\|c\\(ase\\|lass\\)\\>\\|covergroup\\>\\|function\\>\\|module\\>\\|program\\>\\|primitive\\>\\|interface\\>\\|package\\>"
-	  "\\|specify\\>\\|ta\\(ble\\>\\|sk\\>\\)\\)\\)\\|"
-	  "join\\(_any\\|_none\\)?\\>\\|m\\(acromodule\\>\\|odule\\>\\)\\|primitive\\>\\|interface\\>\\|package\\>\\)\\)" ))
+	  verilog-directive-re "\\)\\|\\("
+	  (eval-when-compile
+	    (verilog-regexp-words
+	     
+	     `( "begin"
+		"else"
+		"end"
+		"endcase"
+		"endclass"
+		"endcovergroup"
+		"endfunction"
+		"endmodule"
+		"endprogram"
+		"endprimitive"
+		"endinterface"
+		"endpackage"
+		"endsequence"
+		"endspecify"
+		"endtable"
+		"endtask"
+		"join"
+		"join_any"
+		"join_none"
+		"module"
+		"macromodule"
+		"primitive"
+		"interface"
+		"package")))
+	  "\\)"))
 
 ;;; NOTE: verilog-leap-to-head expects that verilog-end-block-re and
 ;;; verilog-end-block-ordered-re matches exactly the same strings.
@@ -1122,7 +1146,8 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
 	  "\\(package\\)\\|"       ; 10
 	  "\\(class\\)\\|"         ; 11
           "\\(covergroup\\)\\|"    ; 12
-          "\\(program\\)"          ; 13
+          "\\(program\\)\\|"	   ; 13
+          "\\(sequence\\)\\|"	   ; 14
 	  "\\)\\>\\)"))
 (defconst verilog-end-block-re
   (eval-when-compile
@@ -1142,6 +1167,7 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
        "endinterface"
        "endpackage"
        "endprogram"
+       "endsequence"
        )
      )))
 
@@ -1192,7 +1218,20 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
 ;; verilog-forward-sexp and verilog-calc-indent
 
 (defconst verilog-beg-block-re-ordered
-  "\\<\\(begin\\)\\|\\(randcase\\|case[xz]?\\)\\|\\(fork\\)\\|\\(class\\)\\|\\(covergroup\\)\\|\\(table\\)\\|\\(specify\\)\\|\\(function\\)\\|\\(task\\)\\|\\(generate\\)\\|\\(property\\)\\>")
+  ( concat "\\<"
+	   "\\(begin\\)\\|"		;1
+	   "\\(randcase\\|case[xz]?\\)\\|"
+	   "\\(fork\\)\\|"		;3
+	   "\\(class\\)\\|"		;4
+	   "\\(covergroup\\)\\|"	;5
+	   "\\(table\\)\\|"		;6
+	   "\\(specify\\)\\|"		;7
+	   "\\(function\\)\\|"		;8
+	   "\\(task\\)\\|"		;9
+	   "\\(generate\\)\\|"		;10
+	   "\\(property\\)\\|"		;11
+	   "\\(sequence\\)"		;12
+	   "\\>"))
 
 (defconst verilog-end-block-ordered-rry
   [ "\\(\\<begin\\>\\)\\|\\(\\<end\\>\\)\\|\\(\\<endcase\\>\\)\\|\\(\\<join\\(_any\\|_none\\)?\\>\\)"
@@ -1205,7 +1244,9 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
     "\\(\\<generate\\>\\)\\|\\(\\<endgenerate\\>\\)"
     "\\(\\<task\\>\\)\\|\\(\\<endtask\\>\\)"
     "\\(\\<covergroup\\>\\)\\|\\(\\<endgroup\\>\\)"
-    "\\(\\<property\\>\\)\\|\\(\\<endproperty\\>\\)" ] )
+    "\\(\\<property\\>\\)\\|\\(\\<endproperty\\>\\)" 
+    "\\(\\<sequence\\>\\)\\|\\(\\<endsequence\\>\\)" 
+    ] )
 
 (defconst verilog-nameable-item-re
   (eval-when-compile
@@ -1307,6 +1348,7 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
        "primitive" "endprimative" 
        "program" "endprogram"
        "property" "endproperty"
+       "sequence" "endsequence"
        "specify" "endspecify"
        "table" "endtable"
        "task" "endtask"
@@ -1884,6 +1926,9 @@ Use filename, if current buffer being edited shorten to just buffer name."
        ((match-end 11) ; endproperty
 	;; Search forward for matching property
 	(setq reg "\\(\\<property\\>\\)\\|\\(\\<endproperty\\>\\)" ))
+       ((match-end 12) ; endsequence
+	;; Search forward for matching sequence
+	(setq reg "\\(\\<sequence\\>\\)\\|\\(\\<endsequence\\>\\)" ))
        )
       (if (forward-word 1)
 	  (catch 'skip
@@ -1898,7 +1943,13 @@ Use filename, if current buffer being edited shorten to just buffer name."
 		  (setq nest (1+ nest)))))
 	      )))
       )
-     ((looking-at "\\(\\<\\(macro\\)?module\\>\\)\\|\\(\\<primitive\\>\\)\\|\\<class\\>\\)\\|\\<program\\>\\)\\|\\<interface\\>\\)\\|\\(\\<package\\>\\)")
+     ((looking-at (concat 
+		   "\\(\\<\\(macro\\)?module\\>\\)\\|"
+		   "\\(\\<primitive\\>\\)\\|"
+		   "\\(\\<class\\>\\)\\|"
+		   "\\(\\<program\\>\\)\\|"
+		   "\\(\\<interface\\>\\)\\|"
+		   "\\(\\<package\\>\\)"))
       (cond
        ((match-end 1)
 	(verilog-re-search-forward "\\<endmodule\\>" nil 'move))
@@ -2280,7 +2331,7 @@ With optional ARG, remove existing end of line comments."
              (delete-horizontal-space)
 	     (beginning-of-line)
 	     (skip-chars-forward " \t")
-	     (if (looking-at verilog-autoindent-lines-re)
+	     (if (looking-at verilog-auto-end-comment-lines-re)
 		 (let ((indent-str (verilog-indent-line)))
 		   ;; Maybe we should set some endcomments
 		   (if verilog-auto-endcomments
@@ -3240,6 +3291,14 @@ Insert `// NAME ' if this line ends a function, task, module, primitive or inter
 		    (setq reg "\\(\\<interface\\>\\)\\|\\(\\<\\(endinterface\\|package\\|primitive\\|\\(macro\\)?module\\)\\>\\)"))
 		   ((match-end 10) ;; of verilog-end-block-ordered-re
 		    (setq reg "\\(\\<package\\>\\)\\|\\(\\<\\(endpackage\\|primitive\\|interface\\|\\(macro\\)?module\\)\\>\\)"))
+		   ((match-end 11) ;; of verilog-end-block-ordered-re
+		    (setq reg "\\(\\<class\\>\\)\\|\\(\\<\\(endclass\\|primitive\\|interface\\|\\(macro\\)?module\\)\\>\\)"))
+		   ((match-end 12) ;; of verilog-end-block-ordered-re
+		    (setq reg "\\(\\<covergroup\\>\\)\\|\\(\\<\\(endcovergroup\\|primitive\\|interface\\|\\(macro\\)?module\\)\\>\\)"))
+		   ((match-end 13) ;; of verilog-end-block-ordered-re
+		    (setq reg "\\(\\<program\\>\\)\\|\\(\\<\\(endprogram\\|primitive\\|interface\\|\\(macro\\)?module\\)\\>\\)"))
+		   ((match-end 14) ;; of verilog-end-block-ordered-re
+		    (setq reg "\\(\\<sequence\\>\\)\\|\\(\\<\\(endsequence\\|primitive\\|interface\\|\\(macro\\)?module\\)\\>\\)"))
 		   )
 		  (let (b e)
 		    (save-excursion
@@ -3898,8 +3957,11 @@ from endcase to matching case, and so on."
       ;; 11: Search back for matching property
       (setq reg "\\(\\<property\\>\\)\\|\\(\\<endproperty\\>\\)" ))
      ((looking-at "\\<endinterface\\>")
-      ;; 11: Search back for matching property
+      ;; 12: Search back for matching interface
       (setq reg "\\(\\<interface\\>\\)\\|\\(\\<endinterface\\>\\)" ))
+     ((looking-at "\\<endsequence\\>")
+      ;; 12: Search back for matching interface
+      (setq reg "\\(\\<sequence\\>\\)\\|\\(\\<endsequence\\>\\)" ))
      )
     (if reg
 	(catch 'skip
