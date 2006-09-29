@@ -9166,6 +9166,7 @@ and/or see http://www.veripool.org"
 	  (run-hooks 'verilog-before-auto-hook)
 	  ;; Try to save the user from needing to revert-file to reread file local-variables
 	  (verilog-auto-reeval-locals)
+	  (verilog-read-auto-lisp (point-min) (point-max))
 	  (verilog-getopt-flags)
 	  ;; These two may seem obvious to do always, but on large includes it can be way too slow
 	  (when verilog-auto-read-includes
