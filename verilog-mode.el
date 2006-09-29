@@ -6723,7 +6723,8 @@ Or, just the existing dirnames themselves if there are no wildcards."
 
 		   ;; Unfortunately allows abc/*/rtl to match abc/rtl
 		   ;; because abc/.. shows up in dirfiles.  Solutions welcome.
-		   dirfiles (directory-files root t pattern nil))
+		   dirfiles (if (file-directory-p root)	; Ignore version control external
+				(directory-files root t pattern nil)))
 	     (while dirfiles
 	       (setq dirfile (expand-file-name (concat (car dirfiles) rest))
 		     dirfiles (cdr dirfiles))
