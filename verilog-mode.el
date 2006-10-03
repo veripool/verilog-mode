@@ -3575,31 +3575,44 @@ becomes:
 ;;
 ;; Batch
 ;;
+
+(defmacro verilog-batch-error-wrapper (&rest body)
+  "Execute BODY and add error prefix to any errors found.
+This lets programs calling batch mode to easily extract error messages."
+  (` (condition-case err
+	 (progn (,@ body))
+       (error
+	(error "%%Error: %s%s" (error-message-string err)
+	       (if verilog-running-on-xemacs "\n" ""))))))  ;; xemacs forgets to add a newline
+
 (defun verilog-batch-execute-func (funref)
   "Internal processing of a batch command, running FUNREF on all command arguments."
-  ;; General globals needed
-  (setq make-backup-files nil)
-  (setq-default make-backup-files nil)
-  (setq enable-local-variables t)
-  (setq enable-local-eval t)
-  ;; Make sure any sub-files we read get proper mode
-  (setq default-major-mode `verilog-mode)
-  ;; Ditto files already read in
-  (mapcar '(lambda (buf)
-	     (when (buffer-file-name buf)
-	       (save-excursion
-		 (set-buffer buf)
-		 (verilog-mode))))
-	  (buffer-list))
-  ;; Process the files
-  (mapcar '(lambda (buf)
-	     (when (buffer-file-name buf)
-	       (save-excursion
-		 (message (concat "Processing " (buffer-file-name buf)))
-		 (set-buffer buf)
-		 (funcall funref)
-		 (save-buffer))))
-	  (buffer-list)))
+  (verilog-batch-error-wrapper
+   ;; General globals needed
+   (setq make-backup-files nil)
+   (setq-default make-backup-files nil)
+   (setq enable-local-variables t)
+   (setq enable-local-eval t)
+   ;; Make sure any sub-files we read get proper mode
+   (setq default-major-mode `verilog-mode)
+   ;; Ditto files already read in
+   (mapcar '(lambda (buf)
+	      (when (buffer-file-name buf)
+		(save-excursion
+		  (set-buffer buf)
+		  (verilog-mode))))
+	   (buffer-list))
+   ;; Process the files
+   (mapcar '(lambda (buf)
+	      (when (buffer-file-name buf)
+		(save-excursion
+		  (if (not (file-exists-p (buffer-file-name buf)))
+		      (error (concat "File not found: " (buffer-file-name buf))))
+		  (message (concat "Processing " (buffer-file-name buf)))
+		  (set-buffer buf)
+		  (funcall funref)
+		  (save-buffer))))
+	   (buffer-list))))
 
 (defun verilog-batch-auto ()
   "For use with --batch, perform automatic expansions as a stand-alone tool.
@@ -5458,7 +5471,7 @@ Bound search by LIMIT.  Adapted from
 	    (if (looking-at "\\(\\s-*,\\)")
 		(goto-char (match-end 1))
 	      (end-of-line) t))))
-    (error t)))
+    (error nil)))
 
 
 ;; Added by Subbu Meiyappan for Header

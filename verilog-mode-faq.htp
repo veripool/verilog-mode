@@ -37,6 +37,20 @@ HREF="http://www.veripool.org/">www.Veripool.com</A> must be retained.
 
    <p>See <A HREF="http://www.verilog.com/emacs_install.html">Installation</A>.
 
+<a name="3others"></a><h3>Are there other Verilog Modes for Emacs?</h3>
+
+   <p>The authors are only aware of one which have been maintained within
+   the last half-dozen years.
+   
+   <p>Sun Yijiang maintains <A HREF="#3others">vlog-mode.el</A> from <A
+   HREF="http://sourceforge.net/projects/vlog-mode">http://sourceforge.net/projects/vlog-mode</A>.
+   His version supports GNU Emacs and he has started adding some Verilog
+   2001 support.
+
+   <p>Competition is good; if you prefer vlog-mode.el, we'd like to hear
+   back as to if there are features we could also add to in
+   verilog-mode.el.
+
 <a name="3mytool"></a><h3>Can I release Verilog-Mode with my tool?</h3>
 
    <p>Yes.  Verilog-Mode is released under the GNU General Public License.  See
@@ -262,6 +276,20 @@ M-x eval-expression RET
 <pre>
 (setq font-lock-maximum-size 100000)
 </pre>
+
+<a name="3largecolors"></a><h3>Why do I not get any colors in huge files?</h3>
+
+   <p>This is sort of the opposite of the last FAQ; any file exceeding the
+default size of 256,000 characters will not get font-locked.  To override
+this, put into your .emacs:
+
+<pre>
+(setq font-lock-maximum-size 2000000)
+</pre>
+
+   <p>Alternatively, load the lazy-lock package.  This will only highlight
+the region on the screen.  To find it, use <pre>M-x find-library RET
+lazy-lock</pre>.
 
 <a name="2language"></a><h2>Language Support</h2>
 
