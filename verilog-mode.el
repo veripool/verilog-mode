@@ -1823,6 +1823,12 @@ Use filename, if current buffer being edited shorten to just buffer name."
   ;; before that see if we are in a comment
   (verilog-forward-sexp)
 )
+;;;used by hs-minor-mode
+(defun verilog-forward-sexp-function (arg)
+  (if (< arg 0)
+      (verilog-backward-sexp)
+    (verilog-forward-sexp)))
+
 
 (defun verilog-backward-sexp ()
   (let ((reg)
@@ -2296,6 +2302,12 @@ Other useful functions are:
   ;; Tell imenu how to handle verilog.
   (make-local-variable 'imenu-generic-expression)
   (setq imenu-generic-expression verilog-imenu-generic-expression)
+  ;; hideshow support
+  (unless (assq 'verilog-mode hs-special-modes-alist)
+    (setq hs-special-modes-alist
+	  (cons '(verilog-mode-mode  "\\<begin\\>" "\\<end\\>" nil 
+			     verilog-forward-sexp-function)
+		hs-special-modes-alist)))
   ;; Stuff for autos
   (add-hook 'write-contents-hooks 'verilog-auto-save-check) ; already local
   (verilog-auto-reeval-locals t)   ; Save locals in case user changes them
@@ -4672,7 +4684,7 @@ ARG is ignored, for `comment-indent-function' compatibility."
 	(setq myre "<="))
     (setq myre (concat "\\(^[^;" myre "]*\\)\\([" myre "]\\)"))
     (beginning-of-line)
-    (if (and (not(looking-at verilog-complete-reg))
+    (if (and (not (looking-at (concat "^\\s-*" verilog-complete-reg)))
 	     (looking-at myre))
 	(let* ((here (point))
 	       (e) (r)
@@ -4713,8 +4725,7 @@ ARG is ignored, for `comment-indent-function' compatibility."
 	      (message "Lining up expressions..(please stand by)"))
 
 	  ;; Set indent to minimum throughout region
-	  (setq e (marker-position edpos))
-	  (while (< (point) e)
+	  (while (< (point) (marker-position edpos))
 	    (beginning-of-line)
 	    (verilog-just-one-space myre)
 	    (forward-line))
