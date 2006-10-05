@@ -284,7 +284,7 @@
 (defcustom verilog-linter "surelint --std --synth --style --sim --race --fsm --msglimit=none "
   "*Unix program and arguments to call to run a lint checker on verilog source.
 Invoked when you type \\[compile].  \\[next-error] will take you to
-   the next lint error as expected."
+the next lint error as expected."
   :type 'string
   :group 'verilog-mode-actions)
 
@@ -323,8 +323,8 @@ NOTE: Activate the new setting in a Verilog buffer by re-fontifying it (menu
 
 (defcustom verilog-indent-level-module 3
   "* Indentation of Module level Verilog statements.  (eg always, initial)
-Set to 0 to get initial and always statements lined up
-    on the left side of your screen."
+Set to 0 to get initial and always statements lined up on the left side of
+your screen."
   :group 'verilog-mode-indent
   :type 'integer)
 
@@ -422,7 +422,10 @@ default avoids too many redundant comments in tight quarters"
   :type 'integer)
 
 (defcustom verilog-auto-lineup '(declaration)
-  "*If this list contains the symbol 'all', then all line ups described below are done.
+  "*Algorithm for lining up statements on multiple lines.
+
+If this list contains the symbol 'all', then all line ups described below
+are done.
 
 If this list contains the symbol 'declaration', then declarations are lined up
 with any preceding declarations, taking into account widths and the like, so
@@ -465,10 +468,11 @@ The name of the function or case will be set between the braces."
   :type 'boolean )
 
 (defcustom verilog-auto-read-includes nil
-  "*True means do a `verilog-read-defines' and `verilog-read-includes'
-before each AUTO expansion.  This makes it easier to embed defines and
-includes, but can result in very slow reading times if there are many or
-large include files."
+  "*True means to automatically read includes before AUTOs.
+This will do a `verilog-read-defines' and `verilog-read-includes' before
+each AUTO expansion.  This makes it easier to embed defines and includes,
+but can result in very slow reading times if there are many or large
+include files."
   :group 'verilog-mode-actions
   :type 'boolean )
 
@@ -1103,7 +1107,6 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
 	  verilog-directive-re "\\)\\|\\("
 	  (eval-when-compile
 	    (verilog-regexp-words
-	     
 	     `( "begin"
 		"else"
 		"end"
@@ -1156,12 +1159,12 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
      `("end"  ;; closes begin
        "endcase" ;; closes any of case, casex casez or randcase
        "join" "join_any" "join_none" ;; closes fork
-       "endclass" 
-       "endtable" 
-       "endspecify" 
-       "endfunction" 
+       "endclass"
+       "endtable"
+       "endspecify"
+       "endfunction"
        "endgenerate"
-       "endtask" 
+       "endtask"
        "endgroup"
        "endproperty"
        "endinterface"
@@ -1198,20 +1201,20 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
 
 (defconst verilog-named-block-re  "begin[ \t]*:")
 
-;; These words begin a block which can occur inside a module which should be indented, 
+;; These words begin a block which can occur inside a module which should be indented,
 ;; and closed with the respective word from the end-block list
 
 (defconst verilog-beg-block-re
   (eval-when-compile
     (verilog-regexp-words
-     `("begin" 
-       "case" "casex" "casez" "randcase" 
-       "generate" 
-       "fork" 
+     `("begin"
+       "case" "casex" "casez" "randcase"
+       "generate"
+       "fork"
        "function"
        "property"
-       "specify" 
-       "table" 
+       "specify"
+       "table"
        "task"))))
 ;; These are the same words, in a specific order in the regular
 ;; expression so that matching will work nicely for
@@ -1244,28 +1247,28 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
     "\\(\\<generate\\>\\)\\|\\(\\<endgenerate\\>\\)"
     "\\(\\<task\\>\\)\\|\\(\\<endtask\\>\\)"
     "\\(\\<covergroup\\>\\)\\|\\(\\<endgroup\\>\\)"
-    "\\(\\<property\\>\\)\\|\\(\\<endproperty\\>\\)" 
-    "\\(\\<sequence\\>\\)\\|\\(\\<endsequence\\>\\)" 
+    "\\(\\<property\\>\\)\\|\\(\\<endproperty\\>\\)"
+    "\\(\\<sequence\\>\\)\\|\\(\\<endsequence\\>\\)"
     ] )
 
 (defconst verilog-nameable-item-re
   (eval-when-compile
     (verilog-regexp-words
-     `("begin" 
-       "fork" 
-       "join" "join_any" "join_none" 
-       "end" 
-       "endcase" 
-       "endconfig" 
+     `("begin"
+       "fork"
+       "join" "join_any" "join_none"
+       "end"
+       "endcase"
+       "endconfig"
        "endclass"
-       "endfunction" 
-       "endgenerate" 
-       "endmodule" 
-       "endprimative" 
+       "endfunction"
+       "endgenerate"
+       "endmodule"
+       "endprimative"
        "endinterface"
-       "endpackage" 
-       "endspecify" 
-       "endtable" 
+       "endpackage"
+       "endspecify"
+       "endtable"
        "endtask" )
      )))
 
@@ -1331,21 +1334,21 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
   (eval-when-compile
     (verilog-regexp-words
      `(
-       "always" "always_latch" "always_ff" "always_comb" 
-       "begin" "end" 
-       "case" "casex" "casez" "randcase" "endcase" 
-       "class" "endclass" 
+       "always" "always_latch" "always_ff" "always_comb"
+       "begin" "end"
+       "case" "casex" "casez" "randcase" "endcase"
+       "class" "endclass"
        "config" "endconfig"
-       "covergroup" "endgroup" 
+       "covergroup" "endgroup"
        "fork" "join" "join_any" "join_none"
-       "function" "endfunction" 
+       "function" "endfunction"
        "final"
-       "generate" "endgenerate" 
+       "generate" "endgenerate"
        "initial"
        "interface" "endinterface"
-       "module" "macromodule" "endmodule" 
-       "package" "endpackage" 
-       "primitive" "endprimative" 
+       "module" "macromodule" "endmodule"
+       "package" "endpackage"
+       "primitive" "endprimative"
        "program" "endprogram"
        "property" "endproperty"
        "sequence" "endsequence"
@@ -1625,7 +1628,7 @@ See also `verilog-font-lock-extra-types'.")
 See also `verilog-font-lock-extra-types'.")
 (defvar  verilog-font-lock-translate-off-face
   'verilog-font-lock-translate-off-face
-  "Font to use for translated off regions")
+  "Font to use for translated off regions.")
 (defface verilog-font-lock-translate-off-face
   '((((class color)
       (background light))
@@ -1643,7 +1646,7 @@ See also `verilog-font-lock-extra-types'.")
 
 (defvar verilog-font-lock-p1800-face
   'verilog-font-lock-p1800-face
-  "Font to use for p1800 keywords")
+  "Font to use for p1800 keywords.")
 (defface verilog-font-lock-p1800-face
   '((((class color)
       (background light))
@@ -1943,7 +1946,7 @@ Use filename, if current buffer being edited shorten to just buffer name."
 		  (setq nest (1+ nest)))))
 	      )))
       )
-     ((looking-at (concat 
+     ((looking-at (concat
 		   "\\(\\<\\(macro\\)?module\\>\\)\\|"
 		   "\\(\\<primitive\\>\\)\\|"
 		   "\\(\\<class\\>\\)\\|"
@@ -2717,8 +2720,8 @@ With ARG, first kill any existing labels."
 		    (looking-at "extern")))
 	     (not (looking-at verilog-complete-reg)))
 	    (verilog-backward-syntactic-ws)
-	    (not (or 
-		  (bolp) 
+	    (not (or
+		  (bolp)
 		  (= (preceding-char) ?\;)
 		  (save-excursion
 		    (verilog-backward-token)
@@ -2826,7 +2829,7 @@ more specifically, in a list after a struct|union keyword"
   (save-excursion
     (let* ((state (parse-partial-sexp (point-min) (point)))
 	   (depth (nth 0 state)))
-      (if depth 
+      (if depth
 	  (progn (backward-up-list depth)
 		 (verilog-beg-of-statement)
 		 (looking-at "\\<typedef\\>?\\s-*\\<struct\\|union\\>")
@@ -3711,8 +3714,8 @@ type.  Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 
 		   ;; if we are in a parenthesized list, and the user likes to indent these, return.
  		   (if (verilog-in-paren)
-		       (if verilog-indent-lists 
-			   (progn (setq par 1) 
+		       (if verilog-indent-lists
+			   (progn (setq par 1)
 				  (throw 'nesting 'block))
 			 ()
 			  )
@@ -3833,6 +3836,7 @@ type.  Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 	   (list type (verilog-current-indent-level)))))
       )))
 (defun verilog-wai ()
+  "Show matching nesting block for debugging."
   (interactive)
   (save-excursion
     (let ((nesting (verilog-calc-1)))
@@ -3869,7 +3873,7 @@ type.  Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 	      (verilog-leap-to-case-head)
 	      (if (looking-at verilog-case-re)
 		  (throw 'nesting 'case)))))
-       
+
        ((looking-at (if (verilog-in-generate-region-p)
 			verilog-defun-level-not-generate-re
 		      verilog-defun-level-re))
@@ -3932,7 +3936,7 @@ of the appropriate enclosing block."
   "Move point to the head of this block; jump from end to matching begin,
 from endcase to matching case, and so on."
   (let ((reg nil)
-	snest 
+	snest
 	(nest 1))
     (cond
      ((looking-at "\\<end\\>")
@@ -4664,7 +4668,7 @@ ARG is ignored, for `comment-indent-function' compatibility."
   (interactive "sRegular Expression: (<?=) ")
   (save-excursion
     (if (or (eq myre nil)
-	    (string-equal myre "")) 
+	    (string-equal myre ""))
 	(setq myre "<="))
     (setq myre (concat "\\(^[^;" myre "]*\\)\\([" myre "]\\)"))
     (beginning-of-line)
@@ -4777,7 +4781,7 @@ BASEIND is the base indent to offset everything."
 	)
     (setq val (+ baseind (eval (cdr (assoc 'declaration verilog-indent-alist)))))
     (indent-line-to val)
-    
+
     ;; Use previous declaration (in this module) as template.
     (if (or (memq 'all verilog-auto-lineup)
 	    (memq 'declaration verilog-auto-lineup))
@@ -4857,8 +4861,7 @@ Region is defined by B and EDPOS."
 	(1+ (current-column))))))
 
 (defun verilog-get-lineup-indent-2 (myre b edpos)
-  "Return the indent level that will line up several lines within the region
-from b to e nicely. The lineup string is str."
+  "Return the indent level that will line up several lines within the region."
   (save-excursion
     (let ((ind 0) e)
       (goto-char b)
@@ -6372,7 +6375,8 @@ list of ( (signal_name connection_name)... )"
 ;;(progn (find-file "auto-template.v") (verilog-read-auto-template "ptl_entry"))
 
 (defun verilog-set-define (defname defvalue &optional buffer enumname)
-  "Set the definition DEFNAME to the DEFVALUE in the given BUFFER."
+  "Set the definition DEFNAME to the DEFVALUE in the given BUFFER.
+Optionally associate it with the specified enumeration ENUMNAME."
   (save-excursion
     (set-buffer (or buffer (current-buffer)))
     (let ((mac (intern (concat "vh-" defname))))
@@ -6816,8 +6820,8 @@ Use verilog-preserve-cache's to set")
 
 (defvar verilog-modi-lookup-last-mod nil "Cache of last module looked up.")
 (defvar verilog-modi-lookup-last-modi nil "Cache of last modi returned.")
-(defvar verilog-modi-lookup-last-current nil "Cache of last current-buffer looked up.")
-(defvar verilog-modi-lookup-last-tick nil "Cache of last buffer-modified-tick looked up.")
+(defvar verilog-modi-lookup-last-current nil "Cache of last `current-buffer' looked up.")
+(defvar verilog-modi-lookup-last-tick nil "Cache of last `buffer-modified-tick' looked up.")
 
 (defun verilog-modi-lookup (module allow-cache)
   "Find the file and point at which MODULE is defined.
@@ -7135,8 +7139,9 @@ Presumes that any newlines end a list element."
     (insert ","))))
 
 (defun verilog-repair-close-comma (point-limit)
-  "If point contains a comma followed by a close parenthesis, presume it
-was mis-inserted by a AUTOARG, and remove it"
+  "If point is at a comma followed by a close parenthesis, fix it.
+This repairs those mis-inserted by a AUTOARG.  The sequence must occur
+between POINT-LIMIT and point for it to be removed."
   ;; It would be much nicer if Verilog allowed extra commas like Perl does!
   (save-excursion
     (when (re-search-backward "," point-limit t)
@@ -7262,9 +7267,7 @@ It was created by the AUTOS themselves, or by the user."
     (verilog-delete-to-paren)))
 
 (defun verilog-delete-auto-star-implicit ()
-  "Delete all non-templated .* implicit connections that were created
-by .*, `verilog-auto-star'.
-
+  "Delete all .* implicit connections created by `verilog-auto-star'.
 This function will be called automatically at save unless
 `verilog-auto-star-save' is set, any non-templated expanded pins will be
 removed."
@@ -7878,7 +7881,7 @@ Templates:
 Regexp Templates:
 
   A template entry of the form
-  
+
 	    .pci_req\\([0-9]+\\)_l	(pci_req_jtag_[\\1]),
 
   will apply a Emacs style regular expression search for any port beginning
@@ -7896,7 +7899,7 @@ Regexp Templates:
   Here's another example to remove the _l, useful when naming conventions
   specify _ alone to mean active low.  Note the use of [] to keep the bus
   subscript:
-  
+
 	    .\\(.*\\)_l 	(\\1_[]),
 
 Lisp Templates:
@@ -8228,7 +8231,7 @@ Limitations:
   This ONLY detects outputs of AUTOINSTants (see `verilog-read-sub-decls'),
   and all busses must have widths, such as those from AUTOINST, or using []
   in AUTO_TEMPLATEs.
-  
+
   This does NOT work on memories, declare those yourself.
 
 A simple example (see `verilog-auto-inst' for what else is going on here):
@@ -9126,12 +9129,12 @@ For example:
 	somesub sub #(/*AUTOINSTPARAM*/) (/*AUTOINST*/);
 
 You can also update the AUTOs from the shell using:
-	emacs --batch  <filenames.v>  -f verilog-batch-auto 
+	emacs --batch  <filenames.v>  -f verilog-batch-auto
 Or fix indentation with:
 	emacs --batch  <filenames.v>  -f verilog-batch-indent
 Likewise, you can delete or inject AUTOs with:
-	emacs --batch  <filenames.v>  -f verilog-batch-delete-auto 
-	emacs --batch  <filenames.v>  -f verilog-batch-inject-auto 
+	emacs --batch  <filenames.v>  -f verilog-batch-delete-auto
+	emacs --batch  <filenames.v>  -f verilog-batch-inject-auto
 
 Using \\[describe-function], see also:
    `verilog-auto-arg'          for AUTOARG module instantiations
@@ -9699,6 +9702,7 @@ Clicking on the middle-mouse button loads them in a buffer (as in dired)."
 
 
 (defun verilog-colorize-include-files-buffer ()
+  "Colorize a include file."
   (interactive)
   ;; delete overlays
   (let ((overlays (overlays-in (point-min) (point-max))))
@@ -9715,7 +9719,7 @@ Clicking on the middle-mouse button loads them in a buffer (as in dired)."
 ;; so define this function to do more or less the same as ffap-at-mouse
 ;; but first resolve filename...
 (defun verilog-load-file-at-mouse (event)
-  "Load file under button 2 click.
+  "Load file under button 2 click's EVENT.
 Files are checked based on `verilog-library-directories'."
   (interactive "@e")
   (save-excursion ;; implement a verilog specific ffap-at-mouse
