@@ -7142,24 +7142,24 @@ Presumes that any newlines end a list element."
   (save-excursion
     (verilog-backward-syntactic-ws)
     (when (save-excursion
-	  (backward-char 1)
-	  (and (not (looking-at "[(,]"))
-	       (progn
-		 (verilog-re-search-backward "[(`]" nil t)
-		 (looking-at "("))))
+	    (backward-char 1)
+	    (and (not (looking-at "[(,]"))
+		 (progn
+		   (verilog-re-search-backward "[(`]" nil t)
+		   (looking-at "("))))
     (insert ","))))
 
-(defun verilog-repair-close-comma (point-limit)
+(defun verilog-repair-close-comma ()
   "If point is at a comma followed by a close parenthesis, fix it.
-This repairs those mis-inserted by a AUTOARG.  The sequence must occur
-between POINT-LIMIT and point for it to be removed."
+This repairs those mis-inserted by a AUTOARG."
   ;; It would be much nicer if Verilog allowed extra commas like Perl does!
-  (save-excursion
-    (when (re-search-backward "," point-limit t)
-      (when (save-excursion
-	      (forward-char 1)
-	      (verilog-forward-syntactic-ws)
-	      (and (looking-at "[),]")))
+  (let (begin-pt)
+    (save-excursion
+      (verilog-forward-close-paren)
+      (backward-char 1)
+      (verilog-backward-syntactic-ws)
+      (backward-char 1)
+      (when (looking-at ",")
 	(delete-char 1)))))
 
 (defun verilog-get-list (start end)
@@ -7574,8 +7574,7 @@ choose the comma yourself.
 Avoid declaring ports manually, as it makes code harder to maintain."
   (save-excursion
     (let ((modi (verilog-modi-current))
-	  (skip-pins (aref (verilog-read-arg-pins) 0))
-	  (pt (point)))
+	  (skip-pins (aref (verilog-read-arg-pins) 0)))
       (verilog-repair-open-comma)
       (verilog-auto-arg-ports (verilog-signals-not-in
 			       (verilog-modi-get-outputs modi)
@@ -7592,7 +7591,7 @@ Avoid declaring ports manually, as it makes code harder to maintain."
 			       skip-pins)
 			      "// Inputs"
 			      verilog-indent-level-declaration)
-      (verilog-repair-close-comma pt)
+      (verilog-repair-close-comma)
       (unless (eq (char-before) ?/ )
 	(insert "\n"))
       (indent-to verilog-indent-level-declaration)
@@ -8336,7 +8335,6 @@ Typing \\[verilog-auto] will make this into:
   (save-excursion
     ;; Point must be at insertion point.
     (let* ((indent-pt (current-indentation))
-	   (pt   (point))
 	   (v2k  (verilog-in-paren))
 	   (modi (verilog-modi-current))
 	   (sig-list (verilog-signals-not-in
@@ -8355,7 +8353,7 @@ Typing \\[verilog-auto] will make this into:
 	(verilog-insert-definition sig-list "output" indent-pt v2k)
 	(verilog-modi-cache-add-outputs modi sig-list)
 	(verilog-insert-indent "// End of automatics\n"))
-      (when v2k (verilog-repair-close-comma pt))
+      (when v2k (verilog-repair-close-comma))
       )))
 
 (defun verilog-auto-output-every ()
@@ -8393,7 +8391,6 @@ Typing \\[verilog-auto] will make this into:
   (save-excursion
     ;;Point must be at insertion point
     (let* ((indent-pt (current-indentation))
-	   (pt   (point))
 	   (v2k  (verilog-in-paren))
 	   (modi (verilog-modi-current))
 	   (sig-list (verilog-signals-combine-bus
@@ -8408,7 +8405,7 @@ Typing \\[verilog-auto] will make this into:
 	(verilog-insert-definition sig-list "output" indent-pt v2k)
 	(verilog-modi-cache-add-outputs modi sig-list)
 	(verilog-insert-indent "// End of automatics\n"))
-      (when v2k (verilog-repair-close-comma pt))
+      (when v2k (verilog-repair-close-comma))
       )))
 
 (defun verilog-auto-input ()
@@ -8452,7 +8449,6 @@ Typing \\[verilog-auto] will make this into:
 	endmodule"
   (save-excursion
     (let* ((indent-pt (current-indentation))
-	   (pt   (point))
 	   (v2k  (verilog-in-paren))
 	   (modi (verilog-modi-current))
 	   (sig-list (verilog-signals-not-in
@@ -8475,7 +8471,7 @@ Typing \\[verilog-auto] will make this into:
 	(verilog-insert-definition sig-list "input" indent-pt v2k)
 	(verilog-modi-cache-add-inputs modi sig-list)
 	(verilog-insert-indent "// End of automatics\n"))
-      (when v2k (verilog-repair-close-comma pt))
+      (when v2k (verilog-repair-close-comma))
       )))
 
 (defun verilog-auto-inout ()
@@ -8519,7 +8515,6 @@ Typing \\[verilog-auto] will make this into:
   (save-excursion
     ;; Point must be at insertion point.
     (let* ((indent-pt (current-indentation))
-	   (pt   (point))
 	   (v2k  (verilog-in-paren))
 	   (modi (verilog-modi-current))
 	   (sig-list (verilog-signals-not-in
@@ -8539,7 +8534,7 @@ Typing \\[verilog-auto] will make this into:
 	(verilog-insert-definition sig-list "inout" indent-pt v2k)
 	(verilog-modi-cache-add-inouts modi sig-list)
 	(verilog-insert-indent "// End of automatics\n"))
-      (when v2k (verilog-repair-close-comma pt))
+      (when v2k (verilog-repair-close-comma))
       )))
 
 (defun verilog-auto-inout-module ()
@@ -8589,7 +8584,6 @@ Typing \\[verilog-auto] will make this into:
       ;; Note this may raise an error
       (when (setq submodi (verilog-modi-lookup submod t))
 	(let* ((indent-pt (current-indentation))
-	       (pt   (point))
 	       (v2k  (verilog-in-paren))
 	       (modi (verilog-modi-current))
 	       (sig-list-i  (verilog-signals-not-in
@@ -8613,7 +8607,7 @@ Typing \\[verilog-auto] will make this into:
 	    (verilog-modi-cache-add-outputs modi sig-list-o)
 	    (verilog-modi-cache-add-inouts modi sig-list-io)
 	    (verilog-insert-indent "// End of automatics\n"))
-	  (when v2k (verilog-repair-close-comma pt))
+	  (when v2k (verilog-repair-close-comma))
 	  )))))
 
 (defun verilog-auto-sense-sigs (modi presense-sigs)

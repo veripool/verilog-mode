@@ -21,7 +21,7 @@ module autoinput_concat_lau
    // End of automatics
    /*AUTOINOUT*/
    // Beginning of automatic inouts (from unused autoinst inouts)
-   inout [1:0]		fooout,			// To/From sub1 of sub1.v, ...
+   inout [1:0]		fooout			// To/From sub1 of sub1.v, ...
    // End of automatics
    );
 
