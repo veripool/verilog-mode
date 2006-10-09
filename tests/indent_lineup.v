@@ -4,5 +4,9 @@ module test (pci_ack, reg_wr, reg_sel, clk,  rst);
    input 	    reg_sel; 
    input 	    clk; 
    input 	    rst;
-
+   initial begin
+      foo;
+      bar;
+   end
+   
 endmodule // test
