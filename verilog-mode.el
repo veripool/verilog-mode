@@ -310,9 +310,11 @@ the next lint error as expected."
 That is, all code between \"// synopsys translate_off\" and
 \"// synopsys translate_on\" is highlighted using a different background color
 \(face `verilog-font-lock-translate-off-face').
-Note: this will slow down on-the-fly fontification (and thus editing).
-NOTE: Activate the new setting in a Verilog buffer by re-fontifying it (menu
-      entry \"Fontify Buffer\").  XEmacs: turn off and on font locking."
+
+Note: This will slow down on-the-fly fontification (and thus editing).
+
+Note: Activate the new setting in a Verilog buffer by re-fontifying it (menu
+entry \"Fontify Buffer\").  XEmacs: turn off and on font locking."
   :type 'boolean
   :group 'verilog-mode-indent)
 
@@ -322,7 +324,7 @@ NOTE: Activate the new setting in a Verilog buffer by re-fontifying it (menu
   :type 'integer)
 
 (defcustom verilog-indent-level-module 3
-  "* Indentation of Module level Verilog statements.  (eg always, initial)
+  "*Indentation of Module level Verilog statements.  (eg always, initial)
 Set to 0 to get initial and always statements lined up on the left side of
 your screen."
   :group 'verilog-mode-indent
@@ -337,24 +339,25 @@ Set to 0 to get them list right under containing block."
 (defcustom verilog-indent-declaration-macros nil
   "*How to treat macro expansions in a declaration.
 If nil, indent as:
-  input [31:0] a;
-  input        `CP;
-  output       c;
-If non nil, treat as
-  input [31:0] a;
-  input `CP    ;
-  output       c;"
+	input [31:0] a;
+	input        `CP;
+	output       c;
+If non nil, treat as:
+	input [31:0] a;
+	input `CP    ;
+	output       c;"
   :group 'verilog-mode-indent
   :type 'boolean)
 
 (defcustom verilog-indent-lists t
   "*How to treat indenting items in a list.
 If t (the default), indent as:
-  always @( posedge a or
-            reset ) begin
-If nil, treat as
-  always @( posedge a or
-     reset ) begin"
+	always @( posedge a or
+	          reset ) begin
+
+If nil, treat as:
+	always @( posedge a or
+	   reset ) begin"
   :group 'verilog-mode-indent
   :type 'boolean)
 
@@ -430,32 +433,32 @@ are done.
 If this list contains the symbol 'declaration', then declarations are lined up
 with any preceding declarations, taking into account widths and the like, so
 for example the code:
-   reg [31:0] a;
-   reg b;
+	reg [31:0] a;
+	reg b;
 would become
-   reg [31:0] a;
-   reg        b;
+	reg [31:0] a;
+	reg        b;
 
 If this list contains the symbol 'assignment', then assignments are lined up
 with any preceding assignments, so for example the code
-   a_long_variable = b + c;
-   d = e + f;
+	a_long_variable = b + c;
+	d = e + f;
 would become
-   a_long_variable = b + c;
-   d               = e + f;"
+	a_long_variable = b + c;
+	d               = e + f;"
 
 ;; The following is not implemented:
 ;If this list contains the symbol 'case', then case items are lined up
 ;with any preceding case items, so for example the code
-;   case (a) begin
-;    a_long_state : a = 3;
-;    b: a = 4;
-;   endcase
+;	case (a) begin
+;	 a_long_state : a = 3;
+;	 b: a = 4;
+;	endcase
 ;would become
-;   case (a) begin
-;    a_long_state : a = 3;
-;    b            : a = 4;
-;   endcase
+;	case (a) begin
+;	 a_long_state : a = 3;
+;	 b            : a = 4;
+;	endcase
 ;
 
   :group 'verilog-mode-indent
@@ -525,7 +528,7 @@ always be saved."
 \\([a-zA-Z]?:?[^:( \t\n]+\\)[:(][ \t]*\\([0-9]+\\)\\([) \t]\\|\
 :\\([^0-9\n]\\|\\([0-9]+:\\)\\)\\)" 1 2 5)
         ; xsim
-	; Error! in file /homes/mac/Axis/Xsim/test.v at line 13 		[OBJ_NOT_DECLARED]
+	; Error! in file /homes/mac/Axis/Xsim/test.v at line 13		[OBJ_NOT_DECLARED]
     ("\\(Error\\|Warning\\).*in file (\\([^ \t]+\\) at line *\\([0-9]+\\))" 2 3)
 	; vcs
     ("\\(Error\\|Warning\\):[^(]*(\\([^ \t]+\\) line *\\([0-9]+\\))" 2 3)
@@ -600,19 +603,19 @@ always be saved."
 These arguments are used to find files for `verilog-auto', and match
 the flags accepted by a standard Verilog-XL simulator.
 
-   -f filename      Reads more `verilog-library-flags' from the filename.
-   +incdir+dir	    Adds the directory to `verilog-library-directories'.
-   -Idir	    Adds the directory to `verilog-library-directories'.
-   -y dir           Adds the directory to `verilog-library-directories'.
-   +libext+.v       Adds the extensions to `verilog-library-extensions'.
-   -v filename      Adds the filename to `verilog-library-files'.
+    -f filename     Reads more `verilog-library-flags' from the filename.
+    +incdir+dir     Adds the directory to `verilog-library-directories'.
+    -Idir           Adds the directory to `verilog-library-directories'.
+    -y dir          Adds the directory to `verilog-library-directories'.
+    +libext+.v      Adds the extensions to `verilog-library-extensions'.
+    -v filename     Adds the filename to `verilog-library-files'.
 
 You might want these defined in each file; put at the *END* of your file
 something like:
 
-// Local Variables:
-// verilog-library-flags:(\"-y dir -y otherdir\")
-// End:
+    // Local Variables:
+    // verilog-library-flags:(\"-y dir -y otherdir\")
+    // End:
 
 Verilog-mode attempts to detect changes to this local variable, but they
 are only insured to be correct when the file is first visited. Thus if you
@@ -631,9 +634,9 @@ Having at least the current directory is a good idea.
 You might want these defined in each file; put at the *END* of your file
 something like:
 
-// Local Variables:
-// verilog-library-directories:(\".\" \"subdir\" \"subdir2\")
-// End:
+    // Local Variables:
+    // verilog-library-directories:(\".\" \"subdir\" \"subdir2\")
+    // End:
 
 Verilog-mode attempts to detect changes to this local variable, but they
 are only insured to be correct when the file is first visited. Thus if you
@@ -652,9 +655,9 @@ cells defined in it.
 You might want these defined in each file; put at the *END* of your file
 something like:
 
-// Local Variables:
-// verilog-library-files:(\"/some/path/technology.v\" \"/some/path/tech2.v\")
-// End:
+    // Local Variables:
+    // verilog-library-files:(\"/some/path/technology.v\" \"/some/path/tech2.v\")
+    // End:
 
 Verilog-mode attempts to detect changes to this local variable, but they
 are only insured to be correct when the file is first visited. Thus if you
@@ -946,7 +949,7 @@ If set will become buffer local.")
 (defvar verilog-statement-menu
   '("Statements"
     ["Header"		verilog-sk-header  t]
-    ["Comment"	verilog-sk-comment t]
+    ["Comment"		verilog-sk-comment t]
     "----"
     ["Module"		verilog-sk-module t]
     ["Primitive"	verilog-sk-primitive t]
@@ -958,23 +961,23 @@ If set will become buffer local.")
     ["Reg"		verilog-sk-reg t]
     ["Define thing under point as a register" verilog-sk-define-signal t]
     "----"
-    ["Initial"	verilog-sk-initial t]
-    ["Always" 	verilog-sk-always t]
-    ["Function"	verilog-sk-function t]
-    ["Task" 		verilog-sk-task t]
-    ["Specify"	verilog-sk-specify t]
-    ["Generate"	verilog-sk-generate t]
+    ["Initial"		verilog-sk-initial t]
+    ["Always"		verilog-sk-always t]
+    ["Function"		verilog-sk-function t]
+    ["Task"		verilog-sk-task t]
+    ["Specify"		verilog-sk-specify t]
+    ["Generate"		verilog-sk-generate t]
     "----"
     ["Begin"		verilog-sk-begin t]
-    ["If" 		verilog-sk-if t]
+    ["If"		verilog-sk-if t]
     ["(if) else"	verilog-sk-else-if t]
-    ["For" 		verilog-sk-for t]
-    ["While" 		verilog-sk-while t]
-    ["Fork" 		verilog-sk-fork t]
-    ["Repeat" 	verilog-sk-repeat t]
-    ["Case" 		verilog-sk-case t]
-    ["Casex" 		verilog-sk-casex t]
-    ["Casez" 		verilog-sk-casez t]
+    ["For"		verilog-sk-for t]
+    ["While"		verilog-sk-while t]
+    ["Fork"		verilog-sk-fork t]
+    ["Repeat"		verilog-sk-repeat t]
+    ["Case"		verilog-sk-case t]
+    ["Casex"		verilog-sk-casex t]
+    ["Casez"		verilog-sk-casez t]
     )
   "Menu for statement templates in Verilog."
   )
@@ -993,9 +996,10 @@ If set will become buffer local.")
 (defun verilog-set-compile-command ()
   "Function to compute shell command to compile verilog.
 Can be the path and arguments for your Verilog simulator:
-  \"vcs -p123 -O\"
-or a string like
-  \"(cd /tmp; surecov %s)\".
+    \"vcs -p123 -O\"
+or a string like:
+    \"(cd /tmp; surecov %s)\".
+
 In the former case, the path to the current buffer is concat'ed to the
 value of verilog-tool; in the later, the path to the current buffer is
 substituted for the %s.
@@ -1414,9 +1418,10 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
 	  verilog-defun-re
 	  ))
 
-;; Strings used to mark beginning and end of excluded text
-(defconst verilog-exclude-str-start "/* -----\\/----- EXCLUDED -----\\/-----")
-(defconst verilog-exclude-str-end " -----/\\----- EXCLUDED -----/\\----- */")
+(defconst verilog-exclude-str-start "/* -----\\/----- EXCLUDED -----\\/-----"
+  "String used to mark beginning of excluded text")
+(defconst verilog-exclude-str-end " -----/\\----- EXCLUDED -----/\\----- */"
+  "String used to mark end of excluded text")
 
 (defconst verilog-keywords
   '( "`case" "`default" "`define" "`define" "`else" "`endfor" "`endif"
@@ -1463,6 +1468,7 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
 
 
 (defconst verilog-emacs-features
+  "Association list of emacs features present in this version."
   (let ((major (and (boundp 'emacs-major-version)
 		    emacs-major-version))
 	(minor (and (boundp 'emacs-minor-version)
@@ -2138,112 +2144,112 @@ so there may be a large up front penalty for the first search."
 ;;###autoload
 (defun verilog-mode ()
   "Major mode for editing Verilog code.
+
+See \\[verilog-auto] for details on how AUTOs can improve coding efficiency.
+
+Use \\[verilog-faq] for a pointer to frequently asked questions.
+
 \\<verilog-mode-map>
 
 NEWLINE, TAB indents for Verilog code.
 Delete converts tabs to spaces as it moves back.
-Supports highlighting.
 
-Use \\[verilog-faq] for a pointer to frequently asked questions.
+Supports highlighting.
 
 Variables controlling indentation/edit style:
 
  variable `verilog-indent-level'      (default 3)
-    Indentation of Verilog statements with respect to containing block.
+   Indentation of Verilog statements with respect to containing block.
  `verilog-indent-level-module'        (default 3)
-    Absolute indentation of Module level Verilog statements.
-    Set to 0 to get initial and always statements lined up
-    on the left side of your screen.
+   Absolute indentation of Module level Verilog statements.
+   Set to 0 to get initial and always statements lined up
+   on the left side of your screen.
  `verilog-indent-level-declaration'   (default 3)
-    Indentation of declarations with respect to containing block.
-    Set to 0 to get them list right under containing block.
+   Indentation of declarations with respect to containing block.
+   Set to 0 to get them list right under containing block.
  `verilog-indent-level-behavioral'    (default 3)
-    Indentation of first begin in a task or function block
-    Set to 0 to get such code to lined up underneath the task or function keyword
+   Indentation of first begin in a task or function block
+   Set to 0 to get such code to lined up underneath the task or function keyword
  `verilog-indent-level-directive'     (default 1)
-    Indentation of `ifdef/`endif blocks
+   Indentation of `ifdef/`endif blocks
  `verilog-cexp-indent'              (default 1)
-    Indentation of Verilog statements broken across lines i.e.:
-    if (a)
-     begin
+   Indentation of Verilog statements broken across lines i.e.:
+      if (a)
+        begin
  `verilog-case-indent'              (default 2)
-    Indentation for case statements.
+   Indentation for case statements.
  `verilog-auto-newline'             (default nil)
-    Non-nil means automatically newline after semicolons and the punctuation
-    mark after an end.
+   Non-nil means automatically newline after semicolons and the punctuation
+   mark after an end.
  `verilog-auto-indent-on-newline'   (default t)
-    Non-nil means automatically indent line after newline
+   Non-nil means automatically indent line after newline
  `verilog-tab-always-indent'        (default t)
-    Non-nil means TAB in Verilog mode should always reindent the current line,
-    regardless of where in the line point is when the TAB command is used.
+   Non-nil means TAB in Verilog mode should always reindent the current line,
+   regardless of where in the line point is when the TAB command is used.
  `verilog-indent-begin-after-if'    (default t)
-    Non-nil means to indent begin statements following a preceding
-    if, else, while, for and repeat statements, if any.  otherwise,
-    the begin is lined up with the preceding token.  If t, you get:
+   Non-nil means to indent begin statements following a preceding
+   if, else, while, for and repeat statements, if any.  otherwise,
+   the begin is lined up with the preceding token.  If t, you get:
       if (a)
          begin // amount of indent based on `verilog-cexp-indent'
-    otherwise you get:
+   otherwise you get:
       if (a)
       begin
  `verilog-auto-endcomments'         (default t)
-    Non-nil means a comment /* ... */ is set after the ends which ends
-      cases, tasks, functions and modules.
-    The type and name of the object will be set between the braces.
+   Non-nil means a comment /* ... */ is set after the ends which ends
+   cases, tasks, functions and modules.
+   The type and name of the object will be set between the braces.
  `verilog-minimum-comment-distance' (default 10)
-    Minimum distance (in lines) between begin and end required before a comment
-    will be inserted.  Setting this variable to zero results in every
-    end acquiring a comment; the default avoids too many redundant
-    comments in tight quarters.
+   Minimum distance (in lines) between begin and end required before a comment
+   will be inserted.  Setting this variable to zero results in every
+   end acquiring a comment; the default avoids too many redundant
+   comments in tight quarters.
  `verilog-auto-lineup'              (default `(all))
-    List of contexts where auto lineup of code should be done.
+   List of contexts where auto lineup of code should be done.
 
 Turning on Verilog mode calls the value of the variable `verilog-mode-hook' with
 no args, if that value is non-nil.
-Other useful functions are:
-\\[verilog-complete-word]\t-complete word with appropriate possibilities
-   (functions, verilog keywords...)
-\\[verilog-comment-region]\t- Put marked area in a comment, fixing
-   nested comments.
-\\[verilog-uncomment-region]\t- Uncomment an area commented with \
-\\[verilog-comment-region].
-\\[verilog-insert-block]\t- insert begin ... end;
-\\[verilog-star-comment]\t- insert /* ... */
-\\[verilog-mark-defun]\t- Mark function.
-\\[verilog-beg-of-defun]\t- Move to beginning of current function.
-\\[verilog-end-of-defun]\t- Move to end of current function.
-\\[verilog-label-be]\t- Label matching begin ... end, fork ... join
-  and case ... endcase statements;
 
-\\[verilog-sk-always]  Insert a always @(AS) begin .. end block
-\\[verilog-sk-begin]  Insert a begin .. end block
-\\[verilog-sk-case]  Insert a case block, prompting for details
-\\[verilog-sk-else]  Insert an else begin .. end block
-\\[verilog-sk-for]  Insert a for (...) begin .. end block, prompting for details
-\\[verilog-sk-generate]  Insert a generate .. endgenerate block
-\\[verilog-sk-header]  Insert a nice header block at the top of file
-\\[verilog-sk-initial]  Insert an initial begin .. end block
-\\[verilog-sk-fork]  Insert a fork begin .. end .. join block
-\\[verilog-sk-module]  Insert a module .. (/*AUTOARG*/);.. endmodule block
-\\[verilog-sk-primitive]  Insert a primitive .. (.. );.. endprimitive block
-\\[verilog-sk-interface]  Insert an interface .. (.. );.. endinterface block
-\\[verilog-sk-repeat]  Insert a repeat (..) begin .. end block
-\\[verilog-sk-specify]  Insert a specify .. endspecify block
-\\[verilog-sk-task]  Insert a task .. begin .. end endtask block
-\\[verilog-sk-while]  Insert a while (...) begin .. end block, prompting for details
-\\[verilog-sk-casex]  Insert a casex (...) item: begin.. end endcase block, prompting for details
-\\[verilog-sk-casez]  Insert a casez (...) item: begin.. end endcase block, prompting for details
-\\[verilog-sk-if]  Insert an if (..) begin .. end block
-\\[verilog-sk-else-if]  Insert an else if (..) begin .. end block
-\\[verilog-sk-comment]  Insert a comment block
-\\[verilog-sk-assign]  Insert an assign .. = ..; statement
-\\[verilog-sk-function]  Insert a function .. begin .. end endfunction block
-\\[verilog-sk-input]  Insert an input declaration, prompting for details
-\\[verilog-sk-output]  Insert an output declaration, prompting for details
-\\[verilog-sk-state-machine]  Insert a state machine definition, prompting for details!
-\\[verilog-sk-inout]  Insert an inout declaration, prompting for details
-\\[verilog-sk-wire]  Insert a wire declaration, prompting for details
-\\[verilog-sk-reg]  Insert a register declaration, prompting for details
-\\[verilog-sk-define-signal]  Define signal under point as a register at the top of the module"
+Other useful functions are:
+
+    \\[verilog-complete-word]  Complete word with appropriate possibilities.
+    \\[verilog-comment-region]  Put marked area in a comment.
+    \\[verilog-uncomment-region] Uncomment an area commented with \\[verilog-comment-region].
+    \\[verilog-insert-block]  Insert begin ... end;.
+    \\[verilog-star-comment]  Insert /* ... */.
+    \\[verilog-mark-defun] Mark function.
+    \\[verilog-beg-of-defun] Move to beginning of current function.
+    \\[verilog-end-of-defun] Move to end of current function.
+    \\[verilog-label-be] Label matching begin ... end, fork ... join, etc statements.
+
+    \\[verilog-sk-always]  Insert a always @(AS) begin .. end block.
+    \\[verilog-sk-begin]  Insert a begin .. end block.
+    \\[verilog-sk-case]  Insert a case block, prompting for details.
+    \\[verilog-sk-for]  Insert a for (...) begin .. end block, prompting for details.
+    \\[verilog-sk-generate]  Insert a generate .. endgenerate block.
+    \\[verilog-sk-header]  Insert a nice header block at the top of file.
+    \\[verilog-sk-initial]  Insert an initial begin .. end block.
+    \\[verilog-sk-fork]  Insert a fork begin .. end .. join block.
+    \\[verilog-sk-module]  Insert a module .. (/*AUTOARG*/);.. endmodule block.
+    \\[verilog-sk-primitive]  Insert a primitive .. (.. );.. endprimitive block.
+    \\[verilog-sk-repeat]  Insert a repeat (..) begin .. end block.
+    \\[verilog-sk-specify]  Insert a specify .. endspecify block.
+    \\[verilog-sk-task]  Insert a task .. begin .. end endtask block.
+    \\[verilog-sk-while]  Insert a while (...) begin .. end block, prompting for details.
+    \\[verilog-sk-casex]  Insert a casex (...) item: begin.. end endcase block, prompting for details.
+    \\[verilog-sk-casez]  Insert a casez (...) item: begin.. end endcase block, prompting for details.
+    \\[verilog-sk-if]  Insert an if (..) begin .. end block.
+    \\[verilog-sk-else-if]  Insert an else if (..) begin .. end block.
+    \\[verilog-sk-comment]  Insert a comment block.
+    \\[verilog-sk-assign]  Insert an assign .. = ..; statement.
+    \\[verilog-sk-function]  Insert a function .. begin .. end endfunction block.
+    \\[verilog-sk-input]  Insert an input declaration, prompting for details.
+    \\[verilog-sk-output]  Insert an output declaration, prompting for details.
+    \\[verilog-sk-state-machine]  Insert a state machine definition, prompting for details.
+    \\[verilog-sk-inout]  Insert an inout declaration, prompting for details.
+    \\[verilog-sk-wire]  Insert a wire declaration, prompting for details.
+    \\[verilog-sk-reg]  Insert a register declaration, prompting for details.
+    \\[verilog-sk-define-signal]  Define signal under point as a register at the top of the module."
   (interactive)
   (kill-all-local-variables)
   (use-local-map verilog-mode-map)
@@ -2305,7 +2311,7 @@ Other useful functions are:
   ;; hideshow support
   (unless (assq 'verilog-mode hs-special-modes-alist)
     (setq hs-special-modes-alist
-	  (cons '(verilog-mode-mode  "\\<begin\\>" "\\<end\\>" nil 
+	  (cons '(verilog-mode-mode  "\\<begin\\>" "\\<end\\>" nil
 			     verilog-forward-sexp-function)
 		hs-special-modes-alist)))
   ;; Stuff for autos
@@ -2589,7 +2595,7 @@ These deformed comments are returned to normal if you use
 \\[verilog-uncomment-region] to undo the commenting.
 
 The commented area starts with `verilog-exclude-str-start', and ends with
-`verilog-include-str-end'.  But if you change these variables,
+`verilog-exclude-str-end'.  But if you change these variables,
 \\[verilog-uncomment-region] won't recognize the comments."
   (interactive "r")
   (save-excursion
@@ -3505,8 +3511,9 @@ See \\[verilog-surelint-off] and \\[verilog-verilint-off]."
   "Convert a SureLint warning line into a disable statement.
 Run from Verilog source window; assumes there is a *compile* buffer
 with point set appropriately.
+
 For example:
- WARNING [STD-UDDONX]: xx.v, line 8: output out is never assigned.
+	WARNING [STD-UDDONX]: xx.v, line 8: output out is never assigned.
 becomes:
 	// surefire lint_line_off UDDONX"
   (interactive)
@@ -3563,6 +3570,7 @@ becomes:
 
 (defun verilog-verilint-off ()
   "Convert a Verilint warning line into a disable statement.
+
 For example:
 	(W240)  pci_bfm_null.v, line  46: Unused input: pci_rst_
 becomes:
@@ -3725,7 +3733,7 @@ type.  Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 		       (throw 'nesting 'directive))
 
 		   ;; if we are in a parenthesized list, and the user likes to indent these, return.
- 		   (if (verilog-in-paren)
+		   (if (verilog-in-paren)
 		       (if verilog-indent-lists
 			   (progn (setq par 1)
 				  (throw 'nesting 'block))
@@ -4465,7 +4473,7 @@ Only look at a few lines to determine indent level."
 
      (;-- defun
       (and (eq type 'defun)
- 	   (looking-at verilog-zero-indent-re))
+	   (looking-at verilog-zero-indent-re))
       (indent-line-to 0))
 
      (;-- declaration
@@ -4667,7 +4675,7 @@ ARG is ignored, for `comment-indent-function' compatibility."
 	     ((verilog-continued-line-1 start)
 	      (goto-char e)
 	      (indent-line-to ind))
-	     (t 	; Must be comment or white space
+	     (t		; Must be comment or white space
 	      (goto-char e)
 	      (verilog-forward-ws&directives)
 	      (forward-line -1))
@@ -4751,7 +4759,7 @@ ARG is ignored, for `comment-indent-function' compatibility."
 	     ((verilog-continued-line-1 start)
 	      (goto-char e)
 	      (indent-line-to ind))
-	     (t 	; Must be comment or white space
+	     (t		; Must be comment or white space
 	      (goto-char e)
 	      (verilog-forward-ws&directives)
 	      (forward-line -1))
@@ -5200,7 +5208,7 @@ otherwise."
 (defun verilog-complete-word ()
   "Complete word at current point.
 \(See also `verilog-toggle-completions', `verilog-type-keywords',
-`verilog-start-keywords' and `verilog-separator-keywords'.)"
+and `verilog-separator-keywords'.)"
   (interactive)
   (let* ((b (save-excursion (skip-chars-backward "a-zA-Z0-9_") (point)))
 	 (e (save-excursion (skip-chars-forward "a-zA-Z0-9_") (point)))
@@ -5885,11 +5893,11 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 		 (setq vec nil enum nil  rvalue nil  newsig nil  signed nil  typedefed nil  io t  expect-signal 'sigs-out))
 		((equal keywd "inout")
 		 (setq vec nil enum nil  rvalue nil  newsig nil  signed nil  typedefed nil  io t  expect-signal 'sigs-inout))
- 		((or (equal keywd "wire")
- 		     (equal keywd "tri"))
+		((or (equal keywd "wire")
+		     (equal keywd "tri"))
 		 (unless io (setq vec nil  enum nil  rvalue nil  signed nil  typedefed nil  expect-signal 'sigs-wire)))
- 		((or (equal keywd "reg")
- 		     (equal keywd "trireg"))
+		((or (equal keywd "reg")
+		     (equal keywd "trireg"))
 		 (unless io (setq vec nil  enum nil  rvalue nil  signed nil  typedefed nil  expect-signal 'sigs-reg)))
 		((equal keywd "assign")
 		 (setq vec nil  enum nil  rvalue nil  signed nil  typedefed nil  expect-signal 'sigs-assign))
@@ -6030,17 +6038,17 @@ instantiated in this module.  For example if declare A A (.B(SIG)) and SIG
 is a output, then SIG will be included in the list.
 
 This only works on instantiations created with /*AUTOINST*/ converted by
-\\[verilog-auto-instant].  Otherwise, it would have to read in the whole
+\\[verilog-auto-inst].  Otherwise, it would have to read in the whole
 component library to determine connectivity of the design.
 
 One work around for this problem is to manually create // Inputs and //
 Outputs comments above subcell signals, for example:
 
-   module1 instance1x (
-	// Outputs
-	.out (out),
-	// Inputs
-	.in  (in));"
+	module1 instance1x (
+	    // Outputs
+	    .out (out),
+	    // Inputs
+	    .in  (in));"
   (save-excursion
     (let ((end-mod-point (verilog-get-end-of-defun t))
 	  st-point end-inst-point
@@ -6056,7 +6064,7 @@ Outputs comments above subcell signals, for example:
 		   (inst (verilog-read-inst-name))
 		   (comment (concat inst " of " submod ".v")) submodi)
 	      (when (setq submodi (verilog-modi-lookup submod t))
-		;; This could have used a list created by verilog-auto-instant
+		;; This could have used a list created by verilog-auto-inst
 		;; However I want it to be runnable even on user's manually added signals
 		(verilog-backward-open-paren)
 		(setq end-inst-point (save-excursion (forward-sexp 1) (point))
@@ -6424,17 +6432,17 @@ This function is useful for setting vh-* variables.  The file variables
 feature can be used to set defines that `verilog-mode' can see; put at the
 *END* of your file something like:
 
-// Local Variables:
-// vh-macro:\"macro_definition\"
-// End:
+    // Local Variables:
+    // vh-macro:\"macro_definition\"
+    // End:
 
 If macros are defined earlier in the same file and you want their values,
 you can read them automatically (provided `enable-local-eval' is on):
 
-// Local Variables:
-// eval:(verilog-read-defines)
-// eval:(verilog-read-defines \"group_standard_includes.v\")
-// End:
+    // Local Variables:
+    // eval:(verilog-read-defines)
+    // eval:(verilog-read-defines \"group_standard_includes.v\")
+    // End:
 
 Note these are only read when the file is first visited, you must use
 \\[find-alternate-file] RET  to have these take effect after editing them!
@@ -6442,7 +6450,7 @@ Note these are only read when the file is first visited, you must use
 If you want to disable the \"Process `eval' or hook local variables\"
 warning message, you need to add to your .emacs file:
 
-  (setq enable-local-eval t)"
+    (setq enable-local-eval t)"
   (let ((origbuf (current-buffer)))
     (save-excursion
       (unless subcall (verilog-getopt-flags))
@@ -6496,10 +6504,10 @@ file.
 
 It is often useful put at the *END* of your file something like:
 
-// Local Variables:
-// eval:(verilog-read-defines)
-// eval:(verilog-read-includes)
-// End:
+    // Local Variables:
+    // eval:(verilog-read-defines)
+    // eval:(verilog-read-includes)
+    // End:
 
 Note includes are only read when the file is first visited, you must use
 \\[find-alternate-file] RET  to have these take effect after editing them!
@@ -7300,7 +7308,7 @@ removed."
 	(when have-close-paren
 	  ;; Delete extra commentary
 	  (save-excursion
- 	    (while (progn
+	    (while (progn
 		     (forward-line -1)
 		     (looking-at "\\s *//\\s *\\(Outputs\\|Inouts\\|Inputs\\)\n"))
 	      (delete-region (match-beginning 0) (match-end 0))))
@@ -7544,6 +7552,7 @@ on the `fill-column', see \\[set-fill-column].
 
 Limitations:
   Concatenation and outputting partial busses is not supported.
+
   Typedefs must match `verilog-typedef-regexp', which is disabled by default.
 
 For example:
@@ -7711,7 +7720,7 @@ See `verilog-auto-star' for more information.
 
 Limitations:
   Module names must be resolvable to filenames by adding a
-  `verilog-library-extension', and being found in the same directory, or
+  `verilog-library-extensions', and being found in the same directory, or
   by changing the variable `verilog-library-flags' or
   `verilog-library-directories'.  Macros `modname are translated through the
   vh-{name} Emacs variable, if that is not found, it just ignores the `.
@@ -7753,20 +7762,20 @@ Where the list of inputs and outputs came from the inst module.
 
 Exceptions:
 
-Unless you are instantiating a module multiple times, or the module is
-something trivial like a adder, DO NOT CHANGE SIGNAL NAMES ACROSS HIERARCHY.
-It just makes for unmaintainable code.  To sanitize signal names, try
-vrename from http://www.veripool.org
+  Unless you are instantiating a module multiple times, or the module is
+  something trivial like a adder, DO NOT CHANGE SIGNAL NAMES ACROSS HIERARCHY.
+  It just makes for unmaintainable code.  To sanitize signal names, try
+  vrename from http://www.veripool.org
 
-When you need to violate this suggestion there are two ways to list
-exceptions, placing them before the AUTOINST, or using templates.
+  When you need to violate this suggestion there are two ways to list
+  exceptions, placing them before the AUTOINST, or using templates.
 
-Any ports defined before the /*AUTOINST*/ are not included in the list of
-automatics.  This is similar to making a template as described below, but
-is restricted to simple connections just like you normally make.  Also note
-that any signals before the AUTOINST will only be picked up by AUTOWIRE if
-you have the appropriate // Input or // Output comment, and exactly the
-same line formatting as AUTOINST itself uses.
+  Any ports defined before the /*AUTOINST*/ are not included in the list of
+  automatics.  This is similar to making a template as described below, but
+  is restricted to simple connections just like you normally make.  Also note
+  that any signals before the AUTOINST will only be picked up by AUTOWIRE if
+  you have the appropriate // Input or // Output comment, and exactly the
+  same line formatting as AUTOINST itself uses.
 
 	inst inst (// Inputs
 		   .i		(my_i_dont_mess_with_it),
@@ -7811,8 +7820,8 @@ Templates:
 
 	/* psm_mas AUTO_TEMPLATE (
 		.ptl_bus	(ptl_busnew[]),
- 		);
- 	*/
+		);
+	*/
 	psm_mas ms2m (/*AUTOINST*/);
 
   Typing \\[verilog-auto] will make this into:
@@ -7820,7 +7829,7 @@ Templates:
 	psm_mas ms2m (/*AUTOINST*/
 	    // Outputs
 	    .NotInTemplate	(NotInTemplate),
-  	    .ptl_bus		(ptl_busnew[3:0]),  // Templated
+	    .ptl_bus		(ptl_busnew[3:0]),  // Templated
 	    ....
 
 @ Templates:
@@ -7853,8 +7862,8 @@ Templates:
 	/* psm_mas AUTO_TEMPLATE (
 		.ptl_mapvalidx		(ptl_mapvalid[@]),
 		.ptl_mapvalidp1x	(ptl_mapvalid[@\"(% (+ 1 @) 4)\"]),
- 		);
- 	*/
+		);
+	*/
 	psm_mas ms2m (/*AUTOINST*/);
 
   Typing \\[verilog-auto] will make this into:
@@ -7910,7 +7919,7 @@ Regexp Templates:
   specify _ alone to mean active low.  Note the use of [] to keep the bus
   subscript:
 
-	    .\\(.*\\)_l 	(\\1_[]),
+	    .\\(.*\\)_l		(\\1_[]),
 
 Lisp Templates:
 
@@ -8136,9 +8145,10 @@ and isn't a wire output from a block.
 
 Limitations:
   This ONLY detects outputs of AUTOINSTants (see `verilog-read-sub-decls').
+
   This does NOT work on memories, declare those yourself.
 
-A simple example:
+An example:
 
 	module ex_reg (o,i)
 	   output o;
@@ -8188,9 +8198,10 @@ to be instantiated.
 
 Limitations:
   This ONLY detects inputs of AUTOINSTants (see `verilog-read-sub-decls').
+
   This does NOT work on memories, declare those yourself.
 
-A simple example (see `verilog-auto-inst' for what else is going on here):
+An example (see `verilog-auto-inst' for what else is going on here):
 
 	module ex_reg_input (o,i)
 	   output o;
@@ -8244,7 +8255,7 @@ Limitations:
 
   This does NOT work on memories, declare those yourself.
 
-A simple example (see `verilog-auto-inst' for what else is going on here):
+An example (see `verilog-auto-inst' for what else is going on here):
 
 	module ex_wire (o,i)
 	   output o;
@@ -8310,7 +8321,7 @@ Limitations:
 
   Typedefs must match `verilog-typedef-regexp', which is disabled by default.
 
-A simple example (see `verilog-auto-inst' for what else is going on here):
+An example (see `verilog-auto-inst' for what else is going on here):
 
 	module ex_output (ov,i)
 	   input i;
@@ -8363,7 +8374,7 @@ outputs already.  This makes every signal in the design a output.  This is
 useful to get Synopsys to preserve every signal in the design, since it
 won't optimize away the outputs.
 
-A simple example:
+An example:
 
 	module ex_output_every (o,i,tempa,tempb)
 	   output o;
@@ -8425,7 +8436,7 @@ Limitations:
 
   Typedefs must match `verilog-typedef-regexp', which is disabled by default.
 
-A simple example (see `verilog-auto-inst' for what else is going on here):
+An example (see `verilog-auto-inst' for what else is going on here):
 
 	module ex_input (ov,i)
 	   output [31:0] ov;
@@ -8490,7 +8501,7 @@ Limitations:
 
   Typedefs must match `verilog-typedef-regexp', which is disabled by default.
 
-A simple example (see `verilog-auto-inst' for what else is going on here):
+An example (see `verilog-auto-inst' for what else is going on here):
 
 	module ex_inout (ov,i)
 	   input i;
@@ -8556,7 +8567,7 @@ Limitations:
   though they will appear to be in the same order to a AUTOINST
   instantiating either module.
 
-A simple example:
+An example:
 
 	module ex_shell (/*AUTOARG*/)
 	   /*AUTOINOUTMODULE(\"ex_main\")*/
@@ -8653,7 +8664,7 @@ OOps!
   the /*AUTOSENSE*/ comment will prevent it from being deleted when the
   autos are updated (or added if it occurs there already).
 
-A simple example:
+An example:
 
 	   always @ (/*AUTOSENSE*/) begin
 	      /* AUTO_CONSTANT (`constant) */
@@ -8719,6 +8730,7 @@ registers set elsewhere in the always block.
 
 Limitations:
   AUTORESET will not clear memories.
+
   AUTORESET uses <= if there are any <= in the block, else it uses =.
 
 /*AUTORESET*/ presumes that any signals mentioned between the previous
@@ -8734,7 +8746,7 @@ AUTORESET ties signals to deasserted, which is presumed to be zero.
 Signals that match `verilog-active-low-regexp' will be deasserted by tieing
 them to a one.
 
-A simple example:
+An example:
 
     always @(posedge clk or negedge reset_l) begin
         if (!reset_l) begin
@@ -8964,14 +8976,15 @@ Create a register to contain the ASCII decode of a enumerated signal type.
 This will allow trace viewers to show the ASCII name of states.
 
 First, parameters are built into a enumeration using the synopsys enum
-  comment.  The comment must be between the keyword and the symbol.
-  (Annoying, but that's what Synopsys's dc_shell FSM reader requires.)
+comment.  The comment must be between the keyword and the symbol.
+(Annoying, but that's what Synopsys's dc_shell FSM reader requires.)
 
 Next, registers which that enum applies to are also tagged with the same
-  enum.  Synopsys also suggests labeling state vectors, but `verilog-mode'
-  doesn't care.
+enum.  Synopsys also suggests labeling state vectors, but `verilog-mode'
+doesn't care.
 
 Finally, a AUTOASCIIENUM command is used.
+
   The first parameter is the name of the signal to be decoded.
 
   The second parameter is the name to store the ASCII code into.  For the
@@ -8982,40 +8995,39 @@ Finally, a AUTOASCIIENUM command is used.
   The final optional parameter is a string which will be removed from the
   state names.
 
+An example:
 
-A simple example:
+	//== State enumeration
+	parameter [2:0] // synopsys enum state_info
+			   SM_IDLE =  3'b000,
+			   SM_SEND =  3'b001,
+			   SM_WAIT1 = 3'b010;
+	//== State variables
+	reg [2:0]	/* synopsys enum state_info */
+			state_r;		/* synopsys state_vector state_r */
+	reg [2:0]	/* synopsys enum state_info */
+			state_e1;
 
-   //== State enumeration
-   parameter [2:0] // synopsys enum state_info
-		   SM_IDLE =  3'b000,
-		   SM_SEND =  3'b001,
-		   SM_WAIT1 = 3'b010;
-   //== State variables
-   reg [2:0]	/* synopsys enum state_info */
-		state_r;		/* synopsys state_vector state_r */
-   reg [2:0]	/* synopsys enum state_info */
-		state_e1;
+	//== ASCII state decoding
 
-   //== ASCII state decoding
-
-   /*AUTOASCIIENUM(\"state_r\", \"state_ascii_r\", \"SM_\")*/
+	/*AUTOASCIIENUM(\"state_r\", \"state_ascii_r\", \"SM_\")*/
 
 Typing \\[verilog-auto] will make this into:
 
-   ... same front matter ...
+	... same front matter ...
 
-   /*AUTOASCIIENUM(\"state_r\", \"state_ascii_r\", \"SM_\")*/
-   // Beginning of automatic ASCII enum decoding
-   reg [39:0]		state_ascii_r;		// Decode of state_r
-   always @(state_r) begin
-      case ({state_r})
-	SM_IDLE:  state_ascii_r = \"idle \";
-	SM_SEND:  state_ascii_r = \"send \";
-	SM_WAIT1: state_ascii_r = \"wait1\";
-	default:  state_ascii_r = \"%Erro\";
-      endcase
-   end
-   // End of automatics"
+	/*AUTOASCIIENUM(\"state_r\", \"state_ascii_r\", \"SM_\")*/
+	// Beginning of automatic ASCII enum decoding
+	reg [39:0]		state_ascii_r;		// Decode of state_r
+	always @(state_r) begin
+	   case ({state_r})
+		SM_IDLE:  state_ascii_r = \"idle \";
+		SM_SEND:  state_ascii_r = \"send \";
+		SM_WAIT1: state_ascii_r = \"wait1\";
+		default:  state_ascii_r = \"%Erro\";
+	   endcase
+	end
+	// End of automatics"
   (save-excursion
     (let* ((params (verilog-read-auto-params 2 3))
 	   (undecode-name (nth 0 params))
@@ -9142,30 +9154,30 @@ Likewise, you can delete or inject AUTOs with:
 	emacs --batch  <filenames.v>  -f verilog-batch-inject-auto
 
 Using \\[describe-function], see also:
-   `verilog-auto-arg'          for AUTOARG module instantiations
-   `verilog-auto-ascii-enum'   for AUTOASCIIENUM enumeration decoding
-   `verilog-auto-inout-module' for AUTOINOUTMODULE copying i/o from elsewhere
-   `verilog-auto-inout'        for AUTOINOUT making hierarchy inouts
-   `verilog-auto-input'        for AUTOINPUT making hierarchy inputs
-   `verilog-auto-inst'         for AUTOINST instantiation pins
-   `verilog-auto-star'         for AUTOINST .* SystemVerilog pins
-   `verilog-auto-inst-param'   for AUTOINSTPARAM instantiation params
-   `verilog-auto-output'       for AUTOOUTPUT making hierarchy outputs
-   `verilog-auto-output-every' for AUTOOUTPUTEVERY making all outputs
-   `verilog-auto-reg'          for AUTOREG registers
-   `verilog-auto-reg-input'    for AUTOREGINPUT instantiation registers
-   `verilog-auto-reset'        for AUTORESET flop resets
-   `verilog-auto-sense'        for AUTOSENSE always sensitivity lists
-   `verilog-auto-tieoff'       for AUTOTIEOFF output tieoffs
-   `verilog-auto-unused'       for AUTOUNUSED unused inputs/inouts
-   `verilog-auto-wire'         for AUTOWIRE instantiation wires
+    `verilog-auto-arg'          for AUTOARG module instantiations
+    `verilog-auto-ascii-enum'   for AUTOASCIIENUM enumeration decoding
+    `verilog-auto-inout-module' for AUTOINOUTMODULE copying i/o from elsewhere
+    `verilog-auto-inout'        for AUTOINOUT making hierarchy inouts
+    `verilog-auto-input'        for AUTOINPUT making hierarchy inputs
+    `verilog-auto-inst'         for AUTOINST instantiation pins
+    `verilog-auto-star'         for AUTOINST .* SystemVerilog pins
+    `verilog-auto-inst-param'   for AUTOINSTPARAM instantiation params
+    `verilog-auto-output'       for AUTOOUTPUT making hierarchy outputs
+    `verilog-auto-output-every' for AUTOOUTPUTEVERY making all outputs
+    `verilog-auto-reg'          for AUTOREG registers
+    `verilog-auto-reg-input'    for AUTOREGINPUT instantiation registers
+    `verilog-auto-reset'        for AUTORESET flop resets
+    `verilog-auto-sense'        for AUTOSENSE always sensitivity lists
+    `verilog-auto-tieoff'       for AUTOTIEOFF output tieoffs
+    `verilog-auto-unused'       for AUTOUNUSED unused inputs/inouts
+    `verilog-auto-wire'         for AUTOWIRE instantiation wires
 
-   `verilog-read-defines'      for reading `define values
-   `verilog-read-includes'     for reading `includes
+    `verilog-read-defines'      for reading `define values
+    `verilog-read-includes'     for reading `includes
 
 If you have bugs with these autos, try contacting the AUTOAUTHOR
 Wilson Snyder (wsnyder@wsnyder.org),
-and/or see http://www.veripool.org"
+and/or see http://www.veripool.org."
   (interactive)
   (unless noninteractive (message "Updating AUTOs..."))
   (if (featurep 'dinotrace)
@@ -9262,7 +9274,6 @@ and/or see http://www.veripool.org"
   (define-key verilog-mp "a" 'verilog-sk-always)
   (define-key verilog-mp "b" 'verilog-sk-begin)
   (define-key verilog-mp "c" 'verilog-sk-case)
-  (define-key verilog-mp "e" 'verilog-sk-else)
   (define-key verilog-mp "f" 'verilog-sk-for)
   (define-key verilog-mp "g" 'verilog-sk-generate)
   (define-key verilog-mp "h" 'verilog-sk-header)
