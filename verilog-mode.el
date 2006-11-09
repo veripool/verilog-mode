@@ -1468,7 +1468,7 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
 
 
 (defconst verilog-emacs-features
-  "Association list of emacs features present in this version."
+  ;; Documentation at the bottom
   (let ((major (and (boundp 'emacs-major-version)
 		    emacs-major-version))
 	(minor (and (boundp 'emacs-minor-version)
@@ -5894,7 +5894,9 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 		((equal keywd "inout")
 		 (setq vec nil enum nil  rvalue nil  newsig nil  signed nil  typedefed nil  io t  expect-signal 'sigs-inout))
 		((or (equal keywd "wire")
-		     (equal keywd "tri"))
+		     (equal keywd "tri")
+		     (equal keywd "tri0")
+		     (equal keywd "tri1"))
 		 (unless io (setq vec nil  enum nil  rvalue nil  signed nil  typedefed nil  expect-signal 'sigs-wire)))
 		((or (equal keywd "reg")
 		     (equal keywd "trireg"))
