@@ -8060,8 +8060,8 @@ This is then used in a upper level module:
 
 	module ex_inst (o,i)
 	   parameter PAR;
-	   inst inst #(/*AUTOINSTPARAM*/)
-		     (/*AUTOINST*/);
+	   inst #(/*AUTOINSTPARAM*/)
+		inst (/*AUTOINST*/);
 	endmodule
 
 Typing \\[verilog-auto] will make this into:
@@ -8069,10 +8069,10 @@ Typing \\[verilog-auto] will make this into:
 	module ex_inst (o,i)
 	   output o;
 	   input i;
-	   inst inst (/*AUTOINSTPARAM*/
-		      // Parameters
-		      .PAR			(PAR));
-		      (/*AUTOINST*/);
+	   inst (/*AUTOINSTPARAM*/
+		 // Parameters
+		 .PAR			(PAR));
+		inst (/*AUTOINST*/);
 	endmodule
 
 Where the list of parameter connections come from the inst module.
@@ -8093,8 +8093,14 @@ Templates:
 			       (verilog-modi-get-signals modi)))
 	   submod submodi inst skip-pins tpl-list tpl-num)
       ;; Find module name that is instantiated
-      (setq submod  (verilog-read-inst-module)
-	    inst (verilog-read-inst-name)
+      (setq submod (save-excursion
+		     ;; Get to the point where AUTOINST normally is to read the module
+		     (verilog-re-search-forward-quick "[(;]" nil nil)
+		     (verilog-read-inst-module))
+	    inst   (save-excursion
+		     ;; Get to the point where AUTOINST normally is to read the module
+		     (verilog-re-search-forward-quick "[(;]" nil nil)
+		     (verilog-read-inst-name))
 	    vl-cell-type submod
 	    vl-cell-name inst
 	    skip-pins (aref (verilog-read-inst-pins) 0))

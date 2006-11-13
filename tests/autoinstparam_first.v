@@ -3,21 +3,24 @@ module autoinstparam_first ();
    parameter BITSA;
    parameter BITSB;
 
-   autoinstparam_first_sub sub
+   autoinstparam_first_sub
      #(/*AUTOINSTPARAM*/)
-       (/*AUTOINST*/);
+       sub
+	 (/*AUTOINST*/);
 
-   autoinstparam_first_sub sub1
+   autoinstparam_first_sub
      #(
        .BITSB				(2)
        /*AUTOINSTPARAM*/)
-       (/*AUTOINST*/);
+       sub1
+	 (/*AUTOINST*/);
 
-   autoinstparam_first_sub sub2
+   autoinstparam_first_sub
      #(
        .BITSA				(1),
        .BITSB				(2)
        /*AUTOINSTPARAM*/)
-       (/*AUTOINST*/);
+       sub2
+	 (/*AUTOINST*/);
 
 endmodule
