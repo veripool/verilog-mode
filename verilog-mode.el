@@ -3073,9 +3073,16 @@ Insert `// NAME ' if this line ends a function, task, module, primitive or inter
 		      )
 		     ((match-end 0)
 		      (goto-char (match-end 1))
+		      (if nil
+			  (let (s f)
+			    (setq s (match-beginning 1))
+			    (setq f (progn (end-of-line)
+					   (point)))
+			    (setq str  (buffer-substring s f)))
+			(setq err nil))
 		      (setq str (concat (buffer-substring (match-beginning 1) (match-end 1))
-					(verilog-get-expr)))
-		      (setq err nil))))
+					" "
+					(verilog-get-expr))))))
 		  (end-of-line)
 		  (if kill-existing-comment
 		      (kill-existing-comment))
