@@ -780,6 +780,16 @@ For example, \"_t$\" matches typedefs named with _t, as in the C language."
   :type 'hook
   :group 'verilog-mode-auto)
 
+(defcustom verilog-getopt-flags-hook nil
+  "*Hook run after `verilog-getopt-flags' determines the Verilog option lists."
+  :type 'hook
+  :group 'verilog-mode-auto)
+
+(defcustom verilog-before-getopt-flags-hook nil
+  "*Hook run before `verilog-getopt-flags' determines the Verilog option lists."
+  :type 'hook
+  :group 'verilog-mode-auto)
+
 (defvar verilog-imenu-generic-expression
   '((nil "^\\s-*\\(\\(m\\(odule\\|acromodule\\)\\)\\|primitive\\)\\s-+\\([a-zA-Z0-9_.:]+\\)" 4)
     ("*Vars*" "^\\s-*\\(reg\\|wire\\)\\s-+\\(\\|\\[[^]]+\\]\\s-+\\)\\([A-Za-z0-9_]+\\)" 3))
@@ -6587,7 +6597,7 @@ Some macros and such are also found and included.  For dinotrace.el"
 	    arglist (cdr arglist))
       (while (string-match "^\\([^ \t\n\f]+\\)[ \t\n\f]*\\(.*$\\)" arg)
 	(setq space-args (append space-args
-				 (list (match-string 1 arg))))
+				 (list (match-string-no-properties 1 arg))))
 	(setq arg (match-string 2 arg))))
     ;; Parse arguments
     (while space-args
@@ -6628,12 +6638,10 @@ Some macros and such are also found and included.  For dinotrace.el"
 	(verilog-getopt-file arg))
        ((equal next-param "-v")
 	(setq next-param nil)
-	(verilog-add-list-unique `verilog-library-files
-				 (match-string 1 arg)))
+	(verilog-add-list-unique `verilog-library-files arg))
        ((equal next-param "-y")
 	(setq next-param nil)
-	(verilog-add-list-unique `verilog-library-directories
-				 (match-string 1 arg)))
+	(verilog-add-list-unique `verilog-library-directories arg))
        ;; Default - ignore; no warning
        ))))
 ;;(verilog-getopt (list "+libext+.a+.b" "+incdir+foodir" "+define+a+aval" "-f" "otherf" "-v" "library" "-y" "dir"))
@@ -6642,6 +6650,7 @@ Some macros and such are also found and included.  For dinotrace.el"
   "Read verilog options from the specified FILENAME."
   (save-excursion
     (let ((fns (verilog-library-filenames filename (buffer-file-name)))
+	  (orig-buffer (current-buffer))
 	  line)
       (if fns
 	  (set-buffer (find-file-noselect (car fns)))
@@ -6654,7 +6663,9 @@ Some macros and such are also found and included.  For dinotrace.el"
 	(forward-line 1)
 	(when (string-match "//" line)
 	  (setq line (substring line 0 (match-beginning 0))))
-	(verilog-getopt line)))))
+	(save-excursion
+	  (set-buffer orig-buffer)  ; Variables are buffer-local, so need right context.
+	  (verilog-getopt line))))))
 
 (defun verilog-getopt-flags ()
   "Convert `verilog-library-flags' into standard library variables."
@@ -6664,7 +6675,12 @@ Some macros and such are also found and included.  For dinotrace.el"
     (make-variable-buffer-local 'verilog-library-directories)
     (make-variable-buffer-local 'verilog-library-files)
     (make-variable-buffer-local 'verilog-library-flags))
-  (verilog-getopt verilog-library-flags))
+  ;; Allow user to customize
+  (run-hooks 'verilog-before-getopt-flags-hook)
+  ;; Process arguments
+  (verilog-getopt verilog-library-flags)
+  ;; Allow user to customize
+  (run-hooks 'verilog-getopt-flags-hook))
 
 (defun verilog-add-list-unique (varref object)
   "Append to VARREF list the given OBJECT,
@@ -6672,7 +6688,7 @@ unless it is already a member of the variable's list"
   (unless (member object (symbol-value varref))
     (set varref (append (symbol-value varref) (list object))))
   varref)
-;;(progn (setq l '() (verilog-add-list-unique `l "a") (verilog-add-list-unique `l "a") l)
+;;(progn (setq l '()) (verilog-add-list-unique `l "a") (verilog-add-list-unique `l "a") l)
 
 
 ;;
