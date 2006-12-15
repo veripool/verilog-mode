@@ -5625,6 +5625,15 @@ Bound search by LIMIT.  Adapted from
   (nth 5 sig))
 (defsubst verilog-sig-type (sig)
   (nth 6 sig))
+(defsubst verilog-sig-multidim (sig)
+  (nth 7 sig))
+(defsubst verilog-sig-multidim-string (sig)
+  (if (verilog-sig-multidim sig)
+      (let ((str "") (args (verilog-sig-multidim sig)))
+	(while args
+	  (setq str (concat str (car args)))
+	  (setq args (cdr args)))
+	str)))
 (defsubst verilog-sig-width (sig)
   (verilog-make-width-expression (verilog-sig-bits sig)))
 
@@ -5687,7 +5696,7 @@ Duplicate signals are also removed.  For example A[2] and A[1] become A[2:1]."
 	out-list
 	sig highbit lowbit		; Temp information about current signal
 	sv-name sv-highbit sv-lowbit	; Details about signal we are forming
-	sv-comment sv-memory sv-enum sv-signed sv-type sv-busstring
+	sv-comment sv-memory sv-enum sv-signed sv-type sv-multidim sv-busstring
 	bus)
     ;; Shove signals so duplicated signals will be adjacent
     (setq in-list (sort in-list `verilog-signals-sort-compare))
@@ -5703,6 +5712,7 @@ Duplicate signals are also removed.  For example A[2] and A[1] become A[2:1]."
 	      sv-enum    (verilog-sig-enum sig)
 	      sv-signed  (verilog-sig-signed sig)
 	      sv-type    (verilog-sig-type sig)
+	      sv-multidim (verilog-sig-multidim sig)
 	      combo ""
 	      ))
       ;; Extract bus details
@@ -5736,7 +5746,8 @@ Duplicate signals are also removed.  For example A[2] and A[1] become A[2:1]."
 	     (setq sv-memory (or sv-memory (verilog-sig-memory sig))
 		   sv-enum   (or sv-enum   (verilog-sig-enum sig))
 		   sv-signed (or sv-signed (verilog-sig-signed sig))
-                   sv-type   (or sv-type (verilog-sig-type sig))))
+                   sv-type   (or sv-type   (verilog-sig-type sig))
+                   sv-multidim (or sv-multidim (verilog-sig-multidim sig))))
 	    ;; Doesn't match next signal, add to que, zero in prep for next
 	    ;; Note sig may also be nil for the last signal in the list
 	    (t
@@ -5746,7 +5757,7 @@ Duplicate signals are also removed.  For example A[2] and A[1] become A[2:1]."
 				   (if sv-highbit
 				       (concat "[" (int-to-string sv-highbit) ":" (int-to-string sv-lowbit) "]")))
 			       (concat sv-comment combo)
-			       sv-memory sv-enum sv-signed sv-type)
+			       sv-memory sv-enum sv-signed sv-type sv-multidim)
 			 out-list)
 		   sv-name nil)))
       )
@@ -5844,7 +5855,7 @@ Return a array of [outputs inouts inputs wire reg assign const]."
   (let ((end-mod-point (or (verilog-get-end-of-defun t) (point-max)))
 	(functask 0) (paren 0)
 	sigs-in sigs-out sigs-inout sigs-wire sigs-reg sigs-assign sigs-const sigs-gparam
-	vec expect-signal keywd newsig rvalue enum io signed typedefed)
+	vec expect-signal keywd newsig rvalue enum io signed typedefed multidim)
     (save-excursion
       (verilog-beg-of-defun)
       (setq sigs-const (verilog-read-auto-constants (point) end-mod-point))
@@ -5895,6 +5906,10 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 	  (goto-char (match-end 0))
 	  (cond (newsig	; Memory, not just width.  Patch last signal added's memory (nth 3)
 		 (setcar (cdr (cdr (cdr newsig))) (match-string 1)))
+		(vec ;; Multidimensional
+		 (setq multidim (cons vec multidim))
+		 (setq vec (verilog-string-replace-matches
+			    "\\s-+" "" nil nil (match-string 1))))
 		(t ;; Bit width
 		 (setq vec (verilog-string-replace-matches
 			    "\\s-+" "" nil nil (match-string 1))))))
@@ -5905,28 +5920,28 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 	  (when (string-match "^\\\\" keywd)
 	    (setq keywd (concat keywd " ")))  ;; Escaped ID needs space at end
 	  (cond ((equal keywd "input")
-		 (setq vec nil enum nil  rvalue nil  newsig nil  signed nil  typedefed nil  io t  expect-signal 'sigs-in))
+		 (setq vec nil enum nil  rvalue nil  newsig nil  signed nil  typedefed nil  multidim nil  io t  expect-signal 'sigs-in))
 		((equal keywd "output")
-		 (setq vec nil enum nil  rvalue nil  newsig nil  signed nil  typedefed nil  io t  expect-signal 'sigs-out))
+		 (setq vec nil enum nil  rvalue nil  newsig nil  signed nil  typedefed nil  multidim nil  io t  expect-signal 'sigs-out))
 		((equal keywd "inout")
-		 (setq vec nil enum nil  rvalue nil  newsig nil  signed nil  typedefed nil  io t  expect-signal 'sigs-inout))
+		 (setq vec nil enum nil  rvalue nil  newsig nil  signed nil  typedefed nil  multidim nil  io t  expect-signal 'sigs-inout))
 		((or (equal keywd "wire")
 		     (equal keywd "tri")
 		     (equal keywd "tri0")
 		     (equal keywd "tri1"))
-		 (unless io (setq vec nil  enum nil  rvalue nil  signed nil  typedefed nil  expect-signal 'sigs-wire)))
+		 (unless io (setq vec nil  enum nil  rvalue nil  signed nil  typedefed nil  multidim nil  expect-signal 'sigs-wire)))
 		((or (equal keywd "reg")
 		     (equal keywd "trireg"))
-		 (unless io (setq vec nil  enum nil  rvalue nil  signed nil  typedefed nil  expect-signal 'sigs-reg)))
+		 (unless io (setq vec nil  enum nil  rvalue nil  signed nil  typedefed nil  multidim nil  expect-signal 'sigs-reg)))
 		((equal keywd "assign")
-		 (setq vec nil  enum nil  rvalue nil  signed nil  typedefed nil  expect-signal 'sigs-assign))
+		 (setq vec nil  enum nil  rvalue nil  signed nil  typedefed nil  multidim nil  expect-signal 'sigs-assign))
 		((or (equal keywd "supply0")
 		     (equal keywd "supply1")
 		     (equal keywd "supply")
 		     (equal keywd "localparam"))
-		 (unless io (setq vec nil  enum nil  rvalue nil  signed nil  typedefed nil  expect-signal 'sigs-const)))
+		 (unless io (setq vec nil  enum nil  rvalue nil  signed nil  typedefed nil  multidim nil  expect-signal 'sigs-const)))
 		((or (equal keywd "parameter"))
-		 (unless io (setq vec nil  enum nil  rvalue nil  signed nil  typedefed nil  expect-signal 'sigs-gparam)))
+		 (unless io (setq vec nil  enum nil  rvalue nil  signed nil  typedefed nil  multidim nil  expect-signal 'sigs-gparam)))
 		((equal keywd "signed")
 		 (setq signed "signed"))
 		((or (equal keywd "function")
@@ -5945,7 +5960,7 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 		      (not (member keywd verilog-keywords))
 		      (not rvalue))
 		 ;; Add new signal to expect-signal's variable
-		 (setq newsig (list keywd vec nil nil enum signed typedefed))
+		 (setq newsig (list keywd vec nil nil enum signed typedefed multidim))
 		 (set expect-signal (cons newsig
 					  (symbol-value expect-signal))))))
 	 (t
@@ -5966,7 +5981,7 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 (defvar sigs-inout nil) ; Prevent compile warning
 (defvar sigs-out nil) ; Prevent compile warning
 
-(defun verilog-read-sub-decls-sig (submodi comment port sig vec)
+(defun verilog-read-sub-decls-sig (submodi comment port sig vec multidim)
   "For verilog-read-sub-decls-line, add a signal."
   (let (portdata)
     (when sig
@@ -5974,27 +5989,34 @@ Return a array of [outputs inouts inputs wire reg assign const]."
       (setq sig  (verilog-symbol-detick-denumber sig))
       (if sig (setq sig  (verilog-string-replace-matches "^[---+~!|&]+" "" nil nil sig)))
       (if vec (setq vec  (verilog-symbol-detick-denumber vec)))
+      (if multidim (setq multidim  (mapcar `verilog-symbol-detick-denumber multidim)))
       (unless (or (not sig)
 		  (equal sig ""))  ;; Ignore .foo(1'b1) assignments
 	(cond ((setq portdata (assoc port (verilog-modi-get-inouts submodi)))
 	       (setq sigs-inout (cons (list sig vec (concat "To/From " comment) nil nil
 					    (verilog-sig-signed portdata)
-					    (verilog-sig-type portdata)) sigs-inout)))
+					    (verilog-sig-type portdata)
+					    multidim)
+				      sigs-inout)))
 	      ((setq portdata (assoc port (verilog-modi-get-outputs submodi)))
 	       (setq sigs-out   (cons (list sig vec (concat "From " comment) nil nil
 					    (verilog-sig-signed portdata)
-					    (verilog-sig-type portdata)) sigs-out)))
+					    (verilog-sig-type portdata)
+					    multidim)
+				      sigs-out)))
 	      ((setq portdata (assoc port (verilog-modi-get-inputs submodi)))
 	       (setq sigs-in    (cons (list sig vec (concat "To " comment) nil nil
 					    (verilog-sig-signed portdata)
-					    (verilog-sig-type portdata)) sigs-in)))
+					    (verilog-sig-type portdata)
+					    multidim)
+				      sigs-in)))
 	      ;; (t  -- warning pin isn't defined.)   ; Leave for lint tool
 	      )))))
 
 (defun verilog-read-sub-decls-line (submodi comment)
   "For read-sub-decls, read lines of port defs until none match anymore.
 Return the list of signals found, using submodi to look up each port."
-  (let (done port sig vec)
+  (let (done port sig vec multidim)
     (save-excursion
       (forward-line 1)
       (while (not done)
@@ -6012,6 +6034,7 @@ Return the list of signals found, using submodi to look up each port."
 	       (setq port nil  done t))) ;; Unknown, ignore rest of line
 	;; Get signal name
 	(when port
+	  (setq multidim nil)
 	  (cond ((looking-at "\\(\\\\[^ \t\n\f]*\\)\\s-*)")
 		 (setq sig (concat (match-string 1) " ") ;; escaped id's need trailing space
 		       vec nil))
@@ -6023,6 +6046,14 @@ Return the list of signals found, using submodi to look up each port."
 		((looking-at "\\([^[({).]*\\)\\s-*\\(\\[[^]]+\\]\\)\\s-*)")
 		 (setq sig (verilog-string-remove-spaces (match-string 1))
 		       vec (match-string 2)))
+		((looking-at "\\([^[({).]*\\)\\s-*/\\*\\(\\[[^*]+\\]\\)\\*/\\s-*)")
+		 (setq sig (verilog-string-remove-spaces (match-string 1))
+		       vec nil)
+		 (let ((parse (match-string 2)))
+		   (while (string-match "^\\(\\[[^]]+\\]\\)\\(.*\\)$" parse)
+		     (when vec (setq multidim (cons vec multidim)))
+		     (setq vec (match-string 1 parse))
+		     (setq parse (match-string 2 parse)))))
 		((looking-at "{\\(.*\\)}.*\\s-*)")
 		 (let ((mlst (split-string (match-string 1) ","))
 		       mstr)
@@ -6042,11 +6073,11 @@ Return the list of signals found, using submodi to look up each port."
 		      (t
 		       (setq sig nil)))
 		     ;; Process signals
-		     (verilog-read-sub-decls-sig submodi comment port sig vec))))
+		     (verilog-read-sub-decls-sig submodi comment port sig vec multidim))))
 		(t
 		 (setq sig nil)))
 	  ;; Process signals
-	  (verilog-read-sub-decls-sig submodi comment port sig vec))
+	  (verilog-read-sub-decls-sig submodi comment port sig vec multidim))
 	;;
 	(forward-line 1)))))
 
@@ -7123,6 +7154,8 @@ with appropriate INDENT-PT indentation."
   (insert type)
   (when (verilog-sig-signed sig)
     (insert " " (verilog-sig-signed sig)))
+  (when (verilog-sig-multidim sig)
+    (insert " " (verilog-sig-multidim-string sig)))
   (when (verilog-sig-bits sig)
     (insert " " (verilog-sig-bits sig)))
   (indent-to (max 24 (+ indent-pt 16)))
@@ -7659,7 +7692,10 @@ Insert to INDENT-PT, use template TPL-LIST.
 		      (or (verilog-sig-bits port-st) "")
 		    ""))
 	 ;; Default if not found
-	 (tpl-net (concat port vl-bits)))
+	 (tpl-net (if (verilog-sig-multidim port-st)
+		      (concat port "/*" (verilog-sig-multidim-string port-st)
+			      vl-bits "*/")
+		    (concat port vl-bits))))
     ;; Find template
     (cond (tpl-ass	    ; Template of exact port name
 	   (setq tpl-net (nth 1 tpl-ass)))
@@ -7754,6 +7790,8 @@ Limitations:
   and have proper () nesting, including a final ); to end the template.
 
   Typedefs must match `verilog-typedef-regexp', which is disabled by default.
+
+  SystemVerilog multidimmensional input/output has only experimental support.
 
 For example, first take the submodule inst.v:
 
