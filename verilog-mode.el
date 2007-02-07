@@ -2326,8 +2326,8 @@ Other useful functions are:
 		hs-special-modes-alist)))
   ;; Stuff for autos
   (add-hook 'write-contents-hooks 'verilog-auto-save-check) ; already local
-  (verilog-auto-reeval-locals t)   ; Save locals in case user changes them
-  (verilog-getopt-flags)
+;;  (verilog-auto-reeval-locals t)   ; Save locals in case user changes them
+;;  (verilog-getopt-flags)
   (run-hooks 'verilog-mode-hook))
 
 
@@ -7572,8 +7572,8 @@ If FORCE, always reread it."
   (make-variable-buffer-local 'verilog-auto-last-file-locals)
   (let ((curlocal (verilog-auto-read-locals)))
     (when (or force (not (equal verilog-auto-last-file-locals curlocal)))
-      (hack-local-variables)
       (setq verilog-auto-last-file-locals curlocal)
+      (hack-local-variables)
       t)))
 
 ;;

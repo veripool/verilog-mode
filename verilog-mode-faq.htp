@@ -113,12 +113,13 @@ Major modes that require Vi command state
    <p>Now if you are running viper, when you load a verilog file, it
    will start in viper mode.
 
-<a name="3skeleton"></a><h3>Why do I get the message "File mode specification error: (void-function define-skeleton)"?</h3>
+<a name="3skeleton"></a><h3>Why do I get the message "File mode specification error:"?</h3>
 
-<p>Or, the similar message:
+<p>Or, the similar messages:
   
 <pre>
-File mode specification error : (file-error "Cannot open load file" "overlay")
+File mode specification error:  (void-function define-skeleton)
+File mode specification error: (file-error "Cannot open load file" "overlay")
 </pre>
 
    <p>You need skeleton.el, part of the base package for
@@ -138,15 +139,15 @@ File mode specification error : (file-error "Cannot open load file" "overlay")
 <pre>
                  Latest Installed
   Package name   Vers.  Vers.   Description
-===============================================================================
+============================================================
   Sun             1.13   1.13   Support for Sparcworks.
      ...
   w3              1.18   1.18   A Web browser.
-* xemacs-base     1.53   1.51   Fundamental XEmacs support, you almost certainly need this.
+* xemacs-base     1.53   1.51   Fundamental XEmacs support.
 - xemacs-devel    1.33   -----  Emacs Lisp developer support.
 - xslt-process    1.03   -----  XSLT processing support.
   zenirc          1.09   1.09   ZENIRC IRC Client.
-===============================================================================
+============================================================
 </pre>
 
    <p>For the overlay package, click on the line that says <font
@@ -156,14 +157,14 @@ File mode specification error : (file-error "Cannot open load file" "overlay")
 <pre>
                  Latest Installed
   Package name   Vers.  Vers.   Description
-===============================================================================
+============================================================
   Sun             1.13   1.13   Support for Sparcworks.
      ...
 
   w3              1.18   1.18   A Web browser.
 * fsf-compat      1.12   ----   FSF EMacs compatibility files
   zenirc          1.09   1.09   ZENIRC IRC Client.
-===============================================================================
+============================================================
 </pre>
 
    <p>When you click on it, the * changes to a +
@@ -295,10 +296,11 @@ lazy-lock</pre>.
 
 <a name="3bit"></a><h3>Why does the signal "bit", "do", "const" get ignored?</h3>
 
-   <p>They're keywords.  Unfortunately the SystemVerilog committee made these
-   into new keywords, but did not provide a way to make Verilog 1995 code
-   forward compatible by leaving them as signal names.  You need to rename
-   your signals.
+   <p>They're keywords.  Unfortunately the SystemVerilog committee made
+   these into new keywords, but did not provide a way to make Verilog 1995
+   code forward compatible by leaving them as signal names until the
+   Verilog 2005 standard, which we don't fully support yet.  You need to
+   rename your signals.
 
 <a name="3generate"></a><h3>Can I use Verilog-Mode to do 'generate' like code?</h3>
 
@@ -434,6 +436,34 @@ endmodule
    <p>This presumes Modname.v already exists and you want to copy the entire I/O
    list from it.  Otherwise, remove the AUTOINOUTMODULE and add the I/O list
    yourself.
+
+<a name="3bench"></a><h3>How do I make a Testbench module?</h3>
+
+   <p>A testbench for the purposes of this question is a module which
+   instantiates another module for the purpose of testing it.
+
+   <p>By using several Autos, most of the hookup for the testbench
+   are created for you:
+
+<pre>
+module ModnameTest;
+
+   /*AUTOWIRE*/
+   /*AUTOREGINPUT*/
+
+   Modname dut
+     (/*AUTOINST*/);
+   
+   //==== Stimulus
+   // You then put code here to set all of the inputs to the DUT.
+   // The autos have created registers for all of the needed signals.
+	
+   //==== Stimulus
+   // You then put code here to check all of the outputs from the DUT.
+   // The autos have created wires for all of the needed signals.
+
+endmodule
+</pre>
 
 <a name="3autobatch"></a><h3>How do I update AUTOs from the command line?</h3>
 
@@ -718,14 +748,85 @@ foo <= #1 signal;
 
 <a name="3pragmas"></a><h3>Can AUTOASCIIENUM be changed to put translate_off pragmas around the code?</h3>
 
-   <p>No.  First of all, you're better using "`ifdef synthesis" as that lets the
-   tools pick which version of the code you want.
+   <p>No.  First of all, you'd be better of asking to wrap it "`ifdef
+   synthesis" as that lets the tools pick which version of the code you
+   want.
 
    <p>Second, there isn't one standard way that supports all tools.
 
    <p>Third, presuming you never use the value it generates at all (or only in
    $display's) there's no reason to disable translation, as the synthesis tool
    will rip it all out through its normal dead code optimization stage.
+
+<a name="3omitout"></a><h3>How do I remove outputs from AUTOOUTPUT?</h3>
+
+   <p>Maybe you shouldn't be using AUTOOUTPUT?  Consider listing your
+   outputs manually; this insures your module's interface is documented and
+   remains constant, even if other lower modules change.
+
+   <p>With that warning given, on to the solutions.  You have four choices,
+   the last probably being the most used:
+
+   <p>First, just ifdef fake outputs.  Verilog-mode will see them, but no
+   other tool will care.  This is cleanest for signals you can list
+   one-by-one, and are using Verilog 2001 port lists or when you want those
+   listed to still appear in a AUTOARG.
+
+<pre>
+`ifdef NEVER
+        output a_out;   // Fake out Verilog-mode
+        output b_out;   // Fake out Verilog-mode
+`endif
+</pre>
+
+   <p>Second alternative, simply create a fake module listing them as
+   inputs.  Since Verilog-Mode will then see them as inputs to a submodule,
+   it won't output them.
+
+<pre>
+`ifdef NEVER
+  fake fake (// Inputs
+        .fake(a_out),
+        .fake(b_out),
+        );
+`endif
+</pre>
+
+   <p>Third alternative, you can add them to
+   verilog-auto-output-ignore-regexp using Local Variables:
+
+<pre>
+/*
+   Local Variables:
+   eval:(setq verilog-auto-output-ignore-regexp (concat
+   "^\\("
+   "signal1_.*"
+   "\\|signal2_.*"
+   "\\)$"
+   )))
+   End:
+*/
+</pre>
+
+   <p>Finally, you can again use verilog-auto-output-ignore-regexp,
+   but use a AUTO_LISP.  This gets around a Emacs limitation of 3000
+   characters in a Local Variable statement.
+
+<pre>
+ /*AUTO_LISP(setq verilog-auto-output-ignore-regexp
+             (verilog-regexp-words `(
+		"q_single_reg_rddata_30"
+		)))*/
+</pre>
+
+   <p>Here we've used verilog-regexp-words to convert a simple list of signal
+   names to a regular expression.  If you prefer, you can just specify a
+   regular expression directly, perhaps as shown in the Local Variables
+   alternative above.
+
+   <p>Note AUTO_LISPs are evaluated during AUTO expansion multiple times
+   instead of only when the file is loaded into Emacs.  Thus it's a bit
+   slower, but unlikely to be noticable.
 
 <a name="2autoinst"></a><h2>Auto Instantiations and Related Issues</h2>
 
@@ -752,6 +853,19 @@ foo <= #1 signal;
     .signal   (signal[]),
    ); */
 </pre>
+
+<a name="3mergebus"></a><h3>What does AUTOWIRE "can't merge into single bus" mean?</h3>
+  
+   <p>When there are multiple submodules that output the same signal,
+   AUTOWIRE needs to merge those outputs into a single bus.  For example,
+   if one instantiation outputs <code>a[1:0]</code>, and the second
+   instantiation outputs <code>a[3:2]</code>, then AUTOWIRE needs to
+   declare <code>wire a[3:0].</code>
+   
+   <p>This error message means that it cannot determine how to declare that
+   vector.  Usually this is because you used parameters or something
+   complicated in the instantiations.  You'll need to declare that wire
+   yourself.
 
 <a name="3zeroinputs"></a><h3>How do I use AUTO_TEMPLATE to tie off inputs to zero?</h3>
 
