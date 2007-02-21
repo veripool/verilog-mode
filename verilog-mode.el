@@ -181,8 +181,22 @@
       (condition-case nil
 	  (if (fboundp 'match-string-no-properties)
 	      nil ;; great
-	    (defsubst match-string-no-properties (match)
-	      (buffer-substring-no-properties (match-beginning match) (match-end match))))
+	    (defsubst match-string-no-properties (num &optional string)
+	      "Return string of text matched by last search, without text properties.
+NUM specifies which parenthesized expression in the last regexp.
+ Value is nil if NUMth pair didn't match, or there were less than NUM pairs.
+Zero means the entire text matched by the whole regexp or whole string.
+STRING should be given if the last search was by `string-match' on STRING."
+	      (if (match-beginning num)
+		  (if string
+		      (let ((result
+			     (substring string (match-beginning num) (match-end num))))
+			(set-text-properties 0 (length result) nil result)
+			result)
+		    (buffer-substring-no-properties (match-beginning num)
+						    (match-end num)
+						    (current-buffer)
+						    )))))
 	(error nil))
       (if (and (featurep 'custom) (fboundp 'custom-declare-variable))
 	  nil ;; We've got what we needed
@@ -1405,15 +1419,11 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
        "endmodule" "endprimitive" "endinterface" "endpackage" "endprogram" "endclass"
        ))))
 
-(defconst verilog-behavioral-level-re
-  ;; "function" "task"
-  "\\(\\<\\(function\\>\\|task\\>\\)\\)")
-
 (defconst verilog-complete-reg
   (eval-when-compile
     (verilog-regexp-words
      `(
-       "always" "assign" "always_latch" "always_ff" "always_comb" "extern"
+       "always" "assign" "always_latch" "always_ff" "always_comb" "constraint" "extern"
        "initial" "final" "repeat" "case" "casex" "casez" "randcase" "while"
        "if" "for" "forever" "else" "parameter" "task" "function" "do" "foreach"
        ))))
@@ -3477,15 +3487,21 @@ Useful for creating tri's and other expanded fields."
   (interactive)
   (goto-char (point-min))
   (while (re-search-forward "//" nil t)
-    (let ((bpt (- (point) 2)))
-      (end-of-line)
-      (delete-region bpt (point))))
-  ;;
+    (if (verilog-within-string)
+	(re-search-forward "\"" nil t)
+      (if (verilog-in-star-comment-p)
+	  (re-search-forward "\*/" nil t)
+	(let ((bpt (- (point) 2)))
+	  (end-of-line)
+	  (delete-region bpt (point))))))
+    ;;
   (goto-char (point-min))
   (while (re-search-forward "/\\*" nil t)
-    (let ((bpt (- (point) 2)))
-      (re-search-forward "\\*/")
-      (delete-region bpt (point)))))
+    (if (verilog-within-string)
+	(re-search-forward "\"" nil t)
+      (let ((bpt (- (point) 2)))
+	(re-search-forward "\\*/")
+	(delete-region bpt (point))))))
 
 (defun verilog-one-line ()
   "Convert structural verilog instances to occupy one line."
@@ -3883,9 +3899,6 @@ type.  Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
   (catch 'nesting
     (while (verilog-re-search-backward verilog-indent-re nil 'move)
       (cond
-       ;;((looking-at verilog-behavioral-level-re)
-       ;;(throw 'nesting 'behavioral))
-
        ((looking-at verilog-beg-block-re-ordered)
 	(cond
 	 ((match-end 2)  (throw 'nesting 'case))
@@ -4075,6 +4088,18 @@ Set point to where line starts"
    (;-- Anything ending in a ; is complete
     (= (preceding-char) ?\;)
     nil)
+   (;-- constraint foo { a = b } 
+    ;   is a complete statement. *sigh*
+    (= (preceding-char) ?\})
+    (progn
+      (backward-char)
+      (backward-up-list 1)
+      (verilog-backward-syntactic-ws)
+      (forward-word -1) ; label for the (possible) constraint
+      (verilog-backward-syntactic-ws)
+      (forward-word -1)
+      (not (looking-at "\\<constraint\\>")))
+    )
    (;-- Could be 'case (foo)' or 'always @(bar)' which is complete
     ;   also could be simply '@(foo)'
     ;   or foo u1 #(a=8)
@@ -4247,7 +4272,11 @@ Optional BOUND limits search."
  (let ((state
 	(save-excursion
 	  (parse-partial-sexp (point-min) (point)))))
-   (nth 4 state)))
+   (and 
+    (nth 4 state)			; t if in a comment of style a // or b /**/
+	(not 
+	 (nth 7 state)			; t if in a comment of style b /**/
+	 ))))
 
 (defun verilog-in-slash-comment-p ()
  "Return true if in a slash comment."
@@ -6674,7 +6703,10 @@ Some macros and such are also found and included.  For dinotrace.el"
 	(setq next-param nil)
 	(verilog-add-list-unique `verilog-library-directories arg))
        ;; Default - ignore; no warning
-       ))))
+       )
+      )
+    )
+  )
 ;;(verilog-getopt (list "+libext+.a+.b" "+incdir+foodir" "+define+a+aval" "-f" "otherf" "-v" "library" "-y" "dir"))
 
 (defun verilog-getopt-file (filename)
@@ -7219,14 +7251,13 @@ Presumes that any newlines end a list element."
   "If point is at a comma followed by a close parenthesis, fix it.
 This repairs those mis-inserted by a AUTOARG."
   ;; It would be much nicer if Verilog allowed extra commas like Perl does!
-  (let (begin-pt)
-    (save-excursion
-      (verilog-forward-close-paren)
-      (backward-char 1)
-      (verilog-backward-syntactic-ws)
-      (backward-char 1)
-      (when (looking-at ",")
-	(delete-char 1)))))
+  (save-excursion
+    (verilog-forward-close-paren)
+    (backward-char 1)
+    (verilog-backward-syntactic-ws)
+    (backward-char 1)
+    (when (looking-at ",")
+      (delete-char 1))))
 
 (defun verilog-get-list (start end)
   "Return the elements of a comma separated list between START and END."
