@@ -7191,6 +7191,8 @@ with appropriate INDENT-PT indentation."
   (when (verilog-sig-bits sig)
     (insert " " (verilog-sig-bits sig)))
   (indent-to (max 24 (+ indent-pt 16)))
+  (unless (= (char-syntax (preceding-char)) ?\  )
+    (insert " "))  ; Need space between "]name" if indent-to did nothing
   (insert (verilog-sig-name sig)))
 
 (defun verilog-insert-definition (sigs direction indent-pt v2k &optional dont-sort)
@@ -7604,6 +7606,8 @@ If FORCE, always reread it."
   (let ((curlocal (verilog-auto-read-locals)))
     (when (or force (not (equal verilog-auto-last-file-locals curlocal)))
       (setq verilog-auto-last-file-locals curlocal)
+      ;; Note this may cause this function to be recursively invoked.
+      ;; The above when statement will prevent it from recursing forever.
       (hack-local-variables)
       t)))
 
