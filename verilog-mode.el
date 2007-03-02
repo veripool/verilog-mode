@@ -1424,7 +1424,7 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
     (verilog-regexp-words
      `(
        "always" "assign" "always_latch" "always_ff" "always_comb" "constraint" "extern"
-       "initial" "final" "repeat" "case" "casex" "casez" "randcase" "while"
+       "import" "initial" "final" "repeat" "case" "casex" "casez" "randcase" "while"
        "if" "for" "forever" "else" "parameter" "task" "function" "do" "foreach"
        ))))
 
@@ -2755,7 +2755,7 @@ With ARG, first kill any existing labels."
 	     (and (looking-at "\\<function\\|task\\>")
 		  (save-excursion
 		    (verilog-backward-token)
-		    (looking-at "extern")))
+		    (looking-at "\\<extern\\|context\\>")))
 	     (not (looking-at verilog-complete-reg)))
 	    (verilog-backward-syntactic-ws)
 	    (not (or
