@@ -4782,7 +4782,9 @@ ARG is ignored, for `comment-indent-function' compatibility."
 	  (while (< (point) (marker-position edpos))
 	    (beginning-of-line)
 	    (verilog-just-one-space myre)
-	    (forward-line))
+	    (end-of-line)
+	    (verilog-forward-syntactic-ws)
+	    )
 
 	  ;; Now find biggest prefix
 	  (setq ind (verilog-get-lineup-indent-2 myre start edpos))
@@ -4933,7 +4935,7 @@ Region is defined by B and EDPOS."
       ;; Get rightmost position
       (while (progn (setq e (marker-position edpos))
 		    (< (point) e))
-	(if (re-search-forward myre e 'move)
+	(if (verilog-re-search-forward myre e 'move)
 	    (progn
 	      (goto-char (match-end 0))
 	      (verilog-backward-syntactic-ws)
