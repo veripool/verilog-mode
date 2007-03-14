@@ -19,4 +19,10 @@ module io1_sub (/*AUTOARG*/);
    autoinst_lopaz_srpad MD31_pad
      (.*);
 
+   // And .name with auto inst
+   autoinst_lopaz_srpad MD31_pad22
+     (.pin,
+      .clk,
+      /*AUTOINST*/);
+
 endmodule

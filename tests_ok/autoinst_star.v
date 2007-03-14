@@ -28,4 +28,15 @@ module io1_sub (/*AUTOARG*/);
       .pin				(templated)		 // Templated
       );
 
+   // And .name with auto inst
+   autoinst_lopaz_srpad MD31_pad22
+     (.pin,
+      .clk,
+      /*AUTOINST*/
+      // Outputs
+      .pin_in				(pin_in[2*w-1:0]),
+      // Inputs
+      .pin_out				(pin_out[w-1:0]),
+      .pin_outen			(pin_outen));
+
 endmodule

@@ -6172,10 +6172,12 @@ For example if declare A A (.B(SIG)) then B will be included in the list."
     (let ((end-mod-point (point))	;; presume at /*AUTOINST*/ point
 	  pins pin)
       (verilog-backward-open-paren)
-      (while (re-search-forward "\\.\\([^( \t\n\f]*\\)\\s-*(" end-mod-point t)
+      (while (re-search-forward "\\.\\([^(,) \t\n\f]*\\)\\s-*" end-mod-point t)
 	(setq pin (match-string 1))
 	(unless (verilog-inside-comment-p)
-	  (setq pins (cons (list pin) pins))))
+	  (setq pins (cons (list pin) pins))
+	  (when (looking-at "(")
+	    (forward-sexp 1))))
       (vector pins))))
 
 (defun verilog-read-arg-pins ()
@@ -8359,7 +8361,8 @@ Limitations:
   and all busses must have widths, such as those from AUTOINST, or using []
   in AUTO_TEMPLATEs.
 
-  This does NOT work on memories, declare those yourself.
+  This does NOT work on memories or SystemVerilog .name connections,
+  declare those yourself.
 
 An example (see `verilog-auto-inst' for what else is going on here):
 
