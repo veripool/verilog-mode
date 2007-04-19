@@ -2,7 +2,7 @@
 ;;
 ;; $Id$
 
-;; Copyright (C) 2006 Free Software Foundation, Inc.
+;; Copyright (C) 1996-2007 Free Software Foundation, Inc.
 
 ;; Author: Michael McNamara (mac@verilog.com)
 ;;  http://www.verilog.com
@@ -744,22 +744,26 @@ regular use to prevent large numbers of merge conflicts."
   "Column number for first part of auto-inst.")
 
 (defcustom verilog-auto-input-ignore-regexp nil
-  "*If set, when creating AUTOINPUT list, ignore signals matching this regexp."
+  "*If set, when creating AUTOINPUT list, ignore signals matching this regexp.
+See the \\[verilog-faq] for examples on using this."
   :group 'verilog-mode-auto
   :type 'string )
 
 (defcustom verilog-auto-inout-ignore-regexp nil
-  "*If set, when creating AUTOINOUT list, ignore signals matching this regexp."
+  "*If set, when creating AUTOINOUT list, ignore signals matching this regexp.
+See the \\[verilog-faq] for examples on using this."
   :group 'verilog-mode-auto
   :type 'string )
 
 (defcustom verilog-auto-output-ignore-regexp nil
-  "*If set, when creating AUTOOUTPUT list, ignore signals matching this regexp."
+  "*If set, when creating AUTOOUTPUT list, ignore signals matching this regexp.
+See the \\[verilog-faq] for examples on using this."
   :group 'verilog-mode-auto
   :type 'string )
 
 (defcustom verilog-auto-unused-ignore-regexp nil
-  "*If set, when creating AUTOUNUSED list, ignore signals matching this regexp."
+  "*If set, when creating AUTOUNUSED list, ignore signals matching this regexp.
+See the \\[verilog-faq] for examples on using this."
   :group 'verilog-mode-auto
   :type 'string )
 
@@ -1439,9 +1443,9 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
 	  ))
 
 (defconst verilog-exclude-str-start "/* -----\\/----- EXCLUDED -----\\/-----"
-  "String used to mark beginning of excluded text")
+  "String used to mark beginning of excluded text.")
 (defconst verilog-exclude-str-end " -----/\\----- EXCLUDED -----/\\----- */"
-  "String used to mark end of excluded text")
+  "String used to mark end of excluded text.")
 
 (defconst verilog-keywords
   '( "`case" "`default" "`define" "`define" "`else" "`endfor" "`endif"
@@ -1552,7 +1556,7 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
           'flock-syntax-before-1930))
     ;; lets do some minimal sanity checking.
     (if (or
-	 ;; Lemacs before 19.6 had bugs
+	 ;; Emacs before 19.6 had bugs
 	 (and (eq major 'v19) (eq flavor 'XEmacs) (< minor 6))
 	 ;; Emacs 19 before 19.21 has known bugs
 	 (and (eq major 'v19) (eq flavor 'FSF) (< minor 21))
@@ -4088,7 +4092,7 @@ Set point to where line starts"
    (;-- Anything ending in a ; is complete
     (= (preceding-char) ?\;)
     nil)
-   (;-- constraint foo { a = b } 
+   (;-- constraint foo { a = b }
     ;   is a complete statement. *sigh*
     (= (preceding-char) ?\})
     (progn
@@ -4272,9 +4276,9 @@ Optional BOUND limits search."
  (let ((state
 	(save-excursion
 	  (parse-partial-sexp (point-min) (point)))))
-   (and 
+   (and
     (nth 4 state)			; t if in a comment of style a // or b /**/
-	(not 
+	(not
 	 (nth 7 state)			; t if in a comment of style b /**/
 	 ))))
 
@@ -7794,7 +7798,7 @@ Insert to INDENT-PT, use template TPL-LIST.
   "Expand SystemVerilog .* pins, as part of \\[verilog-auto].
 
 If `verilog-auto-star-expand' is set, .* pins are treated if they were
-AUTOINST statements, otherwise they are ignored.  For saftey, Verilog-Mode
+AUTOINST statements, otherwise they are ignored.  For safety, Verilog-Mode
 will also ignore any .* that are not last in your pin list (this prevents
 it from deleting pins following the .* when it expands the AUTOINST.)
 
@@ -8430,6 +8434,8 @@ Limitations:
 
   Typedefs must match `verilog-typedef-regexp', which is disabled by default.
 
+  Signals matching `verilog-auto-output-ignore-regexp' are not included.
+
 An example (see `verilog-auto-inst' for what else is going on here):
 
 	module ex_output (ov,i)
@@ -8545,6 +8551,8 @@ Limitations:
 
   Typedefs must match `verilog-typedef-regexp', which is disabled by default.
 
+  Signals matching `verilog-auto-input-ignore-regexp' are not included.
+
 An example (see `verilog-auto-inst' for what else is going on here):
 
 	module ex_input (ov,i)
@@ -8609,6 +8617,8 @@ Limitations:
   instantiation, all bets are off.  (For example due to a AUTO_TEMPLATE).
 
   Typedefs must match `verilog-typedef-regexp', which is disabled by default.
+
+  Signals matching `verilog-auto-inout-ignore-regexp' are not included.
 
 An example (see `verilog-auto-inst' for what else is going on here):
 
@@ -8731,7 +8741,7 @@ Typing \\[verilog-auto] will make this into:
 	  )))))
 
 (defun verilog-auto-sense-sigs (modi presense-sigs)
-  "Return list of signals for current autosense block."
+  "Return list of signals for current AUTOSENSE block."
   (let* ((sigss (verilog-read-always-signals))
 	 (sig-list (verilog-signals-not-params
 		    (verilog-signals-not-in (verilog-alw-get-inputs sigss)
@@ -9008,17 +9018,22 @@ input/output list as another module, but no internals.  Specifically, it
 finds all inputs and inouts in the module, and if that input is not otherwise
 used, adds it to a comma separated list.
 
-The comma separated list is intented to be used to create a _unused_ok
+The comma separated list is intended to be used to create a _unused_ok
 signal.  Using the exact name \"_unused_ok\" for name of the temporary
-signal is recommended as it will insure maximum forward compatibility.
+signal is recommended as it will insure maximum forward compatibility, it
+also makes lint warnings easy to understand; ignore any unused warnings
+with \"unused\" in the signal name.
 
 To reduce simulation time, the _unused_ok signal should be forced to a
 constant to prevent wiggling.  The easiest thing to do is use a
 reduction-and with 1'b0 as shown.
 
-This way all unused signals are in one place, making it convienient to add
+This way all unused signals are in one place, making it convenient to add
 your tool's specific pragmas around the assignment to disable any unused
 warnings.
+
+You can add signals you do not want included in AUTOUNUSED with
+`verilog-auto-unused-ignore-regexp'.
 
 An example of making a stub for another module:
 
@@ -9285,8 +9300,7 @@ Using \\[describe-function], see also:
     `verilog-read-includes'     for reading `includes
 
 If you have bugs with these autos, try contacting the AUTOAUTHOR
-Wilson Snyder (wsnyder@wsnyder.org),
-and/or see http://www.veripool.org."
+Wilson Snyder (wsnyder@wsnyder.org), and/or see http://www.veripool.org."
   (interactive)
   (unless noninteractive (message "Updating AUTOs..."))
   (if (featurep 'dinotrace)
@@ -9347,7 +9361,7 @@ and/or see http://www.veripool.org."
 	   (verilog-auto-search-do "/*AUTOWIRE*/" 'verilog-auto-wire)
 	   (verilog-auto-search-do "/*AUTOREG*/" 'verilog-auto-reg)
 	   (verilog-auto-search-do "/*AUTOREGINPUT*/" 'verilog-auto-reg-input)
-	   ;; outputevery needs autooutputs done first
+	   ;; outputevery needs AUTOOUTPUTs done first
 	   (verilog-auto-search-do "/*AUTOOUTPUTEVERY*/" 'verilog-auto-output-every)
 	   ;; After we've created all new variables
 	   (verilog-auto-search-do "/*AUTOUNUSED*/" 'verilog-auto-unused)
@@ -9959,9 +9973,9 @@ my coding ability... until now.  I'd really appreciate anything you
 could do to help me out with this minor deficiency in the product.
 
 If you have bugs with the AUTO functions, please CC the AUTOAUTHOR Wilson
-Snyder (wsnyder@wsnyder.org) and/or see
-http://www.veripool.org.  You may also want to look at the Verilog-Mode
-FAQ, see http://www.veripool.org/verilog-mode-faq.html.
+Snyder (wsnyder@wsnyder.org) and/or see http://www.veripool.org.
+You may also want to look at the Verilog-Mode FAQ, see
+http://www.veripool.org/verilog-mode-faq.html.
 
 To reproduce the bug, start a fresh Emacs via " invocation-name "
 -no-init-file -no-site-file'.  In a new buffer, in verilog mode, type
