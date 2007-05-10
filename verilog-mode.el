@@ -72,7 +72,9 @@
 ;       verilog-auto-endcomments         t
 ;       verilog-minimum-comment-distance 40
 ;       verilog-indent-begin-after-if    t
-;       verilog-auto-lineup              '(all))
+;       verilog-auto-lineup              '(all)
+;	verilog-linter			 "my_lint_shell_command"
+;	)
 
 ;; KNOWN BUGS / BUG REPORTS
 ;; =======================
@@ -317,7 +319,11 @@ the next lint error as expected."
   :type 'string
   :group 'verilog-mode-actions)
 
-(defvar verilog-tool 'verilog-linter)
+(defvar verilog-tool 'verilog-linter
+  "Which tool to use for building compiler-command.
+Either nil, `verilog-linter, `verilog-coverage, `verilog-simulator, or
+`verilog-compiler.  Alternatively use the \"Choose Compilation Action\"
+menu.")
 
 (defcustom verilog-highlight-translate-off nil
   "*Non-nil means background-highlight code excluded from translation.
@@ -851,8 +857,7 @@ If set will become buffer local.")
     (define-key verilog-mode-map [(meta delete)] 'kill-word))
   (define-key verilog-mode-map "\M-\C-b"  'electric-verilog-backward-sexp)
   (define-key verilog-mode-map "\M-\C-f"  'electric-verilog-forward-sexp)
-  (define-key verilog-mode-map "\M-\r"    (function (lambda ()
-		      (interactive) (electric-verilog-terminate-line 1))))
+  (define-key verilog-mode-map "\M-\r"    `electric-verilog-terminate-and-indent)
   (define-key verilog-mode-map "\M-\t"    'verilog-complete-word)
   (define-key verilog-mode-map "\M-?"     'verilog-show-completions)
   (define-key verilog-mode-map [(meta control h)] 'verilog-mark-defun)
@@ -877,38 +882,39 @@ If set will become buffer local.")
   )
 
 ;; menus
-(defvar verilog-which-tool 1)
 (defvar verilog-xemacs-menu
   '("Verilog"
     ("Choose Compilation Action"
+     ["None"
+      (progn
+	(setq verilog-tool nil)
+	(verilog-set-compile-command))
+      :style radio
+      :selected (equal verilog-tool nil)]
      ["Lint"
       (progn
 	(setq verilog-tool 'verilog-linter)
-	(setq verilog-which-tool 1)
 	(verilog-set-compile-command))
       :style radio
-      :selected (= verilog-which-tool 1)]
+      :selected (equal verilog-tool `verilog-linter)]
      ["Coverage"
       (progn
 	(setq verilog-tool 'verilog-coverage)
-	(setq verilog-which-tool 2)
 	(verilog-set-compile-command))
       :style radio
-      :selected (= verilog-which-tool 2)]
+      :selected (equal verilog-tool `verilog-coverage)]
      ["Simulator"
       (progn
 	(setq verilog-tool 'verilog-simulator)
-	(setq verilog-which-tool 3)
 	(verilog-set-compile-command))
       :style radio
-      :selected (= verilog-which-tool 3)]
+      :selected (equal verilog-tool `verilog-simulator)]
      ["Compiler"
       (progn
 	(setq verilog-tool 'verilog-compiler)
-	(setq verilog-which-tool 4)
 	(verilog-set-compile-command))
       :style radio
-      :selected (= verilog-which-tool 4)]
+      :selected (equal verilog-tool `verilog-compiler)]
      )
     ("Move"
      ["Beginning of function"		verilog-beg-of-defun t]
@@ -1029,7 +1035,7 @@ or a string like:
     \"(cd /tmp; surecov %s)\".
 
 In the former case, the path to the current buffer is concat'ed to the
-value of verilog-tool; in the later, the path to the current buffer is
+value of `verilog-tool'; in the later, the path to the current buffer is
 substituted for the %s.
 
 Where __FILE__ appears in the string, the buffer-file-name of the current
@@ -1043,11 +1049,11 @@ buffer, without the directory portion, will be substituted."
    (t
     (make-local-variable 'compile-command)
     (setq compile-command
-	  (if (string-match "%s" (eval verilog-tool))
-	      (format (eval verilog-tool) (or buffer-file-name ""))
-	    (concat (eval verilog-tool) " " (or buffer-file-name ""))))
-    )
-   )
+	  (if verilog-tool
+	      (if (string-match "%s" (eval verilog-tool))
+		  (format (eval verilog-tool) (or buffer-file-name ""))
+		(concat (eval verilog-tool) " " (or buffer-file-name "")))
+	    ""))))
   (verilog-modify-compile-command))
 
 (defun verilog-modify-compile-command ()
@@ -2168,17 +2174,19 @@ so there may be a large up front penalty for the first search."
 ;;###autoload
 (defun verilog-mode ()
   "Major mode for editing Verilog code.
-
-See \\[verilog-auto] for details on how AUTOs can improve coding efficiency.
+\\<verilog-mode-map>
+See \\[describe-function] verilog-auto (\\[verilog-auto]) for details on how
+AUTOs can improve coding efficiency.
 
 Use \\[verilog-faq] for a pointer to frequently asked questions.
-
-\\<verilog-mode-map>
 
 NEWLINE, TAB indents for Verilog code.
 Delete converts tabs to spaces as it moves back.
 
 Supports highlighting.
+
+Turning on Verilog mode calls the value of the variable `verilog-mode-hook'
+with no args, if that value is non-nil.
 
 Variables controlling indentation/edit style:
 
@@ -2231,20 +2239,32 @@ Variables controlling indentation/edit style:
  `verilog-auto-lineup'              (default `(all))
    List of contexts where auto lineup of code should be done.
 
-Turning on Verilog mode calls the value of the variable `verilog-mode-hook' with
-no args, if that value is non-nil.
+Variables controlling other actions:
 
-Other useful functions are:
+ `verilog-linter'                   (default surelint)
+   Unix program to call to run the lint checker.  This is the default
+   command for \\[compile-command] and \\[verilog-auto-save-compile].
 
-    \\[verilog-complete-word]  Complete word with appropriate possibilities.
+See \\[customize] for the complete list of variables.
+
+AUTO expansion functions are, in part:
+
+    \\[verilog-auto]  Expand AUTO statements.
+    \\[verilog-delete-auto]  Remove the AUTOs.
+    \\[verilog-inject-auto]  Insert AUTOs for the first time.
+
+Some other functions are:
+
+    \\[verilog-complete-word]    Complete word with appropriate possibilities.
+    \\[verilog-mark-defun]  Mark function.
+    \\[verilog-beg-of-defun]  Move to beginning of current function.
+    \\[verilog-end-of-defun]  Move to end of current function.
+    \\[verilog-label-be]  Label matching begin ... end, fork ... join, etc statements.
+
     \\[verilog-comment-region]  Put marked area in a comment.
-    \\[verilog-uncomment-region] Uncomment an area commented with \\[verilog-comment-region].
+    \\[verilog-uncomment-region]  Uncomment an area commented with \\[verilog-comment-region].
     \\[verilog-insert-block]  Insert begin ... end;.
-    \\[verilog-star-comment]  Insert /* ... */.
-    \\[verilog-mark-defun] Mark function.
-    \\[verilog-beg-of-defun] Move to beginning of current function.
-    \\[verilog-end-of-defun] Move to end of current function.
-    \\[verilog-label-be] Label matching begin ... end, fork ... join, etc statements.
+    \\[verilog-star-comment]    Insert /* ... */.
 
     \\[verilog-sk-always]  Insert a always @(AS) begin .. end block.
     \\[verilog-sk-begin]  Insert a begin .. end block.
@@ -2273,7 +2293,12 @@ Other useful functions are:
     \\[verilog-sk-inout]  Insert an inout declaration, prompting for details.
     \\[verilog-sk-wire]  Insert a wire declaration, prompting for details.
     \\[verilog-sk-reg]  Insert a register declaration, prompting for details.
-    \\[verilog-sk-define-signal]  Define signal under point as a register at the top of the module."
+    \\[verilog-sk-define-signal]  Define signal under point as a register at the top of the module.
+
+All key bindings can be seen in a Verilog-buffer with \\[describe-bindings].
+Key bindings specific to `verilog-mode-map' are:
+
+\\{verilog-mode-map}"
   (interactive)
   (kill-all-local-variables)
   (use-local-map verilog-mode-map)
@@ -2411,6 +2436,11 @@ With optional ARG, remove existing end of line comments."
      (t
       (newline))
      )))
+
+(defun electric-verilog-terminate-and-indent ()
+  "Insert a newline and indent for the next statement."
+  (interactive)
+  (electric-verilog-terminate-line 1))
 
 (defun electric-verilog-semi ()
   "Insert `;' character and reindent the line."
