@@ -297,25 +297,39 @@ STRING should be given if the last search was by `string-match' on STRING."
   "Customize AUTO actions when expanding verilog source text"
   :group 'verilog-mode)
 
-(defcustom verilog-linter "surelint --std --synth --style --sim --race --fsm --msglimit=none "
+(defcustom verilog-linter
+  "echo 'No verilog-linter set, see \"M-x describe-variable verilog-linter\"'"
   "*Unix program and arguments to call to run a lint checker on verilog source.
-Invoked when you type \\[compile].  \\[next-error] will take you to
-the next lint error as expected."
+Depending on the `verilog-set-compile-command', this may be invoked when
+you type \\[compile]. When the compile completes, \\[next-error] will take
+you to the next lint error."
   :type 'string
   :group 'verilog-mode-actions)
 
-(defcustom verilog-coverage "surecov --code --fsm --expr "
-  "*Program and arguments to use to annotate for coverage verilog source."
+(defcustom verilog-coverage
+  "echo 'No verilog-coverage set, see \"M-x describe-variable verilog-coverage\"'"
+  "*Program and arguments to use to annotate for coverage verilog source.
+Depending on the `verilog-set-compile-command', this may be invoked when
+you type \\[compile]. When the compile completes, \\[next-error] will take
+you to the next lint error."
   :type 'string
   :group 'verilog-mode-actions)
 
-(defcustom verilog-simulator "verilog "
-  "*Program and arguments to use to interpret verilog source."
+(defcustom verilog-simulator
+  "echo 'No verilog-simulator set, see \"M-x describe-variable verilog-simulator\"'"
+  "*Program and arguments to use to interpret verilog source.
+Depending on the `verilog-set-compile-command', this may be invoked when
+you type \\[compile]. When the compile completes, \\[next-error] will take
+you to the next lint error."
   :type 'string
   :group 'verilog-mode-actions)
 
-(defcustom verilog-compiler "vcs "
-  "*Program and arguments to use to compile verilog source."
+(defcustom verilog-compiler
+  "echo 'No verilog-compiler set, see \"M-x describe-variable verilog-compiler\"'"
+  "*Program and arguments to use to compile verilog source.
+Depending on the `verilog-set-compile-command', this may be invoked when
+you type \\[compile]. When the compile completes, \\[next-error] will take
+you to the next lint error."
   :type 'string
   :group 'verilog-mode-actions)
 
@@ -323,7 +337,7 @@ the next lint error as expected."
   "Which tool to use for building compiler-command.
 Either nil, `verilog-linter, `verilog-coverage, `verilog-simulator, or
 `verilog-compiler.  Alternatively use the \"Choose Compilation Action\"
-menu.")
+menu.  See `verilog-set-compile-command' for more information.")
 
 (defcustom verilog-highlight-translate-off nil
   "*Non-nil means background-highlight code excluded from translation.
@@ -1029,7 +1043,18 @@ If set will become buffer local.")
 ;; compilation program
 (defun verilog-set-compile-command ()
   "Function to compute shell command to compile verilog.
-Can be the path and arguments for your Verilog simulator:
+
+This reads `verilog-tool' and sets `compile-command'.  This specifies the
+program that executes when you type \\[compile] or
+\\[verilog-auto-save-compile].
+
+By default `verilog-tool' uses a Makefile if one exists in the current
+directory.  If not, it is set to the `verilog-linter', `verilog-coverage',
+`verilog-simulator', or `verilog-compiler' variables, as selected with the
+Verilog -> \"Choose Compilation Action\" menu.
+
+You should set `verilog-tool' or the other variables to the path and
+arguments for your Verilog simulator.  For example:
     \"vcs -p123 -O\"
 or a string like:
     \"(cd /tmp; surecov %s)\".
