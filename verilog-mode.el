@@ -93,6 +93,9 @@
 ;; This variable will always hold the version number of the mode
 (defconst verilog-mode-version "__VMVERSION__"
   "Version of this verilog mode.")
+(defconst verilog-mode-release-date "__VMVERSION__"
+  "Version of this verilog mode.")
+
 (defconst verilog-running-on-xemacs (string-match "XEmacs" emacs-version))
 (defun verilog-version ()
   "Inform caller of the version of this file."
@@ -1175,7 +1178,7 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
 		"end"
 		"endcase"
 		"endclass"
-		"endcovergroup"
+		"endgroup"
 		"endfunction"
 		"endmodule"
 		"endprogram"
@@ -1211,7 +1214,7 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
 	  "\\(interface\\)\\|"     ; 9
 	  "\\(package\\)\\|"       ; 10
 	  "\\(class\\)\\|"         ; 11
-          "\\(covergroup\\)\\|"    ; 12
+          "\\(group\\)\\|"    ; 12
           "\\(program\\)\\|"	   ; 13
           "\\(sequence\\)\\|"	   ; 14
 	  "\\)\\>\\)"))
@@ -1278,7 +1281,8 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
        "property"
        "specify"
        "table"
-       "task"))))
+       "task"
+       ))))
 ;; These are the same words, in a specific order in the regular
 ;; expression so that matching will work nicely for
 ;; verilog-forward-sexp and verilog-calc-indent
@@ -1286,17 +1290,17 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
 (defconst verilog-beg-block-re-ordered
   ( concat "\\<"
 	   "\\(begin\\)\\|"		;1
-	   "\\(randcase\\|case[xz]?\\)\\|"
+	   "\\(randcase\\|case[xz]?\\)\\|" ; 2
 	   "\\(fork\\)\\|"		;3
 	   "\\(class\\)\\|"		;4
-	   "\\(covergroup\\)\\|"	;5
-	   "\\(table\\)\\|"		;6
-	   "\\(specify\\)\\|"		;7
-	   "\\(function\\)\\|"		;8
-	   "\\(task\\)\\|"		;9
-	   "\\(generate\\)\\|"		;10
+	   "\\(table\\)\\|"		;5
+	   "\\(specify\\)\\|"		;6
+	   "\\(function\\)\\|"		;7
+	   "\\(task\\)\\|"		;8
+	   "\\(generate\\)\\|"		;9
+	   "\\(covergroup\\)\\|"	;10
 	   "\\(property\\)\\|"		;11
-	   "\\(sequence\\)"		;12
+	   "\\(\\(rand\\)?sequence\\)"  ;12
 	   "\\>"))
 
 (defconst verilog-end-block-ordered-rry
@@ -1311,7 +1315,7 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
     "\\(\\<task\\>\\)\\|\\(\\<endtask\\>\\)"
     "\\(\\<covergroup\\>\\)\\|\\(\\<endgroup\\>\\)"
     "\\(\\<property\\>\\)\\|\\(\\<endproperty\\>\\)"
-    "\\(\\<sequence\\>\\)\\|\\(\\<endsequence\\>\\)"
+    "\\(\\<\\(rand\\)?sequence\\>\\)\\|\\(\\<endsequence\\>\\)"
     ] )
 
 (defconst verilog-nameable-item-re
@@ -1334,6 +1338,11 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
        "endtable"
        "endtask" )
      )))
+
+(defconst verilog-declaration-opener
+  (eval-when-compile
+    (verilog-regexp-words
+     `("module" "begin" "task" "function"))))
 
 (defconst verilog-declaration-re
   (eval-when-compile
@@ -1414,7 +1423,7 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
        "primitive" "endprimative"
        "program" "endprogram"
        "property" "endproperty"
-       "sequence" "endsequence"
+       "sequence" "randsequence" "endsequence"
        "specify" "endspecify"
        "table" "endtable"
        "task" "endtask"
@@ -1719,6 +1728,20 @@ See also `verilog-font-lock-extra-types'.")
   "Font lock mode face used to highlight P1800 keywords."
   :group 'font-lock-highlighting-faces)
 
+(defvar verilog-font-lock-ams-face
+  'verilog-font-lock-ams-face
+  "Font to use for Analog/Mixed Signal keywords.")
+(defface verilog-font-lock-ams-face
+  '((((class color)
+      (background light))
+     (:foreground "Purple" :bold t ))
+    (((class color)
+      (background dark))
+     (:foreground "orange1" :bold t ))
+    (t (:italic t)))
+  "Font lock mode face used to highlight P1800 keywords."
+  :group 'font-lock-highlighting-faces)
+
 (let* ((verilog-type-font-keywords
 	(eval-when-compile
 	  (verilog-regexp-opt
@@ -1764,6 +1787,20 @@ See also `verilog-font-lock-extra-types'.")
 	     "wait_order" "weak0" "weak1" "wildcard" "with" "within"
 	     ) nil )))
 
+       (verilog-ams-keywords
+	(eval-when-compile
+	  (verilog-regexp-opt
+	   '("above" "abs" "absdelay" "acos" "acosh" "ac_stim"
+	     "aliasparam" "analog" "analysis" "asin" "asinh" "atan" "atan2" "atanh"
+	     "branch" "ceil" "connectmodule" "connectrules" "cos" "cosh" "ddt"
+	     "ddx" "discipline" "driver_update" "enddiscipline" "endconnectrules"
+	     "endnature" "endparamset" "exclude" "exp" "final_step" "flicker_noise"
+	     "floor" "flow" "from" "ground" "hypot" "idt" "idtmod" "inf"
+	     "initial_step" "laplace_nd" "laplace_np" "laplace_zd" "laplace_zp"
+	     "last_crossing" "limexp" "ln" "log" "max" "min" "nature"
+	     "net_resolution" "noise_table" "paramset" "potential" "pow" "sin"
+	     "sinh" "slew" "sqrt" "tan" "tanh" "timer" "transition" "white_noise"
+	     "wreal" "zi_nd" "zi_np" "zi_zd" ) nil )))
 
        (verilog-font-keywords
 	(eval-when-compile
@@ -1772,8 +1809,8 @@ See also `verilog-font-lock-extra-types'.")
 	     "assign" "begin" "case" "casex" "casez" "randcase" "deassign"
 	     "default" "disable" "else" "end" "endcase" "endfunction"
 	     "endgenerate" "endinterface" "endmodule" "endprimitive"
-	     "endspecify" "endtable" "endtask" "final" "for" "force" "return" "break" "continue"
-	     "forever" "fork" "function" "generate" "if" "iff" "initial"
+	     "endspecify" "endtable" "endtask" "final" "for" "force" "return" "break" 
+	     "continue" "forever" "fork" "function" "generate" "if" "iff" "initial"
 	     "interface" "join" "join_any" "join_none" "macromodule" "module" "negedge"
 	     "package" "endpackage" "always" "always_comb" "always_ff"
 	     "always_latch" "posedge" "primitive" "priority" "release"
@@ -1794,6 +1831,9 @@ See also `verilog-font-lock-extra-types'.")
 	 ;; Fontify IEEE-P1800 keywords
 	 (cons (concat "\\<\\(" verilog-p1800-keywords "\\)\\>")
 	       'verilog-font-lock-p1800-face)
+	 ;; Fontify Verilog-AMS keywords
+	 (cons (concat "\\<\\(" verilog-ams-keywords "\\)\\>")
+	       'verilog-font-lock-ams-face)
 
 	 ))
 
@@ -1954,6 +1994,7 @@ Use filename, if current buffer being edited shorten to just buffer name."
 
 (defun verilog-forward-sexp ()
   (let ((reg)
+	(md 2)
 	(st (point)))
     (if (not (looking-at "\\<"))
 	(forward-word -1))
@@ -1961,14 +2002,15 @@ Use filename, if current buffer being edited shorten to just buffer name."
      ((verilog-skip-forward-comment-or-string)
       (verilog-forward-syntactic-ws)
       )
-     ((looking-at verilog-beg-block-re-ordered);; begin|case|fork|class|table|specify|function|task|generate|covergroup|property
+     ((looking-at verilog-beg-block-re-ordered);; begin|case|fork|class|table|specify|function|task|generate|covergroup|property|sequence
       (cond
        ((match-end 1) ; end
 	;; Search forward for matching begin
 	(setq reg "\\(\\<begin\\>\\)\\|\\(\\<end\\>\\)" ))
        ((match-end 2) ; endcase
 	;; Search forward for matching case
-	(setq reg "\\(\\<randcase\\>\\|\\<case[xz]?\\>[^:]\\)\\|\\(\\<endcase\\>\\)" ))
+	(setq reg "\\(\\<randcase\\>\\|\\<case[xz]?\\>[^:]\\)\\|\\(\\<endcase\\>\\)" )
+	)
        ((match-end 3) ; join
 	;; Search forward for matching fork
 	(setq reg "\\(\\<fork\\>\\)\\|\\(\\<join\\(_any\\|_none\\)?\\>\\)" ))
@@ -1998,14 +2040,17 @@ Use filename, if current buffer being edited shorten to just buffer name."
 	(setq reg "\\(\\<property\\>\\)\\|\\(\\<endproperty\\>\\)" ))
        ((match-end 12) ; endsequence
 	;; Search forward for matching sequence
-	(setq reg "\\(\\<sequence\\>\\)\\|\\(\\<endsequence\\>\\)" ))
+	(setq reg "\\(\\<\\(rand\\)?sequence\\>\\)\\|\\(\\<endsequence\\>\\)" )
+	(setq md 3) ; 3 to get to endsequence in the reg above
+	)
+       
        )
       (if (forward-word 1)
 	  (catch 'skip
 	    (let ((nest 1))
 	      (while (verilog-re-search-forward reg nil 'move)
 		(cond
-		 ((match-end 2) ; end
+		 ((match-end md) ; the closer in reg
 		  (setq nest (1- nest))
 		  (if (= 0 nest)
 		      (throw 'skip 1)))
@@ -2189,8 +2234,23 @@ so there may be a large up front penalty for the first search."
 
 ;; initialize fontification for Verilog Mode
 (verilog-font-lock-init)
-
-
+;; start up message
+(defconst verilog-startup-message-lines
+  '("Please use \\[verilog-submit-bug-report] to report bugs."
+    "Visit http://www.verilog.com to check for updates"
+    ))
+(defconst verilog-startup-message-displayed t)
+(defun verilog-display-startup-message ()
+  (if (not verilog-startup-message-displayed)
+      (if (sit-for 5)
+	  (let ((lines verilog-startup-message-lines))
+	    (message "verilog-mode version %s, released %s; type \\[describe-mode] for help"
+		     verilog-mode-version verilog-mode-release-date)
+	    (setq verilog-startup-message-displayed t)
+	    (while (and (sit-for 4) lines)
+	      (message (substitute-command-keys (car lines)))
+	      (setq lines (cdr lines)))))
+    (message "")))
 ;;
 ;;
 ;;  Mode
@@ -2388,6 +2448,9 @@ Key bindings specific to `verilog-mode-map' are:
 	  (cons '(verilog-mode-mode  "\\<begin\\>" "\\<end\\>" nil
 			     verilog-forward-sexp-function)
 		hs-special-modes-alist)))
+  ;; Display version splash information.
+  (verilog-display-startup-message)
+
   ;; Stuff for autos
   (add-hook 'write-contents-hooks 'verilog-auto-save-check) ; already local
 ;;  (verilog-auto-reeval-locals t)   ; Save locals in case user changes them
@@ -2471,6 +2534,7 @@ With optional ARG, remove existing end of line comments."
   "Insert `;' character and reindent the line."
   (interactive)
   (insert last-command-char)
+
   (if (or (verilog-in-comment-or-string-p)
 	  (verilog-in-escaped-name-p))
       ()
@@ -3405,7 +3469,7 @@ Insert `// NAME ' if this line ends a function, task, module, primitive or inter
 		   ((match-end 13) ;; of verilog-end-block-ordered-re
 		    (setq reg "\\(\\<program\\>\\)\\|\\(\\<\\(endprogram\\|primitive\\|interface\\|\\(macro\\)?module\\)\\>\\)"))
 		   ((match-end 14) ;; of verilog-end-block-ordered-re
-		    (setq reg "\\(\\<sequence\\>\\)\\|\\(\\<\\(endsequence\\|primitive\\|interface\\|\\(macro\\)?module\\)\\>\\)"))
+		    (setq reg "\\(\\<\\(rand\\)?sequence\\>\\)\\|\\(\\<\\(endsequence\\|primitive\\|interface\\|\\(macro\\)?module\\)\\>\\)"))
 		   )
 		  (let (b e)
 		    (save-excursion
@@ -4087,7 +4151,7 @@ from endcase to matching case, and so on."
       (setq reg "\\(\\<interface\\>\\)\\|\\(\\<endinterface\\>\\)" ))
      ((looking-at "\\<endsequence\\>")
       ;; 12: Search back for matching interface
-      (setq reg "\\(\\<sequence\\>\\)\\|\\(\\<endsequence\\>\\)" ))
+      (setq reg "\\(\\<\\(rand\\)?sequence\\>\\)\\|\\(\\<endsequence\\>\\)" ))
      )
     (if reg
 	(catch 'skip
@@ -4899,7 +4963,8 @@ BASEIND is the base indent to offset everything."
   (interactive)
   (let ((pos (point-marker))
 	(lim (save-excursion
-	       (verilog-re-search-backward "\\(\\<begin\\>\\)\\|\\(\\<module\\>\\)" nil 'move)
+	       ;; (verilog-re-search-backward verilog-declaration-opener nil 'move)
+	       (verilog-re-search-backward "\\(\\<begin\\>\\)\\|\\(\\<module\\>\\)\\|\\(\\<task\\>\\)" nil 'move)
 	       (point)))
 	(ind)
 	(val)
