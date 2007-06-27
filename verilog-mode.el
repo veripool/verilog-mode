@@ -1464,14 +1464,17 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
        ))))
 
 (defconst verilog-complete-reg
-  (eval-when-compile
-    (verilog-regexp-words
-     `(
-       "always" "assign" "always_latch" "always_ff" "always_comb" "constraint" "extern"
-       "import" "initial" "final" "repeat" "case" "casex" "casez" "randcase" "while"
-       "if" "for" "forever" "else" "parameter" "task" "function" "do" "foreach"
-       ))))
-
+  (concat
+   "\\(extern\\s-+\\|virtual\\s-+\\|protected\\s-+\\)*\\(function\\|task\\)\\|"
+   "\\(typedef\\s-+\\)*\\(struct\\|union\\|class\\)\\|"
+   (eval-when-compile
+     (verilog-regexp-words
+      `(
+	"always" "assign" "always_latch" "always_ff" "always_comb" "constraint" 
+	"import" "initial" "final" "repeat" "case" "casex" "casez" "randcase" "while"
+	"if" "for" "forever" "else" "parameter" "do" "foreach"
+	)))))
+  
 (defconst verilog-end-statement-re
   (concat "\\(" verilog-beg-block-re "\\)\\|\\("
 	  verilog-end-block-re "\\)"))
@@ -1488,7 +1491,7 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
   "String used to mark end of excluded text.")
 
 (defconst verilog-keywords
-  '( "`case" "`default" "`define" "`define" "`else" "`endfor" "`endif"
+  '( "`case" "`default" "`define" "`else" "`endfor" "`endif"
      "`endprotect" "`endswitch" "`endwhile" "`for" "`format" "`if" "`ifdef"
      "`ifndef" "`include" "`let" "`protect" "`switch" "`timescale"
      "`time_scale" "`undef" "`while"
@@ -1867,7 +1870,7 @@ See also `verilog-font-lock-extra-types'.")
 		 ;; Fontify escaped names
 		 '("\\(\\\\\\S-*\\s-\\)"  0 font-lock-function-name-face)
 		 ;; Fontify macro definitions/ uses
-		 '("`\\s-*[A-Za-z][A-Za-z0-9_]*" 0 font-lock-function-name-face)
+		 '("`\\s-*[A-Za-z][A-Za-z0-9_]*" 0 font-lock-preprocessor-face)
 		 ;; Fontify delays/numbers
 		 '("\\(@\\)\\|\\(#\\s-*\\(\\(\[0-9_.\]+\\('s?[hdxbo][0-9a-fA-F_xz]*\\)?\\)\\|\\(([^()]+)\\|\\sw+\\)\\)\\)"
 		   0 font-lock-type-face append)
@@ -2873,22 +2876,15 @@ With ARG, first kill any existing labels."
   "Move backward to beginning of statement."
   (interactive)
   (while (save-excursion
-	   (and
-	    (or
-	     (and (looking-at "\\<function\\|task\\>")
-		  (save-excursion
-		    (verilog-backward-token)
-		    (looking-at "\\<extern\\|context\\>")))
-	     (not (looking-at verilog-complete-reg)))
-	    (verilog-backward-syntactic-ws)
-	    (not (or
-		  (bolp)
-		  (= (preceding-char) ?\;)
-		  (save-excursion
-		    (verilog-backward-token)
-		    (looking-at verilog-end-block-re))
-		  ))
-	    ))
+	   (not (looking-at verilog-complete-reg))
+	   (verilog-backward-syntactic-ws)
+	   (not (or
+		 (bolp)
+		 (= (preceding-char) ?\;)
+		 (save-excursion
+		   (verilog-backward-token)
+		   (looking-at verilog-end-block-re))
+		 )))
     (skip-chars-backward " \t")
     (verilog-backward-token))
   (let ((last (point)))
@@ -4025,12 +4021,17 @@ type.  Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
        ((looking-at verilog-beg-block-re-ordered)
 	(cond
 	 ((match-end 2)  (throw 'nesting 'case))
-	 ((looking-at "\\<function\\|task\\|property\\>") ;*sigh* could have extern function a(); or
-					                  ; assert property (p_1);
-	                                                  ; and we don't want to confuse this with
-	                                                  ; function a();
-	                                                  ; ...
-                                                          ; endfunction
+	 ;; need to conside typedef struct here...
+	 ((looking-at "\\<class\\|struct\\|function\\|task\\|property\\>")
+					; *sigh* These words have an optional prefix:
+					; extern {virtual|protected}? function a();
+					; assert property (p_1);
+	                                ; typedef class foo;
+					; and we don't want to confuse this with
+					; function a();
+	                                ; property
+					; ...
+					; endfunction
 	  (let ((here (point)))
 	    (save-excursion
 	      (verilog-beg-of-statement)
