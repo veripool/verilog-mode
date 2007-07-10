@@ -16,7 +16,7 @@ module ex_inject (i, o,/*AUTOARG*/
 
    autoinst_lopaz_srpad pad
      (.foo(bar),
-      .clk(newclk)
+      .clk(newclk),
       /*AUTOINST*/
       // Outputs
       .pin_in				(pin_in[2*w-1:0]),

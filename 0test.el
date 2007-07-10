@@ -65,6 +65,9 @@
     
   (defun verilog-test ()
     (let ((files (directory-files "tests")))
+      (when (getenv "VERILOG_MODE_TEST_FILE")
+	(setq files (list (getenv "VERILOG_MODE_TEST_FILE")))
+	(message "**** Only testing files in $VERILOG_MODE_TEST_FILE"))
       (while files
 	(setq file (car files))
 	(cond ((equal "." file))

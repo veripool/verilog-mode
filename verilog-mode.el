@@ -7670,27 +7670,34 @@ Typing \\[verilog-inject-auto] will make this into:
     ;; It's hard to distinguish modules; we'll instead search for pins.
     (while (verilog-re-search-forward-quick "\\.\\s *[a-zA-Z0-9`_\$]+\\s *(\\s *[a-zA-Z0-9`_\$]+\\s *)" nil t)
       (verilog-backward-open-paren) ;; Inst start
-      (forward-char 1)
-      (let ((indent-pt (+ (current-column)))
-	    (end-pt (save-excursion (verilog-forward-close-paren) (point))))
-	(cond ((verilog-re-search-forward "\\(/\\*AUTOINST\\*/\\|\\.\\*\\)" end-pt t)
-	       (goto-char end-pt)) ;; Already there, continue search with next instance
-	      (t
-	       ;; Delete identical interconnect
-	       (while (verilog-re-search-forward "\\.\\s *\\([a-zA-Z0-9`_\$]+\\)*\\s *(\\s *\\1*\\s *)\\s *" end-pt t)
-		 (delete-region (match-beginning 0) (match-end 0))
-		 (setq end-pt (- end-pt (- (match-end 0) (match-beginning 0)))) ;; Keep it correct
-		 (while (or (looking-at "[ \t\n\f,]+")
-		       (looking-at "//[^\n]*"))
-		   (delete-region (match-beginning 0) (match-end 0))
-		   (setq end-pt (- end-pt (- (match-end 0) (match-beginning 0))))))
-	       (verilog-forward-close-paren)
-	       (backward-char 1)
-	       (while (verilog-re-search-backward "[ \t\n\f]+" (- (point) 1) t)
-		 (delete-region (match-beginning 0) (match-end 0)))
-	       (insert "\n")
-	       (indent-to indent-pt)
-	       (insert "/*AUTOINST*/")))))))
+      (cond
+       ((= (preceding-char) ?\#)  ;; #(...) parameter section, not pin.  Skip.
+	(forward-char 1)
+	(verilog-forward-close-paren)) ;; Parameters done
+       (t
+	(forward-char 1)
+	(let ((indent-pt (+ (current-column)))
+	      (end-pt (save-excursion (verilog-forward-close-paren) (point))))
+	  (cond ((verilog-re-search-forward "\\(/\\*AUTOINST\\*/\\|\\.\\*\\)" end-pt t)
+		 (goto-char end-pt)) ;; Already there, continue search with next instance
+		(t
+		 ;; Delete identical interconnect
+		 (let ((case-fold-search nil))  ;; So we don't convert upper-to-lower, etc
+		   (while (verilog-re-search-forward "\\.\\s *\\([a-zA-Z0-9`_\$]+\\)*\\s *(\\s *\\1\\s *)\\s *" end-pt t)
+		     (delete-region (match-beginning 0) (match-end 0))
+		     (setq end-pt (- end-pt (- (match-end 0) (match-beginning 0)))) ;; Keep it correct
+		     (while (or (looking-at "[ \t\n\f,]+")
+				(looking-at "//[^\n]*"))
+		       (delete-region (match-beginning 0) (match-end 0))
+		       (setq end-pt (- end-pt (- (match-end 0) (match-beginning 0)))))))
+		 (verilog-forward-close-paren)
+		 (backward-char 1)
+		 ;; Not verilog-re-search, as we don't want to strip comments
+		 (while (re-search-backward "[ \t\n\f]+" (- (point) 1) t)
+		   (delete-region (match-beginning 0) (match-end 0)))
+		 (insert "\n")
+		 (indent-to indent-pt)
+		 (insert "/*AUTOINST*/")))))))))
 
 ;;
 ;; Auto save
@@ -7914,6 +7921,19 @@ Insert to INDENT-PT, use template TPL-LIST.
 ;;(verilog-auto-inst-port (list "foo" "[5:0]") 10 (list (list "foo" "a@\"(% (+ @ 1) 4)\"a")) "3")
 ;;(x "incom[@\"(+ (* 8 @) 7)\":@\"(* 8 @)\"]")
 ;;(x ".out (outgo[@\"(concat (+ (* 8 @) 7) \\\":\\\" ( * 8 @))\"]));")
+
+(defun verilog-auto-inst-first ()
+  "Insert , etc before first ever port in this instant, as part of \\[verilog-auto-inst]."
+  ;; Do we need a trailing comma?
+  ;; There maybe a ifdef or something similar before us.  What a mess.  Thus
+  ;; to avoid trouble we only insert on preceeding ) or *.
+  ;; Insert first port on new line
+  (insert "\n")  ;; Must insert before search, so point will move forward if insert comma
+  (save-excursion
+    (verilog-re-search-backward "[^ \t\n\f]" nil nil)
+    (when (looking-at ")\\|\\*")  ;; Generally don't insert, unless we are fairly sure
+      (forward-char 1)
+      (insert ","))))
 
 (defun verilog-auto-star ()
   "Expand SystemVerilog .* pins, as part of \\[verilog-auto].
@@ -8194,7 +8214,7 @@ Lisp Templates:
 	   (modi (verilog-modi-current))
 	   (vector-skip-list (unless verilog-auto-inst-vector
 			       (verilog-modi-get-signals modi)))
-	   submod submodi inst skip-pins tpl-list tpl-num)
+	   submod submodi inst skip-pins tpl-list tpl-num did-first)
       ;; Find module name that is instantiated
       (setq submod  (verilog-read-inst-module)
 	    inst (verilog-read-inst-name)
@@ -8216,15 +8236,13 @@ Lisp Templates:
 			    (match-string 1 inst)
 			  "")
 		tpl-list (aref tpl-info 1)))
-	;; .* needs a trailing comma
-	(when for-star (insert ","))
 	;; Find submodule's signals and dump
-	(insert "\n")
 	(let ((sig-list (verilog-signals-not-in
 			 (verilog-modi-get-outputs submodi)
 			 skip-pins))
 	      (vl-dir "output"))
 	  (when sig-list
+	    (when (not did-first) (verilog-auto-inst-first) (setq did-first t))
 	    (indent-to indent-pt)
 	    (insert "// Outputs\n")	;; Note these are searched for in verilog-read-sub-decls
 	    (mapcar (function (lambda (port)
@@ -8235,6 +8253,7 @@ Lisp Templates:
 			 skip-pins))
 	      (vl-dir "inout"))
 	  (when sig-list
+	    (when (not did-first) (verilog-auto-inst-first) (setq did-first t))
 	    (indent-to indent-pt)
 	    (insert "// Inouts\n")
 	    (mapcar (function (lambda (port)
@@ -8245,6 +8264,7 @@ Lisp Templates:
 			 skip-pins))
 	      (vl-dir "input"))
 	  (when sig-list
+	    (when (not did-first) (verilog-auto-inst-first) (setq did-first t))
 	    (indent-to indent-pt)
 	    (insert "// Inputs\n")
 	    (mapcar (function (lambda (port)
@@ -8252,7 +8272,8 @@ Lisp Templates:
 		    sig-list)))
 	;; Kill extra semi
 	(save-excursion
-	  (cond ((re-search-backward "," pt t)
+	  (cond (did-first
+		 (re-search-backward "," pt t)
 		 (delete-char 1)
 		 (insert ");")
 		 (search-forward "\n")	;; Added by inst-port
@@ -8261,9 +8282,6 @@ Lisp Templates:
 		     (delete-backward-char 1))
 		 (if (search-forward ";" nil t) ;; Don't error if user had syntax error and forgot it
 		     (delete-backward-char 1))
-		 )
-		(t
-		 (delete-backward-char 1)	;; Newline Inserted above
 		 )))
 	))))
 
@@ -8316,7 +8334,7 @@ Templates:
 	   (modi (verilog-modi-current))
 	   (vector-skip-list (unless verilog-auto-inst-vector
 			       (verilog-modi-get-signals modi)))
-	   submod submodi inst skip-pins tpl-list tpl-num)
+	   submod submodi inst skip-pins tpl-list tpl-num did-first)
       ;; Find module name that is instantiated
       (setq submod (save-excursion
 		     ;; Get to the point where AUTOINST normally is to read the module
@@ -8345,12 +8363,12 @@ Templates:
 			  "")
 		tpl-list (aref tpl-info 1)))
 	;; Find submodule's signals and dump
-	(insert "\n")
 	(let ((sig-list (verilog-signals-not-in
 			 (verilog-modi-get-gparams submodi)
 			 skip-pins))
 	      (vl-dir "parameter"))
 	  (when sig-list
+	    (when (not did-first) (verilog-auto-inst-first) (setq did-first t))
 	    (indent-to indent-pt)
 	    (insert "// Parameters\n")	;; Note these are searched for in verilog-read-sub-decls
 	    (mapcar (function (lambda (port)
@@ -8358,16 +8376,14 @@ Templates:
 		    sig-list)))
 	;; Kill extra semi
 	(save-excursion
-	  (cond ((re-search-backward "," pt t)
+	  (cond (did-first
+		 (re-search-backward "," pt t)
 		 (delete-char 1)
 		 (insert ")")
 		 (search-forward "\n")	;; Added by inst-port
 		 (delete-backward-char 1)
 		 (if (search-forward ")" nil t) ;; From user, moved up a line
 		     (delete-backward-char 1))
-		 )
-		(t
-		 (delete-backward-char 1)	;; Newline Inserted above
 		 )))
 	))))
 

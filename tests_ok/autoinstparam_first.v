@@ -16,7 +16,7 @@ module autoinstparam_first ();
 
    autoinstparam_first_sub
      #(
-       .BITSB				(2)
+       .BITSB				(2),
        /*AUTOINSTPARAM*/
        // Parameters
        .BITSA				(BITSA))
