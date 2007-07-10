@@ -647,6 +647,9 @@ the flags accepted by a standard Verilog-XL simulator.
     +libext+.v      Adds the extensions to `verilog-library-extensions'.
     -v filename     Adds the filename to `verilog-library-files'.
 
+    filename        Adds the filename to `verilog-library-files'.
+                    This is not recommended, -v is a better choice.
+
 You might want these defined in each file; put at the *END* of your file
 something like:
 
@@ -6831,6 +6834,9 @@ Some macros and such are also found and included.  For dinotrace.el"
        ((equal next-param "-y")
 	(setq next-param nil)
 	(verilog-add-list-unique `verilog-library-directories arg))
+       ;; Filename
+       ((string-match "^[^-+]" arg)
+	(verilog-add-list-unique `verilog-library-files arg))
        ;; Default - ignore; no warning
        )
       )
