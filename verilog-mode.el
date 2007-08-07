@@ -1264,7 +1264,7 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
    "\\(\\<always_latch\\>\\(\[ \t\]*@\\)?\\)\\|"
    "\\(@\\)\\|"
    "\\(\\<while\\>\\)\\|"
-   "\\(\\<for\\(ever\\)?\\>\\)\\|"
+   "\\(\\<for\\(ever\\|each\\)?\\>\\)\\|"
    "\\(\\<repeat\\>\\)\\|\\(\\<wait\\>\\)\\|"
    "#"))
 
@@ -1475,7 +1475,7 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
       `(
 	"always" "assign" "always_latch" "always_ff" "always_comb" "constraint" 
 	"import" "initial" "final" "repeat" "case" "casex" "casez" "randcase" "while"
-	"if" "for" "forever" "else" "parameter" "do" "foreach"
+	"if" "for" "forever" "foreach" "else" "parameter" "do" 
 	)))))
   
 (defconst verilog-end-statement-re
@@ -1873,7 +1873,9 @@ See also `verilog-font-lock-extra-types'.")
 		 ;; Fontify escaped names
 		 '("\\(\\\\\\S-*\\s-\\)"  0 font-lock-function-name-face)
 		 ;; Fontify macro definitions/ uses
-		 '("`\\s-*[A-Za-z][A-Za-z0-9_]*" 0 font-lock-preprocessor-face)
+		 '("`\\s-*[A-Za-z][A-Za-z0-9_]*" 0 (if (boundp 'font-lock-preprocessor-face)
+						       'font-lock-preprocessor-face
+						     'font-lock-type-face))
 		 ;; Fontify delays/numbers
 		 '("\\(@\\)\\|\\(#\\s-*\\(\\(\[0-9_.\]+\\('s?[hdxbo][0-9a-fA-F_xz]*\\)?\\)\\|\\(([^()]+)\\|\\sw+\\)\\)\\)"
 		   0 font-lock-type-face append)
@@ -4240,7 +4242,7 @@ Set point to where line starts"
       (let ((back (point)))
 	(forward-word -1)
 	(cond
-	 ((looking-at "\\<\\(always\\(_latch\\|_ff\\|_comb\\)?\\|case\\(\\|[xz]\\)\\|for\\(\\|ever\\)\\|i\\(f\\|nitial\\)\\|repeat\\|while\\)\\>")
+	 ((looking-at "\\<\\(always\\(_latch\\|_ff\\|_comb\\)?\\|case\\(\\|[xz]\\)\\|for\\(\\|each\\|ever\\)\\|i\\(f\\|nitial\\)\\|repeat\\|while\\)\\>")
 	  (not (looking-at "\\<randcase\\>\\|\\<case[xz]?\\>[^:]")))
 	 (t
 	  (goto-char back)
