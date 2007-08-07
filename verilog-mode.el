@@ -1091,7 +1091,9 @@ buffer, without the directory portion, will be substituted."
   "Replace meta-information in `compile-command'.
 Where __FILE__ appears in the string, the current buffer's file-name,
 without the directory portion, will be substituted."
-  (when (string-match "\\b__FILE__\\b" compile-command)
+  (when (and
+	 (stringp compile-command)
+	 (string-match "\\b__FILE__\\b" compile-command))
     (make-local-variable 'compile-command)
     (setq compile-command
 	  (verilog-string-replace-matches
