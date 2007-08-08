@@ -1170,10 +1170,6 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
 
 (defconst verilog-auto-end-comment-lines-re
   ;; Matches to names in this list cause auto-end-commentation
-  ;;
-  ;; "macromodule" "module" "primitive" "interface" "end" "endcase" "endfunction"
-  ;; "endtask" "endmodule" "endprimitive" "endinterface" "endspecify" "endtable" "join"
-  ;; "begin" "else" `{directives}
   (concat "\\("
 	  verilog-directive-re "\\)\\|\\("
 	  (eval-when-compile
@@ -1183,6 +1179,7 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
 		"end"
 		"endcase"
 		"endclass"
+		"endclocking"
 		"endgroup"
 		"endfunction"
 		"endmodule"
@@ -1219,9 +1216,10 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
 	  "\\(interface\\)\\|"     ; 9
 	  "\\(package\\)\\|"       ; 10
 	  "\\(class\\)\\|"         ; 11
-          "\\(group\\)\\|"    ; 12
+          "\\(group\\)\\|"         ; 12
           "\\(program\\)\\|"	   ; 13
           "\\(sequence\\)\\|"	   ; 14
+	  "\\(clocking\\)\\|"      ; 15
 	  "\\)\\>\\)"))
 (defconst verilog-end-block-re
   (eval-when-compile
@@ -1242,6 +1240,7 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
        "endpackage"
        "endprogram"
        "endsequence"
+       "endclocking"
        )
      )))
 
@@ -1252,6 +1251,7 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
    "\\(\\<fork\\>\\)\\|"
    "\\(\\<begin\\>\\)\\|"
    "\\(\\<if\\>\\)\\|"
+   "\\(\\<clocking\\>\\)\\|"   
    "\\(\\<else\\>\\)\\|"
    "\\(\\<end\\>.*\\<else\\>\\)\\|"
    "\\(\\<task\\>\\)\\|"
@@ -1280,6 +1280,7 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
     (verilog-regexp-words
      `("begin"
        "case" "casex" "casez" "randcase"
+       "clocking"
        "generate"
        "fork"
        "function"
@@ -1294,18 +1295,19 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
 
 (defconst verilog-beg-block-re-ordered
   ( concat "\\<"
-	   "\\(begin\\)\\|"		;1
-	   "\\(randcase\\|case[xz]?\\)\\|" ; 2
-	   "\\(fork\\)\\|"		;3
-	   "\\(class\\)\\|"		;4
-	   "\\(table\\)\\|"		;5
-	   "\\(specify\\)\\|"		;6
-	   "\\(function\\)\\|"		;7
-	   "\\(task\\)\\|"		;8
-	   "\\(generate\\)\\|"		;9
-	   "\\(covergroup\\)\\|"	;10
-	   "\\(property\\)\\|"		;11
-	   "\\(\\(rand\\)?sequence\\)"  ;12
+	   "\\(begin\\)"		;1
+	   "\\|\\(randcase\\|case[xz]?\\)" ; 2
+	   "\\|\\(fork\\)"		;3
+	   "\\|\\(class\\)"		;4
+	   "\\|\\(table\\)"		;5
+	   "\\|\\(specify\\)"		;6
+	   "\\|\\(function\\)"		;7
+	   "\\|\\(task\\)"		;8
+	   "\\|\\(generate\\)"		;9
+	   "\\|\\(covergroup\\)"	;10
+	   "\\|\\(property\\)"		;11
+	   "\\|\\(\\(rand\\)?sequence\\)"  ;12
+	   "\\|\\(clocking\\)"          ;13
 	   "\\>"))
 
 (defconst verilog-end-block-ordered-rry
@@ -1321,6 +1323,7 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
     "\\(\\<covergroup\\>\\)\\|\\(\\<endgroup\\>\\)"
     "\\(\\<property\\>\\)\\|\\(\\<endproperty\\>\\)"
     "\\(\\<\\(rand\\)?sequence\\>\\)\\|\\(\\<endsequence\\>\\)"
+    "\\(\\<clocking\\>\\)\\|\\(\\<endclocking\\>\\)"
     ] )
 
 (defconst verilog-nameable-item-re
@@ -1333,6 +1336,7 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
        "endcase"
        "endconfig"
        "endclass"
+       "endclocking"
        "endfunction"
        "endgenerate"
        "endmodule"
@@ -1415,6 +1419,7 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
        "begin" "end"
        "case" "casex" "casez" "randcase" "endcase"
        "class" "endclass"
+       "clocking" "endclocking"
        "config" "endconfig"
        "covergroup" "endgroup"
        "fork" "join" "join_any" "join_none"
@@ -2012,7 +2017,7 @@ Use filename, if current buffer being edited shorten to just buffer name."
      ((verilog-skip-forward-comment-or-string)
       (verilog-forward-syntactic-ws)
       )
-     ((looking-at verilog-beg-block-re-ordered);; begin|case|fork|class|table|specify|function|task|generate|covergroup|property|sequence
+     ((looking-at verilog-beg-block-re-ordered);; begin|case|fork|class|table|specify|function|task|generate|covergroup|property|sequence|clocking
       (cond
        ((match-end 1) ; end
 	;; Search forward for matching begin
@@ -2053,7 +2058,9 @@ Use filename, if current buffer being edited shorten to just buffer name."
 	(setq reg "\\(\\<\\(rand\\)?sequence\\>\\)\\|\\(\\<endsequence\\>\\)" )
 	(setq md 3) ; 3 to get to endsequence in the reg above
 	)
-       
+       ((match-end 13) ; endclocking
+	;; Search forward for matching clocking
+	(setq reg "\\(\\<clocking\\>\\)\\|\\(\\<endclocking\\>\\)" ))
        )
       (if (forward-word 1)
 	  (catch 'skip
@@ -3473,6 +3480,10 @@ Insert `// NAME ' if this line ends a function, task, module, primitive or inter
 		    (setq reg "\\(\\<program\\>\\)\\|\\(\\<\\(endprogram\\|primitive\\|interface\\|\\(macro\\)?module\\)\\>\\)"))
 		   ((match-end 14) ;; of verilog-end-block-ordered-re
 		    (setq reg "\\(\\<\\(rand\\)?sequence\\>\\)\\|\\(\\<\\(endsequence\\|primitive\\|interface\\|\\(macro\\)?module\\)\\>\\)"))
+		   ((match-end 15) ;; of verilog-end-block-ordered-re
+		    (setq reg "\\(\\<clocking\\>\\)\\|\\<endclocking\\>"))
+
+		   (t (error "Problem in verilog-set-auto-endcomments"))
 		   )
 		  (let (b e)
 		    (save-excursion
@@ -3494,7 +3505,7 @@ Insert `// NAME ' if this line ends a function, task, module, primitive or inter
 			(setq string (buffer-substring b e)))
 		       (t
 			(ding 't)
-			(setq string "unmatched end(function|task|module|primitive|interface|package|class)")))))
+			(setq string "unmatched end(function|task|module|primitive|interface|package|class|clocking)")))))
 		  (end-of-line)
 		  (insert (concat " // " string )))
 		))))))))))
@@ -4158,8 +4169,11 @@ from endcase to matching case, and so on."
       ;; 12: Search back for matching interface
       (setq reg "\\(\\<interface\\>\\)\\|\\(\\<endinterface\\>\\)" ))
      ((looking-at "\\<endsequence\\>")
-      ;; 12: Search back for matching interface
+      ;; 12: Search back for matching sequence
       (setq reg "\\(\\<\\(rand\\)?sequence\\>\\)\\|\\(\\<endsequence\\>\\)" ))
+     ((looking-at "\\<endclocking\\>")
+      ;; 12: Search back for matching clocking
+      (setq reg "\\(\\<clocking\\)\\|\\(\\<endclocking\\>\\)" ))
      )
     (if reg
 	(catch 'skip
