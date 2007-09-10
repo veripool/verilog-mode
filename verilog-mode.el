@@ -6030,7 +6030,7 @@ Optional NUM-PARAM and MAX-PARAM check for a specific number of parameters."
   "Compute signal declaration information for the current module at point.
 Return a array of [outputs inouts inputs wire reg assign const]."
   (let ((end-mod-point (or (verilog-get-end-of-defun t) (point-max)))
-	(functask 0) (paren 0)
+	(functask 0) (paren 0) (sig-paren 0)
 	sigs-in sigs-out sigs-inout sigs-wire sigs-reg sigs-assign sigs-const sigs-gparam
 	vec expect-signal keywd newsig rvalue enum io signed typedefed multidim)
     (save-excursion
@@ -6061,11 +6061,11 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 	  (setq vec nil  io nil  expect-signal nil  newsig nil  paren 0  rvalue nil)
 	  (forward-char 1))
 	 ((eq ?= (following-char))
-	  (setq rvalue t newsig nil)
+	  (setq rvalue t  newsig nil)
 	  (forward-char 1))
-	 ((and rvalue
+	 ((and (or rvalue sig-paren)
 	       (cond ((and (eq ?, (following-char))
-			   (eq paren 0))
+			   (eq paren sig-paren))
 		      (setq rvalue nil)
 		      (forward-char 1)
 		      t)
@@ -6077,6 +6077,8 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 		     ((looking-at "[})]")
 		      (setq paren (1- paren))
 		      (forward-char 1)
+		      (when (< paren sig-paren)
+			(setq expect-signal nil))   ; ) that ends variables inside v2k arg list
 		      t)
 		     )))
 	 ((looking-at "\\s-*\\(\\[[^]]+\\]\\)")
@@ -6097,28 +6099,36 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 	  (when (string-match "^\\\\" keywd)
 	    (setq keywd (concat keywd " ")))  ;; Escaped ID needs space at end
 	  (cond ((equal keywd "input")
-		 (setq vec nil enum nil  rvalue nil  newsig nil  signed nil  typedefed nil  multidim nil  io t  expect-signal 'sigs-in))
+		 (setq vec nil enum nil  rvalue nil  newsig nil  signed nil  typedefed nil  multidim nil  sig-paren paren
+		       expect-signal 'sigs-in  io t))
 		((equal keywd "output")
-		 (setq vec nil enum nil  rvalue nil  newsig nil  signed nil  typedefed nil  multidim nil  io t  expect-signal 'sigs-out))
+		 (setq vec nil enum nil  rvalue nil  newsig nil  signed nil  typedefed nil  multidim nil  sig-paren paren
+		       expect-signal 'sigs-out  io t))
 		((equal keywd "inout")
-		 (setq vec nil enum nil  rvalue nil  newsig nil  signed nil  typedefed nil  multidim nil  io t  expect-signal 'sigs-inout))
+		 (setq vec nil enum nil  rvalue nil  newsig nil  signed nil  typedefed nil  multidim nil  sig-paren paren
+		       expect-signal 'sigs-inout  io t))
 		((or (equal keywd "wire")
 		     (equal keywd "tri")
 		     (equal keywd "tri0")
 		     (equal keywd "tri1"))
-		 (unless io (setq vec nil  enum nil  rvalue nil  signed nil  typedefed nil  multidim nil  expect-signal 'sigs-wire)))
+		 (unless io (setq vec nil  enum nil  rvalue nil  signed nil  typedefed nil  multidim nil  sig-paren paren
+				  expect-signal 'sigs-wire)))
 		((or (equal keywd "reg")
 		     (equal keywd "trireg"))
-		 (unless io (setq vec nil  enum nil  rvalue nil  signed nil  typedefed nil  multidim nil  expect-signal 'sigs-reg)))
+		 (unless io (setq vec nil  enum nil  rvalue nil  signed nil  typedefed nil  multidim nil  sig-paren paren
+				  expect-signal 'sigs-reg)))
 		((equal keywd "assign")
-		 (setq vec nil  enum nil  rvalue nil  signed nil  typedefed nil  multidim nil  expect-signal 'sigs-assign))
+		 (setq vec nil  enum nil  rvalue nil  signed nil  typedefed nil  multidim nil  sig-paren paren
+		       expect-signal 'sigs-assign))
 		((or (equal keywd "supply0")
 		     (equal keywd "supply1")
 		     (equal keywd "supply")
 		     (equal keywd "localparam"))
-		 (unless io (setq vec nil  enum nil  rvalue nil  signed nil  typedefed nil  multidim nil  expect-signal 'sigs-const)))
+		 (unless io (setq vec nil  enum nil  rvalue nil  signed nil  typedefed nil  multidim nil  sig-paren paren
+				  expect-signal 'sigs-const)))
 		((or (equal keywd "parameter"))
-		 (unless io (setq vec nil  enum nil  rvalue nil  signed nil  typedefed nil  multidim nil  expect-signal 'sigs-gparam)))
+		 (unless io (setq vec nil  enum nil  rvalue nil  signed nil  typedefed nil  multidim nil  sig-paren paren
+				  expect-signal 'sigs-gparam)))
 		((equal keywd "signed")
 		 (setq signed "signed"))
 		((or (equal keywd "function")
@@ -6134,8 +6144,8 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 		 (setq typedefed keywd))
 		((and expect-signal
 		      (eq functask 0)
-		      (not (member keywd verilog-keywords))
-		      (not rvalue))
+		      (not rvalue)
+		      (not (member keywd verilog-keywords)))
 		 ;; Add new signal to expect-signal's variable
 		 (setq newsig (list keywd vec nil nil enum signed typedefed multidim))
 		 (set expect-signal (cons newsig
@@ -6421,7 +6431,7 @@ IGNORE-NEXT is true to ignore next token, fake from inside case statement."
 	    (forward-char (length keywd)))
 	   ;; Standard tokens...
 	   ((equal keywd ";")
-	    (setq ignore-next nil rvalue semi-rvalue)
+	    (setq ignore-next nil  rvalue semi-rvalue)
 	    ;; Final statement at top level loop?
 	    (when (not exit-keywd)
 	      ;;(if dbg (setq dbg (concat dbg (format "\ttop-end-check %s\n" keywd))))
@@ -6461,14 +6471,14 @@ IGNORE-NEXT is true to ignore next token, fake from inside case statement."
 	    (skip-syntax-forward "w_")
 	    (verilog-read-always-signals-recurse "end" nil nil)
 	    ;;(if dbg (setq dbg (concat dbg (format "\tgot-end %s\n" exit-keywd))))
-	    (setq ignore-next nil rvalue semi-rvalue)
+	    (setq ignore-next nil  rvalue semi-rvalue)
 	    (if (not exit-keywd) (setq end-else-check t)))
 	   ((or (equal keywd "case")
 		(equal keywd "casex")
 		(equal keywd "casez"))
 	    (skip-syntax-forward "w_")
 	    (verilog-read-always-signals-recurse "endcase" t nil)
-	    (setq ignore-next nil rvalue semi-rvalue)
+	    (setq ignore-next nil  rvalue semi-rvalue)
 	    (if (not exit-keywd) (setq gotend t)))	;; top level begin/end
 	   ((string-match "^[$`a-zA-Z_]" keywd)	;; not exactly word constituent
 	    (cond ((or (equal keywd "`ifdef")
