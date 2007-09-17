@@ -1356,8 +1356,8 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
 (defconst verilog-declaration-re
   (eval-when-compile
     (verilog-regexp-words
-     `("assign" "defparam" "event" "inout" "input" "integer" "localparam" "output"
-       "parameter" "real" "realtime" "reg" "supply" "supply0" "supply1" "time"
+     `("assign" "defparam" "event" "inout" "input" "integer" "localparam" "mailbox" "output"
+       "parameter" "real" "realtime" "reg" "semaphore" "supply" "supply0" "supply1" "time"
        "tri" "tri0" "tri1" "triand" "trior" "trireg" "wand" "wire" "typedef"
        "struct" "logic" "bit" "genvar" "wor"))))
 (defconst verilog-range-re "\\(\\[[^]]*\\]\\s-*\\)+")
@@ -1472,18 +1472,21 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
      `(
        "endmodule" "endprimitive" "endinterface" "endpackage" "endprogram" "endclass"
        ))))
-
+(defconst verilog-extended-complete-re
+  "\\(\\<extern\\s-+\\|\\<virtual\\s-+\\|\\<protected\\s-+\\)*\\(\\<function\\>\\|\\<task\\>\\)\\|\\(\\<typedef\\>\\s-+\\)*\\(\\<struct\\>\\|\\<union\\>\\|\\<class\\>\\)")
+(defconst verilog-basic-complete-re
+  (eval-when-compile
+    (verilog-regexp-words
+     `(
+       "always" "assign" "always_latch" "always_ff" "always_comb" "constraint" 
+       "import" "initial" "final" "repeat" "case" "casex" "casez" "randcase" "while"
+       "if" "for" "forever" "foreach" "else" "parameter" "do" 
+       ))))
 (defconst verilog-complete-reg
   (concat
-   "\\(extern\\s-+\\|virtual\\s-+\\|protected\\s-+\\)*\\(function\\|task\\)\\|"
-   "\\(typedef\\s-+\\)*\\(struct\\|union\\|class\\)\\|"
-   (eval-when-compile
-     (verilog-regexp-words
-      `(
-	"always" "assign" "always_latch" "always_ff" "always_comb" "constraint" 
-	"import" "initial" "final" "repeat" "case" "casex" "casez" "randcase" "while"
-	"if" "for" "forever" "foreach" "else" "parameter" "do" 
-	)))))
+   verilog-extended-complete-re
+   "\\|"
+   verilog-basic-complete-re))
   
 (defconst verilog-end-statement-re
   (concat "\\(" verilog-beg-block-re "\\)\\|\\("
@@ -1499,6 +1502,12 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
   "String used to mark beginning of excluded text.")
 (defconst verilog-exclude-str-end " -----/\\----- EXCLUDED -----/\\----- */"
   "String used to mark end of excluded text.")
+(defconst verilog-preprocessor-re
+  (eval-when-compile
+    (verilog-regexp-words
+     `(
+       "`define" "`include" "`ifdef" "`ifndef" "`if" "`endif" "`else"
+       ))))
 
 (defconst verilog-keywords
   '( "`case" "`default" "`define" "`else" "`endfor" "`endif"
@@ -1523,7 +1532,7 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
      "include" "initial" "inout" "input" "inside" "instance" "int"
      "integer" "interface" "intersect" "join" "join_any" "join_none"
      "large" "liblist" "library" "local" "localparam" "logic"
-     "longint" "macromodule" "matches" "medium" "modport" "module"
+     "longint" "macromodule" "mailbox" "matches" "medium" "modport" "module"
      "nand" "negedge" "new" "nmos" "nor" "noshowcancelled" "not"
      "notif0" "notif1" "null" "or" "output" "package" "packed"
      "parameter" "pmos" "posedge" "primitive" "priority" "program"
@@ -1531,7 +1540,7 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
      "pulsestyle_onevent" "pulsestyle_ondetect" "pure" "rand" "randc"
      "randcase" "randsequence" "rcmos" "real" "realtime" "ref" "reg"
      "release" "repeat" "return" "rnmos" "rpmos" "rtran" "rtranif0"
-     "rtranif1" "scalared" "sequence" "shortint" "shortreal"
+     "rtranif1" "scalared" "semaphore" "sequence" "shortint" "shortreal"
      "showcancelled" "signed" "small" "solve" "specify" "specparam"
      "static" "string" "strong0" "strong1" "struct" "super" "supply0"
      "supply1" "table" "tagged" "task" "this" "throughout" "time"
@@ -1761,10 +1770,10 @@ See also `verilog-font-lock-extra-types'.")
 	   '(
 	     "and" "bit" "buf" "bufif0" "bufif1" "cmos" "defparam"
 	     "event" "genvar" "inout" "input" "integer" "localparam"
-	     "logic" "nand" "nmos" "not" "notif0" "notif1" "or"
+	     "logic" "mailbox" "nand" "nmos" "not" "notif0" "notif1" "or"
 	     "output" "parameter" "pmos" "pull0" "pull1" "pullup"
 	     "rcmos" "real" "realtime" "reg" "rnmos" "rpmos" "rtran"
-	     "rtranif0" "rtranif1" "signed" "struct" "supply"
+	     "rtranif0" "rtranif1" "semaphore" "signed" "struct" "supply"
 	     "supply0" "supply1" "time" "tran" "tranif0" "tranif1"
 	     "tri" "tri0" "tri1" "triand" "trior" "trireg" "typedef"
 	     "vectored" "wand" "wire" "wor" "xnor" "xor"
@@ -2889,26 +2898,38 @@ With ARG, first kill any existing labels."
 (defun verilog-beg-of-statement ()
   "Move backward to beginning of statement."
   (interactive)
-  (while (save-excursion
-	   (not (looking-at verilog-complete-reg))
-	   (verilog-backward-syntactic-ws)
-	   (not (or
-		 (bolp)
-		 (= (preceding-char) ?\;)
-		 (save-excursion
-		   (verilog-backward-token)
-		   (looking-at verilog-end-block-re))
-		 )))
-    (skip-chars-backward " \t")
+  ;; Move back token by token until we see the end
+  ;; of some ealier line.
+  (while 
+      ;; If the current point does not begin a new
+      ;; statement, as in the character ahead of us is a ';', or SOF
+      ;; or the string after us unambiguosly starts a statement, 
+      ;; or the token before us unambiguously ends a statement,
+      ;; then move back a token and test again.
+      (not (or
+	    (bolp)
+	    (= (preceding-char) ?\;)
+	    (not (or
+		  (looking-at "\\<")
+		  (forward-word -1)))
+	    (and
+	     (looking-at verilog-extended-complete-re)
+	     (not (save-excursion
+		    (verilog-backward-token)
+		    (looking-at verilog-extended-complete-re)))
+	     )
+	    (looking-at verilog-basic-complete-re)
+	    (save-excursion
+	      (verilog-backward-token)
+	      (or 
+	       (looking-at verilog-end-block-re)
+	       (looking-at verilog-preprocessor-re)))
+	    ))
+    (verilog-backward-syntactic-ws)
     (verilog-backward-token))
-  (let ((last (point)))
-    (while (progn
-	     (setq last (point))
-	     (and (not (looking-at verilog-complete-reg))
-		  (verilog-continued-line))))
-    (goto-char last)
-    (verilog-forward-syntactic-ws)))
-
+  ;; Now point is where the previous line ended.
+  (verilog-forward-syntactic-ws))
+  
 (defun verilog-beg-of-statement-1 ()
   "Move backward to beginning of statement."
   (interactive)
@@ -2922,11 +2943,6 @@ With ARG, first kill any existing labels."
 		(setq pt (point))
 		(not (bolp))
 		(not (= (preceding-char) ?\;))))
-;    (while (progn
-;	     (setq pt (point))
-;	     (and (not (looking-at verilog-complete-reg))
-;		  (not (= (preceding-char) ?\;))
-;		  (verilog-continued-line))))
     (goto-char pt)
     (verilog-forward-ws&directives)))
 
@@ -4065,18 +4081,21 @@ type.  Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 	      (verilog-leap-to-case-head)
 	      (if (looking-at verilog-case-re)
 		  (throw 'nesting 'case)))))
-
+       
        ((looking-at (if (verilog-in-generate-region-p)
 			verilog-defun-level-not-generate-re
 		      verilog-defun-level-re))
 	(throw 'nesting 'defun))
-
+       
        ((looking-at verilog-cpp-level-re)
 	(throw 'nesting 'cpp))
-
+       
        ((bobp)
 	(throw 'nesting 'cpp))
-       ))))
+       ))
+    (throw 'nesting 'cpp)
+    )
+  )
 
 (defun verilog-calculate-indent-directive ()
   "Return indentation level for directive.
@@ -4876,11 +4895,11 @@ ARG is ignored, for `comment-indent-function' compatibility."
 
 (defun verilog-pretty-expr (&optional myre)
   "Line up expressions around point."
-  (interactive "sRegular Expression: (<?=) ")
+  (interactive "sRegular Expression: ((<|:)?=) ")
   (save-excursion
     (if (or (eq myre nil)
 	    (string-equal myre ""))
-	(setq myre "<="))
+	(setq myre "\\(<\\|:\\)?="))
     (setq myre (concat "\\(^[^;" myre "]*\\)\\([" myre "]\\)"))
     (beginning-of-line)
     (if (and (not (looking-at (concat "^\\s-*" verilog-complete-reg)))
@@ -5135,10 +5154,10 @@ it displays a list of all possible completions.")
 (defvar verilog-type-keywords
   '(
     "and" "buf" "bufif0" "bufif1" "cmos" "defparam" "inout" "input"
-    "integer" "localparam" "logic" "nand" "nmos" "nor" "not" "notif0"
+    "integer" "localparam" "logic" "mailbox" "nand" "nmos" "nor" "not" "notif0"
     "notif1" "or" "output" "parameter" "pmos" "pull0" "pull1" "pullup"
     "rcmos" "real" "realtime" "reg" "rnmos" "rpmos" "rtran" "rtranif0"
-    "rtranif1" "time" "tran" "tranif0" "tranif1" "tri" "tri0" "tri1"
+    "rtranif1" "semaphore" "time" "tran" "tranif0" "tranif1" "tri" "tri0" "tri1"
     "triand" "trior" "trireg" "wand" "wire" "wor" "xnor" "xor"
     )
   "*Keywords for types used when completing a word in a declaration or parmlist.
