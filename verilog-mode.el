@@ -38,6 +38,26 @@
 ;; may also get online help describing various functions by: C-h f
 ;; <Name of function you want described>
 
+;; KNOWN BUGS / BUG REPORTS
+;; =======================
+
+;; Verilog is a rapidly evolving language, and hence this mode is
+;; under continuous development. Hence this is beta code, and likely
+;; has bugs. Please report any and all bugs to me at mac@verilog.com.
+;; Please use verilog-submit-bug-report to submit a report; type C-c
+;; C-b to invoke this and as a result I will have a much easier time
+;; of reproducing the bug you find, and hence fixing it.
+
+;; INSTALLING THE MODE
+;; ===================
+
+;; An older version of this mode may be already installed as a part of
+;; your environment, and one method of updating would be to update
+;; your emacs environment.  Sometimes this is difficult for local
+;; political/control reasons, and hence you can always install a
+;; private copy (or even a shared copy) which overrides the system
+;; default.
+
 ;; You can get step by step help in installing this file by going to
 ;; <http://www.verilog.com/emacs_install.html>
 
@@ -73,14 +93,10 @@
 ;       verilog-minimum-comment-distance 40
 ;       verilog-indent-begin-after-if    t
 ;       verilog-auto-lineup              '(all)
+;       verilog-highlight-p1800-keywords nil
 ;	verilog-linter			 "my_lint_shell_command"
 ;	)
 
-;; KNOWN BUGS / BUG REPORTS
-;; =======================
-;; This is beta code, and likely has bugs. Please report any and all
-;; bugs to me at mac@verilog.com.  Use
-;; verilog-submit-bug-report to submit a report.
 ;; 
 
 ;;; History:
@@ -500,6 +516,15 @@ would become
 
   :group 'verilog-mode-indent
   :type 'list )
+
+(defcustom verilog-highlight-p1800-keywords nil
+  "*If true highlight words newly reserved by IEEE-1800 in 
+verilog-font-lock-p1800-face in order to gently suggest changing
+where these words are used as variables to something else.
+Nil means highlight these words as appropriate for the IEEE-1800 standard
+(System Verilog).  Note that changing this will require restarting emacs to see the effect as font color choices are cached by emacs"
+  :group 'verilog-mode-indent
+  :type 'boolean)
 
 (defcustom verilog-auto-endcomments t
   "*True means insert a comment /* ... */ after 'end's.
@@ -1479,7 +1504,7 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
     (verilog-regexp-words
      `(
        "always" "assign" "always_latch" "always_ff" "always_comb" "constraint" 
-       "import" "initial" "final" "repeat" "case" "casex" "casez" "randcase" "while"
+       "import" "initial" "final" "module" "macromodule" "repeat" "case" "casex" "casez" "randcase" "while"
        "if" "for" "forever" "foreach" "else" "parameter" "do" 
        ))))
 (defconst verilog-complete-reg
@@ -1761,7 +1786,7 @@ See also `verilog-font-lock-extra-types'.")
       (background dark))
      (:foreground "orange1" :bold t ))
     (t (:italic t)))
-  "Font lock mode face used to highlight P1800 keywords."
+  "Font lock mode face used to highlight AMS keywords."
   :group 'font-lock-highlighting-faces)
 
 (let* ((verilog-type-font-keywords
@@ -1850,13 +1875,15 @@ See also `verilog-font-lock-extra-types'.")
 	 ;; Fontify all types
 	 (cons (concat "\\<\\(" verilog-type-font-keywords "\\)\\>")
 	       'font-lock-type-face)
-	 ;; Fontify IEEE-P1800 keywords
-	 (cons (concat "\\<\\(" verilog-p1800-keywords "\\)\\>")
-	       'verilog-font-lock-p1800-face)
+	 ;; Fontify IEEE-P1800 keywords appropriately
+	 (if verilog-highlight-p1800-keywords 
+	     (cons (concat "\\<\\(" verilog-p1800-keywords "\\)\\>")
+		   'verilog-font-lock-p1800-face)
+	   (cons (concat "\\<\\(" verilog-p1800-keywords "\\)\\>")
+		 'font-lock-type-face))
 	 ;; Fontify Verilog-AMS keywords
 	 (cons (concat "\\<\\(" verilog-ams-keywords "\\)\\>")
 	       'verilog-font-lock-ams-face)
-
 	 ))
 
   (setq verilog-font-lock-keywords-1
@@ -2281,7 +2308,7 @@ so there may be a large up front penalty for the first search."
 ;;
 ;;  Mode
 ;;
-
+(defvar verilog-which-tool 1)
 ;;###autoload
 (defun verilog-mode ()
   "Major mode for editing Verilog code.
@@ -4288,7 +4315,8 @@ Set point to where line starts"
 	      (verilog-backward-token)
 	      (not (looking-at "\\<\\(always\\(_latch\\|_ff\\|_comb\\)?\\|initial\\|while\\)\\>"))))
 	   ((= (preceding-char) ?\#)
-	    t)
+	    (backward-char)
+	    )
 	   (t t))
 	  )))))
 
@@ -4900,7 +4928,8 @@ ARG is ignored, for `comment-indent-function' compatibility."
     (if (or (eq myre nil)
 	    (string-equal myre ""))
 	(setq myre "\\(<\\|:\\)?="))
-    (setq myre (concat "\\(^[^;" myre "]*\\)\\([" myre "]\\)"))
+;    (setq myre (concat "\\(^[^;" myre "]*\\)\\([" myre "]\\)"))
+    (setq myre (concat "\\(^[^;#:?=]*\\)\\([" myre "]\\)"))
     (beginning-of-line)
     (if (and (not (looking-at (concat "^\\s-*" verilog-complete-reg)))
 	     (looking-at myre))
@@ -4912,8 +4941,10 @@ ARG is ignored, for `comment-indent-function' compatibility."
 		  (setq e (point))
 		  (verilog-backward-syntactic-ws)
 		  (beginning-of-line)
-		  (while (and (not(looking-at (concat "^\\s-*" verilog-complete-reg)))
-			      (looking-at myre))
+		  (while (and (not (looking-at (concat "^\\s-*" verilog-complete-reg)))
+			      (looking-at myre)
+			      (not (bobp))
+			      )
 		    (setq e (point))
 		    (verilog-backward-syntactic-ws)
 		    (beginning-of-line)
