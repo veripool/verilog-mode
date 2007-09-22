@@ -7081,8 +7081,9 @@ If undefined, and WING-IT, return just SYMBOL without the tick, else nil."
     (setq symbol (substring symbol 1))
     (setq symbol
 	  (if (boundp (intern (concat "vh-" symbol)))
-	      ;; Emacs has a bug where boundp on a buffer-local variable in only one
-	      ;; buffer returns t in another.  This can confuse, so check for nil.
+	      ;; Emacs has a bug where boundp on a buffer-local
+	      ;; variable in only one buffer returns t in another.
+	      ;; This can confuse, so check for nil.
 	      (let ((val (eval (intern (concat "vh-" symbol)))))
 		(if (eq val nil)
 		    (if wing-it symbol nil)
@@ -7106,6 +7107,24 @@ If undefined, and WING-IT, return just SYMBOL without the tick, else nil."
   (if (verilog-is-number symbol)
       nil
     symbol))
+
+(defun verilog-symbol-detick-text (text)
+  "Return TEXT with any without any known defines.
+If the variable vh-{symbol} is defined, substitute that value."
+  (let ((ok t) symbol val)
+    (while (and ok (string-match "`\\([a-ZA-Z0-9_]+\\)" text))
+      (setq symbol (match-string 1 text))
+      (message symbol)
+      (cond ((and
+	      (boundp (intern (concat "vh-" symbol)))
+	      ;; Emacs has a bug where boundp on a buffer-local
+	      ;; variable in only one buffer returns t in another.
+	      ;; This can confuse, so check for nil.
+	      (setq val (eval (intern (concat "vh-" symbol)))))
+	     (setq text (replace-match val nil nil text)))
+	    (t (setq ok nil)))))
+  text)
+;;(progn (setq vh-mod "`foo" vh-foo "bar") (verilog-symbol-detick-text "bar `mod `undefed"))
 
 (defun verilog-expand-dirnames (&optional dirnames)
   "Return a list of existing directories given a list of wildcarded DIRNAMES.
@@ -7217,10 +7236,10 @@ Use verilog-preserve-cache's to set")
 (defvar verilog-modi-lookup-last-current nil "Cache of last `current-buffer' looked up.")
 (defvar verilog-modi-lookup-last-tick nil "Cache of last `buffer-modified-tick' looked up.")
 
-(defun verilog-modi-lookup (module allow-cache)
+(defun verilog-modi-lookup (module allow-cache &optional ignore-error)
   "Find the file and point at which MODULE is defined.
 If ALLOW-CACHE is set, check and remember cache of previous lookups.
-Return modi if successful, else print message."
+Return modi if successful, else print message unless IGNORE-ERROR is true."
   (let* ((current (or (buffer-file-name) (current-buffer))))
     (cond ((and verilog-modi-lookup-last-modi
 		verilog-cache-enabled
@@ -7240,13 +7259,15 @@ Return modi if successful, else print message."
 	       (cond (pt (setq verilog-modi-lookup-last-modi
 			       (vector realmod (car filenames) pt)))
 		     (t (setq verilog-modi-lookup-last-modi nil)
-			(error (concat (verilog-point-text)
-				       ": Can't locate " module " module definition"
-				       (if (not (equal module realmod))
-					   (concat " (Expanded macro to " realmod ")")
-					 "")
-				       "\n    Check the verilog-library-directories variable."
-				       "\n    I looked in (if not listed, doesn't exist):\n\t" (mapconcat 'concat orig-filenames "\n\t"))))
+			(or ignore-error
+			    (error (concat (verilog-point-text)
+					   ": Can't locate " module " module definition"
+					   (if (not (equal module realmod))
+					       (concat " (Expanded macro to " realmod ")")
+					     "")
+					   "\n    Check the verilog-library-directories variable."
+					   "\n    I looked in (if not listed, doesn't exist):\n\t"
+					   (mapconcat 'concat orig-filenames "\n\t")))))
 		     )
 	       (setq verilog-modi-lookup-last-mod module
 		     verilog-modi-lookup-last-current current
