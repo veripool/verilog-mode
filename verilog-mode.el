@@ -1440,6 +1440,7 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
   (eval-when-compile
     (verilog-regexp-words
      `(
+       "{" 
        "always" "always_latch" "always_ff" "always_comb"
        "begin" "end"
        "case" "casex" "casez" "randcase" "endcase"
@@ -3945,13 +3946,14 @@ type.  Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 		   (if (save-excursion (beginning-of-line) (looking-at verilog-directive-re-1))
 		       (throw 'nesting 'directive))
 
+		   ;; unless we are in the newfangled coverpoint or constraint blocks
 		   ;; if we are in a parenthesized list, and the user likes to indent these, return.
-		   (if (verilog-in-paren)
-		       (if verilog-indent-lists
-			   (progn (setq par 1)
-				  (throw 'nesting 'block))
-			 ()
-			  )
+		   (if (and
+			verilog-indent-lists
+			(not (verilog-in-coverage))
+			(verilog-in-paren))
+		       (progn (setq par 1)
+			      (throw 'nesting 'block))
 		     )
 
 		   ;; See if we are continuing a previous line
@@ -4077,8 +4079,17 @@ type.  Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 
 (defun verilog-calc-1 ()
   (catch 'nesting
-    (while (verilog-re-search-backward verilog-indent-re nil 'move)
+    (while (verilog-re-search-backward (concat "\\({\\|}\\|" verilog-indent-re "\\)") nil 'move)
       (cond
+       ((= (char-after) ?\{)
+	(if (verilog-at-constraint-p)
+	    (throw 'nesting 'block)
+	  ))
+       ((= (char-after) ?\})
+	
+	(let ((there (verilog-at-close-constraint-p)))
+	  (if there (goto-char there))))
+
        ((looking-at verilog-beg-block-re-ordered)
 	(cond
 	 ((match-end 2)  (throw 'nesting 'case))
@@ -4272,6 +4283,7 @@ Set point to where line starts"
 
 (defun verilog-backward-token ()
   "Step backward token, returning true if we are now at an end of line token."
+  (interactive)
   (verilog-backward-syntactic-ws)
   (cond
    ((bolp)
@@ -4280,16 +4292,22 @@ Set point to where line starts"
     (= (preceding-char) ?\;)
     nil)
    (;-- constraint foo { a = b }
+    ;-- coverpoint c { bins a1 = { [0:63] }; }
+    ;-- cross a,b { bins c1 = 4; } /* NOT HANDLED! */
+    ;-- coverpoint c iff (expr) { bins a1 = { [0:63] }; }    /* NOT HANDLED!!*/
     ;   is a complete statement. *sigh*
     (= (preceding-char) ?\})
     (progn
       (backward-char)
       (backward-up-list 1)
-      (verilog-backward-syntactic-ws)
-      (forward-word -1) ; label for the (possible) constraint
-      (verilog-backward-syntactic-ws)
-      (forward-word -1)
-      (not (looking-at "\\<constraint\\>")))
+      (not (verilog-at-constraint-p)))
+    )
+   (;-- constraint foo { a = b }
+    ;   is a complete statement. *sigh*
+    (= (preceding-char) ?\{)
+    (progn
+      (backward-char)
+      (not (verilog-at-constraint-p)))
     )
    (;-- Could be 'case (foo)' or 'always @(bar)' which is complete
     ;   also could be simply '@(foo)'
@@ -4498,7 +4516,61 @@ Optional BOUND limits search."
  (let ((state
 	(save-excursion
 	  (parse-partial-sexp (point-min) (point)))))
-   (/= 0 (nth 0 state))))
+   (> (nth 0 state) 0 )))
+(defun verilog-in-coverage ()
+ "Return true if in a constraint or coverpoint expression."
+ (interactive)
+ (save-excursion
+   (let (state)
+     (setq state (parse-partial-sexp (point-min) (point)))
+     (if (> (nth 0 state) 0)
+	 (progn
+	   (backward-up-list 1)	   
+	   (verilog-at-constraint-p)
+	   )
+       nil))))
+(defun verilog-at-close-constraint-p ()
+  "If at the } that closes a constraint or covergroup, return true"
+  (if (and 
+       (= (char-after) ?\})
+       (> (nth 0 (parse-partial-sexp (point-min) (point))) 0))
+      (save-excursion
+	(backward-up-list)
+	(if (verilog-at-constraint-p)
+	    (point)
+	  nil))))
+
+(defun verilog-at-constraint-p ()
+  "If at the { of a constraint or coverpoint definition, return true, moving point to constraint"
+  (if (= (char-after) ?\{)
+      (progn
+	(verilog-backward-syntactic-ws)
+	(and
+	 (if (= (char-before) ?\))
+	     (progn 
+	       (backward-char)
+	       (backward-up-list 1)
+	       (forward-word -1) ; better be iff
+	       (looking-at "\\<iff\\>"))
+	   t)
+	 (forward-word -1) ; label for the (possible) constraint/coverpoint
+	 (verilog-backward-syntactic-ws)
+	 (if (= (char-before) ?\,) ;; can have a,b or a,b,c
+	     (progn
+	       (backward-char)
+	       (forward-word -1)
+	       (verilog-backward-syntactic-ws)
+	       (if (= (char-before) ?\,)
+		   (progn
+		     (backward-char)
+		     (forward-word -1)
+		     (verilog-backward-syntactic-ws))
+		 t)
+	       )
+	   t)
+	 (forward-word -1)
+	 (looking-at "\\<constraint\\|coverpoint\\|cross\\>"))
+	)))
 
 (defun verilog-parenthesis-depth ()
  "Return non zero if in parenthetical-expression."
@@ -4693,7 +4765,9 @@ Only look at a few lines to determine indent level."
 	))
 
      (;-- Handle the ends
-      (looking-at verilog-end-block-re )
+      (or 
+       (looking-at verilog-end-block-re )
+       (verilog-at-close-constraint-p))
       (let ((val (if (eq type 'statement)
 		     (- ind verilog-indent-level)
 		   ind)))
