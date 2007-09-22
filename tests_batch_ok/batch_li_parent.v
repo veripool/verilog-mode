@@ -9,10 +9,10 @@ module batch_li_parent();
    batch_li_child
      #(.WIDTH_1 (WIDTH_0),
        .WIDTH_0 (WIDTH_1))
-       child
-	 (/*AUTOINST*/
-	  // Inputs
-	  .rst				(rst),
-	  .clk				(clk));
+   child
+     (/*AUTOINST*/
+      // Inputs
+      .rst				(rst),
+      .clk				(clk));
 
 endmodule
