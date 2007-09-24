@@ -5946,11 +5946,13 @@ Bound search by LIMIT.  Adapted from
   (nth 3 sigs))
 
 (defun verilog-signals-not-in (in-list not-list)
-  "Return list of signals in IN-LIST that aren't also in NOT-LIST.
+  "Return list of signals in IN-LIST that aren't also in NOT-LIST,
+and also remove any duplicates in IN-LIST.
 Signals must be in standard (base vector) form."
   (let (out-list)
     (while in-list
-      (if (not (assoc (car (car in-list)) not-list))
+      (if (not (or (assoc (car (car in-list)) not-list)
+		   (assoc (car (car in-list)) out-list)))
 	  (setq out-list (cons (car in-list) out-list)))
       (setq in-list (cdr in-list)))
     (nreverse out-list)))
