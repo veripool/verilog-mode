@@ -6517,7 +6517,7 @@ EXIT-KEYWD is expression to stop at, nil if top level.
 RVALUE is true if at right hand side of equal.
 IGNORE-NEXT is true to ignore next token, fake from inside case statement."
   (let* ((semi-rvalue (equal "endcase" exit-keywd)) ;; true if after a ; we are looking for rvalue
-	 keywd last-keywd sig-tolk sig-last-tolk gotend end-else-check)
+	 keywd last-keywd sig-tolk sig-last-tolk gotend got-sig got-rvalue end-else-check)
     ;;(if dbg (setq dbg (concat dbg (format "Recursion %S %S %S\n" exit-keywd rvalue ignore-next))))
     (while (not (or (eobp) gotend))
       (cond
@@ -6537,7 +6537,7 @@ IGNORE-NEXT is true to ignore next token, fake from inside case statement."
 				       (point)))
 		sig-last-tolk sig-tolk
 		sig-tolk nil)
-	  ;;(if dbg (setq dbg (concat dbg (format "\tPt %S %S\t%S %S %S\n" (point) keywd rvalue ignore-next end-else-check))))
+	  ;;(if dbg (setq dbg (concat dbg (format "\tPt=%S %S\trv=%S in=%S ee=%S\n" (point) keywd rvalue ignore-next end-else-check))))
 	  (cond
 	   ((equal keywd "\"")
 	    (or (re-search-forward "[^\\]\"" nil t)
@@ -6570,6 +6570,10 @@ IGNORE-NEXT is true to ignore next token, fake from inside case statement."
 	   ((equal keywd ":")	;; Case statement, begin/end label, x?y:z
 	    (cond ((equal "endcase" exit-keywd)  ;; case x: y=z; statement next
 		   (setq ignore-next nil rvalue nil))
+		  ((equal "?" exit-keywd)  ;; x?y:z rvalue
+		   ) ;; NOP
+		  (got-sig	;; label: statement
+		   (setq ignore-next nil rvalue semi-rvalue got-sig nil))
 		  ((not rvalue)	;; begin label
 		   (setq ignore-next t rvalue nil)))
 	    (forward-char 1))
@@ -6616,9 +6620,11 @@ IGNORE-NEXT is true to ignore next token, fake from inside case statement."
 		   (setq ignore-next nil))
 		  (t
 		   (setq keywd (verilog-symbol-detick-denumber keywd))
-		   (if got-sig (if got-rvalue
-				   (setq sigs-in (cons got-sig sigs-in))
-				 (setq sigs-out (cons got-sig sigs-out))))
+		   (when got-sig
+		     (if got-rvalue (setq sigs-in (cons got-sig sigs-in))
+		       (setq sigs-out (cons got-sig sigs-out)))
+		     ;;(if dbg (setq dbg (concat dbg (format "\t\tgot-sig=%S rv=%S\n" got-sig got-rvalue))))
+		     )
 		   (setq got-rvalue rvalue
 			 got-sig (if (or (not keywd)
 					 (assoc keywd (if got-rvalue sigs-in sigs-out)))
@@ -6631,6 +6637,12 @@ IGNORE-NEXT is true to ignore next token, fake from inside case statement."
 	  (setq last-keywd keywd)
 	  ))
       (skip-syntax-forward " "))
+    ;; Append the final pending signal
+    (when got-sig
+      (if got-rvalue (setq sigs-in (cons got-sig sigs-in))
+	(setq sigs-out (cons got-sig sigs-out)))
+      ;;(if dbg (setq dbg (concat dbg (format "\t\tgot-sig=%S rv=%S\n" got-sig got-rvalue))))
+      (setq got-sig nil))
     ;;(if dbg (setq dbg (concat dbg (format "ENDRecursion %s\n" exit-keywd))))
     ))
 
@@ -6640,15 +6652,11 @@ IGNORE-NEXT is true to ignore next token, fake from inside case statement."
   (save-excursion
     (let* (;;(dbg "")
 	   sigs-in sigs-out
-	   got-sig got-rvalue
 	   uses-delayed)	;; Found signal/rvalue; push if not function
       (search-forward ")")
       (verilog-read-always-signals-recurse nil nil nil)
+      ;;(if dbg (save-excursion (set-buffer (get-buffer-create "*vl-dbg*")) (delete-region (point-min) (point-max)) (insert dbg) (setq dbg "")))
       ;; Return what was found
-      (if got-sig (if got-rvalue
-		      (setq sigs-in (cons got-sig sigs-in))
-		    (setq sigs-out (cons got-sig sigs-out))))
-      ;;(if dbg (message dbg))
       (list sigs-out nil sigs-in uses-delayed))))
 
 (defun verilog-read-instants ()
