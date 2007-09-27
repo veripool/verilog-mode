@@ -4081,11 +4081,11 @@ type.  Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
   (catch 'nesting
     (while (verilog-re-search-backward (concat "\\({\\|}\\|" verilog-indent-re "\\)") nil 'move)
       (cond
-       ((= (char-after) ?\{)
+       ((equal (char-after) ?\{)
 	(if (verilog-at-constraint-p)
 	    (throw 'nesting 'block)
 	  ))
-       ((= (char-after) ?\})
+       ((equal (char-after) ?\})
 	
 	(let ((there (verilog-at-close-constraint-p)))
 	  (if there (goto-char there))))
@@ -4507,7 +4507,7 @@ Optional BOUND limits search."
  (save-excursion
    (backward-char)
    (skip-chars-backward "^ \t\n\f")
-   (if (= (char-after (point) ) ?\\ )
+   (if (equal (char-after (point) ) ?\\ )
        t
      nil)))
 
@@ -4532,7 +4532,7 @@ Optional BOUND limits search."
 (defun verilog-at-close-constraint-p ()
   "If at the } that closes a constraint or covergroup, return true"
   (if (and 
-       (= (char-after) ?\})
+       (equal (char-after) ?\})
        (> (nth 0 (parse-partial-sexp (point-min) (point))) 0))
       (save-excursion
 	(backward-up-list)
@@ -4542,11 +4542,11 @@ Optional BOUND limits search."
 
 (defun verilog-at-constraint-p ()
   "If at the { of a constraint or coverpoint definition, return true, moving point to constraint"
-  (if (= (char-after) ?\{)
+  (if (equal (char-after) ?\{)
       (progn
 	(verilog-backward-syntactic-ws)
 	(and
-	 (if (= (char-before) ?\))
+	 (if (equal (char-before) ?\))
 	     (progn 
 	       (backward-char)
 	       (backward-up-list 1)
@@ -4555,12 +4555,12 @@ Optional BOUND limits search."
 	   t)
 	 (forward-word -1) ; label for the (possible) constraint/coverpoint
 	 (verilog-backward-syntactic-ws)
-	 (if (= (char-before) ?\,) ;; can have a,b or a,b,c
+	 (if (equal (char-before) ?\,) ;; can have a,b or a,b,c
 	     (progn
 	       (backward-char)
 	       (forward-word -1)
 	       (verilog-backward-syntactic-ws)
-	       (if (= (char-before) ?\,)
+	       (if (equal (char-before) ?\,)
 		   (progn
 		     (backward-char)
 		     (forward-word -1)
