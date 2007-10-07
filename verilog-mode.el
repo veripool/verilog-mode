@@ -1541,7 +1541,7 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
      "`ifndef" "`include" "`let" "`protect" "`switch" "`timescale"
      "`time_scale" "`undef" "`while"
 
-     "alias" "always" "always_comb" "always_ff" "always_latch" "and"
+     "after" "alias" "always" "always_comb" "always_ff" "always_latch" "and"
      "assert" "assign" "assume" "automatic" "before" "begin" "bind"
      "bins" "binsof" "bit" "break" "buf" "bufif0" "bufif1" "byte"
      "case" "casex" "casez" "cell" "chandle" "class" "clocking" "cmos"
@@ -4291,16 +4291,12 @@ Set point to where line starts"
    (;-- Anything ending in a ; is complete
     (= (preceding-char) ?\;)
     nil)
-   (;-- constraint foo { a = b }
-    ;-- coverpoint c { bins a1 = { [0:63] }; }
-    ;-- cross a,b { bins c1 = 4; } /* NOT HANDLED! */
-    ;-- coverpoint c iff (expr) { bins a1 = { [0:63] }; }    /* NOT HANDLED!!*/
-    ;   is a complete statement. *sigh*
+   (; If a "}" is prefixed by a ";", then this is a complete statement
+    ; i.e.: constraint foo { a = b; }
     (= (preceding-char) ?\})
     (progn
       (backward-char)
-      (backward-up-list 1)
-      (not (verilog-at-constraint-p)))
+      (verilog-at-close-constraint-p))
     )
    (;-- constraint foo { a = b }
     ;   is a complete statement. *sigh*
@@ -4517,60 +4513,45 @@ Optional BOUND limits search."
 	(save-excursion
 	  (parse-partial-sexp (point-min) (point)))))
    (> (nth 0 state) 0 )))
+
 (defun verilog-in-coverage ()
  "Return true if in a constraint or coverpoint expression."
  (interactive)
  (save-excursion
-   (let (state)
-     (setq state (parse-partial-sexp (point-min) (point)))
-     (if (> (nth 0 state) 0)
-	 (progn
-	   (backward-up-list 1)	   
-	   (verilog-at-constraint-p)
-	   )
-       nil))))
+   (if (verilog-in-paren)
+       (progn
+	 (backward-up-list 1)	   
+	 (verilog-at-constraint-p)
+	 )
+     nil)))
 (defun verilog-at-close-constraint-p ()
   "If at the } that closes a constraint or covergroup, return true"
   (if (and 
        (equal (char-after) ?\})
-       (> (nth 0 (parse-partial-sexp (point-min) (point))) 0))
+       (verilog-in-paren))
+
       (save-excursion
-	(backward-up-list)
-	(if (verilog-at-constraint-p)
+	(verilog-backward-ws&directives)
+	(if (equal (char-before) ?\;)	
 	    (point)
 	  nil))))
 
 (defun verilog-at-constraint-p ()
   "If at the { of a constraint or coverpoint definition, return true, moving point to constraint"
-  (if (equal (char-after) ?\{)
-      (progn
-	(verilog-backward-syntactic-ws)
+  (if (save-excursion
 	(and
-	 (if (equal (char-before) ?\))
-	     (progn 
-	       (backward-char)
-	       (backward-up-list 1)
-	       (forward-word -1) ; better be iff
-	       (looking-at "\\<iff\\>"))
-	   t)
-	 (forward-word -1) ; label for the (possible) constraint/coverpoint
-	 (verilog-backward-syntactic-ws)
-	 (if (equal (char-before) ?\,) ;; can have a,b or a,b,c
-	     (progn
-	       (backward-char)
-	       (forward-word -1)
-	       (verilog-backward-syntactic-ws)
-	       (if (equal (char-before) ?\,)
-		   (progn
-		     (backward-char)
-		     (forward-word -1)
-		     (verilog-backward-syntactic-ws))
-		 t)
-	       )
-	   t)
-	 (forward-word -1)
-	 (looking-at "\\<constraint\\|coverpoint\\|cross\\>"))
-	)))
+	 (equal (char-after) ?\{)
+	 (forward-list)
+	 (progn (backward-char 1)
+		(verilog-backward-ws&directives)
+		(equal (char-before) ?\;))
+	 ))
+      ;; maybe
+      (verilog-re-search-backward "\\<constraint\\|coverpoint\\|cross\\>" nil 'move)
+    ;; not    
+    nil 
+    )
+  )
 
 (defun verilog-parenthesis-depth ()
  "Return non zero if in parenthetical-expression."
