@@ -1321,7 +1321,8 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
 (defconst verilog-beg-block-re-ordered
   ( concat "\\<"
 	   "\\(begin\\)"		;1
-	   "\\|\\(randcase\\|case[xz]?\\)" ; 2
+	   "\\|\\(randcase\\|\\(unique\\s-+\\|priority\\s-+\\)?case[xz]?\\)" ; 2
+;;	   "\\|\\(randcase\\|case[xz]?\\)" ; 2
 	   "\\|\\(fork\\)"		;3
 	   "\\|\\(class\\)"		;4
 	   "\\|\\(table\\)"		;5
@@ -1443,6 +1444,7 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
        "{" 
        "always" "always_latch" "always_ff" "always_comb"
        "begin" "end"
+;       "unique" "priority"
        "case" "casex" "casez" "randcase" "endcase"
        "class" "endclass"
        "clocking" "endclocking"
@@ -1498,14 +1500,17 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
      `(
        "endmodule" "endprimitive" "endinterface" "endpackage" "endprogram" "endclass"
        ))))
+(defconst verilog-extended-case-re "\\(unique\\s-+\\|priority\\s-+\\)?case[xz]?")
 (defconst verilog-extended-complete-re
-  "\\(\\<extern\\s-+\\|\\<virtual\\s-+\\|\\<protected\\s-+\\)*\\(\\<function\\>\\|\\<task\\>\\)\\|\\(\\<typedef\\>\\s-+\\)*\\(\\<struct\\>\\|\\<union\\>\\|\\<class\\>\\)")
+  (concat "\\(\\<extern\\s-+\\|\\<virtual\\s-+\\|\\<protected\\s-+\\)*\\(\\<function\\>\\|\\<task\\>\\)"
+	  "\\|\\(\\<typedef\\>\\s-+\\)*\\(\\<struct\\>\\|\\<union\\>\\|\\<class\\>\\)"
+	  "\\|" verilog-extended-case-re ))
 (defconst verilog-basic-complete-re
   (eval-when-compile
     (verilog-regexp-words
      `(
        "always" "assign" "always_latch" "always_ff" "always_comb" "constraint" 
-       "import" "initial" "final" "module" "macromodule" "repeat" "case" "casex" "casez" "randcase" "while"
+       "import" "initial" "final" "module" "macromodule" "repeat" "randcase" "while"
        "if" "for" "forever" "foreach" "else" "parameter" "do" 
        ))))
 (defconst verilog-complete-reg
@@ -2061,7 +2066,7 @@ Use filename, if current buffer being edited shorten to just buffer name."
 	(setq reg "\\(\\<begin\\>\\)\\|\\(\\<end\\>\\)" ))
        ((match-end 2) ; endcase
 	;; Search forward for matching case
-	(setq reg "\\(\\<randcase\\>\\|\\<case[xz]?\\>[^:]\\)\\|\\(\\<endcase\\>\\)" )
+	(setq reg "\\(\\<randcase\\>\\|\\(\\<unique\\>\\s-+\\|\\<priority\\>\\s-+\\)?\\<case[xz]?\\>[^:]\\)\\|\\(\\<endcase\\>\\)" )
 	)
        ((match-end 3) ; join
 	;; Search forward for matching fork
@@ -2104,11 +2109,11 @@ Use filename, if current buffer being edited shorten to just buffer name."
 	    (let ((nest 1))
 	      (while (verilog-re-search-forward reg nil 'move)
 		(cond
-		 ((match-end md) ; the closer in reg
+		 ((match-end md) ; the closer in reg, so we are climbing out
 		  (setq nest (1- nest))
-		  (if (= 0 nest)
+		  (if (= 0 nest) ; we are out!
 		      (throw 'skip 1)))
-		 ((match-end 1) ; begin
+		 ((match-end 1) ; the opener in reg, so we are deeper now
 		  (setq nest (1+ nest)))))
 	      )))
       )
@@ -4092,8 +4097,15 @@ type.  Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 
        ((looking-at verilog-beg-block-re-ordered)
 	(cond
-	 ((match-end 2)  (throw 'nesting 'case))
-	 ;; need to conside typedef struct here...
+	 ((match-end 2)  ; *sigh* could be "unique case" or "priority casex"
+	  (let ((here (point))) 
+	    (verilog-beg-of-statement)
+	    (if (looking-at verilog-extended-case-re)
+		(throw 'nesting 'case)
+	      (goto-char here)))
+	  (throw 'nesting 'case))
+
+	 ;; need to consider typedef struct here...
 	 ((looking-at "\\<class\\|struct\\|function\\|task\\|property\\>")
 					; *sigh* These words have an optional prefix:
 					; extern {virtual|protected}? function a();
@@ -4338,7 +4350,7 @@ Set point to where line starts"
     t
     (forward-word -1)
     (cond
-     ((looking-at "\\(else\\)\\|\\(initial\\>\\)\\|\\(always\\(_latch\\|_ff\\|_comb\\)?\\>\\)")
+     ((looking-at "\\<else\\>")
       t)
      ((looking-at verilog-indent-re)
       nil)
