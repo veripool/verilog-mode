@@ -6,22 +6,6 @@ Occasionally:
     * M-x checkdoc
     * Make sure it's as byte compile clean as possible.
 
-From: Stefan Monnier <monnier@iro.umontreal.ca>
-Date: Sun, 14 Oct 2007 23:22:56 -0400
-
-    >     - Emacs-21's comment-region and uncomment-region should work correctly
-    >     (including mangling nested comments, although in a different way from
-    >     the one you chose).
-    
-    > Is that a suggestion for them to change something?  Or is it a
-    > statement that something is good does not need to be changed?  Both
-    > meanings seem plausible.  But I cnnot tell what the something is,
-    > in regard to verilog-mode.el.
-    
-    It's suggesting that verilog-comment-regiont and verilog-uncomment-region
-    can (probably) be dropped when running under Emacs>=21 (and the C-c C-c
-    binding could also be removed if you assume your users will use M-;)
-
 From: Dan Nicolaescu <dann@ics.uci.edu>
 Date: Sun, 14 Oct 2007 10:49:43 -0700
 
@@ -43,10 +27,6 @@ Date: Sun, 14 Oct 2007 10:49:43 -0700
 From: Stefan Monnier <monnier@iro.umontreal.ca>
 Date: Sat, 13 Oct 2007 22:41:15 -0400
     
-    - Remove verilog-running-on-xemacs and use (featurep 'xemacs) instead
-      (without storing its value in a variable): the byte-compiler will then
-      be able to optimize away the unapplicable code (and correspondingly skip
-      some silly warnings).
     - Rather than create a new syntax-table in each buffer, just do
     
        (defvar verilog-mode-syntax-table
@@ -61,10 +41,8 @@ Date: Sat, 13 Oct 2007 22:41:15 -0400
       solution cleaner, the Emacs solution is not only equivalent but it also
       works under XEmacs, so you can use it everywhere and remove an
       emacs-version check.
-    - in verilog-modi-cache-results, you check (memq 'v19 verilog-emacs-features)
-      additionally to (boundp 'font-lock-mode) which is redundant (same thing
-      in verilog-auto).
     - You can then remove the verilog-emacs-features abomination.
+
     - The part
     
              (require 'verilog-mode)
@@ -72,13 +50,14 @@ Date: Sat, 13 Oct 2007 22:41:15 -0400
       is pretty hideous and deserves either to be fixed (i.e. removed), or large
       comments justifying each part.
       Also some of the subsequent requires are unneeded (e.g. the `imenu' one).
+
     - Use easy-menu-add rather than add-submenu so it works on both Emacs
       and XEmacs.
-    - the code in the major mode function which sets up the menu has a comment
-      claiming this is about font-lock ;-)
+
     - Emacs-21's comment-region and uncomment-region should work correctly
       (including mangling nested comments, although in a different way from the
       one you chose).
-    
-    
-            Stefan
+
+      verilog-comment-regiont and verilog-uncomment-region
+      can (probably) be dropped when running under Emacs>=21 (and the C-c C-c
+      binding could also be removed if you assume your users will use M-;)

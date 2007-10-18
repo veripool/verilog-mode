@@ -112,7 +112,6 @@
 (defconst verilog-mode-release-date "__VMVERSION__"
   "Version of this verilog mode.")
 
-(defconst verilog-running-on-xemacs (string-match "XEmacs" emacs-version))
 (defun verilog-version ()
   "Inform caller of the version of this file."
   (interactive)
@@ -320,7 +319,7 @@ STRING should be given if the last search was by `string-match' on STRING."
   "echo 'No verilog-linter set, see \"M-x describe-variable verilog-linter\"'"
   "*Unix program and arguments to call to run a lint checker on verilog source.
 Depending on the `verilog-set-compile-command', this may be invoked when
-you type \\[compile]. When the compile completes, \\[next-error] will take
+you type \\[compile].  When the compile completes, \\[next-error] will take
 you to the next lint error."
   :type 'string
   :group 'verilog-mode-actions)
@@ -329,7 +328,7 @@ you to the next lint error."
   "echo 'No verilog-coverage set, see \"M-x describe-variable verilog-coverage\"'"
   "*Program and arguments to use to annotate for coverage verilog source.
 Depending on the `verilog-set-compile-command', this may be invoked when
-you type \\[compile]. When the compile completes, \\[next-error] will take
+you type \\[compile].  When the compile completes, \\[next-error] will take
 you to the next lint error."
   :type 'string
   :group 'verilog-mode-actions)
@@ -338,7 +337,7 @@ you to the next lint error."
   "echo 'No verilog-simulator set, see \"M-x describe-variable verilog-simulator\"'"
   "*Program and arguments to use to interpret verilog source.
 Depending on the `verilog-set-compile-command', this may be invoked when
-you type \\[compile]. When the compile completes, \\[next-error] will take
+you type \\[compile].  When the compile completes, \\[next-error] will take
 you to the next lint error."
   :type 'string
   :group 'verilog-mode-actions)
@@ -347,7 +346,7 @@ you to the next lint error."
   "echo 'No verilog-compiler set, see \"M-x describe-variable verilog-compiler\"'"
   "*Program and arguments to use to compile verilog source.
 Depending on the `verilog-set-compile-command', this may be invoked when
-you type \\[compile]. When the compile completes, \\[next-error] will take
+you type \\[compile].  When the compile completes, \\[next-error] will take
 you to the next lint error."
   :type 'string
   :group 'verilog-mode-actions)
@@ -518,11 +517,12 @@ would become
   :type 'list )
 
 (defcustom verilog-highlight-p1800-keywords nil
-  "*If true highlight words newly reserved by IEEE-1800 in 
-verilog-font-lock-p1800-face in order to gently suggest changing
-where these words are used as variables to something else.
-Nil means highlight these words as appropriate for the IEEE-1800 standard
-(System Verilog).  Note that changing this will require restarting emacs to see the effect as font color choices are cached by emacs"
+  "*If true highlight words newly reserved by IEEE-1800 in
+verilog-font-lock-p1800-face in order to gently suggest changing where
+these words are used as variables to something else.  Nil means highlight
+these words as appropriate for the SystemVerilog IEEE-1800 standard.  Note
+that changing this will require restarting emacs to see the effect as font
+color choices are cached by emacs"
   :group 'verilog-mode-indent
   :type 'boolean)
 
@@ -1276,7 +1276,7 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
    "\\(\\<fork\\>\\)\\|"
    "\\(\\<begin\\>\\)\\|"
    "\\(\\<if\\>\\)\\|"
-   "\\(\\<clocking\\>\\)\\|"   
+   "\\(\\<clocking\\>\\)\\|"
    "\\(\\<else\\>\\)\\|"
    "\\(\\<end\\>.*\\<else\\>\\)\\|"
    "\\(\\<task\\>\\)\\|"
@@ -1441,7 +1441,7 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
   (eval-when-compile
     (verilog-regexp-words
      `(
-       "{" 
+       "{"
        "always" "always_latch" "always_ff" "always_comb"
        "begin" "end"
 ;       "unique" "priority"
@@ -1509,16 +1509,16 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
   (eval-when-compile
     (verilog-regexp-words
      `(
-       "always" "assign" "always_latch" "always_ff" "always_comb" "constraint" 
+       "always" "assign" "always_latch" "always_ff" "always_comb" "constraint"
        "import" "initial" "final" "module" "macromodule" "repeat" "randcase" "while"
-       "if" "for" "forever" "foreach" "else" "parameter" "do" 
+       "if" "for" "forever" "foreach" "else" "parameter" "do"
        ))))
 (defconst verilog-complete-reg
   (concat
    verilog-extended-complete-re
    "\\|"
    verilog-basic-complete-re))
-  
+
 (defconst verilog-end-statement-re
   (concat "\\(" verilog-beg-block-re "\\)\\|\\("
 	  verilog-end-block-re "\\)"))
@@ -1862,7 +1862,7 @@ See also `verilog-font-lock-extra-types'.")
 	     "assign" "begin" "case" "casex" "casez" "randcase" "deassign"
 	     "default" "disable" "else" "end" "endcase" "endfunction"
 	     "endgenerate" "endinterface" "endmodule" "endprimitive"
-	     "endspecify" "endtable" "endtask" "final" "for" "force" "return" "break" 
+	     "endspecify" "endtable" "endtask" "final" "for" "force" "return" "break"
 	     "continue" "forever" "fork" "function" "generate" "if" "iff" "initial"
 	     "interface" "join" "join_any" "join_none" "macromodule" "module" "negedge"
 	     "package" "endpackage" "always" "always_comb" "always_ff"
@@ -1882,7 +1882,7 @@ See also `verilog-font-lock-extra-types'.")
 	 (cons (concat "\\<\\(" verilog-type-font-keywords "\\)\\>")
 	       'font-lock-type-face)
 	 ;; Fontify IEEE-P1800 keywords appropriately
-	 (if verilog-highlight-p1800-keywords 
+	 (if verilog-highlight-p1800-keywords
 	     (cons (concat "\\<\\(" verilog-p1800-keywords "\\)\\>")
 		   'verilog-font-lock-p1800-face)
 	   (cons (concat "\\<\\(" verilog-p1800-keywords "\\)\\>")
@@ -2474,8 +2474,8 @@ Key bindings specific to `verilog-mode-map' are:
   (when (boundp 'hack-local-variables-hook)  ;; Also modify any file-local-variables
     (add-hook 'hack-local-variables-hook 'verilog-modify-compile-command t))
 
-  ;; Setting up things for font-lock
-  (if verilog-running-on-xemacs
+  ;; Setting up menus
+  (if (featurep 'xemacs)
       (progn
         (if (and current-menubar
                  (not (assoc "Verilog" current-menubar)))
@@ -2933,10 +2933,10 @@ With ARG, first kill any existing labels."
   (interactive)
   ;; Move back token by token until we see the end
   ;; of some ealier line.
-  (while 
+  (while
       ;; If the current point does not begin a new
       ;; statement, as in the character ahead of us is a ';', or SOF
-      ;; or the string after us unambiguosly starts a statement, 
+      ;; or the string after us unambiguosly starts a statement,
       ;; or the token before us unambiguously ends a statement,
       ;; then move back a token and test again.
       (not (or
@@ -2954,7 +2954,7 @@ With ARG, first kill any existing labels."
 	    (looking-at verilog-basic-complete-re)
 	    (save-excursion
 	      (verilog-backward-token)
-	      (or 
+	      (or
 	       (looking-at verilog-end-block-re)
 	       (looking-at verilog-preprocessor-re)))
 	    ))
@@ -2962,7 +2962,7 @@ With ARG, first kill any existing labels."
     (verilog-backward-token))
   ;; Now point is where the previous line ended.
   (verilog-forward-syntactic-ws))
-  
+
 (defun verilog-beg-of-statement-1 ()
   "Move backward to beginning of statement."
   (interactive)
@@ -3825,7 +3825,7 @@ This lets programs calling batch mode to easily extract error messages."
 	 (progn (,@ body))
        (error
 	(error "%%Error: %s%s" (error-message-string err)
-	       (if verilog-running-on-xemacs "\n" ""))))))  ;; xemacs forgets to add a newline
+	       (if (featurep 'xemacs) "\n" ""))))))  ;; xemacs forgets to add a newline
 
 (defun verilog-batch-execute-func (funref)
   "Internal processing of a batch command, running FUNREF on all command arguments."
@@ -4091,14 +4091,14 @@ type.  Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 	    (throw 'nesting 'block)
 	  ))
        ((equal (char-after) ?\})
-	
+
 	(let ((there (verilog-at-close-constraint-p)))
 	  (if there (goto-char there))))
 
        ((looking-at verilog-beg-block-re-ordered)
 	(cond
 	 ((match-end 2)  ; *sigh* could be "unique case" or "priority casex"
-	  (let ((here (point))) 
+	  (let ((here (point)))
 	    (verilog-beg-of-statement)
 	    (if (looking-at verilog-extended-case-re)
 		(throw 'nesting 'case)
@@ -4131,15 +4131,15 @@ type.  Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 	      (verilog-leap-to-case-head)
 	      (if (looking-at verilog-case-re)
 		  (throw 'nesting 'case)))))
-       
+
        ((looking-at (if (verilog-in-generate-region-p)
 			verilog-defun-level-not-generate-re
 		      verilog-defun-level-re))
 	(throw 'nesting 'defun))
-       
+
        ((looking-at verilog-cpp-level-re)
 	(throw 'nesting 'cpp))
-       
+
        ((bobp)
 	(throw 'nesting 'cpp))
        ))
@@ -4532,24 +4532,24 @@ Optional BOUND limits search."
  (save-excursion
    (if (verilog-in-paren)
        (progn
-	 (backward-up-list 1)	   
+	 (backward-up-list 1)
 	 (verilog-at-constraint-p)
 	 )
      nil)))
 (defun verilog-at-close-constraint-p ()
-  "If at the } that closes a constraint or covergroup, return true"
-  (if (and 
+  "If at the } that closes a constraint or covergroup, return true."
+  (if (and
        (equal (char-after) ?\})
        (verilog-in-paren))
 
       (save-excursion
 	(verilog-backward-ws&directives)
-	(if (equal (char-before) ?\;)	
+	(if (equal (char-before) ?\;)
 	    (point)
 	  nil))))
 
 (defun verilog-at-constraint-p ()
-  "If at the { of a constraint or coverpoint definition, return true, moving point to constraint"
+  "If at the { of a constraint or coverpoint definition, return true, moving point to constraint."
   (if (save-excursion
 	(and
 	 (equal (char-after) ?\{)
@@ -4560,8 +4560,8 @@ Optional BOUND limits search."
 	 ))
       ;; maybe
       (verilog-re-search-backward "\\<constraint\\|coverpoint\\|cross\\>" nil 'move)
-    ;; not    
-    nil 
+    ;; not
+    nil
     )
   )
 
@@ -4758,7 +4758,7 @@ Only look at a few lines to determine indent level."
 	))
 
      (;-- Handle the ends
-      (or 
+      (or
        (looking-at verilog-end-block-re )
        (verilog-at-close-constraint-p))
       (let ((val (if (eq type 'statement)
@@ -7333,8 +7333,7 @@ Cache the output of function so next call may have faster access."
 	    (t
 	     ;; Read from file
 	     ;; Clear then restore any hilighting to make emacs19 happy
-	     (let ((fontlocked (when (and (memq 'v19 verilog-emacs-features)
-					  (boundp 'font-lock-mode)
+	     (let ((fontlocked (when (and (boundp 'font-lock-mode)
 					  font-lock-mode)
 				 (font-lock-mode nil)
 				 t)))
@@ -9629,8 +9628,7 @@ Wilson Snyder (wsnyder@wsnyder.org), and/or see http://www.veripool.org."
 	;; Before version 20, match-string with font-lock returns a
 	;; vector that is not equal to the string.  IE if on "input"
 	;; nil==(equal "input" (progn (looking-at "input") (match-string 0)))
-	(fontlocked (when (and ;(memq 'v19 verilog-emacs-features)
-			       (boundp 'font-lock-mode)
+	(fontlocked (when (and (boundp 'font-lock-mode)
 			       font-lock-mode)
 		      (font-lock-mode nil)
 		      t)))
@@ -10078,7 +10076,7 @@ and the case items."
 ;; ---- add menu 'Statements' in Verilog mode (MH)
 (defun verilog-add-statement-menu ()
   "Add the menu 'Statements' to the menu bar in Verilog mode."
-  (if verilog-running-on-xemacs
+  (if (featurep 'xemacs)
       (progn
 	(easy-menu-add verilog-stmt-menu)
 	(easy-menu-add verilog-menu)
@@ -10094,7 +10092,7 @@ and the case items."
 ;; idea & first impl.: M. Rouat (eldo-mode.el)
 ;; second (emacs/xemacs) impl.: G. Van der Plas (spice-mode.el)
 
-(if verilog-running-on-xemacs
+(if (featurep 'xemacs)
     (require 'overlay)
   (require 'lucid)) ;; what else can we do ??
 
@@ -10111,10 +10109,10 @@ and the case items."
     (set-keymap-parent map verilog-mode-map)
     ;; mouse button bindings
     (define-key map "\r"            'verilog-load-file-at-point)
-    (if verilog-running-on-xemacs
+    (if (featurep 'xemacs)
 	(define-key map 'button2    'verilog-load-file-at-mouse);ffap-at-mouse ?
       (define-key map [mouse-2]     'verilog-load-file-at-mouse))
-    (if verilog-running-on-xemacs
+    (if (featurep 'xemacs)
 	(define-key map 'Sh-button2 'mouse-yank) ; you wanna paste don't you ?
       (define-key map [S-mouse-2]   'mouse-yank-at-click))
     (setq verilog-mode-mouse-map map))) ;; copy complete map now
