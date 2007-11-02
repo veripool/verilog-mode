@@ -1,10 +1,13 @@
-# $Id:$
+# $Id$
 # DESCRIPTION: To-do list for verilog-mode
 ######################################################################
 
 Occasionally:
     * M-x checkdoc
     * Make sure it's as byte compile clean as possible.
+
+Features
+	Make a hiearchy map of the current module and below in a spare buffer.
 
 From: Dan Nicolaescu <dann@ics.uci.edu>
 Date: Sun, 14 Oct 2007 10:49:43 -0700

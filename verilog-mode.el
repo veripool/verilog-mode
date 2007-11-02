@@ -7115,7 +7115,7 @@ If undefined, and WING-IT, return just SYMBOL without the tick, else nil."
   "Return TEXT with any without any known defines.
 If the variable vh-{symbol} is defined, substitute that value."
   (let ((ok t) symbol val)
-    (while (and ok (string-match "`\\([a-ZA-Z0-9_]+\\)" text))
+    (while (and ok (string-match "`\\([a-zA-Z0-9_]+\\)" text))
       (setq symbol (match-string 1 text))
       (message symbol)
       (cond ((and
@@ -8047,7 +8047,8 @@ Insert to INDENT-PT, use template TPL-LIST.
 	 (tpl-net (if (verilog-sig-multidim port-st)
 		      (concat port "/*" (verilog-sig-multidim-string port-st)
 			      vl-bits "*/")
-		    (concat port vl-bits))))
+		    (concat port vl-bits)))
+	 (case-fold-search nil))
     ;; Find template
     (cond (tpl-ass	    ; Template of exact port name
 	   (setq tpl-net (nth 1 tpl-ass)))
