@@ -1379,13 +1379,39 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
     (verilog-regexp-words
      `("module" "begin" "task" "function"))))
 
-(defconst verilog-declaration-re
+(defconst verilog-declaration-prefix-re
   (eval-when-compile
     (verilog-regexp-words
-     `("assign" "defparam" "event" "inout" "input" "integer" "localparam" "mailbox" "output"
-       "parameter" "real" "realtime" "reg" "semaphore" "supply" "supply0" "supply1" "time"
-       "tri" "tri0" "tri1" "triand" "trior" "trireg" "wand" "wire" "typedef"
-       "struct" "logic" "bit" "genvar" "wor"))))
+     `(
+       ;; port direction
+       "inout" "input" "output" "ref" 
+       ;; changeableness
+       "const" "static" "protected" "local"
+       ;; parameters
+       "localparam" "parameter" "var" 
+       ;; type creation
+       "typedef"
+       ))))
+(defconst verilog-declaration-core-re
+  (eval-when-compile
+    (verilog-regexp-words
+     `(
+       ;; integer_atom_type
+       "byte" "shortint" "int" "longint" "integer" "time"
+       ;; integer_vector_type"
+       "bit" "logic" "reg"
+       ;; non_integer_type
+       "shortreal" "real" "realtime"
+       ;; net_type
+       "supply0" "supply1" "tri" "triand" "trior" "trireg" "tri0" "tri1" "uwire" "wire" "wand" "wor"
+       ;; misc
+       "string" "event" "chandle" "virtual" "enum" "genvar"
+       "struct" "union"
+       ;; builtin classes
+       "mailbox" "semaphore" 
+       ))))
+(defconst verilog-declaration-re 
+  (concat "\\(" verilog-declaration-prefix-re "\\s-*\\)?" verilog-declaration-core-re))
 (defconst verilog-range-re "\\(\\[[^]]*\\]\\s-*\\)+")
 (defconst verilog-optional-signed-re "\\s-*\\(signed\\)?")
 (defconst verilog-optional-signed-range-re
@@ -1397,7 +1423,6 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
 (defconst verilog-declaration-re-2-no-macro
   (concat "\\s-*" verilog-declaration-re
 	  "\\s-*\\(\\(" verilog-optional-signed-range-re "\\)\\|\\(" verilog-delay-re "\\)"
-;	  "\\|\\(" verilog-macroexp-re "\\)"
 	  "\\)?"))
 (defconst verilog-declaration-re-2-macro
   (concat "\\s-*" verilog-declaration-re
@@ -1406,26 +1431,9 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
 	  "\\)?"))
 (defconst verilog-declaration-re-1-macro
   (concat "^" verilog-declaration-re-2-macro))
-;  (concat
-;   "^\\s-*\\<\\(in\\(?:out\\|put\\|teger\\)\\|output\\|re\\(?:al\\(?:time\\)?\\|g\\)\\|t\\(?:ime\\|ri\\(?:and\\|or\\|reg\\|[01]\\)?\\|ypedef\\)\\|w\\(?:and\\|ire\\|or\\)\\)\\>"
-;   "\\s-*"
-;   "\\("
-;   "\\("
-;   "\\(\\<\\(reg\\|wire\\)\\>\\s-*\\)?"
-;   "\\(\\<signed\\>\\s-*\\)?"
-;   "\\(\\(\\[[^]]*\\]\\)+\\)?"
-;   "\\)"
-;   "\\|"
-;     "\\(#\\s-*\\("
-;       "\\([0-9_]+\\('s?[hdxbo][0-9a-fA-F_xz]+\\)?\\)"
-;       "\\|\\(([^()]*)\\)"
-;       "\\|\\(\\sw+\\)"
-;     "\\)"
-;   "\\)"
-;   "\\|\\(`\\sw+\\)\\)?"
-;   ))
 
 (defconst verilog-declaration-re-1-no-macro (concat "^" verilog-declaration-re-2-no-macro))
+
 (defconst verilog-defun-re
   (eval-when-compile (verilog-regexp-words `("macromodule" "module" "class" "program" "interface" "package" "primitive" "config"))))
 (defconst verilog-end-defun-re
@@ -1577,7 +1585,7 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
      "supply1" "table" "tagged" "task" "this" "throughout" "time"
      "timeprecision" "timeunit" "tran" "tranif0" "tranif1" "tri"
      "tri0" "tri1" "triand" "trior" "trireg" "type" "typedef" "union"
-     "unique" "unsigned" "use" "var" "vectored" "virtual" "void"
+     "unique" "unsigned" "use" "uwire" "var" "vectored" "virtual" "void"
      "wait" "wait_order" "wand" "weak0" "weak1" "while" "wildcard"
      "wire" "with" "within" "wor" "xnor" "xor"
  )
@@ -1807,7 +1815,7 @@ See also `verilog-font-lock-extra-types'.")
 	     "rtranif0" "rtranif1" "semaphore" "signed" "struct" "supply"
 	     "supply0" "supply1" "time" "tran" "tranif0" "tranif1"
 	     "tri" "tri0" "tri1" "triand" "trior" "trireg" "typedef"
-	     "vectored" "wand" "wire" "wor" "xnor" "xor"
+	     "uwire" "vectored" "wand" "wire" "wor" "xnor" "xor"
 	     ) nil  )))
 
        (verilog-pragma-keywords
@@ -2998,6 +3006,8 @@ With ARG, first kill any existing labels."
 			       (looking-at verilog-beg-block-re))
 			     (goto-char (match-beginning 0))
 			     (throw 'found nil))
+			    ((looking-at "[ \t]*)")
+			     (throw 'found (point)))			     
 			    ((eobp)
 			     (throw 'found (point))))))))
     (if (not pos)
@@ -4898,6 +4908,7 @@ ARG is ignored, for `comment-indent-function' compatibility."
 	(let* ((m1 (make-marker))
 	       (e) (r)
 	       (here (point))
+	       ;; Start of declaration range
 	       (start
 		(progn
 		  (verilog-beg-of-statement-1)
@@ -4908,6 +4919,7 @@ ARG is ignored, for `comment-indent-function' compatibility."
 		    (backward-char)
 		    (verilog-beg-of-statement-1)) ;Ack, need to grok `define
 		  e))
+	       ;; End of declaration range
 	       (end
 		(progn
 		  (goto-char here)
@@ -5115,9 +5127,10 @@ BASEIND is the base indent to offset everything."
     ;; Use previous declaration (in this module) as template.
     (if (or (memq 'all verilog-auto-lineup)
 	    (memq 'declaration verilog-auto-lineup))
-	(if (verilog-re-search-backward (or (and verilog-indent-declaration-macros
-						 verilog-declaration-re-1-macro)
-					    verilog-declaration-re-1-no-macro) lim t)
+	(if (verilog-re-search-backward 
+	     (or (and verilog-indent-declaration-macros
+		      verilog-declaration-re-1-macro)
+		 verilog-declaration-re-1-no-macro) lim t)
 	    (progn
 	      (goto-char (match-end 0))
 	      (skip-chars-forward " \t")
@@ -5173,9 +5186,10 @@ Region is defined by B and EDPOS."
       ;; Get rightmost position
       (while (progn (setq e (marker-position edpos))
 		    (< (point) e))
-	(if (verilog-re-search-forward (or (and verilog-indent-declaration-macros
-						verilog-declaration-re-1-macro)
-					   verilog-declaration-re-1-no-macro) e 'move)
+	(if (verilog-re-search-forward 
+	     (or (and verilog-indent-declaration-macros
+		      verilog-declaration-re-1-macro)
+		 verilog-declaration-re-1-no-macro) e 'move)
 	    (progn
 	      (goto-char (match-end 0))
 	      (verilog-backward-syntactic-ws)
