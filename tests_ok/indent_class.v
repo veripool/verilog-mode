@@ -1,3 +1,7 @@
+class foo();
+   int my_field;
+endclass // foo
+
 class temp;
    extern function test();
    extern function test2();
