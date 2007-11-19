@@ -6278,6 +6278,7 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 		((and expect-signal
 		      (eq functask 0)
 		      (not rvalue)
+		      (eq paren sig-paren)
 		      (not (member keywd verilog-keywords)))
 		 ;; Add new signal to expect-signal's variable
 		 (setq newsig (list keywd vec nil nil enum signed typedefed multidim))
