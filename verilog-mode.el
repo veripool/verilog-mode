@@ -6002,7 +6002,7 @@ Signals must be in standard (base vector) form."
 (defun verilog-signals-combine-bus (in-list)
   "Return a list of signals in IN-LIST, with busses combined.
 Duplicate signals are also removed.  For example A[2] and A[1] become A[2:1]."
-  (let (combo
+  (let (combo buswarn
 	out-list
 	sig highbit lowbit		; Temp information about current signal
 	sv-name sv-highbit sv-lowbit	; Details about signal we are forming
@@ -6024,6 +6024,7 @@ Duplicate signals are also removed.  For example A[2] and A[1] become A[2:1]."
 	      sv-type    (verilog-sig-type sig)
 	      sv-multidim (verilog-sig-multidim sig)
 	      combo ""
+	      buswarn ""
 	      ))
       ;; Extract bus details
       (setq bus (verilog-sig-bits sig))
@@ -6048,17 +6049,19 @@ Duplicate signals are also removed.  For example A[2] and A[1] become A[2:1]."
       (setq sig (car in-list))
       (cond ((and sig (equal sv-name (verilog-sig-name sig)))
 	     ;; Combine with this signal
-	     (if (and sv-busstring (not (equal sv-busstring (verilog-sig-bits sig))))
+	     (when (and sv-busstring (not (equal sv-busstring (verilog-sig-bits sig))))
+	       (when nil  ;; Debugging
 		 (message (concat "Warning, can't merge into single bus "
 				  sv-name bus
 				  ", the AUTOs may be wrong")))
+	       (setq buswarn ", Couldn't Merge"))
 	     (if (verilog-sig-comment sig) (setq combo ", ..."))
 	     (setq sv-memory (or sv-memory (verilog-sig-memory sig))
 		   sv-enum   (or sv-enum   (verilog-sig-enum sig))
 		   sv-signed (or sv-signed (verilog-sig-signed sig))
                    sv-type   (or sv-type   (verilog-sig-type sig))
                    sv-multidim (or sv-multidim (verilog-sig-multidim sig))))
-	    ;; Doesn't match next signal, add to que, zero in prep for next
+	    ;; Doesn't match next signal, add to queue, zero in prep for next
 	    ;; Note sig may also be nil for the last signal in the list
 	    (t
 	     (setq out-list
@@ -6066,7 +6069,7 @@ Duplicate signals are also removed.  For example A[2] and A[1] become A[2:1]."
 			       (or sv-busstring
 				   (if sv-highbit
 				       (concat "[" (int-to-string sv-highbit) ":" (int-to-string sv-lowbit) "]")))
-			       (concat sv-comment combo)
+			       (concat sv-comment combo buswarn)
 			       sv-memory sv-enum sv-signed sv-type sv-multidim)
 			 out-list)
 		   sv-name nil)))
@@ -8701,6 +8704,11 @@ Limitations:
 
   This does NOT work on memories or SystemVerilog .name connections,
   declare those yourself.
+
+  Verilog-mode will add \"Couldn't Merge\" comments to signals it cannot
+  determine how to bus together. This occurs when you have ports with
+  non-numeric or non-sequential bus subscripts. If Verilog-Mode
+  mis-guessed, you'll have to declare them yourself.
 
 An example (see `verilog-auto-inst' for what else is going on here):
 

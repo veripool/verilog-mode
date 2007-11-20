@@ -6,12 +6,12 @@ module foo
 
    /*AUTOOUTPUTEVERY*/
    // Beginning of automatic outputs (every signal)
-   output [Y:X]		aa;			// From inst of autoinst_signed_fubar2.v, ...
+   output [Y:X]		aa;			// From inst of autoinst_signed_fubar2.v, ..., Couldn't Merge
    // End of automatics
 
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire [Y:X]		aa;			// From inst of autoinst_signed_fubar2.v, ...
+   wire [Y:X]		aa;			// From inst of autoinst_signed_fubar2.v, ..., Couldn't Merge
    // End of automatics
 
 
