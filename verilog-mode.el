@@ -756,7 +756,7 @@ included."
   "*If true, AUTOSENSE should assume all defines represent constants.
 When true, the defines will not be included in sensitivity lists.  To
 maintain compatibility with other sites, this should be set at the bottom
-of each verilog file that requires it, rather then being set globally."
+of each verilog file that requires it, rather than being set globally."
   :type 'boolean
   :group 'verilog-mode-auto)
 
@@ -1398,7 +1398,7 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
      `(
        ;; integer_atom_type
        "byte" "shortint" "int" "longint" "integer" "time"
-       ;; integer_vector_type"
+       ;; integer_vector_type
        "bit" "logic" "reg"
        ;; non_integer_type
        "shortreal" "real" "realtime"
@@ -6800,7 +6800,7 @@ If the filename is provided, `verilog-library-flags' will be used to
 resolve it.  If optional RECURSE is non-nil, recurse through `includes.
 
 Parameters must be simple assignments to constants, or have their own
-\"parameter\" label rather then a list of parameters.  Thus:
+\"parameter\" label rather than a list of parameters.  Thus:
 
     parameter X = 5, Y = 10;	// Ok
     parameter X = {1'b1, 2'h2};	// Ok
@@ -6897,7 +6897,7 @@ Note includes are only read when the file is first visited, you must use
 \\[find-alternate-file] RET  to have these take effect after editing them!
 
 It is good to get in the habit of including all needed files in each .v
-file that needs it, rather then waiting for compile time.  This will aid
+file that needs it, rather than waiting for compile time.  This will aid
 this process, Verilint, and readability.  To prevent defining the same
 variable over and over when many modules are compiled together, put a test
 around the inside each include file:
@@ -7566,7 +7566,7 @@ Presumes that any newlines end a list element."
 ;;(let ((indent-pt 10)) (verilog-insert-indent "hello\n" "addon" "there\n"))
 
 (defun verilog-repair-open-comma ()
-  "If backwards-from-point is other then a open parenthesis insert comma."
+  "If backwards-from-point is other than a open parenthesis insert comma."
   (save-excursion
     (verilog-backward-syntactic-ws)
     (when (save-excursion

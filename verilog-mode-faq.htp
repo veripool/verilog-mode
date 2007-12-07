@@ -674,7 +674,7 @@ always @(/*AS*/)
    <p>If your ifdefing around signals for only debug, there's rarely a need to do
    so.  Synthesis programs will remove irrelevant logic and ignore PLI calls.
 
-   <p>An alternative technique to have a fake "mode" input wire, rather then a
+   <p>An alternative technique to have a fake "mode" input wire, rather than a
    ifdef or parameter. This also prevents having to lint or run other
    translators in 2 different `define modes, thus reducing bugs.  This also
    relies on your synthesis program's removal of irrelevant stuff.  For
@@ -890,7 +890,7 @@ foo <= #1 signal;
 </pre>
 
    <p>If you're trying the reverse, namely to upcase your signal names, did you
-   consider lower case is more readable by 15% or so then all upper case?
+   consider lower case is more readable by 15% or so than all upper case?
 
 <a name="3instname"></a><h3>How do I use AUTO_TEMPLATE to include the instantiation name for pin?</h3>
 
@@ -928,7 +928,7 @@ celltype u_a0(/*AUTOINST*/
 
    <p>Substring is very useful in templates.  All of your cell names need to be the
    same length however.  Often you can simply pad the names by adding zeros, for
-   example use <code>u_00 ... u_15<code>, rather then <code>u_0 ... u_15</code>.
+   example use <code>u_00 ... u_15<code>, rather than <code>u_0 ... u_15</code>.
 
 <a name="3instmultd"></a><h3>How do I have AUTO_TEMPLATE use the second number in a instance name?</h3>
 
