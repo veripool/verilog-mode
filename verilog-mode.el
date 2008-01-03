@@ -1,4 +1,6 @@
 ;; verilog-mode.el --- major mode for editing verilog source in Emacs
+;;    This code supports Emacs 21.1 and later
+;;    And XEmacs 21.1 and later
 ;;
 ;; $Id$
 
@@ -118,129 +120,128 @@
   (message (concat "Using verilog-mode version " verilog-mode-version) ))
 
 ;; Insure we have certain packages, and deal with it if we don't
-(if (fboundp 'eval-when-compile)
-    (eval-when-compile
-      (require 'verilog-mode)
-      (condition-case nil
-          (require 'imenu)
-        (error nil))
-      (condition-case nil
-	  (require 'reporter)
-        (error nil))
-      (condition-case nil
-          (require 'easymenu)
-        (error nil))
-      (condition-case nil
-          (require 'regexp-opt)
-        (error nil))
-      (condition-case nil
-	  (load "skeleton") ;; bug in 19.28 through 19.30 skeleton.el, not provided.
-        (error nil))
-      (condition-case nil
-	  (require 'vc)
-        (error nil))
-      (condition-case nil
-          (if (fboundp 'when)
-	      nil ;; fab
-	    (defmacro when (var &rest body)
-	      (` (cond ( (, var) (,@ body))))))
-        (error nil))
-      (condition-case nil
-          (if (fboundp 'unless)
-	      nil ;; fab
-	    (defmacro unless (var &rest body)
-	      (` (if (, var) nil (,@ body)))))
-        (error nil))
-      (condition-case nil
-          (if (fboundp 'store-match-data)
-	      nil ;; fab
-	    (defmacro store-match-data (&rest args) nil))
-        (error nil))
-      (condition-case nil
-	  (if (boundp 'current-menubar)
-	      nil ;; great
-	    (progn
-	     (defmacro set-buffer-menubar (&rest args) nil)
-	     (defmacro add-submenu (&rest args) nil))
-	    )
-	(error nil))
-      (condition-case nil
-	  (if (fboundp 'zmacs-activate-region)
-	      nil ;; great
-	    (defmacro zmacs-activate-region (&rest args) nil))
-	(error nil))
-      (condition-case nil
-	  (if (fboundp 'char-before)
-	      nil ;; great
-	    (defmacro char-before (&rest body)
-	      (` (char-after (1- (point))))))
-	(error nil))
-      ;; Requires to define variables that would be "free" warnings
-      (condition-case nil
-	  (require 'font-lock)
-	(error nil))
-      (condition-case nil
-	  (require 'compile)
-	(error nil))
-      (condition-case nil
-	  (require 'custom)
-	(error nil))
-      (condition-case nil
-	  (require 'dinotrace)
-	(error nil))
-      (condition-case nil
-	  (if (fboundp 'dinotrace-unannotate-all)
-	      nil ;; great
-	    (defun dinotrace-unannotate-all (&rest args) nil))
-	(error nil))
-      (condition-case nil
-	  (if (fboundp 'customize-apropos)
-	      nil ;; great
-	    (defun customize-apropos (&rest args) nil))
-	(error nil))
-      (condition-case nil
-	  (if (fboundp 'match-string-no-properties)
-	      nil ;; great
-	    (defsubst match-string-no-properties (num &optional string)
-	      "Return string of text matched by last search, without text properties.
+(eval-when-compile
+  (require 'verilog-mode)
+  (condition-case nil
+      (require 'imenu)
+    (error nil))
+  (condition-case nil
+      (require 'reporter)
+    (error nil))
+  (condition-case nil
+      (require 'easymenu)
+    (error nil))
+  (condition-case nil
+      (require 'regexp-opt)
+    (error nil))
+  (condition-case nil
+      (load "skeleton") ;; bug in 19.28 through 19.30 skeleton.el, not provided.
+    (error nil))
+  (condition-case nil
+      (require 'vc)
+    (error nil))
+  (condition-case nil
+      (if (fboundp 'when)
+	  nil ;; fab
+	(defmacro when (var &rest body)
+	  (` (cond ( (, var) (,@ body))))))
+    (error nil))
+  (condition-case nil
+      (if (fboundp 'unless)
+	  nil ;; fab
+	(defmacro unless (var &rest body)
+	  (` (if (, var) nil (,@ body)))))
+    (error nil))
+  (condition-case nil
+      (if (fboundp 'store-match-data)
+	  nil ;; fab
+	(defmacro store-match-data (&rest args) nil))
+    (error nil))
+  (condition-case nil
+      (if (boundp 'current-menubar)
+	  nil ;; great
+	(progn
+	  (defmacro set-buffer-menubar (&rest args) nil)
+	  (defmacro add-submenu (&rest args) nil))
+	)
+    (error nil))
+  (condition-case nil
+      (if (fboundp 'zmacs-activate-region)
+	  nil ;; great
+	(defmacro zmacs-activate-region (&rest args) nil))
+    (error nil))
+  (condition-case nil
+      (if (fboundp 'char-before)
+	  nil ;; great
+	(defmacro char-before (&rest body)
+	  (` (char-after (1- (point))))))
+    (error nil))
+  ;; Requires to define variables that would be "free" warnings
+  (condition-case nil
+      (require 'font-lock)
+    (error nil))
+  (condition-case nil
+      (require 'compile)
+    (error nil))
+  (condition-case nil
+      (require 'custom)
+    (error nil))
+  (condition-case nil
+      (require 'dinotrace)
+    (error nil))
+  (condition-case nil
+      (if (fboundp 'dinotrace-unannotate-all)
+	  nil ;; great
+	(defun dinotrace-unannotate-all (&rest args) nil))
+    (error nil))
+  (condition-case nil
+      (if (fboundp 'customize-apropos)
+	  nil ;; great
+	(defun customize-apropos (&rest args) nil))
+    (error nil))
+  (condition-case nil
+      (if (fboundp 'match-string-no-properties)
+	  nil ;; great
+	(defsubst match-string-no-properties (num &optional string)
+	  "Return string of text matched by last search, without text properties.
 NUM specifies which parenthesized expression in the last regexp.
  Value is nil if NUMth pair didn't match, or there were less than NUM pairs.
 Zero means the entire text matched by the whole regexp or whole string.
 STRING should be given if the last search was by `string-match' on STRING."
-	      (if (match-beginning num)
-		  (if string
-		      (let ((result
-			     (substring string (match-beginning num) (match-end num))))
-			(set-text-properties 0 (length result) nil result)
-			result)
-		    (buffer-substring-no-properties (match-beginning num)
-						    (match-end num)
-						    (current-buffer)
-						    )))))
-	(error nil))
-      (if (and (featurep 'custom) (fboundp 'custom-declare-variable))
-	  nil ;; We've got what we needed
-	;; We have the old custom-library, hack around it!
-	(defmacro defgroup (&rest args)  nil)
-	(defmacro customize (&rest args)
-	  (message "Sorry, Customize is not available with this version of emacs"))
-	(defmacro defcustom (var value doc &rest args)
-	  (` (defvar (, var) (, value) (, doc))))
-	)
-      (if (fboundp 'defface)
-	  nil ; great!
-	(defmacro defface (var value doc &rest args)
-	  (` (make-face (, var))))
-	)
+	  (if (match-beginning num)
+	      (if string
+		  (let ((result
+			 (substring string (match-beginning num) (match-end num))))
+		    (set-text-properties 0 (length result) nil result)
+		    result)
+		(buffer-substring-no-properties (match-beginning num)
+						(match-end num)
+						(current-buffer)
+						)))))
+    (error nil))
+  (if (and (featurep 'custom) (fboundp 'custom-declare-variable))
+      nil ;; We've got what we needed
+    ;; We have the old custom-library, hack around it!
+    (defmacro defgroup (&rest args)  nil)
+    (defmacro customize (&rest args)
+      (message "Sorry, Customize is not available with this version of emacs"))
+    (defmacro defcustom (var value doc &rest args)
+      (` (defvar (, var) (, value) (, doc))))
+    )
+  (if (fboundp 'defface)
+      nil ; great!
+    (defmacro defface (var value doc &rest args)
+      (` (make-face (, var))))
+    )
+  
+  (if (and (featurep 'custom) (fboundp 'customize-group))
+      nil ;; We've got what we needed
+    ;; We have an intermediate custom-library, hack around it!
+    (defmacro customize-group (var &rest args)
+      (`(customize (, var) )))
+    )
+  )
 
-      (if (and (featurep 'custom) (fboundp 'customize-group))
-	  nil ;; We've got what we needed
-	;; We have an intermediate custom-library, hack around it!
-	(defmacro customize-group (var &rest args)
-	  (`(customize (, var) )))
-	)
-
-      ))
 ;; Provide a regular expression optimization routine, using regexp-opt
 ;; if provided by the user's elisp libraries
 (eval-and-compile
@@ -517,12 +518,12 @@ would become
   :type 'list )
 
 (defcustom verilog-highlight-p1800-keywords nil
-  "*If true highlight words newly reserved by IEEE-1800 in
-verilog-font-lock-p1800-face in order to gently suggest changing where
-these words are used as variables to something else.  Nil means highlight
-these words as appropriate for the SystemVerilog IEEE-1800 standard.  Note
-that changing this will require restarting emacs to see the effect as font
-color choices are cached by emacs"
+  "*True means highlight words newly reserved by IEEE-1800.
+These will appear in `verilog-font-lock-p1800-face' in order to gently
+suggest changing where these words are used as variables to something else.
+Nil means highlight these words as appropriate for the SystemVerilog
+IEEE-1800 standard.  Note that changing this will require restarting Emacs
+to see the effect as font color choices are cached by Emacs"
   :group 'verilog-mode-indent
   :type 'boolean)
 
@@ -1384,11 +1385,11 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
     (verilog-regexp-words
      `(
        ;; port direction
-       "inout" "input" "output" "ref" 
+       "inout" "input" "output" "ref"
        ;; changeableness
        "const" "static" "protected" "local"
        ;; parameters
-       "localparam" "parameter" "var" 
+       "localparam" "parameter" "var"
        ;; type creation
        "typedef"
        ))))
@@ -1408,9 +1409,9 @@ Called by `compilation-mode-hook'.  This allows \\[next-error] to find the error
        "string" "event" "chandle" "virtual" "enum" "genvar"
        "struct" "union"
        ;; builtin classes
-       "mailbox" "semaphore" 
+       "mailbox" "semaphore"
        ))))
-(defconst verilog-declaration-re 
+(defconst verilog-declaration-re
   (concat "\\(" verilog-declaration-prefix-re "\\s-*\\)?" verilog-declaration-core-re))
 (defconst verilog-range-re "\\(\\[[^]]*\\]\\s-*\\)+")
 (defconst verilog-optional-signed-re "\\s-*\\(signed\\)?")
@@ -2750,13 +2751,13 @@ user is prompted for a value.  The indices are surrounded by square brackets
     a = b                           a[  7] = b
     a = b                           a[  8] = b"
 
-  (interactive "NMAX?")
+  (interactive "NMAX: ")
   (save-excursion
   (let ((n 0))
     (while (< n MAX)
       (save-excursion
       (insert (format "[%3d]" n)))
-      (next-line 1)
+      (forward-line 1)
       (setq n (1+ n))))))
 
 
@@ -2777,13 +2778,13 @@ following code fragment:
     buf buf                           buf buf007
     buf buf                           buf buf008"
 
-  (interactive "NMAX?")
+  (interactive "NMAX: ")
   (save-excursion
   (let ((n 0))
     (while (< n MAX)
       (save-excursion
       (insert (format "%3.3d" n)))
-      (next-line 1)
+      (forward-line 1)
       (setq n (1+ n))))))
 
 (defun verilog-mark-defun ()
@@ -3007,7 +3008,7 @@ With ARG, first kill any existing labels."
 			     (goto-char (match-beginning 0))
 			     (throw 'found nil))
 			    ((looking-at "[ \t]*)")
-			     (throw 'found (point)))			     
+			     (throw 'found (point)))
 			    ((eobp)
 			     (throw 'found (point))))))))
     (if (not pos)
@@ -5001,7 +5002,7 @@ ARG is ignored, for `comment-indent-function' compatibility."
 	  (message "")))))
 
 (defun verilog-pretty-expr (&optional myre)
-  "Line up expressions around point."
+  "Line up expressions around point, or optional regexp MYRE."
   (interactive "sRegular Expression: ((<|:)?=) ")
   (save-excursion
     (if (or (eq myre nil)
@@ -5127,7 +5128,7 @@ BASEIND is the base indent to offset everything."
     ;; Use previous declaration (in this module) as template.
     (if (or (memq 'all verilog-auto-lineup)
 	    (memq 'declaration verilog-auto-lineup))
-	(if (verilog-re-search-backward 
+	(if (verilog-re-search-backward
 	     (or (and verilog-indent-declaration-macros
 		      verilog-declaration-re-1-macro)
 		 verilog-declaration-re-1-no-macro) lim t)
@@ -5186,7 +5187,7 @@ Region is defined by B and EDPOS."
       ;; Get rightmost position
       (while (progn (setq e (marker-position edpos))
 		    (< (point) e))
-	(if (verilog-re-search-forward 
+	(if (verilog-re-search-forward
 	     (or (and verilog-indent-declaration-macros
 		      verilog-declaration-re-1-macro)
 		 verilog-declaration-re-1-no-macro) e 'move)
@@ -6078,7 +6079,7 @@ Duplicate signals are also removed.  For example A[2] and A[1] become A[2:1]."
     out-list))
 
 (defun verilog-sig-tieoff (sig &optional no-width)
-  "Return tieoff expression for given SIGNAL, with appropriate width.
+  "Return tieoff expression for given SIG, with appropriate width.
 Ignore width if optional NO-WIDTH is set."
   (let* ((width (if no-width nil (verilog-sig-width sig))))
     (concat
@@ -7508,7 +7509,7 @@ and invalidating the cache."
 	(funcall func))))
 
 (defun verilog-insert-one-definition (sig type indent-pt)
-  "Print out a definition for SIGNAL of the given TYPE,
+  "Print out a definition for SIG of the given TYPE,
 with appropriate INDENT-PT indentation."
   (indent-to indent-pt)
   (insert type)
@@ -8048,7 +8049,8 @@ Avoid declaring ports manually, as it makes code harder to maintain."
   "Print out a instantiation connection for this PORT-ST.
 Insert to INDENT-PT, use template TPL-LIST.
 @ are instantiation numbers, replaced with TPL-NUM.
-@\"(expression @)\" are evaluated, with @ as a variable."
+@\"(expression @)\" are evaluated, with @ as a variable.
+If FOR-STAR add comment it is a .* expansion."
   (let* ((port (verilog-sig-name port-st))
 	 (tpl-ass (or (assoc port (car tpl-list))
 		      (verilog-auto-inst-port-map port-st)))
@@ -9443,7 +9445,7 @@ This will allow trace viewers to show the ASCII name of states.
 
 First, parameters are built into a enumeration using the synopsys enum
 comment.  The comment must be between the keyword and the symbol.
-(Annoying, but that's what Synopsys's dc_shell FSM reader requires.)
+\(Annoying, but that's what Synopsys's dc_shell FSM reader requires.)
 
 Next, registers which that enum applies to are also tagged with the same
 enum.  Synopsys also suggests labeling state vectors, but `verilog-mode'
