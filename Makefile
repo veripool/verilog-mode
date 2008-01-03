@@ -7,6 +7,7 @@ XEMACS_DEST = /usr/local/lib/xemacs/xemacs-packages/lisp/prog-modes/
 EMACS   = emacs
 EMACS_DEST = /usr/share/emacs/site-lisp/
 ELC	= -batch -q -l verilog-mode.el -f batch-byte-compile
+CVS_GNU = cvs -d:pserver:anonymous@cvs.sv.gnu.org:/sources/emacs
 
 release : dirs install
 install : dirs test $(D)/mmencoded_verilog-mode $(D)/emacs-version.h\
@@ -86,4 +87,13 @@ e/verilog-mode.elc : verilog-mode.el
 verilog.info : verilog.texinfo
 	makeinfo verilog.texinfo > verilog.info
 
+######################################################################
+# GNU CVS version
 
+.PHONY: gnu-update
+gnu-update:
+	$(CVS_GNU) update emacs/lisp/progmodes/verilog-mode.el
+
+.PHONY: gnu-diff
+gnu-diff: gnu-update
+	diff -c verilog-mode.el emacs/lisp/progmodes/verilog-mode.el
