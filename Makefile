@@ -95,5 +95,13 @@ gnu-update:
 	$(CVS_GNU) update emacs/lisp/progmodes/verilog-mode.el
 
 .PHONY: gnu-diff
-gnu-diff: gnu-update
-	diff -c verilog-mode.el emacs/lisp/progmodes/verilog-mode.el
+gnu-diff: gnu-update verilog-mode-tognu.el
+	diff -c verilog-mode-tognu.el emacs/lisp/progmodes/verilog-mode.el
+
+verilog-mode-tognu.el: verilog-mode.el Makefile
+	cat verilog-mode.el \
+	 | sed 's/ *\$$Id:.*//g' \
+	 | sed 's/(substring.*\$$\$$Revision: \([0-9]*\).*$$/"\1"/g' \
+	 | sed 's/(substring.*\$$\$$Date: \(....-..-..\).*).*$$/"\1-GNU"/g' \
+	 | sed 's/verilog-mode-release-emacs nil/verilog-mode-release-emacs t/g' \
+	 > verilog-mode-tognu.el
