@@ -90,13 +90,21 @@ verilog.info : verilog.texinfo
 ######################################################################
 # GNU CVS version
 
-.PHONY: gnu-update
-gnu-update:
-	$(CVS_GNU) update emacs/lisp/progmodes/verilog-mode.el
+.PHONY: gnu-update gnu-update-22 gnu-update-head
+gnu-update: gnu-update-22 gnu-update-head
+gnu-update-22: gnu22
+	cd gnu22   && $(CVS_GNU) co -rEMACS_22_BASE emacs/lisp/progmodes/verilog-mode.el
+gnu-update-head: gnuhead
+	cd gnuhead && $(CVS_GNU) co -rHEAD          emacs/lisp/progmodes/verilog-mode.el
+
+gnu22:
+	mkdir -p $@
+gnuhead:
+	mkdir -p $@
 
 .PHONY: gnu-diff
 gnu-diff: gnu-update verilog-mode-tognu.el
-	diff -c verilog-mode-tognu.el emacs/lisp/progmodes/verilog-mode.el
+	diff -c verilog-mode-tognu.el gnuhead/emacs/lisp/progmodes/verilog-mode.el
 
 verilog-mode-tognu.el: verilog-mode.el Makefile
 	cat verilog-mode.el \

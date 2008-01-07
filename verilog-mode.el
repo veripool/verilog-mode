@@ -122,148 +122,131 @@
 
 ;; Insure we have certain packages, and deal with it if we don't
 (eval-when-compile
-  (condition-case nil
-      (require 'imenu)
-    (error nil))
-  (condition-case nil
-      (require 'reporter)
-    (error nil))
-  (condition-case nil
-      (require 'easymenu)
-    (error nil))
-  (condition-case nil
-      (require 'regexp-opt)
-    (error nil))
-  (condition-case nil
-      (load "skeleton") ;; bug in 19.28 through 19.30 skeleton.el, not provided.
-    (error nil))
-  (condition-case nil
-      (require 'vc)
-    (error nil))
-  (condition-case nil
-      (if (fboundp 'when)
-	  nil ;; fab
-	(defmacro when (var &rest body)
-	  (` (cond ( (, var) (,@ body))))))
-    (error nil))
-  (condition-case nil
-      (if (fboundp 'unless)
-	  nil ;; fab
-	(defmacro unless (var &rest body)
-	  (` (if (, var) nil (,@ body)))))
-    (error nil))
-  (condition-case nil
-      (if (fboundp 'store-match-data)
-	  nil ;; fab
-	(defmacro store-match-data (&rest args) nil))
-    (error nil))
-  (condition-case nil
-      (if (boundp 'current-menubar)
-	  nil ;; great
-	(defmacro add-submenu (&rest args) nil))
-    (error nil))
-  (condition-case nil
-      (if (fboundp 'zmacs-activate-region)
-	  nil ;; great
-	(defmacro zmacs-activate-region (&rest args) nil))
-    (error nil))
-  (condition-case nil
-      (if (fboundp 'char-before)
-	  nil ;; great
-	(defmacro char-before (&rest body)
-	  (` (char-after (1- (point))))))
-    (error nil))
-  ;; Requires to define variables that would be "free" warnings
-  (condition-case nil
-      (require 'font-lock)
-    (error nil))
-  (condition-case nil
-      (require 'compile)
-    (error nil))
-  (condition-case nil
-      (require 'custom)
-    (error nil))
-  (condition-case nil
-      (if (fboundp 'customize-apropos)
-	  nil ;; great
-	(defun customize-apropos (&rest args) nil))
-    (error nil))
-  (condition-case nil
-      (if (fboundp 'match-string-no-properties)
-	  nil ;; great
-	(defsubst match-string-no-properties (num &optional string)
-	  "Return string of text matched by last search, without text properties.
+  (when (featurep 'xemacs)
+    (condition-case nil
+        (require 'easymenu)
+      (error nil))
+    (condition-case nil
+        (require 'regexp-opt)
+      (error nil))
+    ;; Bug in 19.28 through 19.30 skeleton.el, not provided.
+    (condition-case nil
+        (load "skeleton")
+      (error nil))
+    (condition-case nil
+        (if (fboundp 'when)
+            nil ;; fab
+          (defmacro when (cond &rest body)
+            (list 'if cond (cons 'progn body))))
+      (error nil))
+    (condition-case nil
+        (if (fboundp 'unless)
+            nil ;; fab
+          (defmacro unless (cond &rest body)
+            (cons 'if (cons cond (cons nil body)))))
+      (error nil))
+    (condition-case nil
+        (if (fboundp 'store-match-data)
+            nil ;; fab
+          (defmacro store-match-data (&rest args) nil))
+      (error nil))
+    (condition-case nil
+        (if (boundp 'current-menubar)
+            nil ;; great
+          (progn
+            (defmacro add-submenu (&rest args) nil))
+          )
+      (error nil))
+    (condition-case nil
+        (if (fboundp 'char-before)
+            nil ;; great
+          (defmacro char-before (&rest body)
+            (char-after (1- (point)))))
+      (error nil))
+    (condition-case nil
+        (require 'custom)
+      (error nil))
+    (condition-case nil
+        (if (fboundp 'match-string-no-properties)
+            nil ;; great
+          (defsubst match-string-no-properties (num &optional string)
+            "Return string of text matched by last search, without text properties.
 NUM specifies which parenthesized expression in the last regexp.
  Value is nil if NUMth pair didn't match, or there were less than NUM pairs.
 Zero means the entire text matched by the whole regexp or whole string.
 STRING should be given if the last search was by `string-match' on STRING."
-	  (if (match-beginning num)
-	      (if string
-		  (let ((result
-			 (substring string (match-beginning num) (match-end num))))
-		    (set-text-properties 0 (length result) nil result)
-		    result)
-		(buffer-substring-no-properties (match-beginning num)
-						(match-end num)
-						(current-buffer)
-						)))))
-    (error nil))
-  (if (and (featurep 'custom) (fboundp 'custom-declare-variable))
-      nil ;; We've got what we needed
-    ;; We have the old custom-library, hack around it!
-    (defmacro defgroup (&rest args)  nil)
-    (defmacro customize (&rest args)
-      (message "Sorry, Customize is not available with this version of emacs"))
-    (defmacro defcustom (var value doc &rest args)
-      (` (defvar (, var) (, value) (, doc))))
-    )
-  (if (fboundp 'defface)
-      nil ; great!
-    (defmacro defface (var value doc &rest args)
-      (` (make-face (, var))))
-    )
-  
-  (if (and (featurep 'custom) (fboundp 'customize-group))
-      nil ;; We've got what we needed
-    ;; We have an intermediate custom-library, hack around it!
-    (defmacro customize-group (var &rest args)
-      (`(customize (, var) )))
-    )
-  )
+            (if (match-beginning num)
+                (if string
+                    (let ((result
+                           (substring string
+				      (match-beginning num) (match-end num))))
+                      (set-text-properties 0 (length result) nil result)
+                      result)
+                  (buffer-substring-no-properties (match-beginning num)
+                                                  (match-end num)
+                                                  (current-buffer)
+                                                  )))))
+      (error nil))
+    (if (and (featurep 'custom) (fboundp 'custom-declare-variable))
+        nil ;; We've got what we needed
+      ;; We have the old custom-library, hack around it!
+      (defmacro defgroup (&rest args)  nil)
+      (defmacro customize (&rest args)
+        (message
+	 "Sorry, Customize is not available with this version of emacs"))
+      (defmacro defcustom (var value doc &rest args)
+        `(defvar ,var ,value ,doc))
+      )
+    (if (fboundp 'defface)
+        nil				; great!
+      (defmacro defface (var values doc &rest args)
+        `(make-face ,var))
+      )
+
+    (if (and (featurep 'custom) (fboundp 'customize-group))
+        nil ;; We've got what we needed
+      ;; We have an intermediate custom-library, hack around it!
+      (defmacro customize-group (var &rest args)
+        `(customize ,var))
+      )))
 
 ;; Provide a regular expression optimization routine, using regexp-opt
 ;; if provided by the user's elisp libraries
 (eval-and-compile
-  (if (fboundp 'regexp-opt)
-      ;; regexp-opt is defined, does it take 3 or 2 arguments?
-      (if (fboundp 'function-max-args)
-	  (case (function-max-args `regexp-opt)
-	    ( 3 ;; It takes 3
-	      (condition-case nil	; Hide this defun from emacses
+  (if (featurep 'xemacs)
+      (if (fboundp 'regexp-opt)
+          ;; regexp-opt is defined, does it take 3 or 2 arguments?
+          (if (fboundp 'function-max-args)
+              (let ((args (function-max-args `regexp-opt)))
+                (cond
+                 ((eq args 3) ;; It takes 3
+                  (condition-case nil	; Hide this defun from emacses
 					;with just a two input regexp
-		  (defun verilog-regexp-opt (a b)
-		    "Deal with differing number of required arguments for  `regexp-opt'.
+                      (defun verilog-regexp-opt (a b)
+                        "Deal with differing number of required arguments for  `regexp-opt'.
          Call 'regexp-opt' on A and B."
-		    (regexp-opt a b 't)
-		    )
-		(error nil))
-	      )
-	      ( 2 ;; It takes 2
-	      (defun verilog-regexp-opt (a b)
-		"Call 'regexp-opt' on A and B."
-		(regexp-opt a b))
-	      )
-	    ( t nil))
-	;; We can't tell; assume it takes 2
-	(defun verilog-regexp-opt (a b)
-	  "Call 'regexp-opt' on A and B."
-	  (regexp-opt a b))
-	)
-    ;; There is no regexp-opt, provide our own
-    (defun verilog-regexp-opt (strings &optional paren shy)
-      (let ((open (if paren "\\(" "")) (close (if paren "\\)" "")))
-	(concat open (mapconcat 'regexp-quote strings "\\|") close)))
-    ))
+                        (regexp-opt a b 't)
+                        )
+                    (error nil))
+                  )
+                 ((eq args 2) ;; It takes 2
+                  (defun verilog-regexp-opt (a b)
+                    "Call 'regexp-opt' on A and B."
+                    (regexp-opt a b))
+                  )
+                 (t nil)))
+            ;; We can't tell; assume it takes 2
+            (defun verilog-regexp-opt (a b)
+              "Call 'regexp-opt' on A and B."
+              (regexp-opt a b))
+            )
+        ;; There is no regexp-opt, provide our own
+        (defun verilog-regexp-opt (strings &optional paren shy)
+          (let ((open (if paren "\\(" "")) (close (if paren "\\)" "")))
+            (concat open (mapconcat 'regexp-quote strings "\\|") close)))
+        )
+    ;; Emacs.
+    (defalias 'verilog-regexp-opt 'regexp-opt)))
 
 (eval-when-compile
   (defun verilog-regexp-words (a)
@@ -1149,6 +1132,8 @@ so there may be a large up front penalty for the first search."
 (defsubst verilog-within-string ()
   (save-excursion
     (nth 3 (parse-partial-sexp (verilog-get-beg-of-line) (point)))))
+
+(defvar compile-command)
 
 ;; compilation program
 (defun verilog-set-compile-command ()
@@ -2248,10 +2233,6 @@ Use filename, if current buffer being edited shorten to just buffer name."
 (defun verilog-declaration-beg ()
   (verilog-re-search-backward verilog-declaration-re (bobp) t))
 
-(require 'font-lock)
-(defvar verilog-need-fld 1)
-(defvar font-lock-defaults-alist nil)	;In case we are XEmacs
-
 (defun verilog-font-lock-init ()
   "Initialize fontification."
   ;; highlight keywords and standardized types, attributes, enumeration
@@ -2273,24 +2254,7 @@ Use filename, if current buffer being edited shorten to just buffer name."
 	 nil ; nil means keywords must match case
 	 nil ; syntax table handled elsewhere
          ;; Function to move to beginning of reasonable region to highlight
-	 verilog-beg-of-defun))
-  (if verilog-need-fld
-      (let ((verilog-mode-defaults
-	     '((verilog-font-lock-keywords
-		verilog-font-lock-keywords-1
-		verilog-font-lock-keywords-2
-		verilog-font-lock-keywords-3
-		)
-	       nil ;; nil means highlight strings & comments as well as keywords
-	       nil ;; nil means keywords must match case
-	       nil ;; syntax table handled elsewhere
-	       verilog-beg-of-defun ;; function to move to beginning of reasonable region to highlight
-	       )))
-	(setq font-lock-defaults-alist
-	      (append
-	       font-lock-defaults-alist
-	       (list (cons 'verilog-mode  verilog-mode-defaults))))
-	(setq verilog-need-fld 0))))
+	 verilog-beg-of-defun)))
 
 ;; initialize fontification for Verilog Mode
 (verilog-font-lock-init)
@@ -2436,6 +2400,10 @@ Key bindings specific to `verilog-mode-map' are:
   (setq local-abbrev-table verilog-mode-abbrev-table)
   (setq verilog-mode-syntax-table (make-syntax-table))
   (verilog-populate-syntax-table verilog-mode-syntax-table)
+  (set (make-local-variable 'beginning-of-defun-function) 
+       'verilog-beg-of-defun)
+  (set (make-local-variable 'end-of-defun-function) 
+       'verilog-end-of-defun)
   ;; add extra comment syntax
   (verilog-setup-dual-comments verilog-mode-syntax-table)
   (set-syntax-table verilog-mode-syntax-table)
@@ -2468,15 +2436,20 @@ Key bindings specific to `verilog-mode-map' are:
       (add-submenu nil verilog-stmt-menu)))
 
   ;; Stuff for GNU emacs
-  (make-local-variable 'font-lock-defaults)
+  (set (make-local-variable 'font-lock-defaults)
+       '((verilog-font-lock-keywords verilog-font-lock-keywords-1
+                                     verilog-font-lock-keywords-2
+                                     verilog-font-lock-keywords-3)
+         nil nil nil verilog-beg-of-defun))
   ;;------------------------------------------------------------
   ;; now hook in 'verilog-colorize-include-files (eldo-mode.el&spice-mode.el)
   ;; all buffer local:
-  (make-local-hook 'font-lock-mode-hook)
-  (make-local-hook 'font-lock-after-fontify-buffer-hook); doesn't exist in emacs 20
+  (when (featurep 'xemacs)
+    (make-local-hook 'font-lock-mode-hook)
+    (make-local-hook 'font-lock-after-fontify-buffer-hook); doesn't exist in emacs 20
+    (make-local-hook 'after-change-functions))
   (add-hook 'font-lock-mode-hook 'verilog-colorize-include-files-buffer t t)
   (add-hook 'font-lock-after-fontify-buffer-hook 'verilog-colorize-include-files-buffer t t) ; not in emacs 20
-  (make-local-hook 'after-change-functions)
   (add-hook 'after-change-functions 'verilog-colorize-include-files t t)
 
   ;; Tell imenu how to handle verilog.
@@ -3729,56 +3702,61 @@ For example:
 becomes:
 	// surefire lint_line_off UDDONX"
   (interactive)
-  (save-excursion
-    (switch-to-buffer compilation-last-buffer)
-    (beginning-of-line)
-    (when
-	(looking-at "\\(INFO\\|WARNING\\|ERROR\\) \\[[^-]+-\\([^]]+\\)\\]: \\([^,]+\\), line \\([0-9]+\\): \\(.*\\)$")
-      (let* ((code (match-string 2))
-	     (file (match-string 3))
-	     (line (match-string 4))
-	     (buffer (get-file-buffer file))
-	     dir filename)
-	(unless buffer
-	  (progn
-	    (setq buffer
-		  (and (file-exists-p file)
-		       (find-file-noselect file)))
-	    (or buffer
-		(let* ((pop-up-windows t))
-		  (let ((name (expand-file-name
-			       (read-file-name
-				(format "Find this error in: (default %s) "
-					file)
-				dir file t))))
-		    (if (file-directory-p name)
-			(setq name (expand-file-name filename name)))
-		    (setq buffer
-			  (and (file-exists-p name)
-			       (find-file-noselect name))))))))
-	(switch-to-buffer buffer)
-	(goto-line (string-to-number line))
-	(end-of-line)
-	(catch 'already
-	  (cond
-	   ((verilog-in-slash-comment-p)
-	    (re-search-backward "//")
-	    (cond
-	     ((looking-at "// surefire lint_off_line ")
-	      (goto-char (match-end 0))
-	      (let ((lim (save-excursion (end-of-line) (point))))
-		(if (re-search-forward code lim 'move)
-		    (throw 'already t)
-		  (insert (concat " " code)))))
-	     (t
-	      )))
-	   ((verilog-in-star-comment-p)
-	    (re-search-backward "/\*")
-	    (insert (format " // surefire lint_off_line %6s" code ))
-	    )
-	   (t
-	    (insert (format " // surefire lint_off_line %6s" code ))
-	    )))))))
+  (let ((buff (if (boundp 'next-error-last-buffer)
+                  next-error-last-buffer
+                compilation-last-buffer)))
+    (when (buffer-live-p buff)
+      ;; FIXME with-current-buffer?
+      (save-excursion
+        (switch-to-buffer buff)
+        (beginning-of-line)
+        (when
+            (looking-at "\\(INFO\\|WARNING\\|ERROR\\) \\[[^-]+-\\([^]]+\\)\\]: \\([^,]+\\), line \\([0-9]+\\): \\(.*\\)$")
+          (let* ((code (match-string 2))
+                 (file (match-string 3))
+                 (line (match-string 4))
+                 (buffer (get-file-buffer file))
+                 dir filename)
+            (unless buffer
+              (progn
+                (setq buffer
+                      (and (file-exists-p file)
+                           (find-file-noselect file)))
+                (or buffer
+                    (let* ((pop-up-windows t))
+                      (let ((name (expand-file-name
+                                   (read-file-name
+                                    (format "Find this error in: (default %s) "
+                                            file)
+                                    dir file t))))
+                        (if (file-directory-p name)
+                            (setq name (expand-file-name filename name)))
+                        (setq buffer
+                              (and (file-exists-p name)
+                                   (find-file-noselect name))))))))
+            (switch-to-buffer buffer)
+            (goto-line (string-to-number line))
+            (end-of-line)
+            (catch 'already
+              (cond
+               ((verilog-in-slash-comment-p)
+                (re-search-backward "//")
+                (cond
+                 ((looking-at "// surefire lint_off_line ")
+                  (goto-char (match-end 0))
+                  (let ((lim (save-excursion (end-of-line) (point))))
+                    (if (re-search-forward code lim 'move)
+                        (throw 'already t)
+                      (insert (concat " " code)))))
+                 (t
+                  )))
+               ((verilog-in-star-comment-p)
+                (re-search-backward "/\*")
+                (insert (format " // surefire lint_off_line %6s" code ))
+                )
+               (t
+                (insert (format " // surefire lint_off_line %6s" code ))
+                )))))))))
 
 (defun verilog-verilint-off ()
   "Convert a Verilint warning line into a disable statement.
@@ -6543,7 +6521,8 @@ For example if declare A A (.B(SIG)) then B will be included in the list."
   (defvar sigs-out)
   (defvar got-sig)
   (defvar got-rvalue)
-  (defvar uses-delayed))
+  (defvar uses-delayed)
+  (defvar vector-skip-list))
 
 (defun verilog-read-always-signals-recurse
   (exit-keywd rvalue ignore-next)
@@ -8029,7 +8008,6 @@ Avoid declaring ports manually, as it makes code harder to maintain."
 (defun verilog-auto-inst-port-map (port-st)
   nil)
 
-(defvar vector-skip-list nil) ; Prevent compile warning
 (defvar vl-cell-type nil "See `verilog-auto-inst'.") ; Prevent compile warning
 (defvar vl-cell-name nil "See `verilog-auto-inst'.") ; Prevent compile warning
 (defvar vl-name  nil "See `verilog-auto-inst'.") ; Prevent compile warning
@@ -10139,12 +10117,6 @@ and the case items."
     map)
   "Map containing mouse bindings for `verilog-mode'.")
 
-;; create set-extent-keymap procedure when it does not exist
-(eval-and-compile
-  (unless (fboundp 'set-extent-keymap)
-    (defun set-extent-keymap (extent keymap)
-      "fallback version of set-extent-keymap (for emacs 2[01])"
-      (set-extent-property extent 'local-map keymap))))
 
 (defun verilog-colorize-include-files (beg end old-len)
   "This function colorizes included files when the mouse passes over them.
@@ -10166,17 +10138,15 @@ Clicking on the middle-mouse button loads them in a buffer (as in dired)."
 	    (setq overlays (cdr overlays)))) ; let
 	;; make new ones, could reuse deleted one ?
 	(while (search-forward-regexp verilog-include-file-regexp end-point t)
-	  (let (extent)
+	  (let (ov)
 	    (goto-char (match-beginning 1))
-	    (or (extent-at (point) (buffer-name) 'mouse-face) ;; not yet extended
-		(progn
-		  (setq extent (make-extent (match-beginning 1) (match-end 1)))
-		  (set-extent-property extent 'start-closed 't)
-		  (set-extent-property extent 'end-closed 't)
-		  (set-extent-property extent 'detachable 't)
-		  (set-extent-property extent 'verilog-include-file 't)
-		  (set-extent-property extent 'mouse-face 'highlight)
-		  (set-extent-keymap extent verilog-mode-mouse-map)))))))))
+	    (setq ov (make-overlay (match-beginning 1) (match-end 1)))
+	    (overlay-put ov 'start-closed 't)
+	    (overlay-put ov 'end-closed 't)
+	    (overlay-put ov 'evaporate 't)
+	    (overlay-put ov 'verilog-include-file 't)
+	    (overlay-put ov 'mouse-face 'highlight)
+	    (overlay-put ov 'local-map verilog-mode-mouse-map)))))))
 
 
 (defun verilog-colorize-include-files-buffer ()
@@ -10254,6 +10224,7 @@ Files are checked based on `verilog-library-directories'."
     (princ "\n")))
 
 (autoload 'reporter-submit-bug-report "reporter")
+(defvar reporter-prompt-for-summary-p)
 
 (defun verilog-submit-bug-report ()
   "Submit via mail a bug report on verilog-mode.el."
