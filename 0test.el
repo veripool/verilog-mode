@@ -72,6 +72,7 @@
 	(setq file (car files))
 	(cond ((equal "." file))
 	      ((equal ".." file))
+	      ((string-match "^#" file))  ;; Backups
 	      ((string-match "~$" file))
 	      ((string-match "\.f$" file))
 	      ((file-directory-p (concat "tests/" file)))
