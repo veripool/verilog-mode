@@ -9,22 +9,22 @@ Occasionally:
 Features
 	Make a hiearchy map of the current module and below in a spare buffer.
 
-From: Dan Nicolaescu <dann@ics.uci.edu>
-Date: Sun, 14 Oct 2007 10:49:43 -0700
+;From: Dan Nicolaescu <dann@ics.uci.edu>
+;Date: Sun, 14 Oct 2007 10:49:43 -0700
 
-      > (defvar verilog-mode-map ()
-      >   "Keymap used in Verilog mode.")
-      > (if verilog-mode-map
-      >     ()
-      >   (setq verilog-mode-map (make-sparse-keymap))
-      >   (define-key verilog-mode-map ";"        'electric-verilog-semi)
+;      > (defvar verilog-mode-map ()
+;      >   "Keymap used in Verilog mode.")
+;      > (if verilog-mode-map
+;      >     ()
+;      >   (setq verilog-mode-map (make-sparse-keymap))
+;      >   (define-key verilog-mode-map ";"        'electric-verilog-semi)
     
-    Better use:
+;    Better use:
     
-    (defvar verilog-mode-map
-      (let ((map (make-sparse-keymap)))
-        (define-key map ";"        'electric-verilog-semi)
-        ... etc etc
+;    (defvar verilog-mode-map
+;      (let ((map (make-sparse-keymap)))
+;        (define-key map ";"        'electric-verilog-semi)
+;        ... etc etc
 
 
 From: Stefan Monnier <monnier@iro.umontreal.ca>

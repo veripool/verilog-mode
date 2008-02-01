@@ -30,9 +30,14 @@
       (message (concat file ": testing indent..."))
       (save-excursion
 	(goto-char (point-min))
+	(setq ln 0)
 	(while (not (eobp))
 	  (electric-verilog-tab)
-	  (forward-line 1)))
+	  (message "line %s" ln)
+	  ;;(verilog-pretty-expr t )
+	  (forward-line 1)
+	  (setq ln (1+ ln))
+	  ))
       (message (concat file ": indents OK..."))
       (global-replace-regexp "[ \t]+$" "")
       (cond ((string-match "^inject_" file)
@@ -75,6 +80,7 @@
 	      ((string-match "^#" file))  ;; Backups
 	      ((string-match "~$" file))
 	      ((string-match "\.f$" file))
+	      ((string-match "\.\#.*$" file))
 	      ((file-directory-p (concat "tests/" file)))
 	      (t
 	       (message (concat "Considering test " file ))
