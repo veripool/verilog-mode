@@ -694,7 +694,7 @@ something like:
 
     // Local Variables:
     // verilog-library-flags:(\"-y dir -y otherdir\")
-    // End:
+    // End
 
 Verilog-mode attempts to detect changes to this local variable, but they
 are only insured to be correct when the file is first visited. Thus if you
@@ -992,15 +992,9 @@ If set will become buffer local.")
       :selected (equal verilog-tool `verilog-compiler)]
      )
     ("Move"
-     ,(if (featurep 'xemacs)
-	  (progn 
-	    ["Beginning of function"		verilog-beg-of-defun t]
-	    ["End of function"			verilog-end-of-defun t]
-	    ["Mark function"			verilog-mark-defun t])
-	["Beginning of function"		beginning-of-defun t]
-	["End of function"			end-of-defun t]
-	["Mark function"			mark-defun t])
-	
+     ["Beginning of function"           verilog-beg-of-defun t]
+     ["End of function"                 verilog-end-of-defun t]
+     ["Mark function"                   verilog-mark-defun t]
      ["Goto function/module"		verilog-goto-defun t]
      ["Move to beginning of block"	electric-verilog-backward-sexp t]
      ["Move to end of block"		electric-verilog-forward-sexp t]
