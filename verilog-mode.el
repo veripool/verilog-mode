@@ -1445,19 +1445,18 @@ find the errors."
 (defconst verilog-beg-block-re-ordered
   ( concat "\\<"
 	   "\\(begin\\)"		;1
-	   "\\|\\(randcase\\|\\(unique\\s-+\\|priority\\s-+\\)?case[xz]?\\)" ; 2
-;;	   "\\|\\(randcase\\|case[xz]?\\)" ; 2
-	   "\\|\\(fork\\)"		;3
-	   "\\|\\(class\\)"		;4
-	   "\\|\\(table\\)"		;5
-	   "\\|\\(specify\\)"		;6
-	   "\\|\\(function\\)"		;7
-	   "\\|\\(task\\)"		;8
-	   "\\|\\(generate\\)"		;9
-	   "\\|\\(covergroup\\)"	;10
-	   "\\|\\(property\\)"		;11
-	   "\\|\\(\\(rand\\)?sequence\\)"  ;12
-	   "\\|\\(clocking\\)"          ;13
+	   "\\|\\(randcase\\|\\(unique\\s-+\\|priority\\s-+\\)?case[xz]?\\)" ; 2,3
+	   "\\|\\(\\(disable\\s-+\\)?fork\\)" ;4
+	   "\\|\\(class\\)"		;5
+	   "\\|\\(table\\)"		;6
+	   "\\|\\(specify\\)"		;7
+	   "\\|\\(function\\)"		;8
+	   "\\|\\(task\\)"		;9
+	   "\\|\\(generate\\)"		;10
+	   "\\|\\(covergroup\\)"	;11
+	   "\\|\\(property\\)"		;12
+	   "\\|\\(\\(rand\\)?sequence\\)" ;13
+	   "\\|\\(clocking\\)"          ;14
 	   "\\>"))
 
 (defconst verilog-end-block-ordered-rry
@@ -1634,6 +1633,7 @@ find the errors."
      `(
        "endmodule" "endprimitive" "endinterface" "endpackage" "endprogram" "endclass"
        ))))
+(defconst verilog-disable-fork-re "disable\\s-+fork")
 (defconst verilog-extended-case-re "\\(unique\\s-+\\|priority\\s-+\\)?case[xz]?")
 (defconst verilog-extended-complete-re
   (concat "\\(\\<extern\\s-+\\|\\<virtual\\s-+\\|\\<protected\\s-+\\)*\\(\\<function\\>\\|\\<task\\>\\)"
@@ -2060,49 +2060,64 @@ Use filename, if current buffer being edited shorten to just buffer name."
     (cond
      ((verilog-skip-forward-comment-or-string)
       (verilog-forward-syntactic-ws))
-     ((looking-at verilog-beg-block-re-ordered);; begin|case|fork|class|table|specify|function|task|generate|covergroup|property|sequence|clocking
+     ((looking-at verilog-beg-block-re-ordered) ;; begin|(case)|xx|(fork)|class|table|specify|function|task|generate|covergroup|property|sequence|clocking
       (cond
        ((match-end 1) ; end
 	;; Search forward for matching begin
 	(setq reg "\\(\\<begin\\>\\)\\|\\(\\<end\\>\\)" ))
        ((match-end 2) ; endcase
 	;; Search forward for matching case
-	(setq reg "\\(\\<randcase\\>\\|\\(\\<unique\\>\\s-+\\|\\<priority\\>\\s-+\\)?\\<case[xz]?\\>[^:]\\)\\|\\(\\<endcase\\>\\)" ))
-       ((match-end 3) ; join
-	;; Search forward for matching fork
-	(setq reg "\\(\\<fork\\>\\)\\|\\(\\<join\\(_any\\|_none\\)?\\>\\)" ))
-       ((match-end 4) ; endclass
+	(setq reg "\\(\\<randcase\\>\\|\\(\\<unique\\>\\s-+\\|\\<priority\\>\\s-+\\)?\\<case[xz]?\\>[^:]\\)\\|\\(\\<endcase\\>\\)" )
+	(setq md 3) ;; ender is third item in regexp
+	)
+       ((match-end 4) ; join
+	;; might be "disable fork"
+	(if (or 
+	     (looking-at verilog-disable-fork-re)
+	     (and (looking-at "fork")
+		  (progn
+		    (forward-word -1)
+		    (looking-at verilog-disable-fork-re))))
+	    (progn
+	      (goto-char (match-end 0))
+	      (forward-word)
+	      (setq reg nil))
+	  (progn
+	    ;; Search forward for matching fork
+	    (setq reg "\\(\\<fork\\>\\)\\|\\(\\<join\\(_any\\|_none\\)?\\>\\)" ))))
+       ((match-end 5) ; endclass
 	;; Search forward for matching class
 	(setq reg "\\(\\<class\\>\\)\\|\\(\\<endclass\\>\\)" ))
-       ((match-end 5) ; endtable
+       ((match-end 6) ; endtable
 	;; Search forward for matching table
 	(setq reg "\\(\\<table\\>\\)\\|\\(\\<endtable\\>\\)" ))
-       ((match-end 6) ; endspecify
+       ((match-end 7) ; endspecify
 	;; Search forward for matching specify
 	(setq reg "\\(\\<specify\\>\\)\\|\\(\\<endspecify\\>\\)" ))
-       ((match-end 7) ; endfunction
+       ((match-end 8) ; endfunction
 	;; Search forward for matching function
 	(setq reg "\\(\\<function\\>\\)\\|\\(\\<endfunction\\>\\)" ))
-       ((match-end 8) ; endtask
+       ((match-end 9) ; endtask
 	;; Search forward for matching task
 	(setq reg "\\(\\<task\\>\\)\\|\\(\\<endtask\\>\\)" ))
-       ((match-end 9) ; endgenerate
+       ((match-end 10) ; endgenerate
 	;; Search forward for matching generate
 	(setq reg "\\(\\<generate\\>\\)\\|\\(\\<endgenerate\\>\\)" ))
-       ((match-end 10) ; endgroup
+       ((match-end 11) ; endgroup
 	;; Search forward for matching covergroup
 	(setq reg "\\(\\<covergroup\\>\\)\\|\\(\\<endgroup\\>\\)" ))
-       ((match-end 11) ; endproperty
+       ((match-end 12) ; endproperty
 	;; Search forward for matching property
 	(setq reg "\\(\\<property\\>\\)\\|\\(\\<endproperty\\>\\)" ))
-       ((match-end 12) ; endsequence
+       ((match-end 13) ; endsequence
 	;; Search forward for matching sequence
 	(setq reg "\\(\\<\\(rand\\)?sequence\\>\\)\\|\\(\\<endsequence\\>\\)" )
 	(setq md 3)) ; 3 to get to endsequence in the reg above
-       ((match-end 13) ; endclocking
+       ((match-end 14) ; endclocking
 	;; Search forward for matching clocking
 	(setq reg "\\(\\<clocking\\>\\)\\|\\(\\<endclocking\\>\\)" )))
-      (if (forward-word 1)
+      (if (and reg
+	       (forward-word 1))
 	  (catch 'skip
 	    (let ((nest 1))
 	      (while (verilog-re-search-forward reg nil 'move)
@@ -3927,6 +3942,16 @@ type.  Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 		(throw 'nesting 'case)
 	      (goto-char here)))
 	  (throw 'nesting 'case))
+	 
+	 ((match-end 4)  ; *sigh* could be "disable fork"
+	  (let ((here (point)))
+	    (verilog-beg-of-statement)
+	    (if (looking-at verilog-disable-fork-re)
+		t ; is disable fork, this is a normal statement
+	      (progn ; or is fork, starts a new block
+		(goto-char here)
+		(throw 'nesting 'block)))))
+
 
 	 ;; need to consider typedef struct here...
 	 ((looking-at "\\<class\\|struct\\|function\\|task\\|property\\>")
