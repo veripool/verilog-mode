@@ -1567,8 +1567,8 @@ find the errors."
   (concat verilog-defun-re "\\|" verilog-end-defun-re))
 
 (defconst verilog-behavioral-block-beg-re
-  (concat "\\(\\<initial\\>\\|\\<final\\>\\|\\<always\\>\\|\\<always_comb\\>\\|\\<always_ff\\>\\|"
-	  "\\<always_latch\\>\\|\\<function\\>\\|\\<task\\>\\)"))
+  (eval-when-compile (verilog-regexp-words `("initial" "final" "always" "always_comb" "always_latch" "always_ff"
+					     "function" "task"))))
 
 (defconst verilog-indent-re
   (eval-when-compile
@@ -4186,6 +4186,8 @@ Set point to where line starts"
     (forward-word -1)
     (cond
      ((looking-at "\\<else\\>")
+      t)
+     ((looking-at verilog-behavioral-block-beg-re)
       t)
      ((looking-at verilog-indent-re)
       nil)
