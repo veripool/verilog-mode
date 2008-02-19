@@ -1809,6 +1809,20 @@ See also `verilog-font-lock-extra-types'.")
   "Font lock mode face used to highlight AMS keywords."
   :group 'font-lock-highlighting-faces)
 
+(defvar verilog-font-grouping-keywords-face
+  'verilog-font-lock-grouping-keywords-face
+  "Font to use for Verilog Grouping Keywords (such as begin..end).")
+(defface verilog-font-lock-grouping-keywords-face
+  '((((class color)
+      (background light))
+     (:foreground "red4" :bold t ))
+    (((class color)
+      (background dark))
+     (:foreground "red4" :bold t ))
+    (t (:italic t)))
+  "Font lock mode face used to highlight verilog grouping keywords."
+  :group 'font-lock-highlighting-faces)
+
 (let* ((verilog-type-font-keywords
 	(eval-when-compile
 	  (verilog-regexp-opt
@@ -1873,8 +1887,8 @@ See also `verilog-font-lock-extra-types'.")
 	(eval-when-compile
 	  (verilog-regexp-opt
 	   '(
-	     "assign" "begin" "case" "casex" "casez" "randcase" "deassign"
-	     "default" "disable" "else" "end" "endcase" "endfunction"
+	     "assign" "case" "casex" "casez" "randcase" "deassign"
+	     "default" "disable" "else" "endcase" "endfunction"
 	     "endgenerate" "endinterface" "endmodule" "endprimitive"
 	     "endspecify" "endtable" "endtask" "final" "for" "force" "return" "break"
 	     "continue" "forever" "fork" "function" "generate" "if" "iff" "initial"
@@ -1883,7 +1897,12 @@ See also `verilog-font-lock-extra-types'.")
 	     "always_latch" "posedge" "primitive" "priority" "release"
 	     "repeat" "specify" "table" "task" "unique" "wait" "while"
 	     "class" "program" "endclass" "endprogram"
-	     ) nil  ))))
+	     ) nil  )))
+
+       (verilog-font-grouping-keywords
+	(eval-when-compile
+	  (verilog-regexp-opt
+	   '( "begin" "end" ) nil  ))))
 
   (setq verilog-font-lock-keywords
 	(list
@@ -1893,7 +1912,9 @@ See also `verilog-font-lock-extra-types'.")
 		       "\\$[a-zA-Z][a-zA-Z0-9_\\$]*"
 		       "\\)\\>")
 	 ;; Fontify all types
-	 (cons (concat "\\<\\(" verilog-type-font-keywords "\\)\\>")
+	 (cons (concat "\\(\\<" verilog-font-grouping-keywords "\\)\\>") 
+	       'verilog-font-lock-ams-face)
+	 (cons (concat "\\<\\(" verilog-type-font-keywords "\\)\\>") 
 	       'font-lock-type-face)
 	 ;; Fontify IEEE-P1800 keywords appropriately
 	 (if verilog-highlight-p1800-keywords
