@@ -102,9 +102,16 @@ gnu22:
 gnuhead:
 	mkdir -p $@
 
-.PHONY: gnu-diff
-gnu-diff: gnu-update verilog-mode-tognu.el
+.PHONY: gnu-diff-head gnu-diff-22 gnu-diff
+gnu-diff: gnu-diff-head
+
+gnu-diff-head: gnu-update-head verilog-mode-tognu.el
 	diff -c verilog-mode-tognu.el gnuhead/emacs/lisp/progmodes/verilog-mode.el
+
+gnu-diff-22: gnu-update-22 verilog-mode-tognu.el
+	diff -c verilog-mode-tognu.el gnu22/emacs/lisp/progmodes/verilog-mode.el
+gnu-diff-each: gnu-update-22 gnu-update-head
+	diff -c gnuhead/emacs/lisp/progmodes/verilog-mode.el gnu22/emacs/lisp/progmodes/verilog-mode.el
 
 verilog-mode-tognu.el: verilog-mode.el Makefile
 	cat verilog-mode.el \
