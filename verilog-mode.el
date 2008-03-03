@@ -531,10 +531,10 @@ to see the effect as font color choices are cached by Emacs."
 (put 'verilog-highlight-p1800-keywords 'safe-local-variable 'verilog-booleanp)
 
 (defcustom verilog-highlight-grouping-keywords nil
-  "*True means highlight grouping keywords begin and end more dramatically
-that others (These will appear in `verilog-font-lock-ams-face') So highlighted, 
-the grouping constructs are more easily seen further allowing the structure of the code to be
-understood at a glance."
+  "*True means highlight grouping keywords 'begin' and 'end' more dramatically.
+If false, these words are in the font-lock-type-face; if True then they are in 
+`verilog-font-lock-ams-face'. Some find that special highlighting on these 
+grouping constructs allow the structure of the code to be understood at a glance."
   :group 'verilog-mode-indent
   :type 'boolean)
 (put 'verilog-highlight-p1800-keywords 'safe-local-variable 'verilog-booleanp)
