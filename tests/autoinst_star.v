@@ -25,4 +25,8 @@ module io1_sub (/*AUTOARG*/);
       .clk,
       /*AUTOINST*/);
 
+   always @(posedge clk) begin
+      $display ("This .* shouldn't expand.\n");
+   end
+
 endmodule

@@ -26,15 +26,15 @@ test:	.timestamps/test
 test_emacs:
 	@echo
 	@echo == test_emacs
-	$(EMACS)  --batch -q -l e/verilog-mode.elc -l 0test.el
+	time $(EMACS)  --batch -q -l e/verilog-mode.elc -l 0test.el
 test_xemacs:
 	@echo
 	@echo == test_xemacs
-	$(XEMACS) --batch -q -l x/verilog-mode.elc -l 0test.el
+	time $(XEMACS) --batch -q -l x/verilog-mode.elc -l 0test.el
 test_batch:
 	@echo
 	@echo == test_batch
-	./batch_test.pl
+	time ./batch_test.pl
 
 local:	.timestamps/local
 .timestamps/local:  verilog-mode.el

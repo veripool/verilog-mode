@@ -39,4 +39,8 @@ module io1_sub (/*AUTOARG*/);
       .pin_out				(pin_out[w-1:0]),
       .pin_outen			(pin_outen));
 
+   always @(posedge clk) begin
+      $display ("This .* shouldn't expand.\n");
+   end
+
 endmodule

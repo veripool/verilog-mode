@@ -1231,7 +1231,7 @@ will break, as the o's continuously replace.  xa -> x works ok though."
 (defsubst verilog-re-search-forward (REGEXP BOUND NOERROR)
   ; checkdoc-params: (REGEXP BOUND NOERROR)
   "Like `re-search-forward', but skips over match in comments or strings."
-  (store-match-data '(nil nil))
+  (store-match-data '(nil nil))  ;; So match-end will return nil if no matches found
   (while (and
 	  (re-search-forward REGEXP BOUND NOERROR)
 	  (and (verilog-skip-forward-comment-or-string)
@@ -1245,7 +1245,7 @@ will break, as the o's continuously replace.  xa -> x works ok though."
 (defsubst verilog-re-search-backward (REGEXP BOUND NOERROR)
   ; checkdoc-params: (REGEXP BOUND NOERROR)
   "Like `re-search-backward', but skips over match in comments or strings."
-  (store-match-data '(nil nil))
+  (store-match-data '(nil nil))  ;; So match-end will return nil if no matches found
   (while (and
 	  (re-search-backward REGEXP BOUND NOERROR)
 	  (and (verilog-skip-backward-comment-or-string)
@@ -4530,7 +4530,7 @@ Optional BOUND limits search."
 	  (parse-partial-sexp (point-min) (point)))))
    (cond
     ((nth 3 state)			;Inside string
-     (goto-char (nth 3 state))
+     (search-forward "\"")
      t)
     ((nth 7 state)			;Inside // comment
      (forward-line 1)
@@ -6386,7 +6386,7 @@ Outputs comments above subcell signals, for example:
 	  ;; below 3 modified by verilog-read-sub-decls-line
 	  sigs-out sigs-inout sigs-in)
       (verilog-beg-of-defun)
-      (while (re-search-forward "\\(/\\*AUTOINST\\*/\\|\\.\\*\\)" end-mod-point t)
+      (while (verilog-re-search-forward "\\(/\\*AUTOINST\\*/\\|\\.\\*\\)" end-mod-point t)
 	(save-excursion
 	  (goto-char (match-beginning 0))
 	  (unless (verilog-inside-comment-p)
@@ -7406,20 +7406,14 @@ and invalidating the cache."
 (defun verilog-auto-search-do (search-for func)
   "Search for the given auto text SEARCH-FOR, and perform FUNC where it occurs."
   (goto-char (point-min))
-  (while (search-forward search-for nil t)
-    (if (not (save-excursion
-	       (goto-char (match-beginning 0))
-	       (verilog-inside-comment-p)))
-	(funcall func))))
+  (while (verilog-re-search-forward (regexp-quote search-for) nil t)
+    (funcall func)))
 
 (defun verilog-auto-re-search-do (search-for func)
   "Search for the given auto text SEARCH-FOR, and perform FUNC where it occurs."
   (goto-char (point-min))
-  (while (re-search-forward search-for nil t)
-    (if (not (save-excursion
-	       (goto-char (match-beginning 0))
-	       (verilog-inside-comment-p)))
-	(funcall func))))
+  (while (verilog-re-search-forward search-for nil t)
+    (funcall func)))
 
 (defun verilog-insert-one-definition (sig type indent-pt)
   "Print out a definition for SIG of the given TYPE,
