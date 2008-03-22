@@ -559,12 +559,12 @@ to see the effect as font color choices are cached by Emacs."
 
 (defcustom verilog-highlight-grouping-keywords nil
   "*True means highlight grouping keywords 'begin' and 'end' more dramatically.
-If false, these words are in the font-lock-type-face; if True then they are in 
-`verilog-font-lock-ams-face'. Some find that special highlighting on these 
+If false, these words are in the font-lock-type-face; if True then they are in
+`verilog-font-lock-ams-face'. Some find that special highlighting on these
 grouping constructs allow the structure of the code to be understood at a glance."
   :group 'verilog-mode-indent
   :type 'boolean)
-(put 'verilog-highlight-p1800-keywords 'safe-local-variable 'verilog-booleanp)
+(put 'verilog-highlight-grouping-keywords 'safe-local-variable 'verilog-booleanp)
 
 (defcustom verilog-auto-endcomments t
   "*True means insert a comment /* ... */ after 'end's.
@@ -1852,7 +1852,7 @@ find the errors."
 	  (modify-syntax-entry ?/  ". 1456" table)
 	  (modify-syntax-entry ?*  ". 23"   table)
 	  (modify-syntax-entry ?\n "> b"    table))
-      ;; Emacs does things differently, but we can work with it
+      ;; Emacs 19 does things differently, but we can work with it
       (modify-syntax-entry ?/  ". 124b" table)
       (modify-syntax-entry ?*  ". 23"   table)
       (modify-syntax-entry ?\n "> b"    table))
@@ -2018,16 +2018,16 @@ See also `verilog-font-lock-extra-types'.")
 	 ;; Fontify all builtin keywords
 	 (concat "\\<\\(" verilog-font-keywords "\\|"
 		       ;; And user/system tasks and functions
-		       "\\$[a-zA-Z][a-zA-Z0-9_\\$]*"
-		       "\\)\\>")
+              "\\$[a-zA-Z][a-zA-Z0-9_\\$]*"
+              "\\)\\>")
 	 ;; Fontify all types
 	 (if verilog-highlight-grouping-keywords
-	     (cons (concat "\\<\\(" verilog-font-grouping-keywords "\\)\\>") 
+	     (cons (concat "\\<\\(" verilog-font-grouping-keywords "\\)\\>")
 		   'verilog-font-lock-ams-face)
-	   (cons (concat "\\<\\(" verilog-font-grouping-keywords "\\)\\>") 
+	   (cons (concat "\\<\\(" verilog-font-grouping-keywords "\\)\\>")
 		 'font-lock-type-face))
-	 (cons (concat "\\<\\(" verilog-type-font-keywords "\\)\\>") 
-	       'font-lock-type-face)
+	 (cons (concat "\\<\\(" verilog-type-font-keywords "\\)\\>")
+          'font-lock-type-face)
 	 ;; Fontify IEEE-P1800 keywords appropriately
 	 (if verilog-highlight-p1800-keywords
 	     (cons (concat "\\<\\(" verilog-p1800-keywords "\\)\\>")
@@ -2491,7 +2491,7 @@ Key bindings specific to `verilog-mode-map' are:
     (easy-menu-add verilog-menu)
     (setq mode-popup-menu (cons "Verilog Mode" verilog-stmt-menu)))
 
-  ;; Stuff for GNU Emacs
+  ;; Stuff for GNU emacs
   (set (make-local-variable 'font-lock-defaults)
        '((verilog-font-lock-keywords verilog-font-lock-keywords-1
                                      verilog-font-lock-keywords-2
@@ -2502,10 +2502,10 @@ Key bindings specific to `verilog-mode-map' are:
   ;; all buffer local:
   (when (featurep 'xemacs)
     (make-local-hook 'font-lock-mode-hook)
-    (make-local-hook 'font-lock-after-fontify-buffer-hook); doesn't exist in Emacs
+    (make-local-hook 'font-lock-after-fontify-buffer-hook); doesn't exist in emacs 20
     (make-local-hook 'after-change-functions))
   (add-hook 'font-lock-mode-hook 'verilog-colorize-include-files-buffer t t)
-  (add-hook 'font-lock-after-fontify-buffer-hook 'verilog-colorize-include-files-buffer t t) ; not in Emacs
+  (add-hook 'font-lock-after-fontify-buffer-hook 'verilog-colorize-include-files-buffer t t) ; not in emacs 20
   (add-hook 'after-change-functions 'verilog-colorize-include-files t t)
 
   ;; Tell imenu how to handle Verilog.
@@ -3800,7 +3800,7 @@ This lets programs calling batch mode to easily extract error messages."
        (progn ,@body)
      (error
       (error "%%Error: %s%s" (error-message-string err)
-	     (if (featurep 'xemacs) "\n" "")))))  ;; XEmacs forgets to add a newline
+	     (if (featurep 'xemacs) "\n" "")))))  ;; xemacs forgets to add a newline
 
 (defun verilog-batch-execute-func (funref)
   "Internal processing of a batch command, running FUNREF on all command arguments."
@@ -4917,7 +4917,7 @@ ARG is ignored, for `comment-indent-function' compatibility."
     (if (or (eq myre nil)
 	    (string-equal myre ""))
 	(setq myre "\\(<\\|:\\)?="))
-    (setq myre (concat "\\(^[^;#:<=>]*\\)\\(" myre "\\)"))
+    (setq myre (concat "\\(^[^;#<=>]*\\)\\(" myre "\\)"))
     (let ((rexp(concat "^\\s-*" verilog-complete-reg)))
       (beginning-of-line)
       (if (and (not (looking-at rexp ))
@@ -6020,7 +6020,7 @@ Ignore width if optional NO-WIDTH is set."
       (verilog-re-search-backward-quick "\\b[a-zA-Z0-9`_\$]" nil nil))
     (skip-chars-backward "a-zA-Z0-9'_$")
     (looking-at "[a-zA-Z0-9`_\$]+")
-    ;; Important: don't use match string, this must work with Emacs 19 font-lock on
+    ;; Important: don't use match string, this must work with emacs 19 font-lock on
     (buffer-substring-no-properties (match-beginning 0) (match-end 0))))
 
 (defun verilog-read-inst-name ()
@@ -6028,7 +6028,7 @@ Ignore width if optional NO-WIDTH is set."
   (save-excursion
     (verilog-read-inst-backward-name)
     (looking-at "[a-zA-Z0-9`_\$]+")
-    ;; Important: don't use match string, this must work with Emacs 19 font-lock on
+    ;; Important: don't use match string, this must work with emacs 19 font-lock on
     (buffer-substring-no-properties (match-beginning 0) (match-end 0))))
 
 (defun verilog-read-module-name ()
@@ -6038,7 +6038,7 @@ Ignore width if optional NO-WIDTH is set."
     (verilog-re-search-backward-quick "\\b[a-zA-Z0-9`_\$]" nil nil)
     (skip-chars-backward "a-zA-Z0-9`_$")
     (looking-at "[a-zA-Z0-9`_\$]+")
-    ;; Important: don't use match string, this must work with Emacs 19 font-lock on
+    ;; Important: don't use match string, this must work with emacs 19 font-lock on
     (buffer-substring-no-properties (match-beginning 0) (match-end 0))))
 
 (defun verilog-read-auto-params (num-param &optional max-param)
@@ -6680,7 +6680,7 @@ list of ( (signal_name connection_name)... )."
 		      (goto-char (match-end 0)))
 		     ;; Regexp form??
 		     ((looking-at
-		       ;; Regexp bug in XEmacs disallows ][ inside [], and wants + last
+		       ;; Regexp bug in xemacs disallows ][ inside [], and wants + last
 		       "\\s-*\\.\\(\\([a-zA-Z0-9`_$+@^.*?|---]+\\|[][]\\|\\\\[()|]\\)+\\)\\s-*(\\(.*\\))\\s-*\\(,\\|)\\s-*;\\)")
 		      (setq rep (match-string-no-properties 3))
 		      (goto-char (match-end 0))
@@ -7276,7 +7276,7 @@ Cache the output of function so next call may have faster access."
 	     (setq func-returns (nth 3 fass)))
 	    (t
 	     ;; Read from file
-	     ;; Clear then restore any hilighting to make Emacs 19 happy
+	     ;; Clear then restore any hilighting to make emacs19 happy
 	     (let ((fontlocked (when (and (boundp 'font-lock-mode)
 					  font-lock-mode)
 				 (font-lock-mode nil)
