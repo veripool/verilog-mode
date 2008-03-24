@@ -1,11 +1,11 @@
 module io1_sub(
 	       /*AUTOARG*/);
 
-   /*AUTOINPUT*/
+   /*AUTOINPUT("^s")*/
 
-   /*AUTOINOUT*/
+   /*AUTOINOUT("^s")*/
 
-   /*AUTOOUTPUT*/
+   /*AUTOOUTPUT("^s")*/
 
    /* inst AUTO_TEMPLATE (
     .lower_inb		(1'b1),
