@@ -8975,9 +8975,18 @@ Typing \\[verilog-auto] will make this into:
            output o;
            inout io;
 	   // End of automatics
-	endmodule"
+	endmodule
+
+You may also provide an optional regular expression, in which case only
+signals matching the regular expression will be included.  For example the
+same expansion will result from only extracting inouts starting with i:
+
+	   /*AUTOINOUTMODULE(\"ex_main\",\".*\")*/"
   (save-excursion
-    (let* ((submod (car (verilog-read-auto-params 1))) submodi)
+    (let* ((params (verilog-read-auto-params 1 2))
+	   (submod (nth 0 params))
+	   (regexp (nth 1 params))
+	   submodi)
       ;; Lookup position, etc of co-module
       ;; Note this may raise an error
       (when (setq submodi (verilog-modi-lookup submod t))
@@ -8994,6 +9003,13 @@ Typing \\[verilog-auto] will make this into:
 			     (verilog-modi-get-inouts submodi)
 			     (append (verilog-modi-get-inouts modi)))))
 	  (forward-line 1)
+	  (when regexp
+	    (setq sig-list-i  (verilog-signals-matching-regexp
+			       sig-list-i regexp)
+		  sig-list-o  (verilog-signals-matching-regexp
+			       sig-list-o regexp)
+		  sig-list-io (verilog-signals-matching-regexp
+			       sig-list-io regexp)))
 	  (when v2k (verilog-repair-open-comma))
 	  (when (or sig-list-i sig-list-o sig-list-io)
 	    (verilog-insert-indent "// Beginning of automatic in/out/inouts (from specific module)\n")
