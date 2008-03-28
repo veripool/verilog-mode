@@ -395,11 +395,11 @@ endmodule
    <p>You'd then add cells using AUTOINST:
 
 <pre>
-   subfile subcell (
-	/*AUTOINST*/);
+   InstModule instName
+     (/*AUTOINST*/);
 </pre>
 
-   <p>[The newline after the open parenthesis is suggested for larger
+   <p>[The newline before the open parenthesis is suggested for larger
    instantiations to make the lines look nicer.]
 
 <p>And add sensitivity blocks using AUTOSENSE (aka AS):
@@ -451,7 +451,7 @@ module ModnameTest;
    /*AUTOWIRE*/
    /*AUTOREGINPUT*/
 
-   Modname dut
+   InstModule instName
      (/*AUTOINST*/);
    
    //==== Stimulus
@@ -849,7 +849,7 @@ foo <= #1 signal;
    be read by AUTOWIRE.
 
 </pre>
-/* celltype AUTO_TEMPLATE (
+/* InstModule AUTO_TEMPLATE (
     .signal   (signal[]),
    ); */
 </pre>
@@ -873,7 +873,7 @@ foo <= #1 signal;
    the width of the port.
 
 <pre>
-/* celltype AUTO_TEMPLATE (
+/* InstModule AUTO_TEMPLATE (
     .\(.*\)_test ({@"vl-width"{1'b0}}),
 );
 */
@@ -884,7 +884,7 @@ foo <= #1 signal;
    <p>Use a lisp expression, and the lisp function "downcase".
 
 <pre>
-/* celltype AUTO_TEMPLATE (
+/* InstModule AUTO_TEMPLATE (
    .IN (@"(downcase vl-name)"[]),
 */
 </pre>
@@ -897,16 +897,16 @@ foo <= #1 signal;
    <p>Yet another lisp expression:
 
 <pre>
-/* celltype AUTO_TEMPLATE (
+/* InstModule AUTO_TEMPLATE (
      .a(@"vl-cell-name"_in[]),
      .b(@"vl-cell-name"_out[]),
      );*/
 
-celltype u_a0(/*AUTOINST*/
+InstModule u_a0 (/*AUTOINST*/
      // Inouts
      .a	(u_a0_in[bitsa:0]),	 // Templated
      .b	(u_a0_out[bitsb:0]));	 // Templated
-celltype u_a1(/*AUTOINST*/
+InstModule u_a1 (/*AUTOINST*/
      // Inouts
      .a	(u_a1_in[bitsa:0]),	 // Templated
      .b	(u_a1_out[bitsb:0]));	 // Templated
@@ -915,12 +915,12 @@ celltype u_a1(/*AUTOINST*/
    <p>Oh, but what if I didn't want the u_?
 
 <pre>
-/* celltype AUTO_TEMPLATE (
+/* InstModule AUTO_TEMPLATE (
      .a(@"(substring vl-cell-name 2)"_in[]),
      .b(@"(substring vl-cell-name 2)"_out[])
      );*/
 
-celltype u_a0(/*AUTOINST*/
+InstModule u_a0 (/*AUTOINST*/
    // Inouts
    .a	(a0_in[bitsa:0]),	 // Templated
    .b	(a0_out[bitsb:0]));	 // Templated
@@ -940,7 +940,7 @@ celltype u_a0(/*AUTOINST*/
    the second digits in the module:
 
 <pre>   
-/* celltype AUTO_TEMPLATE ".*[0-9]+.*\([0-9]\)" (
+/* InstModule AUTO_TEMPLATE ".*[0-9]+.*\([0-9]\)" (
                              .a (in_@),
 */
 </pre>
@@ -956,7 +956,7 @@ celltype u_a0(/*AUTOINST*/
     (string-match "[^0-9]*[0-9]+[^0-9]*\\([0-9]+\\)" strg)
     (match-string 1 strg)) */
 
-/* celltype AUTO_TEMPLATE (
+/* InstModule AUTO_TEMPLATE (
     .in (@"(getparam2 vl-cell-name)"),
     );
     */
@@ -970,17 +970,17 @@ celltype u_a0(/*AUTOINST*/
    <p>Use a lisp template and a little math.
 
 <pre>
-/* celltype AUTO_TEMPLATE (
+/* InstModule AUTO_TEMPLATE (
      .a(@in[@"(+ (* 8 @) 7)":@"(* 8 @)"]),
      );*/
 
-celltype u_a0(/*AUTOINST*/
+InstModule u_a0 (/*AUTOINST*/
      .a	(in[7:0]));	 // Templated
-celltype u_a1(/*AUTOINST*/
+InstModule u_a1 (/*AUTOINST*/
      .a	(in[15:8]));	 // Templated
-celltype u_a2(/*AUTOINST*/
+InstModule u_a2 (/*AUTOINST*/
      .a	(in[23:16]));	 // Templated
-celltype u_a3(/*AUTOINST*/
+InstModule u_a3 (/*AUTOINST*/
      .a	(in[31:24]));	 // Templated
 </pre>
 
