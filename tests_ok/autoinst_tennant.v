@@ -7,7 +7,7 @@ module top
    (input clk,
     input rstb,
 
-    /*AUTOINPUT("^x.\|v.**")*/
+    /*AUTOINPUT("^x.*\|v.*")*/
     // Beginning of automatic inputs (from unused autoinst inputs)
     input [X-1:0]	xb,			// To XX of xx.v, ...
     // End of automatics

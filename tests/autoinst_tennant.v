@@ -7,20 +7,52 @@ module top
    (input clk,
     input rstb,
 
-    /*AUTOINPUT("^x.\|v.**")*/
+    /*AUTOINPUT("^x.*\|v.*")*/
     /*AUTOOUTPUT("^c.*\|k.*")*/
 
     /*AUTOOUTPUT("^y.*")*/
 
     /*AUTOINPUT*/
     /*AUTOOUTPUT*/
+    // Beginning of automatic outputs (from unused autoinst outputs)
+    output		foobar,			// From XX of xx.v
+    output [4:0] [2:0]	foobar2		// From YY of yy.v
+    // End of automatics
     );
 
-   xx (/*AUTOINSTPARAM*/)
-     XX(/*AUTOINST*/);
+   xx (/*AUTOINSTPARAM*/
+       // Parameters
+       .X				(X),
+       .Y				(Y))
+     XX(/*AUTOINST*/
+	// Outputs
+	.st				(st[1:0]),
+	.foobar				(foobar),
+	// Inputs
+	.clk				(clk),
+	.rstb				(rstb),
+	.xc				(xc/*[X-1:0][1:0]*/),
+	.xa				(xa[X-1:0]),
+	.xb				(xb[X-1:0]),
+	.cb				(cb[X-1:0]),
+	.yb				(yb[X*Y-1:0]));
    
-   yy (/*AUTOINSTPARAM*/)
-     YY(/*AUTOINST*/);
+   yy (/*AUTOINSTPARAM*/
+       // Parameters
+       .X				(X),
+       .Y				(Y))
+     YY(/*AUTOINST*/
+	// Outputs
+	.xc				(xc/*[X-1:0][1:0]*/),
+	.xa				(xa[X-1:0]),
+	.yb				(yb[X*Y-1:0]),
+	.foobar2			(foobar2/*[4:0][2:0]*/),
+	// Inputs
+	.clk				(clk),
+	.rstb				(rstb),
+	.xb				(xb[X-1:0]),
+	.cb				(cb[X-1:0]),
+	.st				(st[1:0]));
 
 endmodule // top
 
