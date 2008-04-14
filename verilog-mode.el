@@ -1950,7 +1950,7 @@ See also `verilog-font-lock-extra-types'.")
        (verilog-pragma-keywords
 	(eval-when-compile
 	  (verilog-regexp-opt
-	   '("surefire" "synopsys" "rtl_synthesis" "verilint" ) nil
+	   '("surefire" "synopsys" "rtl_synthesis" "verilint" "leda" "0in") nil
 	    )))
 
        (verilog-p1800-keywords
@@ -2512,11 +2512,12 @@ Key bindings specific to `verilog-mode-map' are:
   (make-local-variable 'imenu-generic-expression)
   (setq imenu-generic-expression verilog-imenu-generic-expression)
   ;; hideshow support
-  (unless (assq 'verilog-mode hs-special-modes-alist)
-    (setq hs-special-modes-alist
-	  (cons '(verilog-mode-mode  "\\<begin\\>" "\\<end\\>" nil
-			     verilog-forward-sexp-function)
-		hs-special-modes-alist)))
+  (when (boundp 'hs-special-modes-alist)
+    (unless (assq 'verilog-mode hs-special-modes-alist)
+      (setq hs-special-modes-alist
+	    (cons '(verilog-mode-mode  "\\<begin\\>" "\\<end\\>" nil
+				       verilog-forward-sexp-function)
+		  hs-special-modes-alist))))
 
   ;; Stuff for autos
   (add-hook 'write-contents-hooks 'verilog-auto-save-check) ; already local
