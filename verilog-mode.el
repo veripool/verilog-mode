@@ -7001,6 +7001,72 @@ unless it is already a member of the variable's list."
 
 
 ;;
+;; Cached directory support
+;;
+
+(defvar verilog-dir-cache-preserving nil
+  "If set, the directory cache is enabled, and file system changes are ignored.
+See `verilog-dir-exists-p' and `verilog-dir-files'.")
+
+;; If adding new cached variable, add also to verilog-preserve-dir-cache
+(defvar verilog-dir-cache-list nil
+  "Alist of (((Cwd Dirname) Results)...) for caching `verilog-dir-files'.")
+(defvar verilog-dir-cache-lib-dirs nil
+  "Cached data for `verilog-expanded-lib-dirs'.")
+(defvar verilog-dir-cache-lib-filenames nil
+  "Cached data for `verilog-library-filenames'.")
+
+(defmacro verilog-preserve-dir-cache (&rest body)
+  "Execute the BODY forms, allowing directory cache preservation within BODY.
+This means that changes inside BODY made to the file system will not be
+seen by the `verilog-dir-files' and related functions."
+  `(let ((verilog-dir-cache-preserving t)
+	 verilog-dir-cache-list
+	 verilog-dir-cache-lib-dirs
+	 verilog-dir-cache-lib-filenames)
+     (progn ,@body)))
+
+(defun verilog-dir-files (dirname)
+  "Return all filenames in the DIRNAME directory.
+Relative paths depend on the `default-directory'.
+Results are cached if inside `verilog-preserve-dir-cache'."
+  (unless verilog-dir-cache-preserving
+    (setq verilog-dir-cache-list nil)) ;; Cache disabled
+  ;; We don't use expand-file-name on the dirname to make key, as it's slow
+  (let* ((cache-key (list dirname default-directory))
+	 (fass (assoc cache-key verilog-dir-cache-list))
+	 exp-dirname data)
+    (cond (fass  ;; Return data from cache hit
+	   (nth 1 fass))
+	  (t
+	   (setq exp-dirname (expand-file-name dirname)
+		 data (and (file-directory-p exp-dirname)
+			   (directory-files exp-dirname nil nil nil)))
+	   ;; Note we also encache nil for non-existing dirs.
+	   (setq verilog-dir-cache-list (cons (list cache-key data)
+					      verilog-dir-cache-list))
+	   data))))
+;; Miss-and-hit test:
+;;(verilog-preserve-dir-cache (prin1 (verilog-dir-files "."))
+;; (prin1 (verilog-dir-files ".")) nil)
+
+(defun verilog-dir-file-exists-p (filename)
+  "Return true if FILENAME exists.
+Like `file-exists-p' but results are cached if inside
+`verilog-preserve-dir-cache'."
+  (let* ((dirname (file-name-directory filename))
+	 ;; Correct for file-name-nondirectory returning same if no slash.
+	 (dirnamed (if (or (not dirname) (equal dirname filename))
+		       default-directory dirname))
+	 (flist (verilog-dir-files dirnamed)))
+    (and flist
+	 (member (file-name-nondirectory filename) flist)
+	 t)))
+;;(verilog-dir-file-exists-p "verilog-mode.el")
+;;(verilog-dir-file-exists-p "../verilog-mode/verilog-mode.el")
+
+
+;;
 ;; Module name lookup
 ;;
 
@@ -7084,11 +7150,13 @@ If the variable vh-{symbol} is defined, substitute that value."
 (defun verilog-expand-dirnames (&optional dirnames)
   "Return a list of existing directories given a list of wildcarded DIRNAMES.
 Or, just the existing dirnames themselves if there are no wildcards."
+  ;; Note this function is performance critical.
+  ;; Do not call anything that requires disk access that cannot be cached.
   (interactive)
   (unless dirnames (error "`verilog-library-directories' should include at least '.'"))
   (setq dirnames (reverse dirnames))	; not nreverse
   (let ((dirlist nil)
-	pattern dirfile dirfiles dirname root filename rest)
+	pattern dirfile dirfiles dirname root filename rest basefile)
     (while dirnames
       (setq dirname (substitute-in-file-name (car dirnames))
 	    dirnames (cdr dirnames))
@@ -7102,18 +7170,19 @@ Or, just the existing dirnames themselves if there are no wildcards."
 		   pattern filename)
 	     ;; now replace those * and ? with .+ and .
 	     ;; use ^ and /> to get only whole file names
-	     ;;verilog-string-replace-matches
 	     (setq pattern (verilog-string-replace-matches "[*]" ".+" nil nil pattern)
 		   pattern (verilog-string-replace-matches "[?]" "." nil nil pattern)
-
-		   ;; Unfortunately allows abc/*/rtl to match abc/rtl
-		   ;; because abc/.. shows up in dirfiles.  Solutions welcome.
-		   dirfiles (if (file-directory-p root)	; Ignore version control external
-				(directory-files root t pattern nil)))
+		   pattern (concat "^" pattern "$")
+		   dirfiles (verilog-dir-files root))
 	     (while dirfiles
-	       (setq dirfile (expand-file-name (concat (car dirfiles) rest))
+	       (setq basefile (car dirfiles)
+		     dirfile (expand-file-name (concat root basefile rest))
 		     dirfiles (cdr dirfiles))
-	       (if (file-directory-p dirfile)
+	       (if (and (string-match pattern basefile)
+			;; Don't allow abc/*/rtl to match abc/rtl via ..
+			(not (equal basefile "."))
+			(not (equal basefile ".."))
+			(file-directory-p dirfile))
 		   (setq dirlist (cons dirfile dirlist)))))
 	    ;; Defaults
 	    (t
@@ -7122,24 +7191,46 @@ Or, just the existing dirnames themselves if there are no wildcards."
     dirlist))
 ;;(verilog-expand-dirnames (list "." ".." "nonexist" "../*" "/home/wsnyder/*/v"))
 
+(defun verilog-expanded-lib-dirs ()
+  "Call `verilog-expand-dirnames' on `verilog-library-directories' and cache."
+  (setq verilog-dir-cache-lib-dirs
+	(or (and verilog-dir-cache-preserving verilog-dir-cache-lib-dirs)
+	    (verilog-expand-dirnames verilog-library-directories)))
+  verilog-dir-cache-lib-dirs)
+
 (defun verilog-library-filenames (filename current &optional check-ext)
-  "Return a search path to find the given FILENAME name.
+  "Return a search path to find the given FILENAME or module name.
 Uses the CURRENT filename, `verilog-library-directories' and
 `verilog-library-extensions' variables to build the path.
 With optional CHECK-EXT also check `verilog-library-extensions'."
-  (let ((ckdir (verilog-expand-dirnames verilog-library-directories))
-	fn outlist)
-    (while ckdir
-      (let ((ckext (if check-ext verilog-library-extensions `(""))))
-	(while ckext
-	  (setq fn (expand-file-name
-		    (concat filename (car ckext))
-		    (expand-file-name (car ckdir) (file-name-directory current))))
-	  (if (file-exists-p fn)
-	      (setq outlist (cons fn outlist)))
-	  (setq ckext (cdr ckext))))
-      (setq ckdir (cdr ckdir)))
-    (nreverse outlist)))
+  (unless verilog-dir-cache-preserving
+    (setq verilog-dir-cache-lib-filenames nil))
+  (let* ((cache-key (list filename current check-ext))
+	 (fass (assoc cache-key verilog-dir-cache-lib-filenames))
+	 chkdirs chkdir chkexts fn outlist)
+    (cond (fass  ;; Return data from cache hit
+	   (nth 1 fass))
+	  (t
+	   (setq chkdirs (verilog-expanded-lib-dirs))
+	   (while chkdirs
+	     (setq chkdir (expand-file-name (car chkdirs)
+					    (file-name-directory current))
+		   chkexts (if check-ext verilog-library-extensions `("")))
+	     (while chkexts
+	       (setq fn (expand-file-name (concat filename (car chkexts))
+					  chkdir))
+	       ;;(message "Check for %s" fn)
+	       (if (verilog-dir-file-exists-p fn)
+		   (setq outlist (cons (expand-file-name
+					fn (file-name-directory current))
+				       outlist)))
+		 (setq chkexts (cdr chkexts)))
+	     (setq chkdirs (cdr chkdirs)))
+	   (setq outlist (nreverse outlist))
+	   (setq verilog-dir-cache-lib-filenames
+		 (cons (list cache-key outlist)
+		       verilog-dir-cache-lib-filenames))
+	   outlist))))
 
 (defun verilog-module-filenames (module current)
   "Return a search path to find the given MODULE name.
@@ -7169,10 +7260,10 @@ Buffer-local.")
 
 (defvar verilog-modi-cache-preserve-tick nil
   "Modification tick after which the cache is still considered valid.
-Use `verilog-preserve-cache' to set it.")
+Use `verilog-preserve-modi-cache' to set it.")
 (defvar verilog-modi-cache-preserve-buffer nil
   "Modification tick after which the cache is still considered valid.
-Use `verilog-preserve-cache' to set it.")
+Use `verilog-preserve-modi-cache' to set it.")
 
 (defun verilog-modi-current ()
   "Return the modi structure for the module currently at point."
@@ -7263,8 +7354,8 @@ Return modi if successful, else print message unless IGNORE-ERROR is true."
 (defun verilog-modi-cache-results (modi function)
   "Run on MODI the given FUNCTION.  Locate the module in a file.
 Cache the output of function so next call may have faster access."
-  (let (func-returns fass)
-    (save-excursion
+  (let (fass)
+    (save-excursion  ;; Cache is buffer-local so can't avoid this.
       (verilog-modi-goto modi)
       (if (and (setq fass (assoc (list (verilog-modi-name modi) function)
 				 verilog-modi-cache-list))
@@ -7278,26 +7369,26 @@ Cache the output of function so next call may have faster access."
 	  (setq verilog-modi-cache-list nil
 		fass nil))
       (cond (fass
-	     ;; Found
-	     (setq func-returns (nth 3 fass)))
+	     ;; Return data from cache hit
+	     (nth 3 fass))
 	    (t
 	     ;; Read from file
 	     ;; Clear then restore any hilighting to make emacs19 happy
 	     (let ((fontlocked (when (and (boundp 'font-lock-mode)
 					  font-lock-mode)
 				 (font-lock-mode nil)
-				 t)))
+				 t))
+		   func-returns)
 	       (setq func-returns (funcall function))
-	       (when fontlocked (font-lock-mode t)))
-	     ;; Cache for next time
-	     (setq verilog-modi-cache-list
-		   (cons (list (list (verilog-modi-name modi) function)
-			       (buffer-modified-tick)
-			       (visited-file-modtime)
-			       func-returns)
-			 verilog-modi-cache-list)))))
-      ;;
-      func-returns))
+	       (when fontlocked (font-lock-mode t))
+	       ;; Cache for next time
+	       (setq verilog-modi-cache-list
+		     (cons (list (list (verilog-modi-name modi) function)
+				 (buffer-modified-tick)
+				 (visited-file-modtime)
+				 func-returns)
+			   verilog-modi-cache-list))
+	       func-returns))))))
 
 (defun verilog-modi-cache-add (modi function element sig-list)
   "Add function return results to the module cache.
@@ -7312,7 +7403,7 @@ function now contains the additional SIG-LIST parameters."
 	    (aset func-returns element
 		  (append sig-list (aref func-returns element))))))))
 
-(defmacro verilog-preserve-cache (&rest body)
+(defmacro verilog-preserve-modi-cache (&rest body)
   "Execute the BODY forms, allowing cache preservation within BODY.
 This means that changes to the buffer will not result in the cache being
 flushed.  If the changes affect the modsig state, they must call the
@@ -9616,7 +9707,9 @@ Wilson Snyder (wsnyder@wsnyder.org), and/or see http://www.veripool.org."
 	(fontlocked (when (and (boundp 'font-lock-mode)
 			       font-lock-mode)
 		      (font-lock-mode nil)
-		      t)))
+		      t))
+	;; Cache directories; we don't write new files, so can't change
+	(verilog-dir-cache-preserving t))
     (unwind-protect
 	(save-excursion
 	  ;; If we're not in verilog-mode, change syntax table so parsing works right
@@ -9627,56 +9720,58 @@ Wilson Snyder (wsnyder@wsnyder.org), and/or see http://www.veripool.org."
 	  (verilog-auto-reeval-locals)
 	  (verilog-read-auto-lisp (point-min) (point-max))
 	  (verilog-getopt-flags)
-	  ;; These two may seem obvious to do always, but on large includes it can be way too slow
-	  (when verilog-auto-read-includes
-	    (verilog-read-includes)
-	    (verilog-read-defines nil nil t))
-	  ;; This particular ordering is important
-	  ;; INST: Lower modules correct, no internal dependencies, FIRST
-	  (verilog-preserve-cache
-	   ;; Clear existing autos else we'll be screwed by existing ones
-	   (verilog-delete-auto)
-	   ;; Injection if appropriate
-	   (when inject
-	     (verilog-inject-inst)
-	     (verilog-inject-sense)
-	     (verilog-inject-arg))
-	   ;;
-	   (verilog-auto-re-search-do "/\\*AUTOINSTPARAM\\*/" 'verilog-auto-inst-param)
-	   (verilog-auto-re-search-do "/\\*AUTOINST\\*/" 'verilog-auto-inst)
-	   (verilog-auto-re-search-do "\\.\\*" 'verilog-auto-star)
-	   ;; Doesn't matter when done, but combine it with a common changer
-	   (verilog-auto-re-search-do "/\\*\\(AUTOSENSE\\|AS\\)\\*/" 'verilog-auto-sense)
-	   (verilog-auto-re-search-do "/\\*AUTORESET\\*/" 'verilog-auto-reset)
-	   ;; Must be done before autoin/out as creates a reg
-	   (verilog-auto-re-search-do "/\\*AUTOASCIIENUM([^)]*)\\*/" 'verilog-auto-ascii-enum)
-	   ;;
-	   ;; first in/outs from other files
-	   (verilog-auto-re-search-do "/\\*AUTOINOUTMODULE([^)]*)\\*/" 'verilog-auto-inout-module)
-	   ;; next in/outs which need previous sucked inputs first
-	   (verilog-auto-re-search-do "/\\*AUTOOUTPUT\\((\"[^\"]*\")\\)\\*/"
-				      '(lambda () (verilog-auto-output t)))
-	   (verilog-auto-re-search-do "/\\*AUTOOUTPUT\\*/" 'verilog-auto-output)
-	   (verilog-auto-re-search-do "/\\*AUTOINPUT\\((\"[^\"]*\")\\)\\*/"
-				      '(lambda () (verilog-auto-input t)))
-	   (verilog-auto-re-search-do "/\\*AUTOINPUT\\*/"  'verilog-auto-input)
-	   (verilog-auto-re-search-do "/\\*AUTOINOUT\\((\"[^\"]*\")\\)\\*/"
-				      '(lambda () (verilog-auto-inout t)))
-	   (verilog-auto-re-search-do "/\\*AUTOINOUT\\*/" 'verilog-auto-inout)
-	   ;; Then tie off those in/outs
-	   (verilog-auto-re-search-do "/\\*AUTOTIEOFF\\*/" 'verilog-auto-tieoff)
-	   ;; Wires/regs must be after inputs/outputs
-	   (verilog-auto-re-search-do "/\\*AUTOWIRE\\*/" 'verilog-auto-wire)
-	   (verilog-auto-re-search-do "/\\*AUTOREG\\*/" 'verilog-auto-reg)
-	   (verilog-auto-re-search-do "/\\*AUTOREGINPUT\\*/" 'verilog-auto-reg-input)
-	   ;; outputevery needs AUTOOUTPUTs done first
-	   (verilog-auto-re-search-do "/\\*AUTOOUTPUTEVERY\\*/" 'verilog-auto-output-every)
-	   ;; After we've created all new variables
-	   (verilog-auto-re-search-do "/\\*AUTOUNUSED\\*/" 'verilog-auto-unused)
-	   ;; Must be after all inputs outputs are generated
-	   (verilog-auto-re-search-do "/\\*AUTOARG\\*/" 'verilog-auto-arg)
-	   ;; Fix line numbers (comments only)
-	   (verilog-auto-templated-rel))
+	  ;; From here on out, we can cache anything we read from disk
+	  (verilog-preserve-dir-cache
+	   ;; These two may seem obvious to do always, but on large includes it can be way too slow
+	   (when verilog-auto-read-includes
+	     (verilog-read-includes)
+	     (verilog-read-defines nil nil t))
+	   ;; This particular ordering is important
+	   ;; INST: Lower modules correct, no internal dependencies, FIRST
+	   (verilog-preserve-modi-cache
+	    ;; Clear existing autos else we'll be screwed by existing ones
+	    (verilog-delete-auto)
+	    ;; Injection if appropriate
+	    (when inject
+	      (verilog-inject-inst)
+	      (verilog-inject-sense)
+	      (verilog-inject-arg))
+	    ;;
+	    (verilog-auto-re-search-do "/\\*AUTOINSTPARAM\\*/" 'verilog-auto-inst-param)
+	    (verilog-auto-re-search-do "/\\*AUTOINST\\*/" 'verilog-auto-inst)
+	    (verilog-auto-re-search-do "\\.\\*" 'verilog-auto-star)
+	    ;; Doesn't matter when done, but combine it with a common changer
+	    (verilog-auto-re-search-do "/\\*\\(AUTOSENSE\\|AS\\)\\*/" 'verilog-auto-sense)
+	    (verilog-auto-re-search-do "/\\*AUTORESET\\*/" 'verilog-auto-reset)
+	    ;; Must be done before autoin/out as creates a reg
+	    (verilog-auto-re-search-do "/\\*AUTOASCIIENUM([^)]*)\\*/" 'verilog-auto-ascii-enum)
+	    ;;
+	    ;; first in/outs from other files
+	    (verilog-auto-re-search-do "/\\*AUTOINOUTMODULE([^)]*)\\*/" 'verilog-auto-inout-module)
+	    ;; next in/outs which need previous sucked inputs first
+	    (verilog-auto-re-search-do "/\\*AUTOOUTPUT\\((\"[^\"]*\")\\)\\*/"
+				       '(lambda () (verilog-auto-output t)))
+	    (verilog-auto-re-search-do "/\\*AUTOOUTPUT\\*/" 'verilog-auto-output)
+	    (verilog-auto-re-search-do "/\\*AUTOINPUT\\((\"[^\"]*\")\\)\\*/"
+				       '(lambda () (verilog-auto-input t)))
+	    (verilog-auto-re-search-do "/\\*AUTOINPUT\\*/"  'verilog-auto-input)
+	    (verilog-auto-re-search-do "/\\*AUTOINOUT\\((\"[^\"]*\")\\)\\*/"
+				       '(lambda () (verilog-auto-inout t)))
+	    (verilog-auto-re-search-do "/\\*AUTOINOUT\\*/" 'verilog-auto-inout)
+	    ;; Then tie off those in/outs
+	    (verilog-auto-re-search-do "/\\*AUTOTIEOFF\\*/" 'verilog-auto-tieoff)
+	    ;; Wires/regs must be after inputs/outputs
+	    (verilog-auto-re-search-do "/\\*AUTOWIRE\\*/" 'verilog-auto-wire)
+	    (verilog-auto-re-search-do "/\\*AUTOREG\\*/" 'verilog-auto-reg)
+	    (verilog-auto-re-search-do "/\\*AUTOREGINPUT\\*/" 'verilog-auto-reg-input)
+	    ;; outputevery needs AUTOOUTPUTs done first
+	    (verilog-auto-re-search-do "/\\*AUTOOUTPUTEVERY\\*/" 'verilog-auto-output-every)
+	    ;; After we've created all new variables
+	    (verilog-auto-re-search-do "/\\*AUTOUNUSED\\*/" 'verilog-auto-unused)
+	    ;; Must be after all inputs outputs are generated
+	    (verilog-auto-re-search-do "/\\*AUTOARG\\*/" 'verilog-auto-arg)
+	    ;; Fix line numbers (comments only)
+	    (verilog-auto-templated-rel)))
 	  ;;
 	  (run-hooks 'verilog-auto-hook)
 	  ;;
@@ -9686,11 +9781,11 @@ Wilson Snyder (wsnyder@wsnyder.org), and/or see http://www.veripool.org."
 	  (cond ((and oldbuf (equal oldbuf (buffer-string)))
 		 (set-buffer-modified-p nil)
 		 (unless noninteractive (message "Updating AUTOs...done (no changes)")))
-		(t (unless noninteractive (message "Updating AUTOs...done")))))
+		(t (unless noninteractive (message "Updating AUTOs...done"))))))
       ;; Unwind forms
       (progn
 	;; Restore font-lock
-	(when fontlocked (font-lock-mode t))))))
+	(when fontlocked (font-lock-mode t)))))
 
 
 ;;
