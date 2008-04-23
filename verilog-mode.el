@@ -6223,31 +6223,31 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 ;; Signal reading for given module
 ;; Note these all take modi's - as returned from the
 ;; verilog-modi-current function.
-(defsubst verilog-modi-get-outputs (modi)
-  (aref (verilog-modi-get-decls modi) 0))
-(defsubst verilog-modi-get-inouts (modi)
-  (aref (verilog-modi-get-decls modi) 1))
-(defsubst verilog-modi-get-inputs (modi)
-  (aref (verilog-modi-get-decls modi) 2))
-(defsubst verilog-modi-get-wires (modi)
-  (aref (verilog-modi-get-decls modi) 3))
-(defsubst verilog-modi-get-regs (modi)
-  (aref (verilog-modi-get-decls modi) 4))
-(defsubst verilog-modi-get-assigns (modi)
-  (aref (verilog-modi-get-decls modi) 5))
-(defsubst verilog-modi-get-consts (modi)
-  (aref (verilog-modi-get-decls modi) 6))
-(defsubst verilog-modi-get-gparams (modi)
-  (aref (verilog-modi-get-decls modi) 7))
-(defsubst verilog-modi-get-sub-outputs (modi)
-  (aref (verilog-modi-get-sub-decls modi) 0))
-(defsubst verilog-modi-get-sub-inouts (modi)
-  (aref (verilog-modi-get-sub-decls modi) 1))
-(defsubst verilog-modi-get-sub-inputs (modi)
-  (aref (verilog-modi-get-sub-decls modi) 2))
+(defsubst verilog-decls-get-outputs (decls)
+  (aref decls 0))
+(defsubst verilog-decls-get-inouts (decls)
+  (aref decls 1))
+(defsubst verilog-decls-get-inputs (decls)
+  (aref decls 2))
+(defsubst verilog-decls-get-wires (decls)
+  (aref decls 3))
+(defsubst verilog-decls-get-regs (decls)
+  (aref decls 4))
+(defsubst verilog-decls-get-assigns (decls)
+  (aref decls 5))
+(defsubst verilog-decls-get-consts (decls)
+  (aref decls 6))
+(defsubst verilog-decls-get-gparams (decls)
+  (aref decls 7))
+(defsubst verilog-subdecls-get-outputs (subdecls)
+  (aref subdecls 0))
+(defsubst verilog-subdecls-get-inouts (subdecls)
+  (aref subdecls 1))
+(defsubst verilog-subdecls-get-inputs (subdecls)
+  (aref subdecls 2))
 
 
-(defun verilog-read-sub-decls-sig (submodi comment port sig vec multidim)
+(defun verilog-read-sub-decls-sig (submoddecls comment port sig vec multidim)
   "For `verilog-read-sub-decls-line', add a signal."
   (let (portdata)
     (when sig
@@ -6258,19 +6258,19 @@ Return a array of [outputs inouts inputs wire reg assign const]."
       (if multidim (setq multidim  (mapcar `verilog-symbol-detick-denumber multidim)))
       (unless (or (not sig)
 		  (equal sig ""))  ;; Ignore .foo(1'b1) assignments
-	(cond ((setq portdata (assoc port (verilog-modi-get-inouts submodi)))
+	(cond ((setq portdata (assoc port (verilog-decls-get-inouts submoddecls)))
 	       (setq sigs-inout (cons (list sig vec (concat "To/From " comment) nil nil
 					    (verilog-sig-signed portdata)
 					    (verilog-sig-type portdata)
 					    multidim)
 				      sigs-inout)))
-	      ((setq portdata (assoc port (verilog-modi-get-outputs submodi)))
+	      ((setq portdata (assoc port (verilog-decls-get-outputs submoddecls)))
 	       (setq sigs-out   (cons (list sig vec (concat "From " comment) nil nil
 					    (verilog-sig-signed portdata)
 					    (verilog-sig-type portdata)
 					    multidim)
 				      sigs-out)))
-	      ((setq portdata (assoc port (verilog-modi-get-inputs submodi)))
+	      ((setq portdata (assoc port (verilog-decls-get-inputs submoddecls)))
 	       (setq sigs-in    (cons (list sig vec (concat "To " comment) nil nil
 					    (verilog-sig-signed portdata)
 					    (verilog-sig-type portdata)
@@ -6279,7 +6279,7 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 	      ;; (t  -- warning pin isn't defined.)   ; Leave for lint tool
 	      )))))
 
-(defun verilog-read-sub-decls-line (submodi comment)
+(defun verilog-read-sub-decls-line (submoddecls comment)
   "For `verilog-read-sub-decls', read lines of port defs until none match anymore.
 Return the list of signals found, using submodi to look up each port."
   (let (done port sig vec multidim)
@@ -6339,11 +6339,11 @@ Return the list of signals found, using submodi to look up each port."
 		      (t
 		       (setq sig nil)))
 		     ;; Process signals
-		     (verilog-read-sub-decls-sig submodi comment port sig vec multidim))))
+		     (verilog-read-sub-decls-sig submoddecls comment port sig vec multidim))))
 		(t
 		 (setq sig nil)))
 	  ;; Process signals
-	  (verilog-read-sub-decls-sig submodi comment port sig vec multidim))
+	  (verilog-read-sub-decls-sig submoddecls comment port sig vec multidim))
 	;;
 	(forward-line 1)))))
 
@@ -6378,21 +6378,23 @@ Outputs comments above subcell signals, for example:
 	    ;; Attempt to snarf a comment
 	    (let* ((submod (verilog-read-inst-module))
 		   (inst (verilog-read-inst-name))
-		   (comment (concat inst " of " submod ".v")) submodi)
+		   (comment (concat inst " of " submod ".v"))
+		   submodi submoddecls)
 	      (when (setq submodi (verilog-modi-lookup submod t))
+		(setq submoddecls (verilog-modi-get-decls submodi))
 		;; This could have used a list created by verilog-auto-inst
 		;; However I want it to be runnable even on user's manually added signals
 		(verilog-backward-open-paren)
 		(setq end-inst-point (save-excursion (forward-sexp 1) (point))
 		      st-point (point))
 		(while (re-search-forward "\\s *(?\\s *// Outputs" end-inst-point t)
-		  (verilog-read-sub-decls-line submodi comment)) ;; Modifies sigs-out
+		  (verilog-read-sub-decls-line submoddecls comment)) ;; Modifies sigs-out
 		(goto-char st-point)
 		(while (re-search-forward "\\s *// Inouts" end-inst-point t)
-		  (verilog-read-sub-decls-line submodi comment)) ;; Modifies sigs-inout
+		  (verilog-read-sub-decls-line submoddecls comment)) ;; Modifies sigs-inout
 		(goto-char st-point)
 		(while (re-search-forward "\\s *// Inputs" end-inst-point t)
-		  (verilog-read-sub-decls-line submodi comment)) ;; Modifies sigs-in
+		  (verilog-read-sub-decls-line submoddecls comment)) ;; Modifies sigs-in
 		)))))
       ;; Combine duplicate bits
       ;;(setq rr (vector sigs-out sigs-inout sigs-in))
@@ -7349,7 +7351,7 @@ Cache the output of function so next call may have faster access."
   (let (fass)
     (save-excursion  ;; Cache is buffer-local so can't avoid this.
       (verilog-modi-goto modi)
-      (if (and (setq fass (assoc (list (verilog-modi-name modi) function)
+      (if (and (setq fass (assoc (list modi function)
 				 verilog-modi-cache-list))
 	       ;; Destroy caching when incorrect; Modified or file changed
 	       (not (and verilog-cache-enabled
@@ -7375,7 +7377,7 @@ Cache the output of function so next call may have faster access."
 	       (when fontlocked (font-lock-mode t))
 	       ;; Cache for next time
 	       (setq verilog-modi-cache-list
-		     (cons (list (list (verilog-modi-name modi) function)
+		     (cons (list (list modi function)
 				 (buffer-modified-tick)
 				 (visited-file-modtime)
 				 func-returns)
@@ -7389,7 +7391,7 @@ function now contains the additional SIG-LIST parameters."
   (let (fass)
     (save-excursion
       (verilog-modi-goto modi)
-      (if (setq fass (assoc (list (verilog-modi-name modi) function)
+      (if (setq fass (assoc (list modi function)
 			    verilog-modi-cache-list))
 	  (let ((func-returns (nth 3 fass)))
 	    (aset func-returns element
@@ -7445,22 +7447,22 @@ and invalidating the cache."
       (nreverse out-list))))
 
 ;; Combined
-(defun verilog-modi-get-signals (modi)
+(defun verilog-decls-get-signals (decls)
   (append
-   (verilog-modi-get-outputs modi)
-   (verilog-modi-get-inouts modi)
-   (verilog-modi-get-inputs modi)
-   (verilog-modi-get-wires modi)
-   (verilog-modi-get-regs modi)
-   (verilog-modi-get-assigns modi)
-   (verilog-modi-get-consts modi)
-   (verilog-modi-get-gparams modi)))
+   (verilog-decls-get-outputs decls)
+   (verilog-decls-get-inouts decls)
+   (verilog-decls-get-inputs decls)
+   (verilog-decls-get-wires decls)
+   (verilog-decls-get-regs decls)
+   (verilog-decls-get-assigns decls)
+   (verilog-decls-get-consts decls)
+   (verilog-decls-get-gparams decls)))
 
-(defun verilog-modi-get-ports (modi)
+(defun verilog-decls-get-ports (decls)
   (append
-   (verilog-modi-get-outputs modi)
-   (verilog-modi-get-inouts modi)
-   (verilog-modi-get-inputs modi)))
+   (verilog-decls-get-outputs decls)
+   (verilog-decls-get-inouts decls)
+   (verilog-decls-get-inputs decls)))
 
 (defsubst verilog-modi-cache-add-outputs (modi sig-list)
   (verilog-modi-cache-add modi 'verilog-read-decls 0 sig-list))
@@ -7842,17 +7844,18 @@ Typing \\[verilog-inject-auto] will make this into:
   (save-excursion
     (goto-char (point-min))
     (while (verilog-re-search-forward-quick "\\<always\\s *@\\s *(" nil t)
-      (let ((start-pt (point))
-	    (modi (verilog-modi-current))
-	    pre-sigs
-	    got-sigs)
+      (let* ((start-pt (point))
+	     (modi (verilog-modi-current))
+	     (moddecls (verilog-modi-get-decls modi))
+	     pre-sigs
+	     got-sigs)
 	(backward-char 1)
 	(forward-sexp 1)
 	(backward-char 1) ;; End )
 	(when (not (verilog-re-search-backward "/\\*\\(AUTOSENSE\\|AS\\)\\*/" start-pt t))
 	  (setq pre-sigs (verilog-signals-from-signame
 			  (verilog-read-signals start-pt (point)))
-		got-sigs (verilog-auto-sense-sigs modi nil))
+		got-sigs (verilog-auto-sense-sigs moddecls nil))
 	  (when (not (or (verilog-signals-not-in pre-sigs got-sigs)  ; Both are equal?
 			 (verilog-signals-not-in got-sigs pre-sigs)))
 	    (delete-region start-pt (point))
@@ -8005,21 +8008,22 @@ to choose the comma yourself.
 
 Avoid declaring ports manually, as it makes code harder to maintain."
   (save-excursion
-    (let ((modi (verilog-modi-current))
-	  (skip-pins (aref (verilog-read-arg-pins) 0)))
+    (let* ((modi (verilog-modi-current))
+	   (moddecls (verilog-modi-get-decls modi))
+	   (skip-pins (aref (verilog-read-arg-pins) 0)))
       (verilog-repair-open-comma)
       (verilog-auto-arg-ports (verilog-signals-not-in
-			       (verilog-modi-get-outputs modi)
+			       (verilog-decls-get-outputs moddecls)
 			       skip-pins)
 			      "// Outputs"
 			      verilog-indent-level-declaration)
       (verilog-auto-arg-ports (verilog-signals-not-in
-			       (verilog-modi-get-inouts modi)
+			       (verilog-decls-get-inouts moddecls)
 			       skip-pins)
 			      "// Inouts"
 			      verilog-indent-level-declaration)
       (verilog-auto-arg-ports (verilog-signals-not-in
-			       (verilog-modi-get-inputs modi)
+			       (verilog-decls-get-inputs moddecls)
 			       skip-pins)
 			      "// Inputs"
 			      verilog-indent-level-declaration)
@@ -8407,9 +8411,11 @@ Lisp Templates:
 	   (verilog-auto-inst-column (max verilog-auto-inst-column
 					  (+ 16 (* 8 (/ (+ indent-pt 7) 8)))))
 	   (modi (verilog-modi-current))
+	   (moddecls (verilog-modi-get-decls modi))
 	   (vector-skip-list (unless verilog-auto-inst-vector
-			       (verilog-modi-get-signals modi)))
-	   submod submodi inst skip-pins tpl-list tpl-num did-first)
+			       (verilog-decls-get-signals moddecls)))
+	   submod submodi submoddecls
+	   inst skip-pins tpl-list tpl-num did-first)
       ;; Find module name that is instantiated
       (setq submod  (verilog-read-inst-module)
 	    inst (verilog-read-inst-name)
@@ -8423,6 +8429,7 @@ Lisp Templates:
       ;; Lookup position, etc of submodule
       ;; Note this may raise an error
       (when (setq submodi (verilog-modi-lookup submod t))
+	(setq submoddecls (verilog-modi-get-decls submodi))
 	;; If there's a number in the instantiation, it may be a argument to the
 	;; automatic variable instantiation program.
 	(let* ((tpl-info (verilog-read-auto-template submod))
@@ -8433,7 +8440,7 @@ Lisp Templates:
 		tpl-list (aref tpl-info 1)))
 	;; Find submodule's signals and dump
 	(let ((sig-list (verilog-signals-not-in
-			 (verilog-modi-get-outputs submodi)
+			 (verilog-decls-get-outputs submoddecls)
 			 skip-pins))
 	      (vl-dir "output"))
 	  (when sig-list
@@ -8446,7 +8453,7 @@ Lisp Templates:
                                             tpl-list tpl-num for-star))
                   sig-list)))
 	(let ((sig-list (verilog-signals-not-in
-			 (verilog-modi-get-inouts submodi)
+			 (verilog-decls-get-inouts submoddecls)
 			 skip-pins))
 	      (vl-dir "inout"))
 	  (when sig-list
@@ -8458,7 +8465,7 @@ Lisp Templates:
                                             tpl-list tpl-num for-star))
                   sig-list)))
 	(let ((sig-list (verilog-signals-not-in
-			 (verilog-modi-get-inputs submodi)
+			 (verilog-decls-get-inputs submoddecls)
 			 skip-pins))
 	      (vl-dir "input"))
 	  (when sig-list
@@ -8529,9 +8536,11 @@ Templates:
 	   (verilog-auto-inst-column (max verilog-auto-inst-column
 					  (+ 16 (* 8 (/ (+ indent-pt 7) 8)))))
 	   (modi (verilog-modi-current))
+	   (moddecls (verilog-modi-get-decls modi))
 	   (vector-skip-list (unless verilog-auto-inst-vector
-			       (verilog-modi-get-signals modi)))
-	   submod submodi inst skip-pins tpl-list tpl-num did-first)
+			       (verilog-decls-get-signals moddecls)))
+	   submod submodi submoddecls
+	   inst skip-pins tpl-list tpl-num did-first)
       ;; Find module name that is instantiated
       (setq submod (save-excursion
 		     ;; Get to the point where AUTOINST normally is to read the module
@@ -8551,6 +8560,7 @@ Templates:
       ;; Lookup position, etc of submodule
       ;; Note this may raise an error
       (when (setq submodi (verilog-modi-lookup submod t))
+	(setq submoddecls (verilog-modi-get-decls submodi))
 	;; If there's a number in the instantiation, it may be a argument to the
 	;; automatic variable instantiation program.
 	(let* ((tpl-info (verilog-read-auto-template submod))
@@ -8561,7 +8571,7 @@ Templates:
 		tpl-list (aref tpl-info 1)))
 	;; Find submodule's signals and dump
 	(let ((sig-list (verilog-signals-not-in
-			 (verilog-modi-get-gparams submodi)
+			 (verilog-decls-get-gparams submoddecls)
 			 skip-pins))
 	      (vl-dir "parameter"))
 	  (when sig-list
@@ -8618,15 +8628,17 @@ Typing \\[verilog-auto] will make this into:
     ;; Point must be at insertion point.
     (let* ((indent-pt (current-indentation))
 	   (modi (verilog-modi-current))
+	   (moddecls (verilog-modi-get-decls modi))
+	   (modsubdecls (verilog-modi-get-sub-decls modi))
 	   (sig-list (verilog-signals-not-in
-		      (verilog-modi-get-outputs modi)
-		      (append (verilog-modi-get-wires modi)
-			      (verilog-modi-get-regs modi)
-			      (verilog-modi-get-assigns modi)
-			      (verilog-modi-get-consts modi)
-			      (verilog-modi-get-gparams modi)
-			      (verilog-modi-get-sub-outputs modi)
-			      (verilog-modi-get-sub-inouts modi)))))
+		      (verilog-decls-get-outputs moddecls)
+		      (append (verilog-decls-get-wires moddecls)
+			      (verilog-decls-get-regs moddecls)
+			      (verilog-decls-get-assigns moddecls)
+			      (verilog-decls-get-consts moddecls)
+			      (verilog-decls-get-gparams moddecls)
+			      (verilog-subdecls-get-outputs modsubdecls)
+			      (verilog-subdecls-get-inouts modsubdecls)))))
       (forward-line 1)
       (when sig-list
 	(verilog-insert-indent "// Beginning of automatic regs (for this module's undeclared outputs)\n")
@@ -8675,11 +8687,13 @@ Typing \\[verilog-auto] will make this into:
     ;; Point must be at insertion point.
     (let* ((indent-pt (current-indentation))
 	   (modi (verilog-modi-current))
+	   (moddecls (verilog-modi-get-decls modi))
+	   (modsubdecls (verilog-modi-get-sub-decls modi))
 	   (sig-list (verilog-signals-combine-bus
 		      (verilog-signals-not-in
-		       (append (verilog-modi-get-sub-inputs modi)
-			       (verilog-modi-get-sub-inouts modi))
-		       (verilog-modi-get-signals modi)))))
+		       (append (verilog-subdecls-get-inputs modsubdecls)
+			       (verilog-subdecls-get-inouts modsubdecls))
+		       (verilog-decls-get-signals moddecls)))))
       (forward-line 1)
       (when sig-list
 	(verilog-insert-indent "// Beginning of automatic reg inputs (for undeclared instantiated-module inputs)\n")
@@ -8736,11 +8750,13 @@ Typing \\[verilog-auto] will make this into:
     ;; Point must be at insertion point.
     (let* ((indent-pt (current-indentation))
 	   (modi (verilog-modi-current))
+	   (moddecls (verilog-modi-get-decls modi))
+	   (modsubdecls (verilog-modi-get-sub-decls modi))
 	   (sig-list (verilog-signals-combine-bus
 		      (verilog-signals-not-in
-		       (append (verilog-modi-get-sub-outputs modi)
-			       (verilog-modi-get-sub-inouts modi))
-		       (verilog-modi-get-signals modi)))))
+		       (append (verilog-subdecls-get-outputs modsubdecls)
+			       (verilog-subdecls-get-inouts modsubdecls))
+		       (verilog-decls-get-signals moddecls)))))
       (forward-line 1)
       (when sig-list
 	(verilog-insert-indent "// Beginning of automatic wires (for undeclared instantiated-module outputs)\n")
@@ -8810,12 +8826,14 @@ same expansion will result from only extracting outputs starting with ov:
 			(nth 0 (verilog-read-auto-params 1))))
 	   (v2k  (verilog-in-paren))
 	   (modi (verilog-modi-current))
+	   (moddecls (verilog-modi-get-decls modi))
+	   (modsubdecls (verilog-modi-get-sub-decls modi))
 	   (sig-list (verilog-signals-not-in
-		      (verilog-modi-get-sub-outputs modi)
-		      (append (verilog-modi-get-outputs modi)
-			      (verilog-modi-get-inouts modi)
-			      (verilog-modi-get-sub-inputs modi)
-			      (verilog-modi-get-sub-inouts modi)))))
+		      (verilog-subdecls-get-outputs modsubdecls)
+		      (append (verilog-decls-get-outputs moddecls)
+			      (verilog-decls-get-inouts moddecls)
+			      (verilog-subdecls-get-inputs modsubdecls)
+			      (verilog-subdecls-get-inouts modsubdecls)))))
       (when regexp
 	(setq sig-list (verilog-signals-matching-regexp
 			sig-list regexp)))
@@ -8867,10 +8885,11 @@ Typing \\[verilog-auto] will make this into:
     (let* ((indent-pt (current-indentation))
 	   (v2k  (verilog-in-paren))
 	   (modi (verilog-modi-current))
+	   (moddecls (verilog-modi-get-decls modi))
 	   (sig-list (verilog-signals-combine-bus
 		      (verilog-signals-not-in
-		       (verilog-modi-get-signals modi)
-		       (verilog-modi-get-ports modi)))))
+		       (verilog-decls-get-signals moddecls)
+		       (verilog-decls-get-ports moddecls)))))
       (forward-line 1)
       (when v2k (verilog-repair-open-comma))
       (when sig-list
@@ -8935,16 +8954,18 @@ same expansion will result from only extracting inputs starting with i:
 			(nth 0 (verilog-read-auto-params 1))))
 	   (v2k  (verilog-in-paren))
 	   (modi (verilog-modi-current))
+	   (moddecls (verilog-modi-get-decls modi))
+	   (modsubdecls (verilog-modi-get-sub-decls modi))
 	   (sig-list (verilog-signals-not-in
-		      (verilog-modi-get-sub-inputs modi)
-		      (append (verilog-modi-get-inputs modi)
-			      (verilog-modi-get-inouts modi)
-			      (verilog-modi-get-wires modi)
-			      (verilog-modi-get-regs modi)
-			      (verilog-modi-get-consts modi)
-			      (verilog-modi-get-gparams modi)
-			      (verilog-modi-get-sub-outputs modi)
-			      (verilog-modi-get-sub-inouts modi)))))
+		      (verilog-subdecls-get-inputs modsubdecls)
+		      (append (verilog-decls-get-inputs moddecls)
+			      (verilog-decls-get-inouts moddecls)
+			      (verilog-decls-get-wires moddecls)
+			      (verilog-decls-get-regs moddecls)
+			      (verilog-decls-get-consts moddecls)
+			      (verilog-decls-get-gparams moddecls)
+			      (verilog-subdecls-get-outputs modsubdecls)
+			      (verilog-subdecls-get-inouts modsubdecls)))))
       (when regexp
 	(setq sig-list (verilog-signals-matching-regexp
 			sig-list regexp)))
@@ -9014,13 +9035,15 @@ same expansion will result from only extracting inouts starting with i:
 			(nth 0 (verilog-read-auto-params 1))))
 	   (v2k  (verilog-in-paren))
 	   (modi (verilog-modi-current))
+	   (moddecls (verilog-modi-get-decls modi))
+	   (modsubdecls (verilog-modi-get-sub-decls modi))
 	   (sig-list (verilog-signals-not-in
-		      (verilog-modi-get-sub-inouts modi)
-		      (append (verilog-modi-get-outputs modi)
-			      (verilog-modi-get-inouts modi)
-			      (verilog-modi-get-inputs modi)
-			      (verilog-modi-get-sub-inputs modi)
-			      (verilog-modi-get-sub-outputs modi)))))
+		      (verilog-subdecls-get-inouts modsubdecls)
+		      (append (verilog-decls-get-outputs moddecls)
+			      (verilog-decls-get-inouts moddecls)
+			      (verilog-decls-get-inputs moddecls)
+			      (verilog-subdecls-get-inputs modsubdecls)
+			      (verilog-subdecls-get-outputs modsubdecls)))))
       (when regexp
 	(setq sig-list (verilog-signals-matching-regexp
 			sig-list regexp)))
@@ -9093,15 +9116,17 @@ same expansion will result from only extracting signals starting with i:
 	(let* ((indent-pt (current-indentation))
 	       (v2k  (verilog-in-paren))
 	       (modi (verilog-modi-current))
+	       (moddecls (verilog-modi-get-decls modi))
+	       (submoddecls (verilog-modi-get-decls submodi))
 	       (sig-list-i  (verilog-signals-not-in
-			     (verilog-modi-get-inputs submodi)
-			     (append (verilog-modi-get-inputs modi))))
+			     (verilog-decls-get-inputs submoddecls)
+			     (append (verilog-decls-get-inputs moddecls))))
 	       (sig-list-o  (verilog-signals-not-in
-			     (verilog-modi-get-outputs submodi)
-			     (append (verilog-modi-get-outputs modi))))
+			     (verilog-decls-get-outputs submoddecls)
+			     (append (verilog-decls-get-outputs moddecls))))
 	       (sig-list-io (verilog-signals-not-in
-			     (verilog-modi-get-inouts submodi)
-			     (append (verilog-modi-get-inouts modi)))))
+			     (verilog-decls-get-inouts submoddecls)
+			     (append (verilog-decls-get-inouts moddecls)))))
 	  (forward-line 1)
 	  (when regexp
 	    (setq sig-list-i  (verilog-signals-matching-regexp
@@ -9123,15 +9148,15 @@ same expansion will result from only extracting signals starting with i:
 	    (verilog-insert-indent "// End of automatics\n"))
 	  (when v2k (verilog-repair-close-comma)))))))
 
-(defun verilog-auto-sense-sigs (modi presense-sigs)
+(defun verilog-auto-sense-sigs (moddecls presense-sigs)
   "Return list of signals for current AUTOSENSE block."
   (let* ((sigss (verilog-read-always-signals))
 	 (sig-list (verilog-signals-not-params
 		    (verilog-signals-not-in (verilog-alw-get-inputs sigss)
 					    (append (and (not verilog-auto-sense-include-inputs)
 							 (verilog-alw-get-outputs sigss))
-						    (verilog-modi-get-consts modi)
-						    (verilog-modi-get-gparams modi)
+						    (verilog-decls-get-consts moddecls)
+						    (verilog-decls-get-gparams moddecls)
 						    presense-sigs)))))
     sig-list))
 
@@ -9198,16 +9223,17 @@ operator.  (This was added to the language in part due to AUTOSENSE!)
 			(or (and (goto-char start-pt) (1+ (current-column)))
 			    (current-indentation))))
 	   (modi (verilog-modi-current))
+	   (moddecls (verilog-modi-get-decls modi))
 	   (sig-memories (verilog-signals-memory
 			  (append
-			   (verilog-modi-get-regs modi)
-			   (verilog-modi-get-wires modi))))
+			   (verilog-decls-get-regs moddecls)
+			   (verilog-decls-get-wires moddecls))))
 	   sig-list not-first presense-sigs)
       ;; Read signals in always, eliminate outputs from sense list
       (setq presense-sigs (verilog-signals-from-signame
 			   (save-excursion
 			     (verilog-read-signals start-pt (point)))))
-      (setq sig-list (verilog-auto-sense-sigs modi presense-sigs))
+      (setq sig-list (verilog-auto-sense-sigs moddecls presense-sigs))
       (when sig-memories
 	(let ((tlen (length sig-list)))
 	  (setq sig-list (verilog-signals-not-in sig-list sig-memories))
@@ -9292,7 +9318,8 @@ Typing \\[verilog-auto] will make this into:
     ;; Find beginning
     (let* ((indent-pt (current-indentation))
 	   (modi (verilog-modi-current))
-	   (all-list (verilog-modi-get-signals modi))
+	   (moddecls (verilog-modi-get-decls modi))
+	   (all-list (verilog-decls-get-signals moddecls))
 	   sigss sig-list prereset-sigs assignment-str)
       ;; Read signals in always, eliminate outputs from reset list
       (setq prereset-sigs (verilog-signals-from-signame
@@ -9372,15 +9399,17 @@ Typing \\[verilog-auto] will make this into:
     ;; Find beginning
     (let* ((indent-pt (current-indentation))
 	   (modi (verilog-modi-current))
+	   (moddecls (verilog-modi-get-decls modi))
+	   (modsubdecls (verilog-modi-get-sub-decls modi))
 	   (sig-list (verilog-signals-not-in
-		      (verilog-modi-get-outputs modi)
-		      (append (verilog-modi-get-wires modi)
-			      (verilog-modi-get-regs modi)
-			      (verilog-modi-get-assigns modi)
-			      (verilog-modi-get-consts modi)
-			      (verilog-modi-get-gparams modi)
-			      (verilog-modi-get-sub-outputs modi)
-			      (verilog-modi-get-sub-inouts modi)))))
+		      (verilog-decls-get-outputs moddecls)
+		      (append (verilog-decls-get-wires moddecls)
+			      (verilog-decls-get-regs moddecls)
+			      (verilog-decls-get-assigns moddecls)
+			      (verilog-decls-get-consts moddecls)
+			      (verilog-decls-get-gparams moddecls)
+			      (verilog-subdecls-get-outputs modsubdecls)
+			      (verilog-subdecls-get-inouts modsubdecls)))))
       (when sig-list
 	(forward-line 1)
 	(verilog-insert-indent "// Beginning of automatic tieoffs (for this module's unterminated outputs)\n")
@@ -9453,11 +9482,13 @@ Typing \\[verilog-auto] will make this into:
     ;; Find beginning
     (let* ((indent-pt (progn (search-backward "/*") (current-column)))
 	   (modi (verilog-modi-current))
+	   (moddecls (verilog-modi-get-decls modi))
+	   (modsubdecls (verilog-modi-get-sub-decls modi))
 	   (sig-list (verilog-signals-not-in
-		      (append (verilog-modi-get-inputs modi)
-			      (verilog-modi-get-inouts modi))
-		      (append (verilog-modi-get-sub-inputs modi)
-			      (verilog-modi-get-sub-inouts modi)))))
+		      (append (verilog-decls-get-inputs moddecls)
+			      (verilog-decls-get-inouts moddecls))
+		      (append (verilog-subdecls-get-inputs modsubdecls)
+			      (verilog-subdecls-get-inouts modsubdecls)))))
       (setq sig-list (verilog-signals-not-matching-regexp
 		      sig-list verilog-auto-unused-ignore-regexp))
       (when sig-list
@@ -9545,14 +9576,15 @@ Typing \\[verilog-auto] will make this into:
 	   ;;
 	   (indent-pt (current-indentation))
 	   (modi (verilog-modi-current))
+	   (moddecls (verilog-modi-get-decls modi))
 	   ;;
-	   (sig-list-consts (append (verilog-modi-get-consts modi)
-				    (verilog-modi-get-gparams modi)))
-	   (sig-list-all  (append (verilog-modi-get-regs modi)
-				  (verilog-modi-get-outputs modi)
-				  (verilog-modi-get-inouts modi)
-				  (verilog-modi-get-inputs modi)
-				  (verilog-modi-get-wires modi)))
+	   (sig-list-consts (append (verilog-decls-get-consts moddecls)
+				    (verilog-decls-get-gparams moddecls)))
+	   (sig-list-all  (append (verilog-decls-get-regs moddecls)
+				  (verilog-decls-get-outputs moddecls)
+				  (verilog-decls-get-inouts moddecls)
+				  (verilog-decls-get-inputs moddecls)
+				  (verilog-decls-get-wires moddecls)))
 	   ;;
 	   (undecode-sig (or (assoc undecode-name sig-list-all)
 			     (error "%s: Signal %s not found in design" (verilog-point-text) undecode-name)))

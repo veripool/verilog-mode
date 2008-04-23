@@ -55,7 +55,9 @@ $(F):
 	mkdir $(F)
 
 ChangeLog.txt mmencoded_verilog-mode emacs-version.h : make_log.pl verilog-mode.el README
+ifneq ($(VERILOGMODE_SKIP_MAKELOG),1)
 	./make_log.pl	
+endif
 
 email:	.timestamps/email
 .timestamps/email: mmencoded_verilog-mode
