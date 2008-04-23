@@ -6964,7 +6964,7 @@ Some macros and such are also found and included.  For dinotrace.el."
       (if fns
 	  (set-buffer (find-file-noselect (car fns)))
 	(error (concat (verilog-point-text)
-		       "Can't find verilog-getopt-file -f file: " filename)))
+		       ": Can't find verilog-getopt-file -f file: " filename)))
       (goto-char (point-min))
       (while (not (eobp))
 	(setq line (buffer-substring (point)
