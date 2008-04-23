@@ -7011,8 +7011,6 @@ See `verilog-dir-exists-p' and `verilog-dir-files'.")
 ;; If adding new cached variable, add also to verilog-preserve-dir-cache
 (defvar verilog-dir-cache-list nil
   "Alist of (((Cwd Dirname) Results)...) for caching `verilog-dir-files'.")
-(defvar verilog-dir-cache-lib-dirs nil
-  "Cached data for `verilog-expanded-lib-dirs'.")
 (defvar verilog-dir-cache-lib-filenames nil
   "Cached data for `verilog-library-filenames'.")
 
@@ -7022,7 +7020,6 @@ This means that changes inside BODY made to the file system will not be
 seen by the `verilog-dir-files' and related functions."
   `(let ((verilog-dir-cache-preserving t)
 	 verilog-dir-cache-list
-	 verilog-dir-cache-lib-dirs
 	 verilog-dir-cache-lib-filenames)
      (progn ,@body)))
 
@@ -7191,13 +7188,6 @@ Or, just the existing dirnames themselves if there are no wildcards."
     dirlist))
 ;;(verilog-expand-dirnames (list "." ".." "nonexist" "../*" "/home/wsnyder/*/v"))
 
-(defun verilog-expanded-lib-dirs ()
-  "Call `verilog-expand-dirnames' on `verilog-library-directories' and cache."
-  (setq verilog-dir-cache-lib-dirs
-	(or (and verilog-dir-cache-preserving verilog-dir-cache-lib-dirs)
-	    (verilog-expand-dirnames verilog-library-directories)))
-  verilog-dir-cache-lib-dirs)
-
 (defun verilog-library-filenames (filename current &optional check-ext)
   "Return a search path to find the given FILENAME or module name.
 Uses the CURRENT filename, `verilog-library-directories' and
@@ -7211,7 +7201,9 @@ With optional CHECK-EXT also check `verilog-library-extensions'."
     (cond (fass  ;; Return data from cache hit
 	   (nth 1 fass))
 	  (t
-	   (setq chkdirs (verilog-expanded-lib-dirs))
+	   ;; Note this expand can't be easily cached, as we need to
+	   ;; pick up buffer-local variables for newly read sub-module files
+	   (setq chkdirs (verilog-expand-dirnames verilog-library-directories))
 	   (while chkdirs
 	     (setq chkdir (expand-file-name (car chkdirs)
 					    (file-name-directory current))
