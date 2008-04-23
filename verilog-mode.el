@@ -7405,10 +7405,6 @@ and invalidating the cache."
   (while (verilog-re-search-forward search-for nil t)
     (funcall func)))
 
-(defun verilog-auto-search-do (search-for func)
-  "Search for the given auto text SEARCH-FOR, and perform FUNC where it occurs."
-  (verilog-auto-re-search-do (regexp-quote search-for) func))
-
 (defun verilog-insert-one-definition (sig type indent-pt)
   "Print out a definition for SIG of the given TYPE,
 with appropriate INDENT-PT indentation."
@@ -9646,9 +9642,9 @@ Wilson Snyder (wsnyder@wsnyder.org), and/or see http://www.veripool.org."
 	     (verilog-inject-sense)
 	     (verilog-inject-arg))
 	   ;;
-	   (verilog-auto-search-do "/*AUTOINSTPARAM*/" 'verilog-auto-inst-param)
-	   (verilog-auto-search-do "/*AUTOINST*/" 'verilog-auto-inst)
-	   (verilog-auto-search-do ".*" 'verilog-auto-star)
+	   (verilog-auto-re-search-do "/\\*AUTOINSTPARAM\\*/" 'verilog-auto-inst-param)
+	   (verilog-auto-re-search-do "/\\*AUTOINST\\*/" 'verilog-auto-inst)
+	   (verilog-auto-re-search-do "\\.\\*" 'verilog-auto-star)
 	   ;; Doesn't matter when done, but combine it with a common changer
 	   (verilog-auto-re-search-do "/\\*\\(AUTOSENSE\\|AS\\)\\*/" 'verilog-auto-sense)
 	   (verilog-auto-re-search-do "/\\*AUTORESET\\*/" 'verilog-auto-reset)
@@ -9668,17 +9664,17 @@ Wilson Snyder (wsnyder@wsnyder.org), and/or see http://www.veripool.org."
 				      '(lambda () (verilog-auto-inout t)))
 	   (verilog-auto-re-search-do "/\\*AUTOINOUT\\*/" 'verilog-auto-inout)
 	   ;; Then tie off those in/outs
-	   (verilog-auto-search-do "/*AUTOTIEOFF*/" 'verilog-auto-tieoff)
+	   (verilog-auto-re-search-do "/\\*AUTOTIEOFF\\*/" 'verilog-auto-tieoff)
 	   ;; Wires/regs must be after inputs/outputs
-	   (verilog-auto-search-do "/*AUTOWIRE*/" 'verilog-auto-wire)
-	   (verilog-auto-search-do "/*AUTOREG*/" 'verilog-auto-reg)
-	   (verilog-auto-search-do "/*AUTOREGINPUT*/" 'verilog-auto-reg-input)
+	   (verilog-auto-re-search-do "/\\*AUTOWIRE\\*/" 'verilog-auto-wire)
+	   (verilog-auto-re-search-do "/\\*AUTOREG\\*/" 'verilog-auto-reg)
+	   (verilog-auto-re-search-do "/\\*AUTOREGINPUT\\*/" 'verilog-auto-reg-input)
 	   ;; outputevery needs AUTOOUTPUTs done first
-	   (verilog-auto-search-do "/*AUTOOUTPUTEVERY*/" 'verilog-auto-output-every)
+	   (verilog-auto-re-search-do "/\\*AUTOOUTPUTEVERY\\*/" 'verilog-auto-output-every)
 	   ;; After we've created all new variables
-	   (verilog-auto-search-do "/*AUTOUNUSED*/" 'verilog-auto-unused)
+	   (verilog-auto-re-search-do "/\\*AUTOUNUSED\\*/" 'verilog-auto-unused)
 	   ;; Must be after all inputs outputs are generated
-	   (verilog-auto-search-do "/*AUTOARG*/" 'verilog-auto-arg)
+	   (verilog-auto-re-search-do "/\\*AUTOARG\\*/" 'verilog-auto-arg)
 	   ;; Fix line numbers (comments only)
 	   (verilog-auto-templated-rel))
 	  ;;
