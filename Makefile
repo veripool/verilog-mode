@@ -5,7 +5,7 @@ F=/home/mac/external_webpage/src/verilog.com/ftp
 XEMACS  = xemacs
 XEMACS_DEST = /usr/local/lib/xemacs/xemacs-packages/lisp/prog-modes/
 EMACS   = emacs
-EMACS_DEST = /usr/share/emacs/site-lisp/
+EMACS_DEST = /usr/local/share/emacs/site-lisp/
 ELC	= -batch -q -l verilog-mode.el -f batch-byte-compile
 CVS_GNU = cvs -d:pserver:anonymous@cvs.sv.gnu.org:/sources/emacs
 
