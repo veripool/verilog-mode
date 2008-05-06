@@ -24,10 +24,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -35,9 +35,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -1857,7 +1855,7 @@ find the errors."
 	  (modify-syntax-entry ?/  ". 1456" table)
 	  (modify-syntax-entry ?*  ". 23"   table)
 	  (modify-syntax-entry ?\n "> b"    table))
-      ;; Emacs 19 does things differently, but we can work with it
+      ;; Emacs does things differently, but we can work with it
       (modify-syntax-entry ?/  ". 124b" table)
       (modify-syntax-entry ?*  ". 23"   table)
       (modify-syntax-entry ?\n "> b"    table))
@@ -2496,7 +2494,7 @@ Key bindings specific to `verilog-mode-map' are:
     (easy-menu-add verilog-menu)
     (setq mode-popup-menu (cons "Verilog Mode" verilog-stmt-menu)))
 
-  ;; Stuff for GNU emacs
+  ;; Stuff for GNU Emacs
   (set (make-local-variable 'font-lock-defaults)
        '((verilog-font-lock-keywords verilog-font-lock-keywords-1
                                      verilog-font-lock-keywords-2
@@ -2507,10 +2505,10 @@ Key bindings specific to `verilog-mode-map' are:
   ;; all buffer local:
   (when (featurep 'xemacs)
     (make-local-hook 'font-lock-mode-hook)
-    (make-local-hook 'font-lock-after-fontify-buffer-hook); doesn't exist in emacs 20
+    (make-local-hook 'font-lock-after-fontify-buffer-hook); doesn't exist in Emacs
     (make-local-hook 'after-change-functions))
   (add-hook 'font-lock-mode-hook 'verilog-colorize-include-files-buffer t t)
-  (add-hook 'font-lock-after-fontify-buffer-hook 'verilog-colorize-include-files-buffer t t) ; not in emacs 20
+  (add-hook 'font-lock-after-fontify-buffer-hook 'verilog-colorize-include-files-buffer t t) ; not in Emacs
   (add-hook 'after-change-functions 'verilog-colorize-include-files t t)
 
   ;; Tell imenu how to handle Verilog.
@@ -3806,7 +3804,7 @@ This lets programs calling batch mode to easily extract error messages."
        (progn ,@body)
      (error
       (error "%%Error: %s%s" (error-message-string err)
-	     (if (featurep 'xemacs) "\n" "")))))  ;; xemacs forgets to add a newline
+	     (if (featurep 'xemacs) "\n" "")))))  ;; XEmacs forgets to add a newline
 
 (defun verilog-batch-execute-func (funref)
   "Internal processing of a batch command, running FUNREF on all command arguments."
@@ -6026,7 +6024,7 @@ Ignore width if optional NO-WIDTH is set."
       (verilog-re-search-backward-quick "\\b[a-zA-Z0-9`_\$]" nil nil))
     (skip-chars-backward "a-zA-Z0-9'_$")
     (looking-at "[a-zA-Z0-9`_\$]+")
-    ;; Important: don't use match string, this must work with emacs 19 font-lock on
+    ;; Important: don't use match string, this must work with Emacs 19 font-lock on
     (buffer-substring-no-properties (match-beginning 0) (match-end 0))))
 
 (defun verilog-read-inst-name ()
@@ -6034,7 +6032,7 @@ Ignore width if optional NO-WIDTH is set."
   (save-excursion
     (verilog-read-inst-backward-name)
     (looking-at "[a-zA-Z0-9`_\$]+")
-    ;; Important: don't use match string, this must work with emacs 19 font-lock on
+    ;; Important: don't use match string, this must work with Emacs 19 font-lock on
     (buffer-substring-no-properties (match-beginning 0) (match-end 0))))
 
 (defun verilog-read-module-name ()
@@ -6044,7 +6042,7 @@ Ignore width if optional NO-WIDTH is set."
     (verilog-re-search-backward-quick "\\b[a-zA-Z0-9`_\$]" nil nil)
     (skip-chars-backward "a-zA-Z0-9`_$")
     (looking-at "[a-zA-Z0-9`_\$]+")
-    ;; Important: don't use match string, this must work with emacs 19 font-lock on
+    ;; Important: don't use match string, this must work with Emacs 19 font-lock on
     (buffer-substring-no-properties (match-beginning 0) (match-end 0))))
 
 (defun verilog-read-auto-params (num-param &optional max-param)
@@ -6688,7 +6686,7 @@ list of ( (signal_name connection_name)... )."
 		      (goto-char (match-end 0)))
 		     ;; Regexp form??
 		     ((looking-at
-		       ;; Regexp bug in xemacs disallows ][ inside [], and wants + last
+		       ;; Regexp bug in XEmacs disallows ][ inside [], and wants + last
 		       "\\s-*\\.\\(\\([a-zA-Z0-9`_$+@^.*?|---]+\\|[][]\\|\\\\[()|]\\)+\\)\\s-*(\\(.*\\))\\s-*\\(,\\|)\\s-*;\\)")
 		      (setq rep (match-string-no-properties 3))
 		      (goto-char (match-end 0))
