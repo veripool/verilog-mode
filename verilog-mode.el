@@ -2514,6 +2514,9 @@ Key bindings specific to `verilog-mode-map' are:
   ;; Tell imenu how to handle Verilog.
   (make-local-variable 'imenu-generic-expression)
   (setq imenu-generic-expression verilog-imenu-generic-expression)
+  ;; Tell which-func-modes that imenu knows about verilog
+  (when (boundp 'which-function-modes)
+    (add-to-list 'which-func-modes 'verilog-mode))
   ;; hideshow support
   (when (boundp 'hs-special-modes-alist)
     (unless (assq 'verilog-mode hs-special-modes-alist)
@@ -3469,7 +3472,7 @@ primitive or interface named NAME."
 	       (;- this is end{function,generate,task,module,primitive,table,generate}
 		;- which can not be nested.
 		t
-		(let (string reg (width nil))
+		(let (string reg (name-re nil))
 		  (end-of-line)
 		  (if kill-existing-comment
 		      (save-match-data
@@ -3479,7 +3482,8 @@ primitive or interface named NAME."
 		  (cond
 		   ((match-end 5) ;; of verilog-end-block-ordered-re
 		    (setq reg "\\(\\<function\\>\\)\\|\\(\\<\\(endfunction\\|task\\|\\(macro\\)?module\\|primitive\\)\\>\\)")
-		    (setq width "\\(\\s-*\\(\\[[^]]*\\]\\)\\|\\(real\\(time\\)?\\)\\|\\(integer\\)\\|\\(time\\)\\)?"))
+		    (setq name-re "\\w+\\s-*(")
+		    )
 		   ((match-end 6) ;; of verilog-end-block-ordered-re
 		    (setq reg "\\(\\<task\\>\\)\\|\\(\\<\\(endtask\\|function\\|\\(macro\\)?module\\|primitive\\)\\>\\)"))
 		   ((match-end 7) ;; of verilog-end-block-ordered-re
@@ -3510,9 +3514,9 @@ primitive or interface named NAME."
 			(setq b (progn
 				  (skip-chars-forward "^ \t")
 				  (verilog-forward-ws&directives)
-				  (if (and width (looking-at width))
+				  (if (and name-re (verilog-re-search-forward name-re nil 'move))
 				      (progn
-					(goto-char (match-end 0))
+					(goto-char (match-beginning 0))
 					(verilog-forward-ws&directives)))
 				  (point))
 			      e (progn
@@ -4684,10 +4688,8 @@ Only look at a few lines to determine indent level."
 		   (skip-chars-forward " \t")
 		   (current-column))))
 	(indent-line-to val)
-	(if (and (not (verilog-in-struct-region-p))
-		 (looking-at verilog-declaration-re))
-	    (verilog-indent-declaration ind))))
-
+      ))
+     
      (;-- Handle the ends
       (or
        (looking-at verilog-end-block-re )
