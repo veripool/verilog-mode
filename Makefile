@@ -108,7 +108,9 @@ gnuhead:
 gnu-diff: gnu-diff-head
 
 gnu-diff-head: gnu-update-head verilog-mode-tognu.el
-	diff -c verilog-mode-tognu.el gnuhead/emacs/lisp/progmodes/verilog-mode.el
+	diff -c gnuhead/emacs/lisp/progmodes/verilog-mode.el verilog-mode-tognu.el 
+patch-file: gnu-update-head verilog-mode-tognu.el
+	diff -c gnuhead/emacs/lisp/progmodes/verilog-mode.el verilog-mode-tognu.el > patch-file
 
 gnu-diff-22: gnu-update-22 verilog-mode-tognu.el
 	diff -c gnu22/emacs/lisp/progmodes/verilog-mode.el verilog-mode-tognu.el 
