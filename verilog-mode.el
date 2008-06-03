@@ -6152,8 +6152,9 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 		     (equal keywd "tri1"))
 		 (unless io (setq vec nil  enum nil  rvalue nil  signed nil  typedefed nil  multidim nil  sig-paren paren
 				  expect-signal 'sigs-wire)))
-		((or (equal keywd "reg")
-		     (equal keywd "trireg"))
+		((member keywd (list "reg" "trireg"
+				     "byte" "shortint" "int" "longint" "integer" "time"
+				     "bit" "logic"))
 		 (unless io (setq vec nil  enum nil  rvalue nil  signed nil  typedefed nil  multidim nil  sig-paren paren
 				  expect-signal 'sigs-reg)))
 		((equal keywd "assign")

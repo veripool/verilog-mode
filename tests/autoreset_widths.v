@@ -21,6 +21,8 @@ module CmpEng (/*AUTOARG*/);
    reg [2:0] m_wid3_r;
    reg [5:2] m_wid4_r_l;
 
+   logic [4:1] logic_four;
+
 `define M 2
 `define L 1
    parameter MS = 2;
@@ -41,6 +43,7 @@ module CmpEng (/*AUTOARG*/);
 	 m_wid4_r_l <= 0;
 	 m_param_r <= 0;
 	 m_def2_r <= 0;
+	 logic_four <= 4;
       end
    end
 

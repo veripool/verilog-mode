@@ -24,6 +24,8 @@ module CmpEng (/*AUTOARG*/
    reg [2:0] m_wid3_r;
    reg [5:2] m_wid4_r_l;
 
+   logic [4:1] logic_four;
+
 `define M 2
 `define L 1
    parameter MS = 2;
@@ -38,6 +40,7 @@ module CmpEng (/*AUTOARG*/
 	 m_cac_sel_r <= CSEL_PF;
 	 /*AUTORESET*/
 	 // Beginning of autoreset for uninitialized flops
+	 logic_four <= 4'h0;
 	 m_def2_r <= {(1+(`M)-(`L)){1'b0}};
 	 m_param_r <= {(1+(MS)-(LS)){1'b0}};
 	 m_wid1_r <= 1'h0;
@@ -51,6 +54,7 @@ module CmpEng (/*AUTOARG*/
 	 m_wid4_r_l <= 0;
 	 m_param_r <= 0;
 	 m_def2_r <= 0;
+	 logic_four <= 4;
       end
    end
 
