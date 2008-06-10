@@ -1555,21 +1555,21 @@ find the errors."
 ;; verilog-forward-sexp and verilog-calc-indent
 
 (defconst verilog-beg-block-re-ordered
-  ( concat "\\<"
-	   "\\(begin\\)"		;1
-	   "\\|\\(randcase\\|\\(unique\\s-+\\|priority\\s-+\\)?case[xz]?\\)" ; 2,3
-	   "\\|\\(\\(disable\\s-+\\)?fork\\)" ;4
-	   "\\|\\(class\\)"		;5
-	   "\\|\\(table\\)"		;6
-	   "\\|\\(specify\\)"		;7
-	   "\\|\\(function\\)"		;8
-	   "\\|\\(task\\)"		;9
-	   "\\|\\(generate\\)"		;10
-	   "\\|\\(covergroup\\)"	;11
-	   "\\|\\(property\\)"		;12
-	   "\\|\\(\\(rand\\)?sequence\\)" ;13
-	   "\\|\\(clocking\\)"          ;14
-	   "\\>"))
+  ( concat "\\(\\<begin\\>\\)"		;1
+	   "\\|\\(\\<randcase\\>\\|\\(\\<unique\\s-+\\|priority\\s-+\\)?case[xz]?\\>\\)" ; 2,3
+	   "\\|\\(\\(\\<disable\\>\\s-+\\)?fork\\>\\)" ;4,5
+	   "\\|\\(\\<class\\>\\)"		;6
+	   "\\|\\(\\<table\\>\\)"		;7
+	   "\\|\\(\\<specify\\>\\)"		;8
+	   "\\|\\(\\<function\\>\\)"		;9
+	   "\\|\\(\\<task\\>\\)"		;10
+	   "\\|\\(\\(\\(\\<virtual\\>\\s-+\\)\\|\\(\\<protected\\>\\s-+\\)\\)*\\<task\\>\\)"	;11
+	   "\\|\\(\\<generate\\>\\)"		;15
+	   "\\|\\(\\<covergroup\\>\\)"	;16
+	   "\\|\\(\\<property\\>\\)"		;17
+	   "\\|\\(\\<\\(rand\\)?sequence\\>\\)" ;18
+	   "\\|\\(\\<clocking\\>\\)"          ;19
+	   ))
 
 (defconst verilog-end-block-ordered-rry
   [ "\\(\\<begin\\>\\)\\|\\(\\<end\\>\\)\\|\\(\\<endcase\\>\\)\\|\\(\\<join\\(_any\\|_none\\)?\\>\\)"
@@ -1710,6 +1710,7 @@ find the errors."
        "specify" "endspecify"
        "table" "endtable"
        "task" "endtask"
+       "virtual"
        "`case"
        "`default"
        "`define" "`undef"
@@ -2190,23 +2191,24 @@ Use filename, if current buffer being edited shorten to just buffer name."
 (defun verilog-forward-sexp ()
   (let ((reg)
 	(md 2)
-	(st (point)))
+	(st (point))
+	(nest 'yes))
     (if (not (looking-at "\\<"))
 	(forward-word -1))
     (cond
      ((verilog-skip-forward-comment-or-string)
       (verilog-forward-syntactic-ws))
-     ((looking-at verilog-beg-block-re-ordered) ;; begin|(case)|xx|(fork)|class|table|specify|function|task|generate|covergroup|property|sequence|clocking
+     ((looking-at verilog-beg-block-re-ordered)
       (cond
-       ((match-end 1) ; end
-	;; Search forward for matching begin
+       ((match-end 1);
+	;; Search forward for matching end
 	(setq reg "\\(\\<begin\\>\\)\\|\\(\\<end\\>\\)" ))
-       ((match-end 2) ; endcase
-	;; Search forward for matching case
+       ((match-end 2)
+	;; Search forward for matching endcase
 	(setq reg "\\(\\<randcase\\>\\|\\(\\<unique\\>\\s-+\\|\\<priority\\>\\s-+\\)?\\<case[xz]?\\>[^:]\\)\\|\\(\\<endcase\\>\\)" )
 	(setq md 3) ;; ender is third item in regexp
 	)
-       ((match-end 4) ; join
+       ((match-end 4)
 	;; might be "disable fork"
 	(if (or 
 	     (looking-at verilog-disable-fork-re)
@@ -2219,51 +2221,63 @@ Use filename, if current buffer being edited shorten to just buffer name."
 	      (forward-word)
 	      (setq reg nil))
 	  (progn
-	    ;; Search forward for matching fork
+	    ;; Search forward for matching join
 	    (setq reg "\\(\\<fork\\>\\)\\|\\(\\<join\\(_any\\|_none\\)?\\>\\)" ))))
-       ((match-end 5) ; endclass
-	;; Search forward for matching class
+       ((match-end 6)
+	;; Search forward for matching endclass
 	(setq reg "\\(\\<class\\>\\)\\|\\(\\<endclass\\>\\)" ))
-       ((match-end 6) ; endtable
-	;; Search forward for matching table
-	(setq reg "\\(\\<table\\>\\)\\|\\(\\<endtable\\>\\)" ))
-       ((match-end 7) ; endspecify
-	;; Search forward for matching specify
-	(setq reg "\\(\\<specify\\>\\)\\|\\(\\<endspecify\\>\\)" ))
-       ((match-end 8) ; endfunction
-	;; Search forward for matching function
-	(setq reg "\\(\\<function\\>\\)\\|\\(\\<endfunction\\>\\)" ))
-       ((match-end 9) ; endtask
-	;; Search forward for matching task
-	(setq reg "\\(\\<task\\>\\)\\|\\(\\<endtask\\>\\)" ))
-       ((match-end 10) ; endgenerate
-	;; Search forward for matching generate
-	(setq reg "\\(\\<generate\\>\\)\\|\\(\\<endgenerate\\>\\)" ))
-       ((match-end 11) ; endgroup
-	;; Search forward for matching covergroup
-	(setq reg "\\(\\<covergroup\\>\\)\\|\\(\\<endgroup\\>\\)" ))
-       ((match-end 12) ; endproperty
-	;; Search forward for matching property
-	(setq reg "\\(\\<property\\>\\)\\|\\(\\<endproperty\\>\\)" ))
-       ((match-end 13) ; endsequence
-	;; Search forward for matching sequence
-	(setq reg "\\(\\<\\(rand\\)?sequence\\>\\)\\|\\(\\<endsequence\\>\\)" )
-	(setq md 3)) ; 3 to get to endsequence in the reg above
-       ((match-end 14) ; endclocking
-	;; Search forward for matching clocking
-	(setq reg "\\(\\<clocking\\>\\)\\|\\(\\<endclocking\\>\\)" )))
+       
+       ((match-end 7)
+	;; Search forward for matching endtable
+	(setq reg "\\<endtable\\>" )
+	(setq nest 'no))
+      ((match-end 8)
+       ;; Search forward for matching endspecify
+       (setq reg "\\(\\<specify\\>\\)\\|\\(\\<endspecify\\>\\)" ))
+      ((match-end 9)
+       ;; Search forward for matching endfunction
+       (setq reg "\\<endfunction\\>" )
+       (setq nest 'no))
+      ((match-end 10)
+       ;; Search forward for matching endtask
+       (setq reg "\\<endtask\\>" )
+       (setq nest 'no))
+      ((match-end 11)
+       ;; Search forward for matching endtask
+       (setq reg "\\<endtask\\>" )
+       (setq nest 'no))
+      ((match-end 15)
+       ;; Search forward for matching endgenerate
+       (setq reg "\\(\\<generate\\>\\)\\|\\(\\<endgenerate\\>\\)" ))
+      ((match-end 16)
+       ;; Search forward for matching endgroup
+       (setq reg "\\(\\<covergroup\\>\\)\\|\\(\\<endgroup\\>\\)" ))
+      ((match-end 17)
+       ;; Search forward for matching endproperty
+       (setq reg "\\(\\<property\\>\\)\\|\\(\\<endproperty\\>\\)" ))
+      ((match-end 18)
+       ;; Search forward for matching endsequence
+       (setq reg "\\(\\<\\(rand\\)?sequence\\>\\)\\|\\(\\<endsequence\\>\\)" )
+       (setq md 3)) ; 3 to get to endsequence in the reg above
+      ((match-end 19)
+       ;; Search forward for matching endclocking
+       (setq reg "\\(\\<clocking\\>\\)\\|\\(\\<endclocking\\>\\)" )))
       (if (and reg
 	       (forward-word 1))
 	  (catch 'skip
-	    (let ((nest 1))
-	      (while (verilog-re-search-forward reg nil 'move)
-		(cond
-		 ((match-end md) ; the closer in reg, so we are climbing out
-		  (setq nest (1- nest))
-		  (if (= 0 nest) ; we are out!
-		      (throw 'skip 1)))
-		 ((match-end 1) ; the opener in reg, so we are deeper now
-		  (setq nest (1+ nest)))))))))
+	    (if (eq nest 'yes) 
+		(let ((depth 1))
+		  (while (verilog-re-search-forward reg nil 'move)
+		    (cond
+		     ((match-end md) ; the closer in reg, so we are climbing out
+		      (setq depth (1- depth))
+		      (if (= 0 depth) ; we are out!
+			  (throw 'skip 1)))
+		     ((match-end 1) ; the opener in reg, so we are deeper now
+		      (setq depth (1+ depth))))))
+	      (if (verilog-re-search-forward reg nil 'move)
+		  (throw 'skip 1))))))
+    
      ((looking-at (concat
 		   "\\(\\<\\(macro\\)?module\\>\\)\\|"
 		   "\\(\\<primitive\\>\\)\\|"
@@ -4058,8 +4072,26 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
   "Show matching nesting block for debugging."
   (interactive)
   (save-excursion
-    (let ((nesting (verilog-calc-1)))
-      (message "You are at nesting %s" nesting))))
+    (let* ((type (verilog-calc-1))
+	   depth)
+      ;; Return type of block and indent level.
+      (if (not type)
+	  (setq type 'cpp))
+      (if (and
+	   verilog-indent-lists
+	   (not (verilog-in-coverage))
+	   (verilog-in-paren))
+	  (setq depth 1)
+	(cond
+	  ((eq type 'case)
+	   (setq depth (verilog-case-indent-level)))
+	  ((eq type 'statement)
+	   (setq depth (current-column)))
+	  ((eq type 'defun)
+	   (setq depth 0))
+	  (t
+	   (setq depth (verilog-current-indent-level)))))
+      (message "You are at nesting %s depth %d" type depth))))
 
 (defun verilog-calc-1 ()
   (catch 'nesting
@@ -4104,11 +4136,11 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 	                                ; property
 					; ...
 					; endfunction
-	  (let ((here (point)))
-	    (save-excursion
-	      (verilog-beg-of-statement)
-	      (if (= (point) here)
-		  (throw 'nesting 'block)))))
+	  (verilog-beg-of-statement)
+	  (if (looking-at verilog-beg-block-re-ordered)
+	      (throw 'nesting 'block)
+	    (throw 'nesting 'defun)))
+	  
 	 (t              (throw 'nesting 'block))))
 
        ((looking-at verilog-end-block-re)
@@ -4180,12 +4212,17 @@ of the appropriate enclosing block."
 Jump from end to matching begin, from endcase to matching case, and so on."
   (let ((reg nil)
 	snest
+	(nesting 'yes)
 	(nest 1))
     (cond
      ((looking-at "\\<end\\>")
       ;; 1: Search back for matching begin
       (setq reg (concat "\\(\\<begin\\>\\)\\|\\(\\<end\\>\\)\\|"
 			"\\(\\<endcase\\>\\)\\|\\(\\<join\\(_any\\|_none\\)?\\>\\)" )))
+     ((looking-at "\\<endtask\\>")
+      ;; 9: Search back for matching task
+      (setq reg "\\(\\<task\\>\\)\\|\\(\\(\\(\\<virtual\\>\\s-+\\)\\|\\(\\<protected\\>\\s-+\\)\\)+\\<task\\>\\)")
+      (setq nesting 'no))
      ((looking-at "\\<endcase\\>")
       ;; 2: Search back for matching case
       (setq reg "\\(\\<randcase\\>\\|\\<case[xz]?\\>\\)\\|\\(\\<endcase\\>\\)" ))
@@ -4207,9 +4244,6 @@ Jump from end to matching begin, from endcase to matching case, and so on."
      ((looking-at "\\<endgenerate\\>")
       ;; 8: Search back for matching generate
       (setq reg "\\(\\<generate\\>\\)\\|\\(\\<endgenerate\\>\\)" ))
-     ((looking-at "\\<endtask\\>")
-      ;; 9: Search back for matching task
-      (setq reg "\\(\\<task\\>\\)\\|\\(\\<endtask\\>\\)" ))
      ((looking-at "\\<endgroup\\>")
       ;; 10: Search back for matching covergroup
       (setq reg "\\(\\<covergroup\\>\\)\\|\\(\\<endgroup\\>\\)" ))
@@ -4227,32 +4261,41 @@ Jump from end to matching begin, from endcase to matching case, and so on."
       (setq reg "\\(\\<clocking\\)\\|\\(\\<endclocking\\>\\)" )))
     (if reg
 	(catch 'skip
-	  (let (sreg)
-	    (while (verilog-re-search-backward reg nil 'move)
-	      (cond
-	       ((match-end 1) ; begin
-		(setq nest (1- nest))
-		(if (= 0 nest)
-		    ;; Now previous line describes syntax
-		    (throw 'skip 1))
-		(if (and snest
-			 (= snest nest))
-		    (setq reg sreg)))
-	       ((match-end 2) ; end
-		(setq nest (1+ nest)))
-	       ((match-end 3)
-		;; endcase, jump to case
-		(setq snest nest)
-		(setq nest (1+ nest))
-		(setq sreg reg)
-		(setq reg "\\(\\<randcase\\>\\|\\<case[xz]?\\>[^:]\\)\\|\\(\\<endcase\\>\\)" ))
-	       ((match-end 4)
-		;; join, jump to fork
-		(setq snest nest)
-		(setq nest (1+ nest))
-		(setq sreg reg)
-		(setq reg "\\(\\<fork\\>\\)\\|\\(\\<join\\(_any\\|_none\\)?\\>\\)" ))
-	       )))))))
+	  (if (eq nesting 'yes)
+	      (let (sreg)
+		(while (verilog-re-search-backward reg nil 'move)
+		  (cond
+		   ((match-end 1) ; begin
+		    (setq nest (1- nest))
+		    (if (= 0 nest)
+			;; Now previous line describes syntax
+			(throw 'skip 1))
+		    (if (and snest
+			     (= snest nest))
+			(setq reg sreg)))
+		   ((match-end 2) ; end
+		    (setq nest (1+ nest)))
+		   ((match-end 3)
+		    ;; endcase, jump to case
+		    (setq snest nest)
+		    (setq nest (1+ nest))
+		    (setq sreg reg)
+		    (setq reg "\\(\\<randcase\\>\\|\\<case[xz]?\\>[^:]\\)\\|\\(\\<endcase\\>\\)" ))
+		   ((match-end 4)
+		    ;; join, jump to fork
+		    (setq snest nest)
+		    (setq nest (1+ nest))
+		    (setq sreg reg)
+		    (setq reg "\\(\\<fork\\>\\)\\|\\(\\<join\\(_any\\|_none\\)?\\>\\)" ))
+		   )))
+	    ;no nesting
+	    (if (and
+		 (verilog-re-search-backward reg nil 'move)	    
+		 (match-end 1)) ; task -> could be virtual and/or protected
+		(progn
+		  (verilog-beg-of-statement)
+		  (throw 'skip 1))
+	      (throw 'skip 1)))))))
 
 (defun verilog-continued-line ()
   "Return true if this is a continued line.
