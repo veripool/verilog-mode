@@ -849,8 +849,11 @@ regular use to prevent large numbers of merge conflicts."
   :type 'boolean)
 (put 'verilog-auto-inst-template-numbers 'safe-local-variable 'verilog-booleanp)
 
-(defvar verilog-auto-inst-column 40
-  "Column number for first part of auto-inst.")
+(defcustom verilog-auto-inst-column 40
+  "*Indent-to column number for net name part of AUTOINST created pin."
+  :group 'verilog-mode-indent
+  :type 'integer)
+(put 'verilog-auto-inst-column 'safe-local-variable 'integerp)
 
 (defcustom verilog-auto-input-ignore-regexp nil
   "*If set, when creating AUTOINPUT list, ignore signals matching this regexp.
