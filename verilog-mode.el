@@ -830,6 +830,43 @@ the MSB or LSB of a signal inside an AUTORESET."
   :type 'string)
 (put 'verilog-assignment-delay 'safe-local-variable 'stringp)
 
+(defcustom verilog-auto-inst-param-value nil
+  "*If set, AUTOINST will replace parameters with the parameter value.
+If nil, leave parameters as symbolic names.
+
+Parameters must be in Verilog 2001 format #(...), and if a parameter is not
+listed as such there (as when the default value is acceptable), it will not
+be replaced, and will remain symbolic.
+
+For example, imagine a submodule uses parameters to declare the size of its
+inputs.  This is then used by a upper module:
+
+	module InstModule (o,i)
+	   parameter WIDTH;
+	   input [WIDTH-1:0] i;
+	endmodule
+
+	module ExampInst;
+	   InstModule
+ 	     #(PARAM(10))
+	    instName
+	     (/*AUTOINST*/
+	      .i 	(i[PARAM-1:0]));
+
+Note even though PARAM=10, the AUTOINST has left the parameter as a
+symbolic name.  If `verilog-auto-inst-param-value' is set, this will
+instead expand to:
+
+	module ExampInst;
+	   InstModule
+ 	     #(PARAM(10))
+	    instName
+	     (/*AUTOINST*/
+	      .i 	(i[9:0]));"
+  :group 'verilog-mode-auto
+  :type 'boolean)
+(put 'verilog-auto-inst-vector 'safe-local-variable 'verilog-auto-inst-param-value)
+
 (defcustom verilog-auto-inst-vector t
   "*If true, when creating default ports with AUTOINST, use bus subscripts.
 If nil, skip the subscript when it matches the entire bus as declared in
@@ -6093,6 +6130,33 @@ Ignore width if optional NO-WIDTH is set."
     ;; Important: don't use match string, this must work with Emacs 19 font-lock on
     (buffer-substring-no-properties (match-beginning 0) (match-end 0))))
 
+(defun verilog-read-inst-param-value ()
+  "Return list of parameters and values when point is inside instantiation."
+  (save-excursion
+    (verilog-read-inst-backward-name)
+    ;; Skip over instantiation name
+    (verilog-re-search-backward-quick "\\(\\b[a-zA-Z0-9`_\$]\\|)\\)" nil nil)  ; ) isn't word boundary
+    ;; If there are parameterized instantiations
+    (when (looking-at ")")
+      (let ((end-pt (point))
+	    params
+	    param-name paren-beg-pt param-value)
+	(verilog-backward-open-paren)
+	(while (verilog-re-search-forward-quick "\\." end-pt t)
+	  (verilog-re-search-forward-quick "\\([a-zA-Z0-9`_\$]\\)" nil nil)
+	  (skip-chars-backward "a-zA-Z0-9'_$")
+	  (looking-at "[a-zA-Z0-9`_\$]+")
+	  (setq param-name (buffer-substring-no-properties
+			    (match-beginning 0) (match-end 0)))
+	  (verilog-re-search-forward-quick "(" nil nil)
+	  (setq paren-beg-pt (point))
+	  (verilog-forward-close-paren)
+	  (setq param-value (verilog-string-remove-spaces
+			     (buffer-substring-no-properties
+			      paren-beg-pt (1- (point)))))
+	  (setq params (cons (list param-name param-value) params)))
+	params))))
+
 (defun verilog-read-auto-params (num-param &optional max-param)
   "Return parameter list inside auto.
 Optional NUM-PARAM and MAX-PARAM check for a specific number of parameters."
@@ -7656,6 +7720,28 @@ This repairs those mis-inserted by a AUTOARG."
 	       (t nil)))))
 ;;(verilog-make-width-expression "`A:`B")
 
+(defun verilog-simplify-range-expression (range-exp)
+  "Return a simplified range expression with constants eliminated from RANGE-EXP."
+  (let ((out range-exp)
+	(last-pass ""))
+    (while (not (equal last-pass out))
+      (setq last-pass out)
+      (while (string-match "(\\<\\([0-9]+\\)\\>)" out)
+	(setq out (replace-match "\\1" nil nil out)))
+      (while (string-match "\\<\\([0-9]+\\)\\>\\s *\\+\\s *\\<\\([0-9]+\\)\\>" out)
+	(setq out (replace-match 
+		   (int-to-string (+ (string-to-number (match-string 1 out))
+				     (string-to-number (match-string 2 out))))
+		   nil nil out)))
+      (while (string-match "\\<\\([0-9]+\\)\\>\\s *\\-\\s *\\<\\([0-9]+\\)\\>" out)
+	(setq out (replace-match 
+		   (int-to-string (- (string-to-number (match-string 1 out))
+				     (string-to-number (match-string 2 out))))
+		   nil nil out))))
+    out))
+;;(verilog-simplify-range-expression "1")
+;;(verilog-simplify-range-expression "(((16)+1)-3)")
+
 (defun verilog-typedef-name-p (variable-name)
   "Return true if the VARIABLE-NAME is a type definition."
   (when verilog-typedef-regexp
@@ -8088,12 +8174,13 @@ Avoid declaring ports manually, as it makes code harder to maintain."
 (defvar vl-width nil "See `verilog-auto-inst'.") ; Prevent compile warning
 (defvar vl-dir   nil "See `verilog-auto-inst'.") ; Prevent compile warning
 
-(defun verilog-auto-inst-port (port-st indent-pt tpl-list tpl-num for-star)
+(defun verilog-auto-inst-port (port-st indent-pt tpl-list tpl-num for-star par-values)
   "Print out a instantiation connection for this PORT-ST.
 Insert to INDENT-PT, use template TPL-LIST.
 @ are instantiation numbers, replaced with TPL-NUM.
 @\"(expression @)\" are evaluated, with @ as a variable.
-If FOR-STAR add comment it is a .* expansion."
+If FOR-STAR add comment it is a .* expansion.
+If PAR-VALUES replace final strings with these parameter values."
   (let* ((port (verilog-sig-name port-st))
 	 (tpl-ass (or (assoc port (car tpl-list))
 		      (verilog-auto-inst-port-map port-st)))
@@ -8111,7 +8198,18 @@ If FOR-STAR add comment it is a .* expansion."
 		      (concat port "/*" (verilog-sig-multidim-string port-st)
 			      vl-bits "*/")
 		    (concat port vl-bits)))
-	 (case-fold-search nil))
+	 (case-fold-search nil)
+	 (check-values par-values))
+    ;; Replace parameters in bit-width
+    (when (and check-values
+	       (not (equal vl-bits "")))
+      (while check-values
+	(setq vl-bits (verilog-string-replace-matches
+		       (concat "\\<" (nth 0 (car check-values)) "\\>")
+		       (concat "(" (nth 1 (car check-values)) ")")
+		       t t vl-bits)
+	      check-values (cdr check-values)))
+      (setq vl-bits (verilog-simplify-range-expression vl-bits))) ; Not in the loop for speed
     ;; Find template
     (cond (tpl-ass	    ; Template of exact port name
 	   (setq tpl-net (nth 1 tpl-ass)))
@@ -8145,6 +8243,7 @@ If FOR-STAR add comment it is a .* expansion."
       ;; Replace @ and [] magic variables in final output
       (setq tpl-net (verilog-string-replace-matches "@" tpl-num nil nil tpl-net))
       (setq tpl-net (verilog-string-replace-matches "\\[\\]" vl-bits nil nil tpl-net)))
+    ;; Insert it
     (indent-to indent-pt)
     (insert "." port)
     (indent-to verilog-auto-inst-column)
@@ -8219,6 +8318,9 @@ Limitations:
   Typedefs must match `verilog-typedef-regexp', which is disabled by default.
 
   SystemVerilog multidimensional input/output has only experimental support.
+
+  Parameters referenced by the instantiation will remain symbolic, unless
+  `verilog-auto-inst-param-value' is set.
 
 For example, first take the submodule InstModule.v:
 
@@ -8462,7 +8564,8 @@ Lisp Templates:
 	   (vector-skip-list (unless verilog-auto-inst-vector
 			       (verilog-decls-get-signals moddecls)))
 	   submod submodi submoddecls
-	   inst skip-pins tpl-list tpl-num did-first)
+	   inst skip-pins tpl-list tpl-num did-first par-values)
+
       ;; Find module name that is instantiated
       (setq submod  (verilog-read-inst-module)
 	    inst (verilog-read-inst-name)
@@ -8472,6 +8575,10 @@ Lisp Templates:
 
       ;; Parse any AUTO_LISP() before here
       (verilog-read-auto-lisp (point-min) pt)
+
+      ;; Read parameters (after AUTO_LISP)
+      (setq par-values (and verilog-auto-inst-param-value
+			    (verilog-read-inst-param-value)))
 
       ;; Lookup position, etc of submodule
       ;; Note this may raise an error
@@ -8497,7 +8604,7 @@ Lisp Templates:
 	    (insert "// Outputs\n")
 	    (mapc (lambda (port)
                     (verilog-auto-inst-port port indent-pt
-                                            tpl-list tpl-num for-star))
+                                            tpl-list tpl-num for-star par-values))
                   sig-list)))
 	(let ((sig-list (verilog-signals-not-in
 			 (verilog-decls-get-inouts submoddecls)
@@ -8509,7 +8616,7 @@ Lisp Templates:
 	    (insert "// Inouts\n")
 	    (mapc (lambda (port)
                     (verilog-auto-inst-port port indent-pt
-                                            tpl-list tpl-num for-star))
+                                            tpl-list tpl-num for-star par-values))
                   sig-list)))
 	(let ((sig-list (verilog-signals-not-in
 			 (verilog-decls-get-inputs submoddecls)
@@ -8521,7 +8628,7 @@ Lisp Templates:
 	    (insert "// Inputs\n")
 	    (mapc (lambda (port)
                     (verilog-auto-inst-port port indent-pt
-                                            tpl-list tpl-num for-star))
+                                            tpl-list tpl-num for-star par-values))
                   sig-list)))
 	;; Kill extra semi
 	(save-excursion
@@ -8628,7 +8735,7 @@ Templates:
 	    (insert "// Parameters\n")
 	    (mapc (lambda (port)
                     (verilog-auto-inst-port port indent-pt
-                                            tpl-list tpl-num nil))
+                                            tpl-list tpl-num nil nil))
                   sig-list)))
 	;; Kill extra semi
 	(save-excursion
