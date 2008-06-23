@@ -1228,7 +1228,7 @@ will break, as the o's continuously replace.  xa -> x works ok though."
   (let ((start 0))
     (while (string-match from-string string start)
       (setq string (replace-match to-string fixedcase literal string)
-	    start (min (length string) (match-end 0))))
+	    start (min (length string) (+ (match-beginning 0) (length to-string)))))
     string))
 
 (defsubst verilog-string-remove-spaces (string)
