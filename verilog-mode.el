@@ -133,8 +133,7 @@
 ;; Insure we have certain packages, and deal with it if we don't
 ;; Be sure to note which Emacs flavor and version added each feature.
 (eval-when-compile
-  ;; The below were disabled when GNU Emacs 22 was released;
-  ;; perhaps some still need to be there to support Emacs 21.
+  ;; Provide stuff if we are XEmacs
   (when (featurep 'xemacs)
     (condition-case nil
         (require 'easymenu)
@@ -214,7 +213,13 @@ STRING should be given if the last search was by `string-match' on STRING."
       ;; We have an intermediate custom-library, hack around it!
       (defmacro customize-group (var &rest args)
         `(customize ,var))
-      )))
+      ))
+  ;; OK, do this stuff if we are NOT XEmacs:
+  (unless (featurep 'xemacs)
+    (unless (fboundp 'region-active-p)
+      (defmacro region-active-p ()
+	`(and transient-mark-mode mark-active))))
+  )
 
 ;; Provide a regular expression optimization routine, using regexp-opt
 ;; if provided by the user's elisp libraries
@@ -2716,34 +2721,39 @@ With optional ARG, remove existing end of line comments."
   "Function called when TAB is pressed in Verilog mode."
   (interactive)
   ;; If verilog-tab-always-indent, indent the beginning of the line.
-  (if (or verilog-tab-always-indent
-	  (save-excursion
-	    (skip-chars-backward " \t")
-	    (bolp)))
-      (let* ((oldpnt (point))
-	     (boi-point
-	      (save-excursion
-		(beginning-of-line)
-		(skip-chars-forward " \t")
-		(verilog-indent-line)
-		(back-to-indentation)
-		(point))))
-        (if (< (point) boi-point)
-            (back-to-indentation)
-	  (cond ((not verilog-tab-to-comment))
-		((not (eolp))
-		 (end-of-line))
-		(t
-		 (indent-for-comment)
-		 (when (and (eolp) (= oldpnt (point)))
+  (cond
+   ;; The region is active, indent it.
+   ((and (region-active-p)
+	 (not (eq (region-beginning) (region-end))))
+    (indent-region (region-beginning) (region-end) nil))
+   ((or verilog-tab-always-indent
+	(save-excursion
+	  (skip-chars-backward " \t")
+	  (bolp)))
+    (let* ((oldpnt (point))
+	   (boi-point
+	    (save-excursion
+	      (beginning-of-line)
+	      (skip-chars-forward " \t")
+	      (verilog-indent-line)
+	      (back-to-indentation)
+	      (point))))
+      (if (< (point) boi-point)
+	  (back-to-indentation)
+	(cond ((not verilog-tab-to-comment))
+	      ((not (eolp))
+	       (end-of-line))
+	      (t
+	       (indent-for-comment)
+	       (when (and (eolp) (= oldpnt (point)))
 					; kill existing comment
-		   (beginning-of-line)
-		   (re-search-forward comment-start-skip oldpnt 'move)
-		   (goto-char (match-beginning 0))
-		   (skip-chars-backward " \t")
-		   (kill-region (point) oldpnt))))))
-    (progn (insert "\t"))))
-
+		 (beginning-of-line)
+		 (re-search-forward comment-start-skip oldpnt 'move)
+		 (goto-char (match-beginning 0))
+		 (skip-chars-backward " \t")
+		 (kill-region (point) oldpnt)))))))
+   (t (progn (insert "\t")))))
+  
 
 
 ;;
