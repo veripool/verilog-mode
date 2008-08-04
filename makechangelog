@@ -1,0 +1,166 @@
+#!/usr/bin/perl -w # -*- Perl -*-
+# $Id$
+# See copyright, etc in below POD section.
+######################################################################
+
+require 5.006_001;
+use Getopt::Long;
+#use Data::Dumper; $Data::Dumper::Indent=1; #Debug
+use IO::File;
+use IO::Dir;
+use Pod::Usage;
+use strict;
+use vars qw ($Debug);
+
+#======================================================================
+# main
+
+our $Opt_FileA;
+our $Opt_FileB;
+
+autoflush STDOUT 1;
+autoflush STDERR 1;
+Getopt::Long::config ("no_auto_abbrev");
+if (! GetOptions (
+		  "help"	=> \&usage,
+		  "debug"	=> sub { $Debug = 1; },
+		  "<>"		=> \&parameter,
+		  )) {
+    die "%Error: Bad usage, try 'makechangelog --help'\n";
+}
+
+read_file($Opt_FileA, $Opt_FileB);
+
+#----------------------------------------------------------------------
+
+sub usage {
+    print '$Id$ ', "\n";
+    pod2usage(-verbose=>2, -exitval => 2);
+    exit (1);
+}
+
+sub parameter {
+    my $param = shift;
+    if (!$Opt_FileA) {
+	$Opt_FileA = $param;
+    } elsif (!$Opt_FileB) {
+	$Opt_FileB = $param;
+    } else {
+	die "%Error: Unknown parameter: $param\n";
+    }
+}
+
+#######################################################################
+
+sub read_file {
+    my $a = shift;
+    my $b = shift;
+    my @l = (read_lines($a), read_lines($b));
+
+    my $fh = IO::File->new("diff -c $a $b |") or die "%Error: $!,";
+    my @ln = (0,0);
+    my %difffuncs;
+    my $mode = 0;
+    while (defined(my $line = $fh->getline)) {
+	my $fn = "";
+	if ($line =~ /^\*\*\* (\d+)/) {
+	    $mode = 0;
+	    $ln[$mode] = $1 - 1;
+	} elsif ($line =~ /^\-\-\- (\d+)/) {
+	    $mode = 1;
+	    $ln[$mode] = $1 - 1;
+	} elsif ($line =~ /^\*\*\*/) {
+	} elsif ($line =~ /^\-\-\-/) {
+	} else {
+	    $ln[$mode]++;
+
+	    if ($line =~ /^[!-+]/) {
+		my $checkline = substr($line,2);
+		chomp $checkline;
+		$checkline =~ s/;.*$//;
+		$checkline =~ s/[ \t\n]+$//;
+		if ($checkline ne "") {
+		    $fn = $l[$mode][ $ln[$mode] ] || "Line#".$ln[$mode];
+		    $difffuncs{$fn} = 1;
+		}
+	    }
+	}
+	(my $fnq = $fn||"") =~ s/^verilog-/v-/g;
+	printf ("%05d: %-20s: %s",$ln[$mode],substr($fnq,0,20), $line);
+    }
+    $fh->close;
+
+    foreach my $func (sort keys %difffuncs) {
+	print "($func) ";
+    }
+    print "\n";
+}
+
+sub read_lines {
+    my $filename = shift;
+
+    my @lines;
+
+    my $func;
+    my $fh = IO::File->new($filename) or die "%Error: $! $filename\n";
+    my $ln = 0;
+    while (defined(my $line = $fh->getline)) {
+	$ln++;
+	$func = undef if ($line =~ /^\(/);
+	$func = $1 if $line =~ /^\(def[a-z]+\s+\'?(\S+)/;
+	$lines[$ln] = $func;
+	printf "%05d %-30s %s", $ln, $func||"", $line if $Debug;
+    }
+    $fh->close;
+    return \@lines;
+}
+
+#######################################################################
+__END__
+
+=pod
+
+=head1 NAME
+
+makechangelog -
+
+=head1 SYNOPSIS
+
+  makechangelog *.log
+
+=head1 DESCRIPTION
+
+dd
+
+=head1 ARGUMENTS
+
+=over 4
+
+=item --help
+
+Displays this message and program version and exits.
+
+=back
+
+=head1 DISTRIBUTION
+
+This is part of the L<http://www.veripool.org/> free Verilog EDA software
+tool suite.  The latest version is available from CPAN and from
+L<http://www.veripool.org/>.
+
+Copyright 2008-2008 by Wilson Snyder.  This package is free software; you
+can redistribute it and/or modify it under the terms of either the GNU
+Lesser General Public License or the Perl Artistic License.
+
+=head1 AUTHORS
+
+Wilson Snyder <wsnyder@wsnyder.org>
+
+=head1 SEE ALSO
+
+=cut
+
+######################################################################
+### Local Variables:
+### compile-command: "./makechangelog verilog-mode.el.415 verilog-mode.el"
+### End:

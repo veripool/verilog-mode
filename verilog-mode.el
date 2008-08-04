@@ -1283,30 +1283,34 @@ will break, as the o's continuously replace.  xa -> x works ok though."
 (defsubst verilog-re-search-forward (REGEXP BOUND NOERROR)
   ; checkdoc-params: (REGEXP BOUND NOERROR)
   "Like `re-search-forward', but skips over match in comments or strings."
-  (store-match-data '(nil nil))  ;; So match-end will return nil if no matches found
-  (while (and
-	  (re-search-forward REGEXP BOUND NOERROR)
-	  (and (verilog-skip-forward-comment-or-string)
-	       (progn
-		 (store-match-data '(nil nil))
-		 (if BOUND
-		     (< (point) BOUND)
-		   t)))))
-  (match-end 0))
+  (let ((mdata '(nil nil)))  ;; So match-end will return nil if no matches found
+    (while (and
+	    (re-search-forward REGEXP BOUND NOERROR)
+	    (setq mdata (match-data))
+	    (and (verilog-skip-forward-comment-or-string)
+		 (progn
+		   (setq mdata '(nil nil))
+		   (if BOUND
+		       (< (point) BOUND)
+		     t)))))
+    (store-match-data mdata)
+    (match-end 0)))
 
 (defsubst verilog-re-search-backward (REGEXP BOUND NOERROR)
   ; checkdoc-params: (REGEXP BOUND NOERROR)
   "Like `re-search-backward', but skips over match in comments or strings."
-  (store-match-data '(nil nil))  ;; So match-end will return nil if no matches found
-  (while (and
-	  (re-search-backward REGEXP BOUND NOERROR)
-	  (and (verilog-skip-backward-comment-or-string)
-	       (progn
-		 (store-match-data '(nil nil))
-		 (if BOUND
-		     (> (point) BOUND)
-		   t)))))
-  (match-end 0))
+  (let ((mdata '(nil nil)))  ;; So match-end will return nil if no matches found
+    (while (and
+	    (re-search-backward REGEXP BOUND NOERROR)
+	    (setq mdata (match-data))
+	    (and (verilog-skip-backward-comment-or-string)
+		 (progn
+		   (setq mdata '(nil nil))
+		   (if BOUND
+		       (> (point) BOUND)
+		     t)))))
+    (store-match-data mdata)
+    (match-end 0)))
 
 (defsubst verilog-re-search-forward-quick (regexp bound noerror)
   "Like `verilog-re-search-forward', including use of REGEXP BOUND and NOERROR,
@@ -7491,7 +7495,7 @@ Cache the output of function so next call may have faster access."
 	     ;; Clear then restore any hilighting to make emacs19 happy
 	     (let ((fontlocked (when (and (boundp 'font-lock-mode)
 					  font-lock-mode)
-				 (font-lock-mode nil)
+				 (font-lock-mode 0)
 				 t))
 		   func-returns)
 	       (setq func-returns (funcall function))
@@ -9894,7 +9898,7 @@ Wilson Snyder (wsnyder@wsnyder.org), and/or see http://www.veripool.org."
 	;; nil==(equal "input" (progn (looking-at "input") (match-string 0)))
 	(fontlocked (when (and (boundp 'font-lock-mode)
 			       font-lock-mode)
-		      (font-lock-mode nil)
+		      (font-lock-mode 0)
 		      t))
 	;; Cache directories; we don't write new files, so can't change
 	(verilog-dir-cache-preserving t))
@@ -9969,11 +9973,11 @@ Wilson Snyder (wsnyder@wsnyder.org), and/or see http://www.veripool.org."
 	  (cond ((and oldbuf (equal oldbuf (buffer-string)))
 		 (set-buffer-modified-p nil)
 		 (unless noninteractive (message "Updating AUTOs...done (no changes)")))
-		(t (unless noninteractive (message "Updating AUTOs...done"))))))
+		(t (unless noninteractive (message "Updating AUTOs...done")))))
       ;; Unwind forms
       (progn
 	;; Restore font-lock
-	(when fontlocked (font-lock-mode t)))))
+	(when fontlocked (font-lock-mode t))))))
 
 
 ;;
