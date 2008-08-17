@@ -1615,9 +1615,9 @@ find the errors."
 	   "\\|\\(\\(\\(\\<virtual\\>\\s-+\\)\\|\\(\\<protected\\>\\s-+\\)\\)*\\<task\\>\\)"	;11
 	   "\\|\\(\\<generate\\>\\)"		;15
 	   "\\|\\(\\<covergroup\\>\\)"	;16
-	   "\\|\\(\\<property\\>\\)"		;17
-	   "\\|\\(\\<\\(rand\\)?sequence\\>\\)" ;18
-	   "\\|\\(\\<clocking\\>\\)"          ;19
+	   "\\|\\(\\(\\(\\<cover\\>\\s-+\\)\\|\\(\\<assert\\>\\s-+\\)\\)*\\<property\\>\\)"	;17
+	   "\\|\\(\\<\\(rand\\)?sequence\\>\\)" ;21
+	   "\\|\\(\\<clocking\\>\\)"          ;22
 	   ))
 
 (defconst verilog-end-block-ordered-rry
@@ -4180,10 +4180,9 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 
 
 	 ;; need to consider typedef struct here...
-	 ((looking-at "\\<class\\|struct\\|function\\|task\\|property\\>")
+	 ((looking-at "\\<class\\|struct\\|function\\|task\\>")
 					; *sigh* These words have an optional prefix:
 					; extern {virtual|protected}? function a();
-					; assert property (p_1);
 	                                ; typedef class foo;
 					; and we don't want to confuse this with
 					; function a();
@@ -4194,7 +4193,18 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 	  (if (looking-at verilog-beg-block-re-ordered)
 	      (throw 'nesting 'block)
 	    (throw 'nesting 'defun)))
-	  
+
+	 ((looking-at "\\<property\\>")
+					; *sigh* 
+					;    {assert|assume|cover} property (); are complete
+					; but
+                                        ;    property ID () ... needs end_property
+	  (verilog-beg-of-statement)
+	  (if (looking-at "\\(assert\\|assume\\|cover\\)\\s-+property\\>")
+	      (throw 'nesting 'statement) ; We don't need an endproperty for these
+	    (throw 'nesting 'block)	;We still need a endproperty
+	    ))
+	 
 	 (t              (throw 'nesting 'block))))
 
        ((looking-at verilog-end-block-re)
