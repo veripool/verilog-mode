@@ -24,3 +24,7 @@ module autoinstparam_first ();
 	 (/*AUTOINST*/);
 
 endmodule
+
+// Local Variables:
+// verilog-auto-inst-param-value:nil
+// End:

@@ -8,11 +8,11 @@ module autoinstparam_first ();
        // Parameters
        .BITSA				(BITSA),
        .BITSB				(BITSB))
-       sub
-	 (/*AUTOINST*/
-	  // Inouts
-	  .a				(a[BITSA:0]),
-	  .b				(b[BITSB:0]));
+   sub
+     (/*AUTOINST*/
+      // Inouts
+      .a				(a[BITSA:0]),
+      .b				(b[BITSB:0]));
 
    autoinstparam_first_sub
      #(
@@ -20,21 +20,25 @@ module autoinstparam_first ();
        /*AUTOINSTPARAM*/
        // Parameters
        .BITSA				(BITSA))
-       sub1
-	 (/*AUTOINST*/
-	  // Inouts
-	  .a				(a[BITSA:0]),
-	  .b				(b[BITSB:0]));
+   sub1
+     (/*AUTOINST*/
+      // Inouts
+      .a				(a[BITSA:0]),
+      .b				(b[BITSB:0]));
 
    autoinstparam_first_sub
      #(
        .BITSA				(1),
        .BITSB				(2)
        /*AUTOINSTPARAM*/)
-       sub2
-	 (/*AUTOINST*/
-	  // Inouts
-	  .a				(a[BITSA:0]),
-	  .b				(b[BITSB:0]));
+   sub2
+     (/*AUTOINST*/
+      // Inouts
+      .a				(a[BITSA:0]),
+      .b				(b[BITSB:0]));
 
 endmodule
+
+// Local Variables:
+// verilog-auto-inst-param-value:nil
+// End:

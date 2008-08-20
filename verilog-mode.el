@@ -870,7 +870,7 @@ instead expand to:
 	      .i 	(i[9:0]));"
   :group 'verilog-mode-auto
   :type 'boolean)
-(put 'verilog-auto-inst-vector 'safe-local-variable 'verilog-auto-inst-param-value)
+(put 'verilog-auto-inst-param-value 'safe-local-variable 'verilog-booleanp)
 
 (defcustom verilog-auto-inst-vector t
   "*If true, when creating default ports with AUTOINST, use bus subscripts.
@@ -7750,7 +7750,7 @@ This repairs those mis-inserted by a AUTOARG."
 	(last-pass ""))
     (while (not (equal last-pass out))
       (setq last-pass out)
-      (while (string-match "(\\<\\([0-9]+\\)\\>)" out)
+      (while (string-match "(\\<\\([0-9A-Z-az_]+\\)\\>)" out)
 	(setq out (replace-match "\\1" nil nil out)))
       (while (string-match "\\<\\([0-9]+\\)\\>\\s *\\+\\s *\\<\\([0-9]+\\)\\>" out)
 	(setq out (replace-match 
@@ -8217,13 +8217,9 @@ If PAR-VALUES replace final strings with these parameter values."
 				      (verilog-sig-bits (assoc port vector-skip-list)))))
 		      (or (verilog-sig-bits port-st) "")
 		    ""))
-	 ;; Default if not found
-	 (tpl-net (if (verilog-sig-multidim port-st)
-		      (concat port "/*" (verilog-sig-multidim-string port-st)
-			      vl-bits "*/")
-		    (concat port vl-bits)))
 	 (case-fold-search nil)
-	 (check-values par-values))
+	 (check-values par-values)
+	 tpl-net)
     ;; Replace parameters in bit-width
     (when (and check-values
 	       (not (equal vl-bits "")))
@@ -8234,6 +8230,11 @@ If PAR-VALUES replace final strings with these parameter values."
 		       t t vl-bits)
 	      check-values (cdr check-values)))
       (setq vl-bits (verilog-simplify-range-expression vl-bits))) ; Not in the loop for speed
+    ;; Default net value if not found
+    (setq tpl-net (if (verilog-sig-multidim port-st)
+		      (concat port "/*" (verilog-sig-multidim-string port-st)
+			      vl-bits "*/")
+		    (concat port vl-bits)))
     ;; Find template
     (cond (tpl-ass	    ; Template of exact port name
 	   (setq tpl-net (nth 1 tpl-ass)))
