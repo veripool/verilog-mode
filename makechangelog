@@ -102,7 +102,7 @@ sub read_file {
     if ($ENV{USER} eq 'wsnyder') {
 	$who = 'Wilson Snyder <wsnyder@wsnyder.org>';
     } else {
-	die "%Error: Unknown user: $ENV{USER},";
+	$who = "**Unknown user** <$ENV{USER}>";
     }
 
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime();
@@ -147,7 +147,7 @@ makechangelog -
 
 =head1 SYNOPSIS
 
-  makechangelog *.log
+  ./makechangelog --svn verilog-mode.el
 
 =head1 DESCRIPTION
 
