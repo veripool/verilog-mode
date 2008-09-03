@@ -78,8 +78,7 @@
 ;; .emacs, or in your site's site-load.el
 
 ; (autoload 'verilog-mode "verilog-mode" "Verilog mode" t )
-; (setq auto-mode-alist (cons  '("\\.v\\'" . verilog-mode) auto-mode-alist))
-; (setq auto-mode-alist (cons  '("\\.dv\\'" . verilog-mode) auto-mode-alist))
+; (add-to-list 'auto-mode-alist '("\\.[ds]?v\\'" . verilog-mode))
 
 ;; If you want to customize Verilog mode to fit your needs better,
 ;; you may add these lines (the values of the variables presented
@@ -787,7 +786,7 @@ See also `verilog-library-flags', `verilog-library-directories'."
   :type '(repeat directory))
 (put 'verilog-library-files 'safe-local-variable 'listp)
 
-(defcustom verilog-library-extensions '(".v")
+(defcustom verilog-library-extensions '(".v" ".sv")
   "*List of extensions to use when looking for files for /*AUTOINST*/.
 See also `verilog-library-flags', `verilog-library-directories'."
   :type '(repeat string)
