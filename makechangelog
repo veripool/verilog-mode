@@ -17,6 +17,7 @@ use vars qw ($Debug);
 
 our $Opt_FileA;
 our $Opt_FileB;
+our $Opt_Svn;
 
 autoflush STDOUT 1;
 autoflush STDERR 1;
@@ -25,8 +26,15 @@ if (! GetOptions (
 		  "help"	=> \&usage,
 		  "debug"	=> sub { $Debug = 1; },
 		  "<>"		=> \&parameter,
+	  	  "svn!"	=> \$Opt_Svn,
 		  )) {
     die "%Error: Bad usage, try 'makechangelog --help'\n";
+}
+
+if ($Opt_Svn) {
+    my $now = $Opt_FileA;
+    $Opt_FileA = ".svn/text-base/${now}.svn-base";
+    $Opt_FileB = $now;
 }
 
 read_file($Opt_FileA, $Opt_FileB);
@@ -90,10 +98,23 @@ sub read_file {
     }
     $fh->close;
 
-    foreach my $func (sort keys %difffuncs) {
-	print "($func) ";
+    my $who = '?';
+    if ($ENV{USER} eq 'wsnyder') {
+	$who = 'Wilson Snyder <wsnyder@wsnyder.org>';
+    } else {
+	die "%Error: Unknown user: $ENV{USER},";
     }
-    print "\n";
+
+    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime();
+    printf "%04d-%02d-%02d %s\n\n", $year+1900,$mon,$mday,$who;
+
+    print "\t* verilog-mode.el";
+    foreach my $func (sort keys %difffuncs) {
+	next if $func eq 'verilog-mode-release-date';
+	next if $func eq 'verilog-mode-version';
+	print " ($func)";
+    }
+    print ":\n";
 }
 
 sub read_lines {
@@ -162,5 +183,5 @@ Wilson Snyder <wsnyder@wsnyder.org>
 
 ######################################################################
 ### Local Variables:
-### compile-command: "./makechangelog verilog-mode.el.415 verilog-mode.el"
+### compile-command: "./makechangelog --svn verilog-mode.el"
 ### End:
