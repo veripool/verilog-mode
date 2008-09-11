@@ -69,6 +69,7 @@ sub read_file {
     my @ln = (0,0);
     my %difffuncs;
     my $mode = 0;
+    my @difflines;
     while (defined(my $line = $fh->getline)) {
 	my $fn = "";
 	if ($line =~ /^\*\*\* (\d+)/) {
@@ -94,27 +95,39 @@ sub read_file {
 	    }
 	}
 	(my $fnq = $fn||"") =~ s/^verilog-/v-/g;
-	printf ("%05d: %-20s: %s",$ln[$mode],substr($fnq,0,20), $line);
+	push @difflines, sprintf ("%05d: %-20s: %s",$ln[$mode],substr($fnq,0,20), $line);
     }
     $fh->close;
 
     my $who = '?';
     if ($ENV{USER} eq 'wsnyder') {
-	$who = 'Wilson Snyder <wsnyder@wsnyder.org>';
+	$who = 'Wilson Snyder  <wsnyder@wsnyder.org>';
+    } elsif ($ENV{USER} eq 'mac') {
+	$who = 'Michael McNamara  <mac@verilog.com>';
     } else {
-	$who = "**Unknown user** <$ENV{USER}>";
+	$who = "**Unknown user**  <$ENV{USER}>";
     }
 
+    print "-*- ChangeLog -*-\n\n";
+
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime();
-    printf "%04d-%02d-%02d %s\n\n", $year+1900,$mon,$mday,$who;
+    printf "%04d-%02d-%02d  %s\n\n", $year+1900,$mon,$mday,$who;
 
     print "\t* verilog-mode.el";
+    my $f="";
+    my $sep = " (";
     foreach my $func (sort keys %difffuncs) {
 	next if $func eq 'verilog-mode-release-date';
 	next if $func eq 'verilog-mode-version';
-	print " ($func)";
+	$f .= $sep.$func;
+	$sep = ", ";
     }
-    print ":\n";
+    $f .= ")" if $f;
+    print "$f:\n";
+
+    print "\n";
+    print "="x70,"\n";
+    print join('',@difflines);
 }
 
 sub read_lines {

@@ -9822,8 +9822,10 @@ Typing \\[verilog-auto] will make this into:
 	   (undecode-enum (or (verilog-sig-enum undecode-sig)
 			      (error "%s: Signal %s does not have a enum tag" (verilog-point-text) undecode-name)))
 	   ;;
-	   (enum-sigs (or (verilog-signals-matching-enum sig-list-consts undecode-enum)
-			  (error "%s: No state definitions for %s" (verilog-point-text) undecode-enum)))
+	   (enum-sigs (verilog-signals-not-in
+		       (or (verilog-signals-matching-enum sig-list-consts undecode-enum)
+			   (error "%s: No state definitions for %s" (verilog-point-text) undecode-enum))
+		       nil))
 	   ;;
 	   (enum-chars 0)
 	   (ascii-chars 0))

@@ -8,9 +8,10 @@ EMACS   = emacs
 EMACS_DEST = /usr/local/share/emacs/site-lisp/
 ELC	= -batch -q -l verilog-mode.el -f batch-byte-compile
 CVS_GNU = cvs -d:pserver:anonymous@cvs.sv.gnu.org:/sources/emacs
+MAKECHANGELOG = perl makechangelog
 
 release : dirs install
-install : dirs test $(D)/mmencoded_verilog-mode $(D)/emacs-version.h\
+install : dirs ChangeLog test $(D)/mmencoded_verilog-mode $(D)/emacs-version.h\
 	$(S)ChangeLog.txt email $(S)bits/verilog-mode.el local \
 #	ftp  
 	@echo Installation up to date
@@ -58,6 +59,9 @@ ChangeLog.txt mmencoded_verilog-mode emacs-version.h : make_log.pl verilog-mode.
 ifneq ($(VERILOGMODE_SKIP_MAKELOG),1)
 	./make_log.pl	
 endif
+
+ChangeLog : verilog-mode.el makechangelog
+	$(MAKECHANGELOG) --svn verilog-mode.el > $@
 
 email:	.timestamps/email
 .timestamps/email: mmencoded_verilog-mode
