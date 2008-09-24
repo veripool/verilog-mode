@@ -6872,6 +6872,7 @@ Optionally associate it with the specified enumeration ENUMNAME."
     (if enumname
 	(let ((enumvar (intern (concat "venum-" enumname))))
 	  ;;(message "Define %s=%s" defname defvalue) (sleep-for 1)
+	  (unless (boundp enumvar) (set enumvar nil))
 	  (make-variable-buffer-local enumvar)
 	  (add-to-list enumvar defname)))))
 
