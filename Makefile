@@ -24,11 +24,11 @@ test:	.timestamps/test
 	$(MAKE) test_xemacs
 	@touch $@
 
-test_emacs:
+test_emacs: e/verilog-mode.elc
 	@echo
 	@echo == test_emacs
 	time $(EMACS)  --batch -q -l e/verilog-mode.elc -l 0test.el
-test_xemacs:
+test_xemacs: x/verilog-mode.elc
 	@echo
 	@echo == test_xemacs
 	time $(XEMACS) --batch -q -l x/verilog-mode.elc -l 0test.el
