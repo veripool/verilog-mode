@@ -1612,13 +1612,14 @@ find the errors."
 	   "\\|\\(\\<table\\>\\)"		;7
 	   "\\|\\(\\<specify\\>\\)"		;8
 	   "\\|\\(\\<function\\>\\)"		;9
-	   "\\|\\(\\<task\\>\\)"		;10
-	   "\\|\\(\\(\\(\\<virtual\\>\\s-+\\)\\|\\(\\<protected\\>\\s-+\\)\\)*\\<task\\>\\)"	;11
-	   "\\|\\(\\<generate\\>\\)"		;15
-	   "\\|\\(\\<covergroup\\>\\)"	;16
-	   "\\|\\(\\(\\(\\<cover\\>\\s-+\\)\\|\\(\\<assert\\>\\s-+\\)\\)*\\<property\\>\\)"	;17
-	   "\\|\\(\\<\\(rand\\)?sequence\\>\\)" ;21
-	   "\\|\\(\\<clocking\\>\\)"          ;22
+	   "\\|\\(\\(\\(\\<virtual\\>\\s-+\\)\\|\\(\\<protected\\>\\s-+\\)\\)*\\<function\\>\\)"	;10
+	   "\\|\\(\\<task\\>\\)"		;14
+	   "\\|\\(\\(\\(\\<virtual\\>\\s-+\\)\\|\\(\\<protected\\>\\s-+\\)\\)*\\<task\\>\\)"	;15
+	   "\\|\\(\\<generate\\>\\)"		;18
+	   "\\|\\(\\<covergroup\\>\\)"	;16 20
+	   "\\|\\(\\(\\(\\<cover\\>\\s-+\\)\\|\\(\\<assert\\>\\s-+\\)\\)*\\<property\\>\\)"	;17 21
+	   "\\|\\(\\<\\(rand\\)?sequence\\>\\)" ;21 25
+	   "\\|\\(\\<clocking\\>\\)"          ;22 27
 	   ))
 
 (defconst verilog-end-block-ordered-rry
@@ -1776,19 +1777,27 @@ find the errors."
        "`time_scale"
        ))))
 
-(defconst verilog-defun-level-re
-  (eval-when-compile
-    (verilog-regexp-words
-     `(
-       "module" "macromodule" "primitive" "class" "program" "initial" "final" "always" "always_comb"
-       "always_ff" "always_latch" "endtask" "endfunction" "interface" "package"
-       "config"))))
+(defconst verilog-defun-level-list
+  `( "module" "macromodule" "primitive" "class" "program"
+       "interface" "package" "config"))
+
+(defconst verilog-generate-defun-level-list
+  `( "initial" "final" "always" "always_comb" "always_ff"
+     "always_latch" "endtask" "endfunction" ))
 
 (defconst verilog-defun-level-not-generate-re
   (eval-when-compile
+    (verilog-regexp-words verilog-defun-level-list)))
+
+(defconst verilog-defun-level-re
+  (eval-when-compile
     (verilog-regexp-words
-     `(
-       "module" "macromodule" "primitive" "class" "program" "interface" "package" "config"))))
+     (append verilog-defun-level-list verilog-generate-defun-level-list))))
+
+(defconst verilog-defun-level-generate-only-re
+  (eval-when-compile
+    (verilog-regexp-words verilog-generate-defun-level-list)))
+
 
 (defconst verilog-cpp-level-re
   (eval-when-compile
@@ -2289,27 +2298,31 @@ Use filename, if current buffer being edited shorten to just buffer name."
        (setq reg "\\<endfunction\\>" )
        (setq nest 'no))
       ((match-end 10)
-       ;; Search forward for matching endtask
-       (setq reg "\\<endtask\\>" )
+       ;; Search forward for matching endfunction
+       (setq reg "\\<endfunction\\>" )
        (setq nest 'no))
-      ((match-end 11)
+      ((match-end 14)
        ;; Search forward for matching endtask
        (setq reg "\\<endtask\\>" )
        (setq nest 'no))
       ((match-end 15)
+       ;; Search forward for matching endtask
+       (setq reg "\\<endtask\\>" )
+       (setq nest 'no))
+      ((match-end 19)
        ;; Search forward for matching endgenerate
        (setq reg "\\(\\<generate\\>\\)\\|\\(\\<endgenerate\\>\\)" ))
-      ((match-end 16)
+      ((match-end 20)
        ;; Search forward for matching endgroup
        (setq reg "\\(\\<covergroup\\>\\)\\|\\(\\<endgroup\\>\\)" ))
-      ((match-end 17)
+      ((match-end 21)
        ;; Search forward for matching endproperty
        (setq reg "\\(\\<property\\>\\)\\|\\(\\<endproperty\\>\\)" ))
-      ((match-end 18)
+      ((match-end 25)
        ;; Search forward for matching endsequence
        (setq reg "\\(\\<\\(rand\\)?sequence\\>\\)\\|\\(\\<endsequence\\>\\)" )
        (setq md 3)) ; 3 to get to endsequence in the reg above
-      ((match-end 19)
+      ((match-end 27)
        ;; Search forward for matching endclocking
        (setq reg "\\(\\<clocking\\>\\)\\|\\(\\<endclocking\\>\\)" )))
       (if (and reg
@@ -3131,17 +3144,20 @@ More specifically, in a list after a struct|union keyword."
   "Return true if in a generate region.
 More specifically, after a generate and before an endgenerate."
   (interactive)
-  (let ((lim (save-excursion (verilog-beg-of-defun)  (point)))
-	(nest 1))
+  (let ((nest 1))
     (save-excursion
-      (while (and
-	      (/= nest 0)
-	      (verilog-re-search-backward "\\<\\(generate\\)\\|\\(endgenerate\\)\\>" lim 'move)
-	      (cond
-	       ((match-end 1) ; generate
-		(setq nest (1- nest)))
-	       ((match-end 2) ; endgenerate
-		(setq nest (1+ nest)))))))
+      (catch 'done
+	(while (and
+		(/= nest 0)
+		(verilog-re-search-backward 
+		 "\\<\\(module\\)\\|\\(generate\\)\\|\\(endgenerate\\)\\>" nil 'move)
+		(cond
+		 ((match-end 1) ; module - we have crawled out
+		  (throw 'done 1))
+		 ((match-end 2) ; generate
+		  (setq nest (1- nest)))
+		 ((match-end 3) ; endgenerate
+		  (setq nest (1+ nest))))))))
     (= nest 0) )) ; return nest
 
 (defun verilog-in-fork-region-p ()
@@ -4216,10 +4232,13 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 	      (if (looking-at verilog-case-re)
 		  (throw 'nesting 'case)))))
 
-       ((looking-at (if (verilog-in-generate-region-p)
-			verilog-defun-level-not-generate-re
-		      verilog-defun-level-re))
-	(throw 'nesting 'defun))
+       ((looking-at verilog-defun-level-re)
+	(if (looking-at verilog-defun-level-generate-only-re)
+	    (if (verilog-in-generate-region-p)
+		(throw 'nesting 'defun))
+	  ; else
+	  (throw 'nesting 'defun))
+	)
 
        ((looking-at verilog-cpp-level-re)
 	(throw 'nesting 'cpp))
@@ -4305,7 +4324,9 @@ Jump from end to matching begin, from endcase to matching case, and so on."
       (setq reg "\\(\\<specify\\>\\)\\|\\(\\<endspecify\\>\\)" ))
      ((looking-at "\\<endfunction\\>")
       ;; 7: Search back for matching function
-      (setq reg "\\(\\<function\\>\\)\\|\\(\\<endfunction\\>\\)" ))
+      (setq reg "\\(\\<function\\>\\)\\|\\(\\(\\(\\<virtual\\>\\s-+\\)\\|\\(\\<protected\\>\\s-+\\)\\)+\\<function\\>\\)")
+      (setq nesting 'no))
+      ;;(setq reg "\\(\\<function\\>\\)\\|\\(\\<endfunction\\>\\)" ))
      ((looking-at "\\<endgenerate\\>")
       ;; 8: Search back for matching generate
       (setq reg "\\(\\<generate\\>\\)\\|\\(\\<endgenerate\\>\\)" ))
@@ -4512,7 +4533,8 @@ Optional BOUND limits search."
 		    (save-excursion
 		      (beginning-of-line)
 		      (cond
-		       ((verilog-within-translate-off)
+		       ((and verilog-highlight-translate-off
+			     (verilog-within-translate-off))
 			(verilog-back-to-start-translate-off (point-min)))
 		       ((looking-at verilog-directive-re-1)
 			(point))
