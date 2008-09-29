@@ -7091,23 +7091,26 @@ Some macros and such are also found and included.  For dinotrace.el."
        ((or (string-match "^\\+incdir\\+\\(.*\\)" arg)	;; +incdir+dir
 	    (string-match "^-I\\(.*\\)" arg))	;; -Idir
 	(verilog-add-list-unique `verilog-library-directories
-				 (match-string 1 arg)))
+				 (match-string 1 (substitute-in-file-name arg))))
        ;; Ignore
        ((equal "+librescan" arg))
        ((string-match "^-U\\(.*\\)" arg))	;; -Udefine
        ;; Second parameters
        ((equal next-param "-f")
 	(setq next-param nil)
-	(verilog-getopt-file arg))
+	(verilog-getopt-file (substitute-in-file-name arg)))
        ((equal next-param "-v")
 	(setq next-param nil)
-	(verilog-add-list-unique `verilog-library-files arg))
+	(verilog-add-list-unique `verilog-library-files
+				 (substitute-in-file-name arg)))
        ((equal next-param "-y")
 	(setq next-param nil)
-	(verilog-add-list-unique `verilog-library-directories arg))
+	(verilog-add-list-unique `verilog-library-directories 
+				 (substitute-in-file-name arg)))
        ;; Filename
        ((string-match "^[^-+]" arg)
-	(verilog-add-list-unique `verilog-library-files arg))
+	(verilog-add-list-unique `verilog-library-files 
+				 (substitute-in-file-name arg)))
        ;; Default - ignore; no warning
        ))))
 ;;(verilog-getopt (list "+libext+.a+.b" "+incdir+foodir" "+define+a+aval" "-f" "otherf" "-v" "library" "-y" "dir"))
