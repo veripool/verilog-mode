@@ -2604,8 +2604,7 @@ Key bindings specific to `verilog-mode-map' are:
 
   ;; Stuff for autos
   (add-hook 'write-contents-hooks 'verilog-auto-save-check) ; already local
-;;  (verilog-auto-reeval-locals t)   ; Save locals in case user changes them
-;;  (verilog-getopt-flags)
+  (verilog-getopt-flags)
   (run-hooks 'verilog-mode-hook))
 
 
@@ -8119,7 +8118,8 @@ If FORCE, always reread it."
   (let ((curlocal (verilog-auto-read-locals)))
     (when (or force (not (equal verilog-auto-last-file-locals curlocal)))
       (setq verilog-auto-last-file-locals curlocal)
-      ;; Note this may cause this function to be recursively invoked.
+      ;; Note this may cause this function to be recursively invoked,
+      ;; because hack-local-variables may call (verilog-mode)
       ;; The above when statement will prevent it from recursing forever.
       (hack-local-variables)
       t)))
