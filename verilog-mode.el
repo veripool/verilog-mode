@@ -2604,7 +2604,6 @@ Key bindings specific to `verilog-mode-map' are:
 
   ;; Stuff for autos
   (add-hook 'write-contents-hooks 'verilog-auto-save-check) ; already local
-  (verilog-getopt-flags)
   (run-hooks 'verilog-mode-hook))
 
 
@@ -5709,12 +5708,16 @@ If search fails, other files are checked based on
 	 (verilog-buffer-to-use (current-buffer))
 	 (label (if (not (string= default ""))
 		    ;; Do completion with default
-		    (completing-read (concat "Label: (default " default ") ")
+		    (completing-read (concat "Goto-Label: (default "
+					     default ") ")
 				     'verilog-comp-defun nil nil "")
 		  ;; There is no default value. Complete without it
-		  (completing-read "Label: "
+		  (completing-read "Goto-Label: "
 				   'verilog-comp-defun nil nil "")))
 	 pt)
+    ;; Make sure library paths are correct, in case need to resolve module
+    (verilog-auto-reeval-locals)
+    (verilog-getopt-flags)
     ;; If there was no response on prompt, use default value
     (if (string= label "")
 	(setq label default))
