@@ -1777,35 +1777,26 @@ find the errors."
        "`time_scale"
        ))))
 
-(defconst verilog-defun-level-list
-  (eval-when-compile  
-    `( "module" "macromodule" "primitive" "class" "program"
-       "interface" "package" "config")))
-  
-(defconst verilog-generate-defun-level-list
-  (eval-when-compile
-    `( "initial" "final" "always" "always_comb" "always_ff"
-       "always_latch" "endtask" "endfunction" )))
-
-(defconst verilog-all-defun-level-list
-  (eval-when-compile  
-    (append 
-     `( "module" "macromodule" "primitive" "class" "program"
-	"interface" "package" "config")
-     `( "initial" "final" "always" "always_comb" "always_ff"
-       "always_latch" "endtask" "endfunction" ))))
-
 (defconst verilog-defun-level-not-generate-re
   (eval-when-compile
-    (verilog-regexp-words verilog-defun-level-list)))
+    (verilog-regexp-words 
+     `( "module" "macromodule" "primitive" "class" "program"
+	"interface" "package" "config"))))
 
 (defconst verilog-defun-level-re
   (eval-when-compile
-    (verilog-regexp-words verilog-all-defun-level-list)))
+    (verilog-regexp-words 
+     (append 
+      `( "module" "macromodule" "primitive" "class" "program"
+	 "interface" "package" "config")
+      `( "initial" "final" "always" "always_comb" "always_ff"
+	 "always_latch" "endtask" "endfunction" )))))
 
 (defconst verilog-defun-level-generate-only-re
   (eval-when-compile
-    (verilog-regexp-words verilog-generate-defun-level-list)))
+    (verilog-regexp-words 
+     `( "initial" "final" "always" "always_comb" "always_ff"
+	"always_latch" "endtask" "endfunction" ))))
 
 (defconst verilog-cpp-level-re
   (eval-when-compile
