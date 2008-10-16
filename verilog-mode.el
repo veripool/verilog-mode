@@ -1436,6 +1436,9 @@ find the errors."
   ;; "`time_scale" "`undef" "`while"
   "\\<`\\(case\\|def\\(ault\\|ine\\(\\)?\\)\\|e\\(lse\\|nd\\(for\\|if\\|protect\\|switch\\|while\\)\\)\\|for\\(mat\\)?\\|i\\(f\\(def\\|ndef\\)?\\|nclude\\)\\|let\\|protect\\|switch\\|time\\(_scale\\|scale\\)\\|undef\\|while\\)\\>")
 
+(defconst verilog-directive-re-1
+  (concat "[ \t]*"  verilog-directive-re))
+
 (defconst verilog-directive-begin
   "\\<`\\(for\\|i\\(f\\|fdef\\|fndef\\)\\|switch\\|while\\)\\>")
 
@@ -1445,8 +1448,133 @@ find the errors."
 (defconst verilog-directive-end
   "`\\(endfor\\|endif\\|endswitch\\|endwhile\\)\\>")
 
-(defconst verilog-directive-re-1
-  (concat "[ \t]*"  verilog-directive-re))
+(defconst verilog-ovm-begin-re
+  (eval-when-compile
+    (verilog-regexp-opt 
+     '(
+       "`ovm_component_utils_begin"
+       "`ovm_field_utils_begin"
+       "`ovm_object_utils_begin"
+       "`ovm_sequence_utils_begin"
+       "`ovm_sequencer_utils_begin" 
+       ) nil )))
+
+(defconst verilog-ovm-end-re
+  (eval-when-compile
+    (verilog-regexp-opt 
+     '(
+       "`ovm_component_utils_end"
+       "`ovm_field_utils_end"
+       "`ovm_object_utils_end"
+       "`ovm_sequence_utils_end"
+       "`ovm_sequencer_utils_end"
+       ) nil )))
+  
+(defconst verilog-ovm-statement-re
+  (eval-when-compile
+    (verilog-regexp-opt 
+     '(
+       ;; Statements
+       "`DUT_ERROR"
+       "`MESSAGE"
+       "`dut_error"
+       "`message"
+       "`ovm_analysis_imp_decl"
+       "`ovm_blocking_get_imp_decl"
+       "`ovm_blocking_get_peek_imp_decl"
+       "`ovm_blocking_master_imp_decl"
+       "`ovm_blocking_peek_imp_decl"
+       "`ovm_blocking_put_imp_decl"
+       "`ovm_blocking_slave_imp_decl"
+       "`ovm_blocking_transport_imp_decl"
+       "`ovm_component_registry"
+       "`ovm_component_registry_param"
+       "`ovm_component_utils"
+       "`ovm_create"
+       "`ovm_create_seq"
+       "`ovm_declare_sequence_lib"
+       "`ovm_do"
+       "`ovm_do_seq"
+       "`ovm_do_seq_with"
+       "`ovm_do_with"
+       "`ovm_error"
+       "`ovm_fatal"
+       "`ovm_field_aa_int_byte"
+       "`ovm_field_aa_int_byte_unsigned"
+       "`ovm_field_aa_int_int"
+       "`ovm_field_aa_int_int_unsigned"
+       "`ovm_field_aa_int_integer"
+       "`ovm_field_aa_int_integer_unsigned"
+       "`ovm_field_aa_int_key"
+       "`ovm_field_aa_int_longint"
+       "`ovm_field_aa_int_longint_unsigned"
+       "`ovm_field_aa_int_shortint"
+       "`ovm_field_aa_int_shortint_unsigned"
+       "`ovm_field_aa_int_string"
+       "`ovm_field_aa_object_int"
+       "`ovm_field_aa_object_string"
+       "`ovm_field_aa_string_int"
+       "`ovm_field_aa_string_string"
+       "`ovm_field_array_int"
+       "`ovm_field_array_object"
+       "`ovm_field_array_string"
+       "`ovm_field_enum"
+       "`ovm_field_event"
+       "`ovm_field_int"
+       "`ovm_field_object"
+       "`ovm_field_queue_int"
+       "`ovm_field_queue_object"
+       "`ovm_field_queue_string"
+       "`ovm_field_sarray_int"
+       "`ovm_field_string"
+       "`ovm_field_utils"
+       "`ovm_file"
+       "`ovm_get_imp_decl"
+       "`ovm_get_peek_imp_decl"
+       "`ovm_info"
+       "`ovm_info1"
+       "`ovm_info2"
+       "`ovm_info3"
+       "`ovm_info4"
+       "`ovm_line"
+       "`ovm_master_imp_decl"
+       "`ovm_msg_detail"
+       "`ovm_non_blocking_transport_imp_decl"
+       "`ovm_nonblocking_get_imp_decl"
+       "`ovm_nonblocking_get_peek_imp_decl"
+       "`ovm_nonblocking_master_imp_decl"
+       "`ovm_nonblocking_peek_imp_decl"
+       "`ovm_nonblocking_put_imp_decl"
+       "`ovm_nonblocking_slave_imp_decl"
+       "`ovm_object_registry"
+       "`ovm_object_registry_param"
+       "`ovm_object_utils"
+       "`ovm_peek_imp_decl"
+       "`ovm_phase_func_decl"
+       "`ovm_phase_task_decl"
+       "`ovm_print_aa_int_object"
+       "`ovm_print_aa_string_int"
+       "`ovm_print_aa_string_object"
+       "`ovm_print_aa_string_string"
+       "`ovm_print_array_int"
+       "`ovm_print_array_object"
+       "`ovm_print_array_string"
+       "`ovm_print_object_queue"
+       "`ovm_print_queue_int"
+       "`ovm_print_string_queue"
+       "`ovm_put_imp_decl"
+       "`ovm_rand_send"
+       "`ovm_rand_send_with"
+       "`ovm_send"
+       "`ovm_sequence_utils"
+       "`ovm_slave_imp_decl"
+       "`ovm_transport_imp_decl"
+       "`ovm_update_sequence_lib"
+       "`ovm_update_sequence_lib_and_item"
+       "`ovm_warning"
+       "`static_dut_error"
+       "`static_message") nil )))
+
 
 ;;
 ;; Regular expressions used to calculate indent, etc.
@@ -1477,7 +1605,14 @@ find the errors."
    "\\(\\<endgenerate\\>\\)\\|"         ; 9
    "\\(\\<join\\(_any\\|_none\\)?\\>\\)\\|" ; 10
    "\\(\\<endclass\\>\\)\\|"            ; 11
-   "\\(\\<endgroup\\>\\)"               ; 12
+   "\\(\\<endgroup\\>\\)\\|"            ; 12
+   ;; OVM
+   "\\(\\<`ovm_component_utils_end\\>\\)\\|"
+   "\\(\\<`ovm_field_utils_end\\>\\)\\|"
+   "\\(\\<`ovm_object_utils_end\\>\\)\\|"
+   "\\(\\<`ovm_sequence_utils_end\\>\\)\\|"
+   "\\(\\<`ovm_sequencer_utils_end\\>\\)"
+
    ))
 
 (defconst verilog-auto-end-comment-lines-re
@@ -1553,6 +1688,13 @@ find the errors."
        "endprogram"
        "endsequence"
        "endclocking"
+       ;; OVM
+       "`ovm_component_utils_end"
+       "`ovm_field_utils_end"
+       "`ovm_object_utils_end"
+       "`ovm_sequence_utils_end"
+       "`ovm_sequencer_utils_end"
+
        ))))
 
 
@@ -1599,11 +1741,17 @@ find the errors."
        "specify"
        "table"
        "task"
+       ;;; OVM 
+       "`ovm_component_utils_begin"
+       "`ovm_field_utils_begin"
+       "`ovm_object_utils_begin"
+       "`ovm_sequence_utils_begin"
+       "`ovm_sequencer_utils_begin"
+
        ))))
 ;; These are the same words, in a specific order in the regular
 ;; expression so that matching will work nicely for
 ;; verilog-forward-sexp and verilog-calc-indent
-
 (defconst verilog-beg-block-re-ordered
   ( concat "\\(\\<begin\\>\\)"		;1
 	   "\\|\\(\\<randcase\\>\\|\\(\\<unique\\s-+\\|priority\\s-+\\)?case[xz]?\\>\\)" ; 2,3
@@ -1620,6 +1768,9 @@ find the errors."
 	   "\\|\\(\\(\\(\\<cover\\>\\s-+\\)\\|\\(\\<assert\\>\\s-+\\)\\)*\\<property\\>\\)"	;17 21
 	   "\\|\\(\\<\\(rand\\)?sequence\\>\\)" ;21 25
 	   "\\|\\(\\<clocking\\>\\)"          ;22 27
+	   "\\|\\(\\<`ovm_[a-z_]+_begin\\>\\)" ;28
+	   ;;
+	   
 	   ))
 
 (defconst verilog-end-block-ordered-rry
@@ -1775,6 +1926,18 @@ find the errors."
        "`switch" "`endswitch"
        "`timescale"
        "`time_scale"
+       ;; OVM Begin tokens
+       "`ovm_component_utils_begin"
+       "`ovm_field_utils_begin"
+       "`ovm_object_utils_begin"
+       "`ovm_sequence_utils_begin"
+       "`ovm_sequencer_utils_begin" 
+       ;; OVM End tokens
+       "`ovm_component_utils_end"
+       "`ovm_field_utils_end"
+       "`ovm_object_utils_end"
+       "`ovm_sequence_utils_end"
+       "`ovm_sequencer_utils_end"
        ))))
 
 (defconst verilog-defun-level-not-generate-re
@@ -4015,7 +4178,9 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 		       (throw 'nesting 'comment))
 
 		   ;; if we have a directive, done.
-		   (if (save-excursion (beginning-of-line) (looking-at verilog-directive-re-1))
+		   (if (save-excursion (beginning-of-line) 
+				       (and (looking-at verilog-directive-re-1)
+					    (not (looking-at "[ \t]*`ovm_"))))
 		       (throw 'nesting 'directive))
 
 		   ;; unless we are in the newfangled coverpoint or constraint blocks
@@ -4306,26 +4471,26 @@ Jump from end to matching begin, from endcase to matching case, and so on."
       (setq reg (concat "\\(\\<begin\\>\\)\\|\\(\\<end\\>\\)\\|"
 			"\\(\\<endcase\\>\\)\\|\\(\\<join\\(_any\\|_none\\)?\\>\\)" )))
      ((looking-at "\\<endtask\\>")
-      ;; 9: Search back for matching task
+      ;; 2: Search back for matching task
       (setq reg "\\(\\<task\\>\\)\\|\\(\\(\\(\\<virtual\\>\\s-+\\)\\|\\(\\<protected\\>\\s-+\\)\\)+\\<task\\>\\)")
       (setq nesting 'no))
      ((looking-at "\\<endcase\\>")
-      ;; 2: Search back for matching case
+      ;; 3: Search back for matching case
       (setq reg "\\(\\<randcase\\>\\|\\<case[xz]?\\>\\)\\|\\(\\<endcase\\>\\)" ))
      ((looking-at "\\<join\\(_any\\|_none\\)?\\>")
-      ;; 3: Search back for matching fork
+      ;; 4: Search back for matching fork
       (setq reg "\\(\\<fork\\>\\)\\|\\(\\<join\\(_any\\|_none\\)?\\>\\)" ))
      ((looking-at "\\<endclass\\>")
-      ;; 4: Search back for matching class
+      ;; 5: Search back for matching class
       (setq reg "\\(\\<class\\>\\)\\|\\(\\<endclass\\>\\)" ))
      ((looking-at "\\<endtable\\>")
-      ;; 5: Search back for matching table
+      ;; 6: Search back for matching table
       (setq reg "\\(\\<table\\>\\)\\|\\(\\<endtable\\>\\)" ))
      ((looking-at "\\<endspecify\\>")
-      ;; 6: Search back for matching specify
+      ;; 7: Search back for matching specify
       (setq reg "\\(\\<specify\\>\\)\\|\\(\\<endspecify\\>\\)" ))
      ((looking-at "\\<endfunction\\>")
-      ;; 7: Search back for matching function
+      ;; 8: Search back for matching function
       (setq reg "\\(\\<function\\>\\)\\|\\(\\(\\(\\<virtual\\>\\s-+\\)\\|\\(\\<protected\\>\\s-+\\)\\)+\\<function\\>\\)")
       (setq nesting 'no))
       ;;(setq reg "\\(\\<function\\>\\)\\|\\(\\<endfunction\\>\\)" ))
@@ -4338,6 +4503,9 @@ Jump from end to matching begin, from endcase to matching case, and so on."
      ((looking-at "\\<endproperty\\>")
       ;; 11: Search back for matching property
       (setq reg "\\(\\<property\\>\\)\\|\\(\\<endproperty\\>\\)" ))
+     ((looking-at verilog-ovm-end-re)
+      ;; 12: Search back for matching sequence
+      (setq reg (concat "\\(" verilog-ovm-begin-re "\\|" verilog-ovm-end-re "\\)")))
      ((looking-at "\\<endinterface\\>")
       ;; 12: Search back for matching interface
       (setq reg "\\(\\<interface\\>\\)\\|\\(\\<endinterface\\>\\)" ))
@@ -4438,8 +4606,15 @@ Set point to where line starts."
       (let ((back (point)))
 	(forward-word -1)
 	(cond
+	 ;;XX
 	 ((looking-at "\\<\\(always\\(_latch\\|_ff\\|_comb\\)?\\|case\\(\\|[xz]\\)\\|for\\(\\|each\\|ever\\)\\|i\\(f\\|nitial\\)\\|repeat\\|while\\)\\>")
 	  (not (looking-at "\\<randcase\\>\\|\\<case[xz]?\\>[^:]")))
+	 ((looking-at verilog-ovm-statement-re)
+	  nil)
+	 ((looking-at verilog-ovm-begin-re)
+	  t)
+	 ((looking-at verilog-ovm-end-re)
+	  t)
 	 (t
 	  (goto-char back)
 	  (cond
