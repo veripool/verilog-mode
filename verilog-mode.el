@@ -2537,31 +2537,6 @@ Use filename, if current buffer being edited shorten to just buffer name."
 (defun verilog-declaration-beg ()
   (verilog-re-search-backward verilog-declaration-re (bobp) t))
 
-(defun verilog-font-lock-init ()
-  "Initialize fontification."
-  ;; highlight keywords and standardized types, attributes, enumeration
-  ;; values, and subprograms
-  (setq verilog-font-lock-keywords-3
-	(append verilog-font-lock-keywords-2
-		(when verilog-highlight-translate-off
-		  (list
-		   ;; Fontify things in translate off regions
-		   '(verilog-match-translate-off
-                     (0 'verilog-font-lock-translate-off-face prepend))))))
-  (put 'verilog-mode 'font-lock-defaults
-       '((verilog-font-lock-keywords
-	  verilog-font-lock-keywords-1
-	  verilog-font-lock-keywords-2
-	  verilog-font-lock-keywords-3)
-	 nil ; nil means highlight strings & comments as well as keywords
-	 nil ; nil means keywords must match case
-	 nil ; syntax table handled elsewhere
-         ;; Function to move to beginning of reasonable region to highlight
-	 verilog-beg-of-defun)))
-
-;; initialize fontification for Verilog Mode
-(verilog-font-lock-init)
-
 ;;
 ;;
 ;;  Mode
@@ -2735,10 +2710,17 @@ Key bindings specific to `verilog-mode-map' are:
 
   ;; Stuff for GNU Emacs
   (set (make-local-variable 'font-lock-defaults)
-       '((verilog-font-lock-keywords verilog-font-lock-keywords-1
+       `((verilog-font-lock-keywords verilog-font-lock-keywords-1
                                      verilog-font-lock-keywords-2
                                      verilog-font-lock-keywords-3)
-         nil nil nil verilog-beg-of-defun))
+         nil nil nil 
+	 ,(if (functionp 'syntax-ppss) 
+	      ;; verilog-beg-of-defun uses syntax-ppss, and syntax-ppss uses
+	      ;; font-lock-beginning-of-syntax-function, so
+	      ;; font-lock-beginning-of-syntax-function, can't use
+              ;; verilog-beg-of-defun.
+	      nil)
+	 verilog-beg-of-defun))
   ;;------------------------------------------------------------
   ;; now hook in 'verilog-colorize-include-files (eldo-mode.el&spice-mode.el)
   ;; all buffer local:
