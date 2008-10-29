@@ -2719,8 +2719,8 @@ Key bindings specific to `verilog-mode-map' are:
 	      ;; font-lock-beginning-of-syntax-function, so
 	      ;; font-lock-beginning-of-syntax-function, can't use
               ;; verilog-beg-of-defun.
-	      nil)
-	 verilog-beg-of-defun))
+	      nil
+	    'verilog-beg-of-defun)))
   ;;------------------------------------------------------------
   ;; now hook in 'verilog-colorize-include-files (eldo-mode.el&spice-mode.el)
   ;; all buffer local:
