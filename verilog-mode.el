@@ -6411,7 +6411,7 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 	      (error "%s: Unmatched /* */, at char %d" (verilog-point-text) (point))))
 	 ((looking-at "(\\*")
 	  (forward-char 2)
-	  (or (looking-at "\\s-*)")   ; It's a "always @ (*)"
+	  (or (looking-at "\\s-*)")   ; It's an "always @ (*)"
 	      (search-forward "*)")
 	      (error "%s: Unmatched (* *), at char %d" (verilog-point-text) (point))))
 	 ((eq ?\" (following-char))
@@ -6466,6 +6466,9 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 		((equal keywd "inout")
 		 (setq vec nil enum nil  rvalue nil  newsig nil  signed nil  typedefed nil  multidim nil  sig-paren paren
 		       expect-signal 'sigs-inout  io t))
+		((or (equal keywd "parameter"))
+		 (unless io (setq vec nil  enum nil  rvalue nil  signed nil  typedefed nil  multidim nil  sig-paren paren
+				  expect-signal 'sigs-gparam  io t)))
 		((or (equal keywd "wire")
 		     (equal keywd "tri")
 		     (equal keywd "tri0")
@@ -6487,9 +6490,6 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 		     (equal keywd "genvar"))
 		 (unless io (setq vec nil  enum nil  rvalue nil  signed nil  typedefed nil  multidim nil  sig-paren paren
 				  expect-signal 'sigs-const)))
-		((or (equal keywd "parameter"))
-		 (unless io (setq vec nil  enum nil  rvalue nil  signed nil  typedefed nil  multidim nil  sig-paren paren
-				  expect-signal 'sigs-gparam)))
 		((equal keywd "signed")
 		 (setq signed "signed"))
 		((or (equal keywd "function")
