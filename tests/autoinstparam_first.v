@@ -1,5 +1,6 @@
 module autoinstparam_first ();
 
+   parameter BITSCHANGED;
    parameter BITSA;
    parameter BITSB;
 
@@ -10,7 +11,7 @@ module autoinstparam_first ();
 
    autoinstparam_first_sub
      #(
-       .BITSB				(2)
+       .BITSB				(2),
        /*AUTOINSTPARAM*/)
        sub1
 	 (/*AUTOINST*/);
@@ -21,6 +22,16 @@ module autoinstparam_first ();
        .BITSB				(2)
        /*AUTOINSTPARAM*/)
        sub2
+	 (/*AUTOINST*/);
+
+   /* autoinstparam_first_sub AUTO_TEMPLATE (
+       .BITSA		(BITSCHANGED),
+    ); */
+
+   autoinstparam_first_sub
+     #(
+       /*AUTOINSTPARAM*/)
+       sub3
 	 (/*AUTOINST*/);
 
 endmodule
