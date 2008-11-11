@@ -6466,9 +6466,9 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 		((equal keywd "inout")
 		 (setq vec nil enum nil  rvalue nil  newsig nil  signed nil  typedefed nil  multidim nil  sig-paren paren
 		       expect-signal 'sigs-inout  io t))
-		((or (equal keywd "parameter"))
-		 (unless io (setq vec nil  enum nil  rvalue nil  signed nil  typedefed nil  multidim nil  sig-paren paren
-				  expect-signal 'sigs-gparam  io t)))
+		((equal keywd "parameter")
+		 (setq vec nil  enum nil  rvalue nil  signed nil  typedefed nil  multidim nil  sig-paren paren
+		       expect-signal 'sigs-gparam  io t))
 		((or (equal keywd "wire")
 		     (equal keywd "tri")
 		     (equal keywd "tri0")
