@@ -4313,40 +4313,42 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
   (catch 'nesting
     (let ((re (concat "\\({\\|}\\|" verilog-indent-re "\\)")))
       (while (verilog-re-search-backward re nil 'move)
-	(cond
-	 ((equal (char-after) ?\{)
-	  (if (verilog-at-constraint-p)
-	      (throw 'nesting 'block)))
-	 ((equal (char-after) ?\})
-	  (let ((there (verilog-at-close-constraint-p)))
-	    (if there ;; we are at the } that closes a constraing.  Find the { that opens it
-		(progn
-		  (forward-char 1)
-		  (backward-list 1)
-		  (verilog-beg-of-statement)))))
-	 
-	 ((looking-at verilog-beg-block-re-ordered)
+	(catch 'continue
 	  (cond
-	   ((match-end 2)  ; *sigh* could be "unique case" or "priority casex"
-	    (let ((here (point)))
-	      (verilog-beg-of-statement)
-	      (if (looking-at verilog-extended-case-re)
-		  (throw 'nesting 'case)
-		(goto-char here)))
-	    (throw 'nesting 'case))
-	   
-	   ((match-end 4)  ; *sigh* could be "disable fork"
-	    (let ((here (point)))
-	      (verilog-beg-of-statement)
-	      (if (looking-at verilog-disable-fork-re)
-		  t ; is disable fork, this is a normal statement
-		(progn ; or is fork, starts a new block
-		  (goto-char here)
-		  (throw 'nesting 'block)))))
-	   
+	   ((equal (char-after) ?\{)
+	    (if (verilog-at-constraint-p)
+		(throw 'nesting 'block)))
 
-	   ;; need to consider typedef struct here...
-	   ((looking-at "\\<class\\|struct\\|function\\|task\\>")
+	   ((equal (char-after) ?\})
+	    (let ((there (verilog-at-close-constraint-p)))
+	      (if there ;; we are at the } that closes a constraing.  Find the { that opens it
+		  (progn
+		    (forward-char 1)
+		    (backward-list 1)
+		    (verilog-beg-of-statement)))))
+	   
+	   ((looking-at verilog-beg-block-re-ordered)
+	    (cond
+	     ((match-end 2)  ; *sigh* could be "unique case" or "priority casex"
+	      (let ((here (point)))
+		(verilog-beg-of-statement)
+		(if (looking-at verilog-extended-case-re)
+		    (throw 'nesting 'case)
+		  (goto-char here)))
+	      (throw 'nesting 'case))
+	     
+	     ((match-end 4)  ; *sigh* could be "disable fork"
+	      (let ((here (point)))
+		(verilog-beg-of-statement)
+		(if (looking-at verilog-disable-fork-re)
+		    t ; is disable fork, this is a normal statement
+		  (progn ; or is fork, starts a new block
+		    (goto-char here)
+		    (throw 'nesting 'block)))))
+	     
+	     
+	     ;; need to consider typedef struct here...
+	     ((looking-at "\\<class\\|struct\\|function\\|task\\>")
 					; *sigh* These words have an optional prefix:
 					; extern {virtual|protected}? function a();
 	                                ; typedef class foo;
@@ -4355,45 +4357,45 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 	                                ; property
 					; ...
 					; endfunction
-	    (verilog-beg-of-statement)
-	    (if (looking-at verilog-beg-block-re-ordered)
-		(throw 'nesting 'block)
-	      (throw 'nesting 'defun)))
-	   
-	   ((looking-at "\\<property\\>")
+	      (verilog-beg-of-statement)
+	      (if (looking-at verilog-beg-block-re-ordered)
+		  (throw 'nesting 'block)
+		(throw 'nesting 'defun)))
+	     
+	     ((looking-at "\\<property\\>")
 					; *sigh* 
 					;    {assert|assume|cover} property (); are complete
 					; but
                                         ;    property ID () ... needs end_property
-	    (verilog-beg-of-statement)
-	    (if (looking-at "\\(assert\\|assume\\|cover\\)\\s-+property\\>")
-		(throw 'nesting 'statement) ; We don't need an endproperty for these
-	      (throw 'nesting 'block)	;We still need a endproperty
-	      ))
+	      (verilog-beg-of-statement)
+	      (if (looking-at "\\(assert\\|assume\\|cover\\)\\s-+property\\>")
+		  (throw 'nesting 'statement) ; We don't need an endproperty for these
+		(throw 'nesting 'block)	;We still need a endproperty
+		))
+	     
+	     (t              (throw 'nesting 'block))))
 	   
-	   (t              (throw 'nesting 'block))))
-	 
-	 ((looking-at verilog-end-block-re)
-	  (verilog-leap-to-head)
-	  (if (verilog-in-case-region-p)
-	      (progn
-		(verilog-leap-to-case-head)
-		(if (looking-at verilog-case-re)
-		    (throw 'nesting 'case)))))
-	 
-	 ((looking-at verilog-defun-level-re)
-	  (if (looking-at verilog-defun-level-generate-only-re)
-	      (if (verilog-in-generate-region-p)
+	   ((looking-at verilog-end-block-re)
+	    (verilog-leap-to-head)
+	    (if (verilog-in-case-region-p)
+		(progn
+		  (verilog-leap-to-case-head)
+		  (if (looking-at verilog-case-re)
+		      (throw 'nesting 'case)))))
+	   
+	   ((looking-at verilog-defun-level-re)
+	    (if (looking-at verilog-defun-level-generate-only-re)
+		(if (verilog-in-generate-region-p)
+		    (throw 'continue 'foo)  ; always block in a generate
 		  (throw 'nesting 'defun))
-					; else
-	    (throw 'nesting 'defun))
-	  )
-	 
-	 ((looking-at verilog-cpp-level-re)
-	  (throw 'nesting 'cpp))
-	 
-	 ((bobp)
-	  (throw 'nesting 'cpp))))
+	      (throw 'nesting 'defun)))
+	   
+	   ((looking-at verilog-cpp-level-re)
+	    (throw 'nesting 'cpp))
+	   
+	   ((bobp)
+	    (throw 'nesting 'cpp)))))
+
       (throw 'nesting 'cpp))))
 
 (defun verilog-calculate-indent-directive ()
