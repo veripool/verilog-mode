@@ -1,25 +1,25 @@
 typedef class burst_drv;
-   
+
 class burst_drv extends vmm_xactor;
-   
+
    int EXECUTING;
    int OBSERVED;
    int SUB_OBSERVED;
-   
+
    protected burst_drv_cfg cfg;
    local     burst_drv_cfg reset_cfg;
    protected burst_xn       rx_factory;
    local     burst_xn       reset_rx_factory;
-   
+
    burst_xn_channel in_chan;
    burst_xn_channel obs_chan;
-   
+
    burst_xn tr_main; // Current transaction in main()
    /* could have [extern] [virtual] [protected|local] task [static|automatic|] name (); */
    /* If extern -> then it is complete; other wise it is not complete */
    /* class could have:
     class c
-       extern virtual static protected task t ();
+    extern virtual static protected task t ();
     endclass
     task declaration could have
     task static t();
@@ -35,7 +35,7 @@ class burst_drv extends vmm_xactor;
    endgenerate
    task t();
       /**/
-      /**/            
+      /**/
    endtask // t
    protected virtual task pv_t();
       /**/
@@ -45,7 +45,7 @@ class burst_drv extends vmm_xactor;
       /* ACK*/
    endtask // p_t
    virtual task v_t();
-      /**/      
+      /**/
    endtask // v_t
    virtual protected task vp_t();
       /**/
@@ -61,7 +61,7 @@ class burst_drv extends vmm_xactor;
    generate g;
       /**/
    endgenerate
-   
+
    extern virtual function void reconfigure(burst_drv_cfg cfg);
    extern virtual function void reset_xactor(reset_e rst_type = SOFT_RST);
    extern virtual function new (
@@ -71,7 +71,7 @@ class burst_drv extends vmm_xactor;
 				burst_xn_channel in_chan       = null,
 				burst_xn_channel obs_chan      = null,
 				burst_xn         rx_factory    = null);
-   virtual task start();
+   virtual 				   task start();
       super.start();
       this.tx_dma.start();
       this.rx_dma.start();
@@ -87,3 +87,4 @@ class burst_drv extends vmm_xactor;
       this.rx_dma.start();
    endtask // static
 endclass : burst_drv
+

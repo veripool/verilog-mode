@@ -13,8 +13,8 @@ module foo;
  `endif
    input cmode;
 `endif
-   
-// instead of:
+
+   // instead of:
 
 `ifdef LABEL_A
    CHIP CPU (

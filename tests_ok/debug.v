@@ -1,7 +1,7 @@
 `include "some_macros.v"
 
 module z();
-  
+
    $display("%t:", $time);
    a 			      = b;
    casfasdf 		      = d;
@@ -11,5 +11,5 @@ module z();
    gf 			     <=g;
    ssdf 		      = 5;
    f 			      = zsfdsdf >= f;
-  
+
 endmodule

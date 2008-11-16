@@ -8,13 +8,13 @@ module sm (/*AUTOARG*/
 
    //== State enumeration
    parameter [2:0] // synopsys enum state_info
-		   SM_IDLE =  3'b000,
-		   SM_ACT = 3'b010;
+		SM_IDLE =  3'b000,
+		SM_ACT = 3'b010;
    //== State variables
-   reg [2:0] 	   /* synopsys enum state_info */
-		   state_r;		/* synopsys state_vector state_r */
-   reg [2:0] 	   /* synopsys enum state_info */
-		   state_e1;
+   reg [2:0] 	/* synopsys enum state_info */
+		state_r;		/* synopsys state_vector state_r */
+   reg [2:0] 	/* synopsys enum state_info */
+		state_e1;
 
    //== ASCII state decoding
 

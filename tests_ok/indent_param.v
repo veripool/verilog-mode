@@ -12,3 +12,4 @@ module example_block
     output reg c
     );
 endmodule
+

@@ -17,8 +17,8 @@ module io1_sub (/*AUTOARG*/);
    autoinst_lopaz_srpad MD31_pad
      (.*);
 
-  /* autoinst_lopaz_srpad AUTO_TEMPLATE (
-      .pin	(templated));
+   /* autoinst_lopaz_srpad AUTO_TEMPLATE (
+    .pin	(templated));
     */
 
    autoinst_lopaz_srpad MD31_pad

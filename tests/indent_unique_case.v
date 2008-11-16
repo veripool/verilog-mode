@@ -33,3 +33,4 @@ module foo;
 	  endcase // case (in.value1)
       endcase // case (in.value1)
    end
+endmodule

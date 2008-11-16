@@ -1,23 +1,23 @@
 module foo;
-   
+
    // for each additional in-air txmacphy byte
    task nextTxByte();
       TxByteCnt++;
-      TxLastByteTime = $time;  
+      TxLastByteTime = $time;
    endtask // nextTxByte
-   
+
    function foo();
       foo = 1;
    endfunction // foo
-   
+
    // start counting when txmacphy sees first in-air byte
    task firstTxByte();
       TxByteCnt = 1;
       TxFirstByteTime = $time;
       TxLastByteTime = $time;
    endtask // firstTxByte
-   
-   
+
+
    // outputs the overall performance of the RX path in Mbps (MBits per second)
    task printRxPerformance();
       integer ibps;
@@ -31,9 +31,9 @@ module foo;
       end
       else
 	$display("%t: %s - Requires >= 2 RX frames in order to measure performance", $time, myName);
-      
+
    endtask // printRxPerformance
-   
+
 endmodule // foo
 
 class a;
@@ -44,36 +44,36 @@ class a;
    function fred();
       aaa;
    endfunction // fred
-   
+
    task foo;
    endtask // endtask
-   
+
    virtual task foo;
    endtask // endtask
-   
+
    generate g;
    endgenerate
-   
+
    covergroup g;
    endgroup // g
-   
+
    property p;
    endproperty
-   
+
    sequence s;
    endsequence // s
-   
+
    clocking c;
    endclocking // c
-   
+
    function f;
    endfunction //
-   
+
    virtual function f;
    endfunction //
-   
+
    protected function f;
    endfunction //
-   
+
 endclass // a
 

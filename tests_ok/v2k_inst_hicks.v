@@ -10,19 +10,19 @@ module v2k_inst_hicks (
 		       input wire clock
 		       );
 
-   input [31:0] 	     dcb_n2k;
+   input [31:0] 		  dcb_n2k;
 
    // AUTOINST results  NOT OK
    v2k_inst_hicks v2k_inst_hicks (/*AUTOINST*/
 				  // Outputs
-				  .relay(relay[7:0]),
-				  .relay_f(relay_f),
-				  .swen_f0_n(swen_f0_n),
+				  .relay		(relay[7:0]),
+				  .relay_f		(relay_f),
+				  .swen_f0_n		(swen_f0_n),
 				  // Inputs
-				  .dcb	(dcb[31:0]),
-				  .relay_ce(relay_ce),
-				  .simReset(simReset),
-				  .clock(clock),
-				  .dcb_n2k(dcb_n2k[31:0]));
+				  .dcb			(dcb[31:0]),
+				  .relay_ce		(relay_ce),
+				  .simReset		(simReset),
+				  .clock		(clock),
+				  .dcb_n2k		(dcb_n2k[31:0]));
 
 endmodule

@@ -4,7 +4,7 @@ module foo;
       case (f)
 	1 		  : 2;
       endcase // case (f)
-      
+
       unique case(vlcnum)
 	0 : unique case(in.value1)
 		     0 	  : out = 1; 1 : out = 3; 2 : out = 3; 3 : out = 4;
@@ -33,3 +33,4 @@ module foo;
 	  endcase // case (in.value1)
       endcase // case (in.value1)
    end
+endmodule

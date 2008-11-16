@@ -32,8 +32,8 @@ module lbm
 
    lbnsub lbnsub	(/*AUTOINST*/
 			 // Outputs
-			 .outgo		(outgo[7:4]),
+			 .outgo			(outgo[7:4]),
 			 // Inputs
-			 .income	(income[4:7]));		 // Templated
+			 .income		(income[4:7]));	 // Templated
 endmodule
 

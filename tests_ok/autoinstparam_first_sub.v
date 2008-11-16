@@ -8,8 +8,8 @@ module autoinstparam_first_sub (/*AUTOARG*/
    //======================================================================
 
    localparam IGNORED;
-   parameter  BITSA;
-   parameter  BITSB;
+   parameter BITSA;
+   parameter BITSB;
 
    inout [BITSA:0] a;
    inout [BITSB:0] b;

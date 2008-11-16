@@ -14,7 +14,7 @@ module x;
          b <= in_b;
          c <= in_c;
 `ifndef DC
-    x <= 1'b1;
+	 x <= 1'b1;
 `endif
       end
    end

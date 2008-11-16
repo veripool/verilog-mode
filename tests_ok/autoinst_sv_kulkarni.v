@@ -6,12 +6,12 @@
 module a_h
   // Verilog 2001 style
   #(parameter M=5, N=3)
-    (
-     // Outputs
+   (
+    // Outputs
     output [N-1:0] [M-1:0]a_o1		// From Ia of autoinst_sv_kulkarni_base.v
-     // End of automatics
-     // AUTOINPUT*/
-     );
+    // End of automatics
+    // AUTOINPUT*/
+    );
 
    /*AUTOWIRE*/
 
@@ -20,12 +20,12 @@ module a_h
        // Parameters
        .M				(M),
        .N				(N))
-       Ia
-	 (/*AUTOINST*/
-	  // Outputs
-	  .a_o1				(a_o1/*[N-1:0][M-1:0]*/),
-	  // Inputs
-	  .a_i1				(a_i1/*[N-1:0][M-1:0]*/)); // <---- BUG?
+   Ia
+     (/*AUTOINST*/
+      // Outputs
+      .a_o1				(a_o1/*[N-1:0][M-1:0]*/),
+      // Inputs
+      .a_i1				(a_i1/*[N-1:0][M-1:0]*/)); // <---- BUG?
 
 endmodule
 
@@ -36,7 +36,7 @@ module top;
    parameter M=4;
    parameter N=2;
 
-   wire [N-1:0] a_o1;
+   wire [N-1:0]         a_o1;
    logic [N-1:0][M-1:0] a_i1;
 
    logic                temp;
@@ -51,10 +51,10 @@ module top;
 	 // Parameters
 	 .M				(M),
 	 .N				(N))
-     Ua_h
-       (/*AUTOINST*/
-	// Outputs
-	.a_o1				(a_o1/*[N-1:0][M-1:0]*/));    // <---- BUG?
+   Ua_h
+     (/*AUTOINST*/
+      // Outputs
+      .a_o1				(a_o1/*[N-1:0][M-1:0]*/));    // <---- BUG?
 
    // Stimulus
    initial begin

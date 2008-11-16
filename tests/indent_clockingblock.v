@@ -35,3 +35,4 @@ class mipsbfm_master extends vmm_xactor;
 mipsbfm_trans_channel  in_chan ;
 
 endclass // mipsbfm_master
+

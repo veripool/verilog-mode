@@ -4,9 +4,9 @@ module coverage;
       c : coverpoint color;
       c : coverpoint color;
       c : coverpoint color;
-      c : coverpoint color;      
+      c : coverpoint color;
    endgroup // foo
-   
+
    foo 	  = bar;
 
    sequence bar
@@ -18,7 +18,7 @@ module coverage;
 	 foo 	= 1;
       end
    endfunction // foo
-   
+
    randsequence bar
      b 		= c;
    endsequence // bar
@@ -42,5 +42,5 @@ module coverage;
      1: a;
      2:b;
    endcase // case (foo)
-   
+
 endmodule // coverage

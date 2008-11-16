@@ -22,9 +22,9 @@ module foo();
    
    initial d;
    
-   ap_1 assert property (p_1);
-   ap_2 assert property (p_2);
-   
+   //   ap_1 assert property (p_1);  FIXME
+   //   ap_2 assert property (p_2);
+	 
    property p_lane_output_change_on_input_change;
       @(negedge test_clk)
         disable iff (ana_byp == 0)

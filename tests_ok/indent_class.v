@@ -6,13 +6,13 @@ class temp;
    extern function test();
    extern function test2();
    function foo();
-      foo    = 1;
+      foo = 1;
    endfunction // foo
    extern function test3();
    reg [31:0] b;
 endclass // temp
 
-class short  extends temp;
+class short extends temp;
    logic      a;
 endclass
 
@@ -24,8 +24,8 @@ module foo;
    reg [1:0] b;
 
    initial begin
-      b    = `vmm_channel(a);
+      b = `vmm_channel(a);
    end // initial begin
 endmodule // foo
 
-      
+

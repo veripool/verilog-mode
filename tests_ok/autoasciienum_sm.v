@@ -8,18 +8,18 @@ module sm (/*AUTOARG*/
    //==================== Constant declarations ==============
 
    parameter [2:0]	// synopsys enum state_info
-			IDLE = 		3'b000,
-			SEND =		3'b001,
-			WAIT1 = 		3'b010,
-			UPDATE1 = 	3'b011,
-			WAIT2 = 		3'b100;
+		IDLE = 		3'b000,
+		SEND =		3'b001,
+		WAIT1 = 		3'b010,
+		UPDATE1 = 	3'b011,
+		WAIT2 = 		3'b100;
 
    parameter [2:0] 	/* synopsys enum state_info */ UPDATE2 = 3'b101;
 
    parameter [2:0] 	NOT_A_STATE_ELEMENT = 3'b101;
 
    parameter [2:0] 	/* synopsys enum other */
-			A_OTHER_STATE_ELEMENT = 3'b101;
+		A_OTHER_STATE_ELEMENT = 3'b101;
 
    //==================== Input Signals ======================
 

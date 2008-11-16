@@ -2,7 +2,7 @@ module escape_a (/*AUTOARG*/
    // Outputs
    \o[10] , \o[2] ,
    // Inputs
-   \i&e;
+   \i&e; 
    );
    output \o[10] ;
    output \o[2] ;

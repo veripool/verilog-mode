@@ -1,5 +1,5 @@
 always
-   @(w or c_int)
+  @(w or c_int)
   begin
      if ((w == 1'b0) && ((status_register[7]) == 1'b1))
        begin
@@ -10,4 +10,4 @@ always
 	  write_protect <= `FALSE ;
        end
   end
-   
+

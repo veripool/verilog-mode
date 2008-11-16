@@ -11,7 +11,7 @@ module autoascii_peltan
 	    state0 = 4'h0;
 
    wire [3:0] 	/* synopsys enum xstate */
-            xstate;
+		xstate;
 
    /* synopsys translate off */
 

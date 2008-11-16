@@ -1,5 +1,4 @@
 ;; $Id$
-
 (progn
   (save-excursion
     (with-temp-buffer
@@ -14,7 +13,9 @@
   (setq enable-local-eval t)
   (setq auto-mode-alist (cons  '("\\.v\\'" . verilog-mode) auto-mode-alist))
   (setq-default fill-column 100)
-
+  (if running-on-xemacs 
+      (setq again "!xemacs")
+    (setq again "!emacs"))
   ;; Local functions
   (defun global-replace-regexp (from to)
     (goto-char (point-min))
@@ -25,6 +26,7 @@
     (save-excursion
       (message (concat file ": finding..."))
       (find-file (concat "tests/" file))
+      (verilog-mode)
       (message (concat file ": deleting autos..."))
       (verilog-delete-auto)
       (message (concat file ": testing indent..."))
@@ -33,10 +35,8 @@
 	(setq ln 0)
 	(while (not (eobp))
 	  (electric-verilog-tab)
-	  (message "line %s" ln)
 	  ;;(verilog-pretty-expr t )
 	  (forward-line 1)
-	  (setq ln (1+ ln))
 	  ))
       (message (concat file ": indents OK..."))
       (global-replace-regexp "[ \t]+$" "")
@@ -50,29 +50,48 @@
       (write-file (concat "../" temp-file))
       (kill-buffer nil))
     ;;
-    (message (concat file ": running diff..."))
-    (with-temp-buffer
-      (let* ((status
-	      (call-process "diff"
-			    nil (current-buffer) nil
-			    "-w"
-			    (concat "tests_ok/" file)
-			    temp-file)))
-	;(delete-file temp-file)
-	(cond ((not (equal status 0))
-	       (message (concat "diff tests_ok/" file " " temp-file))
-	       (message "<Golden Reference File\n>Generated Test File")
-	       (message (concat "#if OK: cp " temp-file " tests_ok/" file))
-	       (message (buffer-string))
-	       (error "%%Error: Didn't Verify %s (status %d)" file status))
-	      (t
-	       (message "Verified %s" file))))))
-    
+    (diff-file file))
+
+(defun diff-file (file)
+  (message (concat file ": running diff of " file " and tests_ok/" file ))
+  (with-temp-buffer
+    (let* ((status
+	    (call-process "diff" nil (current-buffer) nil 
+			   (concat "tests_ok/" file) temp-file)))
+      ;(delete-file temp-file)
+      (cond ((not (equal status 0))
+	     (message (concat "#if OK: cp " temp-file " tests_ok/" file "; setenv VERILOG_MODE_START_FILE " file " ; " again " ; cat tests_ok/0temp.v "))
+	     (message (concat "diff tests_ok/" file " " temp-file))
+	     (message "<Golden Reference File\n>Generated Test File")
+	     (message (buffer-string))
+	     (message (concat "#if OK: cp " temp-file " tests_ok/" file "; setenv VERILOG_MODE_START_FILE " file " ; " again " ; cat tests_ok/0temp.v "))
+	     (error "%%Error: Didn't Verify %s (status %d)" file status))
+
+	    (t
+	     (message "Verified %s" file))))))
+
   (defun verilog-test ()
-    (let ((files (directory-files "tests")))
+    (let ((files (directory-files "tests"))
+	  (tests-run 0)
+	  )
       (when (getenv "VERILOG_MODE_TEST_FILE")
 	(setq files (list (getenv "VERILOG_MODE_TEST_FILE")))
 	(message "**** Only testing files in $VERILOG_MODE_TEST_FILE"))
+
+      (when (getenv "VERILOG_MODE_START_FILE")
+	(setq startfiles (list (getenv "VERILOG_MODE_START_FILE")))
+	(setq startfile (car startfiles))
+	(message (concat "Staring from file " startfile))
+	(catch 'done
+	  (while files
+	    (setq file (car files))
+	    (if (string-equal file startfile)
+		(progn
+		  (message (concat "matched " file))
+		  (throw 'done 0))
+	      (progn
+		(setq files (cdr files)))))))
+    
       (while files
 	(setq file (car files))
 	(cond ((equal "." file))
@@ -89,15 +108,36 @@
 		     (setq cf (concat "skip_for_xemacs/" file))
 		     (if (file-exists-p cf ) ; 
 			 (message (concat "Skipping testing " file " on Xemacs because file " cf "exists"))
-		       (verilog-test-file file "tests_ok/0temp.v")
+		       (progn
+			 (verilog-test-file file "tests_ok/0temp.v")
+			 (setq tests-run (1+ tests-run))
+			 )
 		       ))
-		 (verilog-test-file file "tests_ok/0temp.v")
+		 (progn
+		   (verilog-test-file file "tests_ok/0temp.v")
+		   (setq tests-run (1+ tests-run))
+		   )
 		 )
 	       ))
+	(message (format " %d tests run so far..." tests-run ))
 	(setq files (cdr files))))
     (message "Tests Passed")
     "Tests Passed")
     
   (verilog-test))
 
-
+(defun vl-indent-file ()
+  "Reindent file"
+  (interactive)
+  (save-excursion
+    (goto-char (point-min))
+    (while (not (eobp))
+      (electric-verilog-tab)
+      (end-of-line)
+      (delete-char (- (skip-chars-backward " \t")))
+      (forward-line 1)
+      )
+    )
+  (write-file (buffer-file-name))
+  )
+  

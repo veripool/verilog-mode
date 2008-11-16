@@ -53,4 +53,4 @@ module x;
 	  end
        end
     end
-endmodule
+endmodule // x

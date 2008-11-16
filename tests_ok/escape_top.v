@@ -2,7 +2,7 @@ module escape_top (/*AUTOARG*/
    // Outputs
    \o[2] , \o[10] ,
    // Inputs
-   \i&e;
+   \i&e; 
    );
 
    /*AUTOINPUT*/

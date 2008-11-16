@@ -1,9 +1,9 @@
 // Note module names don't match, this is intentional to check the .f file
 
 module reg_core (
-    output logic [7:0] q,
-    input  logic [7:0] d,
-    input  logic       clk, rst_n
+		 output logic [7:0] q,
+		 input  logic [7:0] d,
+		 input  logic       clk, rst_n
 		 /*AUTOARG*/);
 
    always_ff @(posedge clk or negedge rst_n)
@@ -12,9 +12,9 @@ module reg_core (
 endmodule
 
 module register (
-    output logic [7:0] q,
-    input  logic [7:0] d,
-    input  logic       clk, rst_n
+		 output logic [7:0] q,
+		 input  logic [7:0] d,
+		 input  logic       clk, rst_n
 		 /*AUTOARG*/);
 
    reg_core c1 (

@@ -32,13 +32,13 @@ module io1_sub(
 
    autoinst_lopaz_srpad MD31_pad (/*AUTOINST*/
 				  // Outputs
-				  .pin_in({SDRAM_DQ_in[31],SDRAM_DQ_in[31]}), // Templated
+				  .pin_in		({SDRAM_DQ_in[31],SDRAM_DQ_in[31]}), // Templated
 				  // Inouts
-				  .pin	(MD[31]),		 // Templated
+				  .pin			(MD[31]),	 // Templated
 				  // Inputs
-				  .clk	(data_strobeH),		 // Templated
-				  .pin_out(SDRAM_DQ_out[31]),	 // Templated
-				  .pin_outen(SDRAM_DQ_outen));	 // Templated
+				  .clk			(data_strobeH),	 // Templated
+				  .pin_out		(SDRAM_DQ_out[31]), // Templated
+				  .pin_outen		(SDRAM_DQ_outen)); // Templated
 
 
    /* autoinst_lopaz_srpad AUTO_TEMPLATE (
@@ -49,13 +49,13 @@ module io1_sub(
    /*AUTO_LISP(setq num 1)*/
    autoinst_lopaz_srpad MD31_pad11 (/*AUTOINST*/
 				    // Outputs
-				    .pin_in(pin_in[2*w-1:0]),
+				    .pin_in		(pin_in[2*w-1:0]),
 				    // Inouts
-				    .pin(MD[1]),		 // Templated
+				    .pin		(MD[1]),	 // Templated
 				    // Inputs
-				    .clk(clk),
-				    .pin_out(pin_out[w-1:0]),
-				    .pin_outen(pin_outen));
+				    .clk		(clk),
+				    .pin_out		(pin_out[w-1:0]),
+				    .pin_outen		(pin_outen));
 
    /* autoinst_lopaz_srpad AUTO_TEMPLATE (
     .pin(MD[@"num"]),
@@ -65,12 +65,12 @@ module io1_sub(
    /*AUTO_LISP(setq num 2)*/
    autoinst_lopaz_srpad MD31_pad11 (/*AUTOINST*/
 				    // Outputs
-				    .pin_in(pin_in[2*w-1:0]),
+				    .pin_in		(pin_in[2*w-1:0]),
 				    // Inouts
-				    .pin(MD[2]),		 // Templated
+				    .pin		(MD[2]),	 // Templated
 				    // Inputs
-				    .clk(clk),
-				    .pin_out(pin_out[w-1:0]),
-				    .pin_outen(pin_outen));
+				    .clk		(clk),
+				    .pin_out		(pin_out[w-1:0]),
+				    .pin_outen		(pin_outen));
 
 endmodule

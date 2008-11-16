@@ -16,8 +16,8 @@ endmodule
 
 module Example_mod
   (
-    input  logic clk,
-    input  logic reset_b,
+   input  logic clk,
+   input  logic reset_b,
    );
 endmodule
 

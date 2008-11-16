@@ -1,5 +1,5 @@
 module autoarg_comment
-
+  
   // Copyright 1997-1998, blah, blah, blah
 
   (/*AUTOARG*/);

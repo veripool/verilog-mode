@@ -12,3 +12,4 @@ input     a, b,
 output reg c
 );
 endmodule
+

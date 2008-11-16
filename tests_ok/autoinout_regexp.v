@@ -53,8 +53,8 @@ module instio (/*AUTOARG*/
    input lower_ina;
    inout lower_io;
    output lower_out;
-   input sec_ina;
-   inout sec_io;
+   input  sec_ina;
+   inout  sec_io;
    output sec_out;
 
    wire   lower_out = lower_ina | lower_io;

@@ -1,9 +1,9 @@
 module inject_inst_net_case (
-    output logic [7:0] q2,
-    input  logic [7:0] d,
-    input  logic       clk, rst_n
+			     output logic [7:0] q2,
+			     input  logic [7:0] d,
+			     input  logic       clk, rst_n
 			     /*AUTOARG*/);
-   logic [7:0] Q1;
+   logic [7:0] 					Q1;
 
    register2 r2 (.q1(Q1), .ck(clk),
 		 /*AUTOINST*/
@@ -20,9 +20,9 @@ module inject_inst_net_case (
 endmodule
 
 module register2 (
-    output logic [7:0] q2,
-    input  logic [7:0] q1,
-    input  logic       ck, rst_n
+		  output logic [7:0] q2,
+		  input  logic [7:0] q1,
+		  input  logic       ck, rst_n
 		  /*AUTOARG*/);
 
    always_ff @(posedge ck or negedge rst_n)
@@ -31,9 +31,9 @@ module register2 (
 endmodule
 
 module register1 (
-    output logic [7:0] q1,
-    input  logic [7:0] d,
-    input  logic       ck, rst_n
+		  output logic [7:0] q1,
+		  input  logic [7:0] d,
+		  input  logic       ck, rst_n
 		  /*AUTOARG*/);
 
    always_ff @(posedge ck or negedge rst_n)

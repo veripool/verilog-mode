@@ -42,7 +42,7 @@ module top
 	.xb				(xb[X-1:0]),
 	.cb				(cb[X-1:0]),
 	.yb				(yb[X*Y-1:0]));
-   
+
    yy (/*AUTOINSTPARAM*/
        // Parameters
        .X				(X),

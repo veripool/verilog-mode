@@ -8,11 +8,11 @@ module foo_bar (/*AUTOARG*/
   input        clk;
    input       rst;
    input       signed [15:-15] data;
-   input [11:0] addr;
-   output 	signed [15:0] result;
+   input [11:0] 	       addr;
+   output 	signed [15:0]  result;
 
    wire 	signed [15:-15] data;
-   reg 		signed [15:0] result;
+   reg 		signed [15:0] 	result;
 
    always @ (/*AS*/rst) begin
       result = 32'sh22 | rst;

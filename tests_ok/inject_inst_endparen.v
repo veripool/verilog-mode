@@ -24,9 +24,9 @@ module inject_inst_endparen;
 endmodule
 
 module register (
-    output logic [7:0] q,
-    input  logic [7:0] d,
-    input  logic       clk, rst_n
+		 output logic [7:0] q,
+		 input  logic [7:0] d,
+		 input  logic       clk, rst_n
 		 /*AUTOARG*/);
 
    always_ff @(posedge clk or negedge rst_n)

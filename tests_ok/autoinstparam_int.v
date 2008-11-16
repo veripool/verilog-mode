@@ -6,15 +6,15 @@ module xyz
      input int i1, i2,
      input logic [5:0] i3, i4,
      input i5,
-     output y); 
-endmodule 
+     output y);
+endmodule
 
 module pdq;
    input x; output y;
    parameter int FOO=1;
-endmodule 
+endmodule
 
-module abc; 
+module abc;
    xyz XYZ
      #(/*AUTOINSTPARAM*/
        // Parameters
@@ -33,7 +33,7 @@ module abc;
     .i2					(i2),
     .i3					(i3[5:0]),
     .i4					(i4[5:0]),
-    .i5					(i5)); 
+    .i5					(i5));
    pdq PDQ
      #(/*AUTOINSTPARAM*/
        // Parameters
@@ -42,5 +42,5 @@ module abc;
     // Outputs
     .y					(y),
     // Inputs
-    .x					(x)); 
-endmodule 
+    .x					(x));
+endmodule

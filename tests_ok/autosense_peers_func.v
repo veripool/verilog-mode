@@ -19,21 +19,21 @@ endmodule
 
 function [7:0] barrel_shifter;
 
-      input [7:0] source;
-      input [2:0] shift_amt;
+   input [7:0] source;
+   input [2:0] shift_amt;
 
-      begin
-	 case (shift_amt) //synopsys parallel_case full_case
-           3'b0: barrel_shifter = source;
-           3'b1: barrel_shifter = {source[0], source[7:1]};
-           3'b2: barrel_shifter = {source[1:0], source[7:2]};
-           3'b3: barrel_shifter = {source[2:0], source[7:3]};
-           3'b4: barrel_shifter = {source[3:0], source[7:4]};
-           3'b5: barrel_shifter = {source[4:0], source[7:5]};
-           3'b6: barrel_shifter = {source[5:0], source[7:6]};
-           3'b7: barrel_shifter = {source[6:0], source[7]};
-	 endcase // case(shift_amt)
-      end
+   begin
+      case (shift_amt) //synopsys parallel_case full_case
+        3'b0: barrel_shifter = source;
+        3'b1: barrel_shifter = {source[0], source[7:1]};
+        3'b2: barrel_shifter = {source[1:0], source[7:2]};
+        3'b3: barrel_shifter = {source[2:0], source[7:3]};
+        3'b4: barrel_shifter = {source[3:0], source[7:4]};
+        3'b5: barrel_shifter = {source[4:0], source[7:5]};
+        3'b6: barrel_shifter = {source[5:0], source[7:6]};
+        3'b7: barrel_shifter = {source[6:0], source[7]};
+      endcase // case(shift_amt)
+   end
 
 endfunction // barrel_shifter
 

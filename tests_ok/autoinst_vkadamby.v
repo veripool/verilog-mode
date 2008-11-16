@@ -2,7 +2,7 @@ module autoinst_vkadamby ( /*AUTOARG*/);
 
    child1 #(.lengthM2(100))  I34 (/*AUTOINST*/
 				  // Inputs
-				  .x	(x));
+				  .x			(x));
 
 endmodule
 

@@ -20,24 +20,24 @@ module autoinst_crawford_array(/*AUTOARG*/
 
    // non-arrayed example
    autoinst_crawford_array_a auto_a_0
-       (/*AUTOINST*/
-	// Outputs
-	.a_valid			(a_valid),
-	.a_data				(a_data[7:0]),
-	// Inputs
-	.a_ready			(a_ready),
-	.clk				(clk),
-	.rst_n				(rst_n));
-   
+     (/*AUTOINST*/
+      // Outputs
+      .a_valid				(a_valid),
+      .a_data				(a_data[7:0]),
+      // Inputs
+      .a_ready				(a_ready),
+      .clk				(clk),
+      .rst_n				(rst_n));
+
    autoinst_crawford_array_a auto_a_1
-       (/*AUTOINST*/
-	// Outputs
-	.a_valid			(a_valid),
-	.a_data				(a_data[7:0]),
-	// Inputs
-	.a_ready			(a_ready),
-	.clk				(clk),
-	.rst_n				(rst_n));
+     (/*AUTOINST*/
+      // Outputs
+      .a_valid				(a_valid),
+      .a_data				(a_data[7:0]),
+      // Inputs
+      .a_ready				(a_ready),
+      .clk				(clk),
+      .rst_n				(rst_n));
 
    // Arrayed instances
    // AUTOINST does not work for this one :-(
@@ -65,13 +65,13 @@ module autoinst_crawford_array(/*AUTOARG*/
       .rst_n				(rst_n));
 
    autoinst_crawford_array_a #(.a(a),b) par [`AUTO_NBR_A_INST-1:0]
-     (/*AUTOINST*/
-      // Outputs
-      .a_valid				(a_valid),
-      .a_data				(a_data[7:0]),
-      // Inputs
-      .a_ready				(a_ready),
-      .clk				(clk),
-      .rst_n				(rst_n));
+					  (/*AUTOINST*/
+					   // Outputs
+					   .a_valid		(a_valid),
+					   .a_data		(a_data[7:0]),
+					   // Inputs
+					   .a_ready		(a_ready),
+					   .clk			(clk),
+					   .rst_n		(rst_n));
 
 endmodule

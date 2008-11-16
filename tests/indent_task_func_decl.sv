@@ -87,3 +87,4 @@ class burst_drv extends vmm_xactor;
       this.rx_dma.start();
    endtask // static
 endclass : burst_drv
+

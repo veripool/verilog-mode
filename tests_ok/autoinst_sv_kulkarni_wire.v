@@ -2,7 +2,7 @@
 
 module a_h
   #(parameter M=5, N=3)
-    ();
+   ();
 
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
@@ -14,11 +14,11 @@ module a_h
        // Parameters
        .M				(M),
        .N				(N))
-       Ia
-	 (/*AUTOINST*/
-	  // Outputs
-	  .a_o1				(a_o1/*[N-1:0][M-1:0]*/),
-	  // Inputs
-	  .a_i1				(a_i1/*[N-1:0][M-1:0]*/)); // <---- BUG?
+   Ia
+     (/*AUTOINST*/
+      // Outputs
+      .a_o1				(a_o1/*[N-1:0][M-1:0]*/),
+      // Inputs
+      .a_i1				(a_i1/*[N-1:0][M-1:0]*/)); // <---- BUG?
 
 endmodule

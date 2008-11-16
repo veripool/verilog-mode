@@ -4,10 +4,10 @@ class C;
       f = 17;
    endfunction
    extern function int g();
-      virtual function int f();
+   virtual function int f();
       a;
-endfunction // int
-   
+   endfunction // int
+
    integer foo;
 endclass // C
    C a;

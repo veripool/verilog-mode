@@ -24,3 +24,4 @@ module top;
    memMod mem(sb_intf, clk); // Connect the interface to the module instance
    cpuMod cpu(.b(sb_intf), .clk(clk)); // Either by position or by name
 endmodule
+

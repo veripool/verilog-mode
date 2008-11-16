@@ -14,7 +14,7 @@ covergroup cg @(posedge clk);
       bins b2 = { [1:84] };
       bins b3 = { [85:169] };
       bins b4 = { [170:255] };
-   }   
+   }
    c: cross a , b, c {
       bins c1 = ! binsof(a) intersect {[100:200]}; // 4 cross products
       bins c2 = binsof(a.a2) || binsof(b.b2); // 7 cross products

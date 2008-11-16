@@ -6,12 +6,12 @@ interface simple_bus; // Define the interface
 endinterface: simple_bus
 module memMod(
 	      simple_bus a, // Access the simple_bus interface
-    input bit clk);
-   
-   logic  avail;
+	      input bit clk);
+
+   logic 		avail;
    // When memMod is instantiated in module top, a.req is the req
    // signal in the sb_intf instance of the simple_bus interface
-   always @(posedge clk) 
+   always @(posedge clk)
      a.gnt <= a.req & avail;
 endmodule
 module cpuMod(simple_bus b, input bit clk);
@@ -24,3 +24,4 @@ module top;
    memMod mem(sb_intf, clk); // Connect the interface to the module instance
    cpuMod cpu(.b(sb_intf), .clk(clk)); // Either by position or by name
 endmodule
+

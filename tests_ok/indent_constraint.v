@@ -1,5 +1,5 @@
 // my simple if else example, indented by verilog-mode
-if (x == 1) 
+if (x == 1)
   begin
      test1 <= 1;
      test2 <= 2;
@@ -16,7 +16,7 @@ class MyBus extends Bus;
    constraint addr_range
      {
       (atype == low ) -> addr inside { [0 : 15] };
-      (atype == mid ) -> addr inside { [16 : 127]};   
+      (atype == mid ) -> addr inside { [16 : 127]};
       (atype == high) -> addr inside {[128 : 255]};
    }
    //
@@ -28,7 +28,7 @@ class MyBus extends Bus;
    constraint addr_range
      {
       (atype == low ) -> addr inside { [0 : 15] };
-      (atype == mid ) -> addr inside { [16 : 127]};   
+      (atype == mid ) -> addr inside { [16 : 127]};
       (atype == high) -> addr inside {[128 : 255]};
    }
    //
@@ -40,7 +40,7 @@ class MyBus extends Bus;
    constraint addr_range
      {
       (atype 		      == low ) -> addr inside { [0 : 15] };
-      (atype 		      == mid ) -> addr inside { [16 : 127]};   
+      (atype 		      == mid ) -> addr inside { [16 : 127]};
       (atype 		      == high) -> addr inside {[128 : 255]};
    }
 endclass // MyBus
@@ -85,7 +85,7 @@ covergroup cg @(posedge clk  );
       bins b2 		      = { [1:84] };
       bins b3 		      = { [85:169] };
       bins b4 		      = { [170:255] };
-   }   
+   }
    c			     : cross a, b
      {
       bins c1 		      = ! binsof(a) intersect {[100:200]}; // 4 cross products
@@ -95,7 +95,7 @@ covergroup cg @(posedge clk  );
 endgroup
 
 module fool;
-   
+
    always @(posedge clk) begin
       if(!M_select)
         xferCount <	      = 8'd0;

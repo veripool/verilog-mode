@@ -14,14 +14,14 @@ module inject_inst_empty_ports;
 endmodule
 
 module register (
-    output logic [7:0] q, qb,
-    input  logic [7:0] d,
-    input  logic       clk, rst_n
+		 output logic [7:0] q, qb,
+		 input  logic [7:0] d,
+		 input  logic       clk, rst_n
 		 /*AUTOARG*/);
 
    always_ff @(posedge clk or negedge rst_n)
      if (!rst_n) q <= '0;
      else        q <= d;
 
-   assign  qb = ~q;
+   assign qb = ~q;
 endmodule
