@@ -6340,7 +6340,8 @@ Ignore width if optional NO-WIDTH is set."
     (skip-chars-backward "a-zA-Z0-9`_$")
     (looking-at "[a-zA-Z0-9`_\$]+")
     ;; Important: don't use match string, this must work with Emacs 19 font-lock on
-    (buffer-substring-no-properties (match-beginning 0) (match-end 0))))
+    (verilog-symbol-detick
+     (buffer-substring-no-properties (match-beginning 0) (match-end 0)) t)))
 
 (defun verilog-read-inst-param-value ()
   "Return list of parameters and values when point is inside instantiation."
