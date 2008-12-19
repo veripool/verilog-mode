@@ -141,7 +141,7 @@ sub read_lines {
     while (defined(my $line = $fh->getline)) {
 	$ln++;
 	$func = undef if ($line =~ /^\(/);
-	$func = $1 if $line =~ /^\(def[a-z]+\s+\'?(\S+)/;
+	$func = $1 if $line =~ /^\(def[---a-z]+\s+\'?(\S+)/;
 	$lines[$ln] = $func;
 	printf "%05d %-30s %s", $ln, $func||"", $line if $Debug;
     }

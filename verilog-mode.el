@@ -6024,7 +6024,8 @@ Bound search by LIMIT.  Adapted from
 ;; Added by Subbu Meiyappan for Header
 
 (defun verilog-header ()
-  "Insert a standard Verilog file header."
+  "Insert a standard Verilog file header.
+See also `verilog-sk-header' for an alternative format."
   (interactive)
   (let ((start (point)))
   (insert "\
@@ -6089,26 +6090,14 @@ Bound search by LIMIT.  Adapted from
 (defun verilog-insert-date ()
   "Insert date from the system."
   (interactive)
-  (let ((timpos))
-    (setq timpos (point))
-    (if verilog-date-scientific-format
-	(shell-command  "date \"+@%Y/%m/%d\"" t)
-      (shell-command  "date \"+@%d.%m.%Y\"" t))
-    (search-forward "@")
-    (delete-region timpos (point))
-    (end-of-line))
-    (delete-char 1))
+  (if verilog-date-scientific-format
+      (insert (format-time-string "%Y/%m/%d"))
+    (insert (format-time-string "%d.%m.%Y"))))
 
 (defun verilog-insert-year ()
   "Insert year from the system."
   (interactive)
-  (let ((timpos))
-    (setq timpos (point))
-    (shell-command  "date \"+@%Y\"" t)
-    (search-forward "@")
-    (delete-region timpos (point))
-    (end-of-line))
-  (delete-char 1))
+  (insert (format-time-string "%Y")))
 
 
 ;;
@@ -10340,7 +10329,8 @@ Wilson Snyder (wsnyder@wsnyder.org), and/or see http://www.veripool.org."
     (if (> (point) verilog-sk-p) "] " " ")))
 
 (defun verilog-sk-header ()
-  "Insert a descriptive header at the top of the file."
+  "Insert a descriptive header at the top of the file.
+See also `verilog-header' for an alternative format."
   (interactive "*")
   (save-excursion
     (goto-char (point-min))
@@ -10354,8 +10344,8 @@ Wilson Snyder (wsnyder@wsnyder.org), and/or see http://www.veripool.org."
   "\n// Description     : " str
   "\n// Author          : " (user-full-name)
   "\n// Created On      : " (current-time-string)
-  "\n// Last Modified By: ."
-  "\n// Last Modified On: ."
+  "\n// Last Modified By: " (user-full-name)
+  "\n// Last Modified On: " (current-time-string)
   "\n// Update Count    : 0"
   "\n// Status          : Unknown, Use with caution!"
   "\n")
