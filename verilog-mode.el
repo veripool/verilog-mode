@@ -5,7 +5,7 @@
 
 ;; Author: Michael McNamara (mac@verilog.com)
 ;;  http://www.verilog.com
-;;
+;;  
 ;; AUTO features, signal, modsig; by: Wilson Snyder
 ;;	(wsnyder@wsnyder.org)
 ;;	http://www.veripool.org
