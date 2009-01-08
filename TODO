@@ -1,7 +1,6 @@
 # $Id$
 # DESCRIPTION: To-do list for verilog-mode
 ######################################################################
-
  
 Occasionally:
     * M-x checkdoc
