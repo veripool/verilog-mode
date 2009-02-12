@@ -6853,6 +6853,8 @@ IGNORE-NEXT is true to ignore next token, fake from inside case statement."
 		   (setq ignore-next nil rvalue nil))
 		  ((equal "?" exit-keywd)  ;; x?y:z rvalue
 		   ) ;; NOP
+		  ((equal "]" exit-keywd)  ;; [x:y] rvalue
+		   ) ;; NOP
 		  (got-sig	;; label: statement
 		   (setq ignore-next nil rvalue semi-rvalue got-sig nil))
 		  ((not rvalue)	;; begin label

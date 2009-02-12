@@ -12,7 +12,6 @@ module bar;
 
    always @(a) begin // 
       b <= #10 ~  a;
-      
       a;
    end
 endmodule // foo
