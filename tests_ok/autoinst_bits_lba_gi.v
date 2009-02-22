@@ -1,19 +1,19 @@
 module autoinst_bits_lba_gi
-
+  
   // ==xxxxxxx==
-
+  
   // xxxxxxxxx 1997-1998, xxxxx xxx.
   // xxx xxxxxx xxxxxxxx
-
+  
   // ****************************************************************** /
   // ****************************************************************** /
   // xxxxx, xxxxxxxxxxxx
-  // xxxxxxx:		xxx-4080
-  // xxxxxx:  		xxx xxxxxxx
-  // xxxxx:		xxxxxxx 16, 1998
+  // xxxxxxx:           xxx-4080
+  // xxxxxx:            xxx xxxxxxx
+  // xxxxx:             xxxxxxx 16, 1998
   // ******************************************************************* /
   // ******************************************************************* /
-  // xxxx xxxx:		xxx_xx.x
+  // xxxx xxxx:         xxx_xx.x
   // xxxxxxxx xxxxxxx:
   // $xxx: xxx_xx.x,x $
   // xxxxxxxx 1.3  1998/03/06 00:27:00  xxx
@@ -45,7 +45,7 @@ module autoinst_bits_lba_gi
   //       (if so indicated by lbsm.v) the bidir Fooileo Cmd bus.
   //
   //
-
+  
   (
    CLK,
    WWADoe,
@@ -58,49 +58,49 @@ module autoinst_bits_lba_gi
    WWADB,
    WWCmdB
    );
-
+   
    /////////////////////////////////////////////////////////////////////
-	 // inputs
-
-   input		CLK;		// LBA clk
-
+  // inputs
+   
+   input         CLK; // LBA clk
+   
    // inputs from lbsm.v
-   input		WWADoe;		// FooBus Addr/Data OE
-   input		WWCoe;		// FooBus Cmd OE
-   input [8:0] 		WWCmdIfOE;	// FooBus Cmd if enabled
-   input		WWADHold;	// FooBus Addr hold
-
+   input         WWADoe; // FooBus Addr/Data OE
+   input         WWCoe; // FooBus Cmd OE
+   input [8:0]   WWCmdIfOE; // FooBus Cmd if enabled
+   input         WWADHold; // FooBus Addr hold
+   
    // inputs from li.v
-   input [31:0] 	iWWADO;		// FooBus Address/Data out next cycle
-
-
+   input [31:0]  iWWADO; // FooBus Address/Data out next cycle
+   
+   
    /////////////////////////////////////////////////////////////////////
    // outputs
-
+   
    // outputs to lbsm.v
-   output [8:0] 	WWCmdI;		// FooBus Command in
-
+   output [8:0]  WWCmdI; // FooBus Command in
+   
    // outputs to li.v
-   output [31:0] 	WWADI;		// FooBus Address/Data in
-
-
+   output [31:0] WWADI; // FooBus Address/Data in
+   
+   
    /////////////////////////////////////////////////////////////////////
    // bidirs
-
+   
    // bidirs to/from off-chip
-   inout [31:0] 	WWADB;		// bidir FooBus addr/data
-   inout [8:0] 		WWCmdB;		// bidir FooBus command
-
+   inout [31:0]  WWADB; // bidir FooBus addr/data
+   inout [8:0]   WWCmdB; // bidir FooBus command
+   
    /////////////////////////////////////////////////////////////////////
    // reg's for outputs (some flops, some not)
-
+   
    /////////////////////////////////////////////////////////////////////
    // other flops
-
-   reg [31:0] 		WWADIfOE;	// FooBus Addr/Data Out if enabled
-
-
-
+   
+   reg [31:0]    WWADIfOE;      // FooBus Addr/Data Out if enabled
+   
+   
+   
 endmodule
 
 

@@ -5,13 +5,13 @@ module testcase
    // Inputs
    A, B, C, D, SEL
    );
-
+   
    input       A, B, C, D;
    input [1:0] SEL;
    output      Z;
-
+   
 `include autosense_dittrich_inc.v
-
+   
    always @(/*AS*/A or B or C or D or SEL) begin
       case (SEL)
         sel_a: Z = A;
@@ -21,7 +21,7 @@ module testcase
         default: Z = D;
       endcase // case(SEL)
    end // always @ (...
-
+   
 endmodule // testcase
 
 // Local Variables:

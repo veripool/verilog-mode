@@ -1,9 +1,9 @@
 module local_vmode ();
-
+   
    local_vmode_sub sub (/*AUTOINST*/
-			// Inputs
-			.in		(in));
-
+                        // Inputs
+                        .in             (in));
+   
 endmodule
 
 // Local Variables:

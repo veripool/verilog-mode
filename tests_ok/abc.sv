@@ -14,7 +14,7 @@ covergroup CB;
    ab: cross a,b {
       bins a0b0 = binsof(a.a0) && binsof(b.b0);
       bins a1b0 = binsof(a.a1) && binsof(b.b0);
-      bins b0   = binsof(b.b0);
+      bins b0 = binsof(b.b0);
    }
 endgroup // CB
 

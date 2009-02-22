@@ -10,12 +10,12 @@ module autoinst_sv_kulkarni_base
     output logic [N-1:0][M-1:0] a_o1,
     input [N-1:0][M-1:0] a_i1
     );
-
+   
    // -----------------------------------------------------------------------------
    // Main Code
    always_comb begin
       for (int i=0; i<N; i++)
-        a_o1[i] = ^(a_i1[i]);
+        a_o1[i]  = ^(a_i1[i]);
    end
-
+   
 endmodule

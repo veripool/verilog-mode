@@ -8,10 +8,10 @@ module foo();
    bar bar
      (/*AUTOINST*/
       // Inputs
-      .PME_o				(pMe),			 // Templated
-      .pme_o				(pme),			 // Templated
-      .pmE_o				(pmE_o));
-
+      .PME_o                            (pMe),                   // Templated
+      .pme_o                            (pme),                   // Templated
+      .pmE_o                            (pmE_o));
+   
 endmodule
 
 module bar
@@ -19,9 +19,9 @@ module bar
    // Inputs
    PME_o, pme_o, pmE_o
    );
-
+   
    input PME_o;
    input pme_o;
    input pmE_o;
-
+   
 endmodule

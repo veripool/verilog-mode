@@ -2,28 +2,28 @@
 `define COM_CLDATWID   2
 
 module autosense_jbrown(/*AUTOARG*/
-   // Outputs
-   lch_gswdata,
-   // Inputs
-   com_cldata
-   );
-
-   output [`LCH_GSWDATWID-1:0]    lch_gswdata;    // data to switch
-   input [`COM_CLDATWID-1:0] 	  com_cldata;     // data bus to clusters
-
+                        // Outputs
+                        lch_gswdata,
+                        // Inputs
+                        com_cldata
+                        );
+   
+   output [`LCH_GSWDATWID-1:0] lch_gswdata; // data to switch
+   input [`COM_CLDATWID-1:0]   com_cldata; // data bus to clusters
+   
    /*autowire*/
-
-   reg 				  tmp;
+   
+   reg                         tmp;
 `define TEST_DEFINE   1'b0
    always @ (/*AUTOSENSE*/)
      begin
         /* AUTO_CONSTANT (`TEST_DEFINE) */
         tmp <= `TEST_DEFINE;  // test defines
      end
-
+   
    // Local Variables:
    // verilog-library-directories:("." "../cdp/")
    // verilog-library-extensions:(".v" ".vh")
    // End:
-
+   
 endmodule

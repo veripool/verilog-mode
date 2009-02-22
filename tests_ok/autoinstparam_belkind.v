@@ -1,20 +1,20 @@
 module autoinstparam_belkind (/*AUTOARG*/) ;
-
-   parameter X = 8;
+   
+   parameter X  = 8;
    /*
     autoinstparam_belkind_leaf AUTO_TEMPLATE (
     .P (X),
     .a (b[]),
     );
     */
-
+   
    autoinstparam_belkind_leaf (/*AUTOINSTPARAM*/
-			       // Parameters
-			       .P		(X))		 // Templated
+                               // Parameters
+                               .P               (X))             // Templated
      leaf(/*AUTOINST*/
-	  // Inputs
-	  .a				(b[X-1:0]));		 // Templated
-
+          // Inputs
+          .a                            (b[P-1:0]));             // Templated
+   
 endmodule // tree
 
 // Local Variables:

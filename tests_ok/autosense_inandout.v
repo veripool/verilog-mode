@@ -1,14 +1,14 @@
 module autosense_inandout(a,b);
-
-   input a;
+   
+   input  a;
    output b;
-   reg 	  b;
-   reg 	  c;
-
+   reg    b;
+   reg    c;
+   
    always @(/*AUTOSENSE*/a) begin
-      c=a;
-      b=c;
+      c  =a;
+      b  =c;
    end
-
+   
 endmodule
 

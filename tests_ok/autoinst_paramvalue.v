@@ -8,36 +8,36 @@ module  testmuxpv();
 endmodule
 
 module  top_test();
-
+   
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire [WIDTH-1:0]	out;			// From testmuxpv_boo of testmuxpv.v, ...
+   wire [WIDTH-1:0] out;                        // From testmuxpv_boo of testmuxpv.v, ...
    // End of automatics
-
+   
    testmuxpv #(.IGNORE((1)),
-	       .WIDTH(  16  ),
-	       .IGNORE2(2))
+               .WIDTH(  16  ),
+               .IGNORE2(2))
    testmuxpv_boo
      (/*AUTOINST*/
       // Outputs
-      .out				(out[15:0]),
+      .out                              (out[15:0]),
       // Inputs
-      .sel				(sel[2:0]),
-      .a				(a[15:0]));
-
+      .sel                              (sel[2:0]),
+      .a                                (a[15:0]));
+   
    //======================================================================
-
+   
    testmuxpv #(.IGNORE((1)),
-	       .WIDTH(WIDTH),   // Make sure we don't recurse!
-	       .IGNORE2(2))
+               .WIDTH(WIDTH),   // Make sure we don't recurse!
+               .IGNORE2(2))
    testmuxpv_boo
      (/*AUTOINST*/
       // Outputs
-      .out				(out[WIDTH-1:0]),
+      .out                              (out[WIDTH-1:0]),
       // Inputs
-      .sel				(sel[2:0]),
-      .a				(a[WIDTH-1:0]));
-
+      .sel                              (sel[2:0]),
+      .a                                (a[WIDTH-1:0]));
+   
 endmodule
 
 // Local Variables:

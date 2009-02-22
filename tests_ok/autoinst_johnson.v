@@ -1,7 +1,7 @@
 module bfm (/*AUTOARG*/
-   // Inputs
-   name
-   );
+            // Inputs
+            name
+            );
    input [8*5:1] name ;
 endmodule
 
@@ -21,15 +21,15 @@ module tb;
     */
    // -------------------------------------------------------------------------
    bfm bmf0 (/*AUTOINST*/
-	     // Inputs
-	     .name			("name0"));		 // Templated
+             // Inputs
+             .name                      ("name0"));              // Templated
    // -------------------------------------------------------------------------
    bfm bmf1 (/*AUTOINST*/
-	     // Inputs
-	     .name			("name1"));		 // Templated
+             // Inputs
+             .name                      ("name1"));              // Templated
    // -------------------------------------------------------------------------
    bfm bmf2 (/*AUTOINST*/
-	     // Inputs
-	     .name			("name2"));		 // Templated
+             // Inputs
+             .name                      ("name2"));              // Templated
    // -------------------------------------------------------------------------
 endmodule

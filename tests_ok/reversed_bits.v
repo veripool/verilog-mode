@@ -5,12 +5,12 @@ module lbnsub
    // Inputs
    income
    );
-
-   input	[7:4]	income;
-   output [7:4] 	outgo;
-
-   wire [7:4] 		outgo = income;
-
+   
+   input [7:4]  income;
+   output [7:4] outgo;
+   
+   wire [7:4]   outgo = income;
+   
 endmodule
 
 module lbm
@@ -20,20 +20,20 @@ module lbm
    // Inputs
    income
    );
-
-   input	[7:4]	income;
-   output [7:4] 	outgo;
-
+   
+   input [7:4]  income;
+   output [7:4] outgo;
+   
    /*
     lbnsub AUTO_TEMPLATE (
     // Inputs
-    .income	(income[4:7]));
+    .income     (income[4:7]));
     */
-
-   lbnsub lbnsub	(/*AUTOINST*/
-			 // Outputs
-			 .outgo			(outgo[7:4]),
-			 // Inputs
-			 .income		(income[4:7]));	 // Templated
+   
+   lbnsub lbnsub        (/*AUTOINST*/
+                         // Outputs
+                         .outgo                 (outgo[7:4]),
+                         // Inputs
+                         .income                (income[4:7]));  // Templated
 endmodule
 

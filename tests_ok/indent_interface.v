@@ -1,14 +1,14 @@
 interface simple_bus; // Define the interface
-   logic req, gnt;
+   logic       req, gnt;
    logic [7:0] addr, data;
    logic [1:0] mode;
    logic       start, rdy;
 endinterface: simple_bus
 module memMod(
-	      simple_bus a, // Access the simple_bus interface
-	      input bit clk);
-
-   logic 		avail;
+              simple_bus a, // Access the simple_bus interface
+              input bit clk);
+   
+   logic avail;
    // When memMod is instantiated in module top, a.req is the req
    // signal in the sb_intf instance of the simple_bus interface
    always @(posedge clk)

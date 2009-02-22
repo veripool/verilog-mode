@@ -13,9 +13,9 @@ module foo;
  `endif
    input cmode;
 `endif
-
+   
    // instead of:
-
+   
 `ifdef LABEL_A
    CHIP CPU (
              .clkin(clkin),
@@ -30,5 +30,5 @@ module foo;
  `endif
    input cmode;
 `endif
-
+   
 endmodule // foo

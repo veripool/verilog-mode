@@ -1,16 +1,16 @@
 module foo;
    initial
      begin
-	s1;
+        s1;
      end
-
+   
    always @(a)
      begin
-	s1;
+        s1;
      end // always @ (a)
    always
      begin
-	s1;
+        s1;
      end // always begin
    always_ff
      begin
@@ -18,5 +18,5 @@ module foo;
    task
      t;
    endtask // t
-
+   
 endmodule // foo
