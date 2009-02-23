@@ -1998,6 +1998,7 @@ find the errors."
 (defconst verilog-extended-complete-re
   (concat "\\(\\<extern\\s-+\\|\\<virtual\\s-+\\|\\<protected\\s-+\\)*\\(\\<function\\>\\|\\<task\\>\\)"
 	  "\\|\\(\\<typedef\\>\\s-+\\)*\\(\\<struct\\>\\|\\<union\\>\\|\\<class\\>\\)"
+	  "\\|\\(\\<import\\>\\s-+\\)?\"DPI-C\"\\s-+\\(function\\>\\|task\\>\\)"
 	  "\\|" verilog-extended-case-re ))
 (defconst verilog-basic-complete-re
   (eval-when-compile
