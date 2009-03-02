@@ -6559,37 +6559,28 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 		((equal keywd "parameter")
 		 (setq vec nil  enum nil  rvalue nil  signed nil  typedefed nil  multidim nil  sig-paren paren
 		       expect-signal 'sigs-gparam  io t))
-		((or (equal keywd "wire")
-		     (equal keywd "tri")
-		     (equal keywd "tri0")
-		     (equal keywd "tri1"))
+		((member keywd '("wire" "tri" "tri0" "tri1" "triand" "trior" "wand" "wor"))
 		 (unless io (setq vec nil  enum nil  rvalue nil  signed nil  typedefed nil  multidim nil  sig-paren paren
 				  expect-signal 'sigs-wire)))
-		((member keywd (list "reg" "trireg"
-				     "byte" "shortint" "int" "longint" "integer" "time"
-				     "bit" "logic"))
+		((member keywd '("reg" "trireg"
+				 "byte" "shortint" "int" "longint" "integer" "time"
+				 "bit" "logic"))
 		 (unless io (setq vec nil  enum nil  rvalue nil  signed nil  typedefed nil  multidim nil  sig-paren paren
 				  expect-signal 'sigs-reg)))
 		((equal keywd "assign")
 		 (setq vec nil  enum nil  rvalue nil  signed nil  typedefed nil  multidim nil  sig-paren paren
 		       expect-signal 'sigs-assign))
-		((or (equal keywd "supply0")
-		     (equal keywd "supply1")
-		     (equal keywd "supply")
-		     (equal keywd "localparam")
-		     (equal keywd "genvar"))
+		((member keywd '("supply0" "supply1" "supply"
+				 "localparam" "genvar"))
 		 (unless io (setq vec nil  enum nil  rvalue nil  signed nil  typedefed nil  multidim nil  sig-paren paren
 				  expect-signal 'sigs-const)))
 		((equal keywd "signed")
 		 (setq signed "signed"))
-		((or (equal keywd "function")
-		     (equal keywd "task"))
+		((member keywd '("function" "task"))
 		 (setq functask (1+ functask)))
-		((or (equal keywd "endfunction")
-		     (equal keywd "endtask"))
+		((member keywd '("endfunction" "endtask"))
 		 (setq functask (1- functask)))
-		((or (equal keywd "`ifdef")
-		     (equal keywd "`ifndef"))
+		((member keywd '("`ifdef" "`ifndef"))
 		 (setq rvalue t))
 		((verilog-typedef-name-p keywd)
 		 (setq typedefed keywd))
