@@ -6942,7 +6942,8 @@ IGNORE-NEXT is true to ignore next token, fake from inside case statement."
 		   (setq ignore-next t rvalue nil)))
 	    (forward-char 1))
 	   ((equal keywd "=")
-	    (if (eq (char-before) ?< )
+	    (if (and (eq (char-before) ?< )
+		     (not rvalue))
 		(setq uses-delayed 1))
 	    (setq ignore-next nil rvalue t)
 	    (forward-char 1))
@@ -9770,7 +9771,8 @@ registers set elsewhere in the always block.
 Limitations:
   AUTORESET will not clear memories.
 
-  AUTORESET uses <= if there are any <= in the block, else it uses =.
+  AUTORESET uses <= if there are any <= assigmnents in the block,
+  else it uses =.
 
 /*AUTORESET*/ presumes that any signals mentioned between the previous
 begin/case/if statement and the AUTORESET comment are being reset manually
