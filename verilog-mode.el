@@ -6655,7 +6655,7 @@ Return a array of [outputs inouts inputs wire reg assign const]."
     (when sig
       (setq port (verilog-symbol-detick-denumber port))
       (setq sig  (verilog-symbol-detick-denumber sig))
-      (if sig (setq sig  (verilog-string-replace-matches "^[---+~!|&]+" "" nil nil sig)))
+      (if sig (setq sig  (verilog-string-replace-matches "^\\s-*[---+~!|&]+\\s-*" "" nil nil sig)))
       (if vec (setq vec  (verilog-symbol-detick-denumber vec)))
       (if multidim (setq multidim  (mapcar `verilog-symbol-detick-denumber multidim)))
       (unless (or (not sig)
@@ -6681,10 +6681,48 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 	      ;; (t  -- warning pin isn't defined.)   ; Leave for lint tool
 	      )))))
 
+(defun verilog-read-sub-decls-expr (submoddecls comment port expr)
+  "For `verilog-read-sub-decls-line', parse a subexpression and add signals."
+  ;;(message "vrsde: '%s'" expr)
+  ;; Replace special /*[....]*/ comments inserted by verilog-auto-inst-port
+  (setq expr (verilog-string-replace-matches "/\\*\\(\\[[^*]+\\]\\)\\*/" "\\1" nil nil expr))
+  ;; Remove front operators
+  (setq expr (verilog-string-replace-matches "^\\s-*[---+~!|&]+\\s-*" "" nil nil expr))
+  ;;
+  (cond
+   ;; {..., a, b} requires us to recurse on a,b
+   ((string-match "^\\s-*{\\([^{}]*\\)}\\s-*$" expr)
+    (let ((mlst (split-string (match-string 1 expr) ","))
+	  mstr)
+      (while (setq mstr (pop mlst))
+	(verilog-read-sub-decls-expr submoddecls comment port mstr))))
+   (t
+    (let (sig vec multidim)
+      (cond ;; Find \signal. Final space is part of escaped signal name
+       ((string-match "^\\s-*\\(\\\\[^ \t\n\f]+\\s-\\)" expr)
+	;;(message "vrsde-s: '%s'" (match-string 1 expr))
+	(setq sig (match-string 1 expr)
+	      expr (substring expr (match-end 0))))
+       ;; Find signal
+       ((string-match "^\\s-*\\([^[({).\\]+\\)" expr)
+	;;(message "vrsde-s: '%s'" (match-string 1 expr))
+	(setq sig (verilog-string-remove-spaces (match-string 1 expr))
+	      expr (substring expr (match-end 0)))))
+      ;; Find [vector] or [multi][multi][multi][vector]
+      (while (string-match "^\\s-*\\(\\[[^]]+\\]\\)" expr)
+	;;(message "vrsde-v: '%s'" (match-string 1 expr))
+	(when vec (setq multidim (cons vec multidim)))
+	(setq vec (match-string 1 expr)
+	      expr (substring expr (match-end 0))))
+      ;; If found signal, and nothing unrecognized, add the signal
+      ;;(message "vrsde-rem: '%s'" expr)
+      (when (and sig (string-match "^\\s-*$" expr))
+	(verilog-read-sub-decls-sig submoddecls comment port sig vec multidim))))))
+
 (defun verilog-read-sub-decls-line (submoddecls comment)
   "For `verilog-read-sub-decls', read lines of port defs until none match anymore.
 Return the list of signals found, using submodi to look up each port."
-  (let (done port sig vec multidim)
+  (let (done port)
     (save-excursion
       (forward-line 1)
       (while (not done)
@@ -6700,52 +6738,27 @@ Return the list of signals found, using submodi to look up each port."
 	       (goto-char (match-end 0)))
 	      (t
 	       (setq port nil  done t))) ;; Unknown, ignore rest of line
-	;; Get signal name
+	;; Get signal name.  Point is at the first-non-space after (
+	;; We intentionally ignore (non-escaped) signals with .s in them
+	;; this prevents AUTOWIRE etc from noticing hierarchical sigs.
 	(when port
-	  (setq multidim nil)
-	  (cond ((looking-at "\\(\\\\[^ \t\n\f]*\\)\\s-*)")
-		 (setq sig (concat (match-string 1) " ") ;; escaped id's need trailing space
-		       vec nil))
-		; We intentionally ignore (non-escaped) signals with .s in them
-		; this prevents AUTOWIRE etc from noticing hierarchical sigs.
-		((looking-at "\\([^[({).]*\\)\\s-*)")
-		 (setq sig (verilog-string-remove-spaces (match-string 1))
-		       vec nil))
-		((looking-at "\\([^[({).]*\\)\\s-*\\(\\[[^]]+\\]\\)\\s-*)")
-		 (setq sig (verilog-string-remove-spaces (match-string 1))
-		       vec (match-string 2)))
-		((looking-at "\\([^[({).]*\\)\\s-*/\\*\\(\\[[^*]+\\]\\)\\*/\\s-*)")
-		 (setq sig (verilog-string-remove-spaces (match-string 1))
-		       vec nil)
-		 (let ((parse (match-string 2)))
-		   (while (string-match "^\\(\\[[^]]+\\]\\)\\(.*\\)$" parse)
-		     (when vec (setq multidim (cons vec multidim)))
-		     (setq vec (match-string 1 parse))
-		     (setq parse (match-string 2 parse)))))
-		((looking-at "{\\(.*\\)}.*\\s-*)")
-		 (let ((mlst (split-string (match-string 1) ","))
-		       mstr)
-		   (while (setq mstr (pop mlst))
-		     ;;(unless noninteractive (message "sig: %s " mstr))
-		     (cond
-		      ((string-match "\\(['`a-zA-Z0-9_$]+\\)\\s-*$" mstr)
-		       (setq sig (verilog-string-remove-spaces (match-string 1 mstr))
-			     vec nil)
-		       ;;(unless noninteractive (message "concat sig1: %s %s" mstr (match-string 1 mstr)))
-		       )
-		      ((string-match "\\([^[({).]+\\)\\s-*\\(\\[[^]]+\\]\\)\\s-*" mstr)
-		       (setq sig (verilog-string-remove-spaces (match-string 1 mstr))
-			     vec (match-string 2 mstr))
-		       ;;(unless noninteractive (message "concat sig2: '%s' '%s' '%s'" mstr (match-string 1 mstr) (match-string 2 mstr)))
-		       )
-		      (t
-		       (setq sig nil)))
-		     ;; Process signals
-		     (verilog-read-sub-decls-sig submoddecls comment port sig vec multidim))))
-		(t
-		 (setq sig nil)))
-	  ;; Process signals
-	  (verilog-read-sub-decls-sig submoddecls comment port sig vec multidim))
+	  (cond ((looking-at "\\([^[({).\\]*\\)\\s-*)")
+		 (verilog-read-sub-decls-sig
+		  submoddecls comment port
+		  (verilog-string-remove-spaces (match-string 1)) ; sig
+		  nil nil)) ; vec multidim 
+		;;
+		((looking-at "\\([^[({).\\]*\\)\\s-*\\(\\[[^]]+\\]\\)\\s-*)")
+		 (verilog-read-sub-decls-sig
+		  submoddecls comment port
+		  (verilog-string-remove-spaces (match-string 1)) ; sig
+		  (match-string 2) nil)) ; vec multidim 
+		;; Fastpath was above looking-at's.
+		;; For something more complicated invoke a parser
+		((looking-at "\\([^)]+\\)\\s-*)")
+		 (verilog-read-sub-decls-expr
+		  submoddecls comment port
+		  (match-string 1))))) ; expr
 	;;
 	(forward-line 1)))))
 
@@ -7539,7 +7552,7 @@ If the variable vh-{symbol} is defined, substitute that value."
   (let ((ok t) symbol val)
     (while (and ok (string-match "`\\([a-zA-Z0-9_]+\\)" text))
       (setq symbol (match-string 1 text))
-      (message symbol)
+      ;;(message symbol)
       (cond ((and
 	      (boundp (intern (concat "vh-" symbol)))
 	      ;; Emacs has a bug where boundp on a buffer-local

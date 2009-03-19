@@ -53,9 +53,9 @@
 (defun diff-file (file)
   (message (concat file ": running diff of " file " and tests_ok/" file ))
   (with-temp-buffer
-    (let* ((ws (if (getenv "VERILOG_MODE_TEST_NO_INDENTS") "-wB" ""))
+    (let* ((flags (if (getenv "VERILOG_MODE_TEST_NO_INDENTS") "-wBc" "-c"))
 	   (status
-            (call-process "diff" nil t t "-c" ws "--label" "GOLDEN_REFERENCE" (concat "tests_ok/" file) "--label" "CURRENT_BEHAVIOR" temp-file )))
+            (call-process "diff" nil t t flags "--label" "GOLDEN_REFERENCE" (concat "tests_ok/" file) "--label" "CURRENT_BEHAVIOR" temp-file )))
       (cond ((not (equal status 0))
              (message (concat "diff -c tests_ok/" file " " temp-file))
              (message "***Golden Reference File\n---Generated Test File")
