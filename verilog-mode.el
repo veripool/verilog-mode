@@ -5,7 +5,7 @@
 
 ;; Author: Michael McNamara (mac@verilog.com)
 ;;  http://www.verilog.com
-;;  
+;;
 ;; AUTO features, signal, modsig; by: Wilson Snyder
 ;;	(wsnyder@wsnyder.org)
 ;;	http://www.veripool.org
@@ -1158,6 +1158,8 @@ If set will become buffer local.")
        :help		"Help on AUTOINOUTCOMP - copying complemented i/o from another file"]
       ["AUTOINOUTMODULE"		(describe-function 'verilog-auto-inout-module)
        :help		"Help on AUTOINOUTMODULE - copying i/o from another file"]
+      ["AUTOINSERTLISP"			(describe-function 'verilog-auto-insert-lisp)
+       :help		"Help on AUTOINSERTLISP - insert text from a lisp function"]
       ["AUTOINOUT"			(describe-function 'verilog-auto-inout)
        :help		"Help on AUTOINOUT - adding inouts from cells"]
       ["AUTOINPUT"			(describe-function 'verilog-auto-input)
@@ -8188,10 +8190,11 @@ called before and after this function, respectively."
 	       (verilog-regexp-words
 		`("AUTOASCIIENUM" "AUTOCONCATCOMMENT" "AUTODEFINEVALUE"
 		  "AUTOINOUT" "AUTOINOUTCOMP" "AUTOINOUTMODULE"
-		  "AUTOINPUT" "AUTOOUTPUT" "AUTOOUTPUTEVERY"
+		  "AUTOINPUT" "AUTOINSERTLISP" "AUTOOUTPUT" "AUTOOUTPUTEVERY"
 		  "AUTOREG" "AUTOREGINPUT" "AUTORESET" "AUTOTIEOFF"
 		  "AUTOUNUSED" "AUTOWIRE")))
-	     "\\(\\|([^)]*)\\|(\"[^\"]*\")\\)" ; Optional parens or quoted parameter
+	     ;; Optional parens or quoted parameter or .* for (((...)))
+	     "\\(\\|([^)]*)\\|(\"[^\"]*\")\\|.*?\\)"
 	     "\\*/")
      'verilog-delete-autos-lined)
     ;; Remove those that are in parenthesis
@@ -8853,6 +8856,8 @@ Lisp Templates:
   will evaluate any Lisp expression inside the parenthesis between the
   beginning of the buffer and the point of the AUTOINST.  This allows
   functions to be defined or variables to be changed between instantiations.
+  (See also `verilog-auto-insert-lisp' if you want the output from your
+  lisp function to be inserted.)
 
   Note that when using lisp expressions errors may occur when @ is not a
   number; you may need to use the standard Emacs Lisp functions
@@ -9666,6 +9671,69 @@ same expansion will result from only extracting signals starting with i:
 	   /*AUTOINOUTCOMP(\"ExampMain\",\"^i\")*/"
   (verilog-auto-inout-module t))
 
+(defun verilog-auto-insert-lisp ()
+  "Expand AUTOINSERTLISP statements, as part of \\[verilog-auto].
+The lisp code provided is called, and the lisp code calls
+`insert` to insert text into the current file beginning on the
+line after the AUTOINSERTLISP.
+
+See also AUTO_LISP, which takes a lisp expression and evaluates
+it during `verilog-auto-inst' but does not insert any text.
+
+An example:
+
+	module ExampInsertLisp;
+	   /*AUTOINSERTLISP(my-verilog-insert-hello \"world\")*/
+	endmodule
+
+	// For this example we declare the function in the
+	// module's file itself.  Often you'd define it instead
+	// in a site-start.el or .emacs file.
+	/*
+	 Local Variables:
+	 eval:
+	   (defun my-verilog-insert-hello (who)
+	     (insert (concat \"initial $write(\\\"hello \" who \"\\\");\\n\")))
+	 End:
+	*/
+
+Typing \\[verilog-auto] will call my-verilog-insert-hello and
+expand the above into:
+
+	// Beginning of automatic insert lisp
+	initial $write(\"hello world\");
+	// End of automatics
+
+You can also call an external program and insert the returned
+text:
+
+	/*AUTOINSERTLISP(insert (shell-command-to-string \"echo //hello\"))*/
+	// Beginning of automatic insert lisp
+	//hello
+	// End of automatics"
+  (save-excursion
+    ;; Point is at end of /*AUTO...*/
+    (let* ((indent-pt (current-indentation))
+	   (cmd-end-pt (save-excursion (search-backward ")")
+				       (forward-char)
+				       (point)))	;; Closing paren
+	   (cmd-beg-pt (save-excursion (goto-char cmd-end-pt)
+				       (backward-sexp 1)
+				       (point))) ;; Beginning paren
+	   (cmd (buffer-substring-no-properties cmd-beg-pt cmd-end-pt)))
+      (forward-line 1)
+      (let ((pre-eval-pt (point)))
+	;;Debug: (insert cmd)
+	;; Don't use eval-region as Xemacs has a bug where it goto-char's begin-pt
+	(eval (read cmd))
+	;; If inserted something add the begin/end blocks
+	(when (not (equal pre-eval-pt (point)))
+	  (when (not (bolp)) (insert "\n"))  ;; If user forgot final newline, add it
+	  (save-excursion
+	    (goto-char pre-eval-pt)
+	    (verilog-insert-indent "// Beginning of automatic insert lisp\n"))
+	  (verilog-insert-indent "// End of automatics\n"))))))
+      
 (defun verilog-auto-sense-sigs (moddecls presense-sigs)
   "Return list of signals for current AUTOSENSE block."
   (let* ((sigss (verilog-read-always-signals))
@@ -10223,6 +10291,7 @@ Using \\[describe-function], see also:
     `verilog-auto-inout-module' for AUTOINOUTMODULE copying i/o from elsewhere
     `verilog-auto-inout'        for AUTOINOUT making hierarchy inouts
     `verilog-auto-input'        for AUTOINPUT making hierarchy inputs
+    `verilog-auto-insert-lisp'  for AUTOINSERTLISP insert code from lisp function
     `verilog-auto-inst'         for AUTOINST instantiation pins
     `verilog-auto-star'         for AUTOINST .* SystemVerilog pins
     `verilog-auto-inst-param'   for AUTOINSTPARAM instantiation params
@@ -10283,6 +10352,11 @@ Wilson Snyder (wsnyder@wsnyder.org), and/or see http://www.veripool.org."
 	      (verilog-inject-sense)
 	      (verilog-inject-arg))
 	    ;;
+	    ;; Do user inserts first, so their code can insert AUTOs
+	    ;; We may provide a AUTOINSERTLISPLAST if another cleanup pass is needed
+	    (verilog-auto-re-search-do "/\\*AUTOINSERTLISP(.*?)\\*/"
+				       'verilog-auto-insert-lisp)
+	    ;; Expand instances before need the signals the instances input/output
 	    (verilog-auto-re-search-do "/\\*AUTOINSTPARAM\\*/" 'verilog-auto-inst-param)
 	    (verilog-auto-re-search-do "/\\*AUTOINST\\*/" 'verilog-auto-inst)
 	    (verilog-auto-re-search-do "\\.\\*" 'verilog-auto-star)
