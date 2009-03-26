@@ -10621,7 +10621,7 @@ for sensitivity list."
 and the case items."
   "[selector expression]: "
   > "case (" str ") " \n
-  > ("case selector: " str ": begin" \n > _ \n > (- verilog-indent-level-behavioral) "end" \n )
+  > ("case selector: " str ": begin" \n > _ \n > (- verilog-indent-level-behavioral) "end" \n > )
   resume: >  (- verilog-case-indent) "endcase" (progn (electric-verilog-terminate-line) nil))
 
 (define-skeleton verilog-sk-casex
@@ -10629,7 +10629,7 @@ and the case items."
 and the case items."
   "[selector expression]: "
   > "casex (" str ") " \n
-  > ("case selector: " str ": begin" \n > _ \n > (- verilog-indent-level-behavioral) "end" \n )
+  > ("case selector: " str ": begin" \n > _ \n > (- verilog-indent-level-behavioral) "end" \n > )
   resume: >  (- verilog-case-indent) "endcase" (progn (electric-verilog-terminate-line) nil))
 
 (define-skeleton verilog-sk-casez
@@ -10637,7 +10637,7 @@ and the case items."
 and the case items."
   "[selector expression]: "
   > "casez (" str ") " \n
-  > ("case selector: " str ": begin" \n > _ \n > (- verilog-indent-level-behavioral) "end" \n )
+  > ("case selector: " str ": begin" \n > _ \n > (- verilog-indent-level-behavioral) "end" \n > )
   resume: >  (- verilog-case-indent) "endcase" (progn (electric-verilog-terminate-line) nil))
 
 (define-skeleton verilog-sk-if
