@@ -3976,6 +3976,7 @@ See \\[verilog-surelint-off] and \\[verilog-verilint-off]."
 	  (t (error "Linter name not set")))))
 
 (defvar compilation-last-buffer)
+(defvar next-error-last-buffer)
 
 (defun verilog-surelint-off ()
   "Convert a SureLint warning line into a disable statement.
