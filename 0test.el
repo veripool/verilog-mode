@@ -1,4 +1,9 @@
 ;; $Id$
+;;
+;;   VERILOG_MODE_TEST_NO_INDENTS=1    # Disable indent checks
+;;   VERILOG_MODE_TEST_FILE=filename   # Run only specified test
+;;   VERILOG_MODE_START_FILE=filename  # Start at specified test
+
 (defun global-replace-regexp (from to)
   (goto-char (point-min))
   (while (re-search-forward from nil t)
