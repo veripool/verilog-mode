@@ -7847,7 +7847,7 @@ and invalidating the cache."
 
 (defun verilog-signals-matching-regexp (in-list regexp)
   "Return all signals in IN-LIST matching the given REGEXP, if non-nil."
-  (if (not regexp)
+  (if (or (not regexp) (equal regexp ""))
       in-list
     (let (out-list)
       (while in-list
@@ -7858,11 +7858,29 @@ and invalidating the cache."
 
 (defun verilog-signals-not-matching-regexp (in-list regexp)
   "Return all signals in IN-LIST not matching the given REGEXP, if non-nil."
-  (if (not regexp)
+  (if (or (not regexp) (equal regexp ""))
       in-list
     (let (out-list)
       (while in-list
 	(if (not (string-match regexp (verilog-sig-name (car in-list))))
+	    (setq out-list (cons (car in-list) out-list)))
+	(setq in-list (cdr in-list)))
+      (nreverse out-list))))
+
+(defun verilog-signals-matching-dir-re (in-list decl-type regexp)
+  "Return all signals in IN-LIST matching the given directional REGEXP,
+if non-nil."
+  (if (or (not regexp) (equal regexp ""))
+      in-list
+    (let (out-list to-match)
+      (while in-list
+	;; Note verilog-insert-one-definition matches on this order
+	(setq to-match (concat
+			decl-type
+			" " (verilog-sig-signed (car in-list))
+			" " (verilog-sig-multidim (car in-list))
+			(verilog-sig-bits (car in-list))))
+	(if (string-match regexp to-match)
 	    (setq out-list (cons (car in-list) out-list)))
 	(setq in-list (cdr in-list)))
       (nreverse out-list))))
@@ -7915,6 +7933,7 @@ and invalidating the cache."
   "Print out a definition for SIG of the given TYPE,
 with appropriate INDENT-PT indentation."
   (indent-to indent-pt)
+  ;; Note verilog-signals-matching-dir-re matches on this order
   (insert type)
   (when (verilog-sig-signed sig)
     (insert " " (verilog-sig-signed sig)))
@@ -9573,11 +9592,25 @@ You may also provide an optional regular expression, in which case only
 signals matching the regular expression will be included.  For example the
 same expansion will result from only extracting signals starting with i:
 
-	   /*AUTOINOUTMODULE(\"ExampMain\",\"^i\")*/"
+	   /*AUTOINOUTMODULE(\"ExampMain\",\"^i\")*/
+
+You may also provide an optional second regulat expression, in
+which case only signals which have that pin direction and data
+type will be included.  This matches against everything before
+the signal name in the declaration, for example against
+\"input\" (single bit), \"output logic\" (direction and type) or
+\"output [1:0]\" (direction and implicit type).  You also
+probably want to skip spaces in your regexp.
+
+For example, the below will result in matching the output \"o\"
+against the previous example's module:
+
+	   /*AUTOINOUTMODULE(\"ExampMain\",\"\",\"^output.*\")*/"
   (save-excursion
-    (let* ((params (verilog-read-auto-params 1 2))
+    (let* ((params (verilog-read-auto-params 1 3))
 	   (submod (nth 0 params))
 	   (regexp (nth 1 params))
+	   (direction-re (nth 2 params))
 	   submodi)
       ;; Lookup position, etc of co-module
       ;; Note this may raise an error
@@ -9601,13 +9634,15 @@ same expansion will result from only extracting signals starting with i:
 			     (verilog-decls-get-inouts submoddecls)
 			     (append (verilog-decls-get-inouts moddecls)))))
 	  (forward-line 1)
-	  (when regexp
-	    (setq sig-list-i  (verilog-signals-matching-regexp
-			       sig-list-i regexp)
-		  sig-list-o  (verilog-signals-matching-regexp
-			       sig-list-o regexp)
-		  sig-list-io (verilog-signals-matching-regexp
-			       sig-list-io regexp)))
+	  (setq sig-list-i  (verilog-signals-matching-dir-re
+			     (verilog-signals-matching-regexp sig-list-i regexp)
+			     "input" direction-re)
+		sig-list-o  (verilog-signals-matching-dir-re
+			     (verilog-signals-matching-regexp sig-list-o regexp)
+			     "output" direction-re)
+		sig-list-io (verilog-signals-matching-dir-re
+			     (verilog-signals-matching-regexp sig-list-io regexp)
+			     "inout" direction-re))
 	  (when v2k (verilog-repair-open-comma))
 	  (when (or sig-list-i sig-list-o sig-list-io)
 	    (verilog-insert-indent "// Beginning of automatic in/out/inouts (from specific module)\n")
