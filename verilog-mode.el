@@ -7989,16 +7989,19 @@ Presumes that any newlines end a list element."
 ;;(let ((indent-pt 10)) (verilog-insert-indent "hello\n" "addon" "there\n"))
 
 (defun verilog-repair-open-comma ()
-  "If backwards-from-point is other than a open parenthesis insert comma."
+  "Insert comma if previous argument is other than a open parenthesis or endif."
+  ;; We can't just search backward for ) as it might be inside another expression.
+  ;; Also want "`ifdef X   input foo   `endif" to just leave things to the human to deal with
   (save-excursion
     (verilog-backward-syntactic-ws)
-    (when (save-excursion
-	    (backward-char 1)
-	    (and (not (looking-at "[(,]"))
-		 (progn
-		   (verilog-re-search-backward "[(`]" nil t)
-		   (looking-at "("))))
-    (insert ","))))
+    (when (and (not (save-excursion ;; Not beginning (, or existing ,
+		      (backward-char 1)
+		      (looking-at "[(,]")))
+	       (not (save-excursion ;; Not `endif, or user define
+		      (backward-char 1)
+		      (skip-chars-backward "[a-zA-Z0-9_`]")
+		      (looking-at "`"))))
+      (insert ","))))
 
 (defun verilog-repair-close-comma ()
   "If point is at a comma followed by a close parenthesis, fix it.
@@ -8035,11 +8038,16 @@ This repairs those mis-inserted by a AUTOARG."
 	     (setq range-exp (match-string 1 range-exp)))
 	 (cond ((not range-exp)
 		"1")
+	       ;; [#:#] We can compute a numeric result
 	       ((string-match "^\\s *\\([0-9]+\\)\\s *:\\s *\\([0-9]+\\)\\s *$"
 			      range-exp)
 		(int-to-string
 		 (1+ (abs (- (string-to-number (match-string 1 range-exp))
 			     (string-to-number (match-string 2 range-exp)))))))
+	       ;; [PARAM-1:0] can just return PARAM
+	       ((string-match "^\\s *\\([a-zA-Z_][a-zA-Z0-9_]*\\)\\s *-\\s *1\\s *:\\s *0\\s *$" range-exp)
+		(match-string 1 range-exp))
+	       ;; [arbitrary] need math
 	       ((string-match "^\\(.*\\)\\s *:\\s *\\(.*\\)\\s *$" range-exp)
 		(concat "(1+(" (match-string 1 range-exp) ")"
 			(if (equal "0" (match-string 2 range-exp))

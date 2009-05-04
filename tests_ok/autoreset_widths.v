@@ -6,8 +6,8 @@ module CmpEng (/*AUTOARG*/
                clk, reset_l
                );
    
-   input       clk;
-   input       reset_l;
+   input             clk;
+   input             reset_l;
    
    // ****************************************************************
    
@@ -16,15 +16,17 @@ module CmpEng (/*AUTOARG*/
    
    // ********* Prefetch FSM definitions ****************************
    
-   reg [3:0]   m_cac_state_r;
+   reg [3:0]         m_cac_state_r;
    
-   reg [2:0]   m_cac_sel_r, m_dat_sel_r, m_cac_rw_sel_r;
+   reg [2:0]         m_cac_sel_r, m_dat_sel_r, m_cac_rw_sel_r;
    
-   reg         m_wid1_r;
-   reg [2:0]   m_wid3_r;
-   reg [5:2]   m_wid4_r_l;
+   reg               m_wid1_r;
+   reg [2:0]         m_wid3_r;
+   reg [5:2]         m_wid4_r_l;
    
-   logic [4:1] logic_four;
+   logic [4:1]       logic_four;
+   
+   logic [PARAM-1:0] paramed;
    
 `define M 2
 `define L 1
@@ -46,6 +48,7 @@ module CmpEng (/*AUTOARG*/
          m_wid1_r      <= 1'h0;
          m_wid3_r      <= 3'h0;
          m_wid4_r_l    <= ~4'h0;
+         paramed       <= {PARAM{1'b0}};
          // End of automatics
       end
       else begin
@@ -55,6 +58,7 @@ module CmpEng (/*AUTOARG*/
          m_param_r     <= 0;
          m_def2_r      <= 0;
          logic_four    <= 4;
+         paramed       <= 1;
       end
    end
    
