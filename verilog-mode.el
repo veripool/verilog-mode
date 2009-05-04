@@ -6229,6 +6229,8 @@ See also `verilog-sk-header' for an alternative format."
 	  (setq str (concat str (car args)))
 	  (setq args (cdr args)))
 	str)))
+(defsubst verilog-sig-modport (sig)
+  (nth 8 sig))
 (defsubst verilog-sig-width (sig)
   (verilog-make-width-expression (verilog-sig-bits sig)))
 
@@ -6294,6 +6296,7 @@ Duplicate signals are also removed.  For example A[2] and A[1] become A[2:1]."
 	sig highbit lowbit		; Temp information about current signal
 	sv-name sv-highbit sv-lowbit	; Details about signal we are forming
 	sv-comment sv-memory sv-enum sv-signed sv-type sv-multidim sv-busstring
+	sv-modport
 	bus)
     ;; Shove signals so duplicated signals will be adjacent
     (setq in-list (sort in-list `verilog-signals-sort-compare))
@@ -6310,6 +6313,7 @@ Duplicate signals are also removed.  For example A[2] and A[1] become A[2:1]."
 	      sv-signed  (verilog-sig-signed sig)
 	      sv-type    (verilog-sig-type sig)
 	      sv-multidim (verilog-sig-multidim sig)
+	      sv-modport  (verilog-sig-modport sig)
 	      combo ""
 	      buswarn ""))
       ;; Extract bus details
@@ -6348,7 +6352,8 @@ Duplicate signals are also removed.  For example A[2] and A[1] become A[2:1]."
 		   sv-enum   (or sv-enum   (verilog-sig-enum sig))
 		   sv-signed (or sv-signed (verilog-sig-signed sig))
                    sv-type   (or sv-type   (verilog-sig-type sig))
-                   sv-multidim (or sv-multidim (verilog-sig-multidim sig))))
+                   sv-multidim (or sv-multidim (verilog-sig-multidim sig))
+                   sv-modport  (or sv-modport  (verilog-sig-modport sig))))
 	    ;; Doesn't match next signal, add to queue, zero in prep for next
 	    ;; Note sig may also be nil for the last signal in the list
 	    (t
@@ -6360,7 +6365,7 @@ Duplicate signals are also removed.  For example A[2] and A[1] become A[2:1]."
 				  (concat "[" (int-to-string sv-highbit) ":"
 					  (int-to-string sv-lowbit) "]")))
 			  (concat sv-comment combo buswarn)
-			  sv-memory sv-enum sv-signed sv-type sv-multidim)
+			  sv-memory sv-enum sv-signed sv-type sv-multidim sv-modport)
 		    out-list)
 		   sv-name nil))))
     ;;
@@ -6483,9 +6488,11 @@ Optional NUM-PARAM and MAX-PARAM check for a specific number of parameters."
   "Compute signal declaration information for the current module at point.
 Return a array of [outputs inouts inputs wire reg assign const]."
   (let ((end-mod-point (or (verilog-get-end-of-defun t) (point-max)))
-	(functask 0) (paren 0) (sig-paren 0)
-	sigs-in sigs-out sigs-inout sigs-wire sigs-reg sigs-assign sigs-const sigs-gparam
-	vec expect-signal keywd newsig rvalue enum io signed typedefed multidim)
+	(functask 0) (paren 0) (sig-paren 0) (v2kargs-ok t)
+	sigs-in sigs-out sigs-inout sigs-wire sigs-reg sigs-assign sigs-const
+	sigs-gparam sigs-intf
+	vec expect-signal keywd newsig rvalue enum io signed typedefed multidim
+	modport)
     (save-excursion
       (verilog-beg-of-defun)
       (setq sigs-const (verilog-read-auto-constants (point) end-mod-point))
@@ -6511,7 +6518,8 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 	  (or (re-search-forward "[^\\]\"" nil t)	;; don't forward-char first, since we look for a non backslash first
 	      (error "%s: Unmatched quotes, at char %d" (verilog-point-text) (point))))
 	 ((eq ?\; (following-char))
-	  (setq vec nil  io nil  expect-signal nil  newsig nil  paren 0  rvalue nil)
+	  (setq vec nil  io nil  expect-signal nil  newsig nil  paren 0  rvalue nil
+		v2kargs-ok nil)
 	  (forward-char 1))
 	 ((eq ?= (following-char))
 	  (setq rvalue t  newsig nil)
@@ -6552,48 +6560,61 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 	    (setq keywd (concat keywd " ")))  ;; Escaped ID needs space at end
 	  (cond ((equal keywd "input")
 		 (setq vec nil enum nil  rvalue nil  newsig nil  signed nil  typedefed nil  multidim nil  sig-paren paren
-		       expect-signal 'sigs-in  io t))
+		       expect-signal 'sigs-in  io t  modport nil))
 		((equal keywd "output")
 		 (setq vec nil enum nil  rvalue nil  newsig nil  signed nil  typedefed nil  multidim nil  sig-paren paren
-		       expect-signal 'sigs-out  io t))
+		       expect-signal 'sigs-out  io t  modport nil))
 		((equal keywd "inout")
 		 (setq vec nil enum nil  rvalue nil  newsig nil  signed nil  typedefed nil  multidim nil  sig-paren paren
-		       expect-signal 'sigs-inout  io t))
+		       expect-signal 'sigs-inout  io t  modport nil))
 		((equal keywd "parameter")
 		 (setq vec nil  enum nil  rvalue nil  signed nil  typedefed nil  multidim nil  sig-paren paren
-		       expect-signal 'sigs-gparam  io t))
+		       expect-signal 'sigs-gparam  io t  modport nil))
 		((member keywd '("wire" "tri" "tri0" "tri1" "triand" "trior" "wand" "wor"))
 		 (unless io (setq vec nil  enum nil  rvalue nil  signed nil  typedefed nil  multidim nil  sig-paren paren
-				  expect-signal 'sigs-wire)))
+				  expect-signal 'sigs-wire  modport nil)))
 		((member keywd '("reg" "trireg"
 				 "byte" "shortint" "int" "longint" "integer" "time"
 				 "bit" "logic"))
 		 (unless io (setq vec nil  enum nil  rvalue nil  signed nil  typedefed nil  multidim nil  sig-paren paren
-				  expect-signal 'sigs-reg)))
+				  expect-signal 'sigs-reg  modport nil)))
 		((equal keywd "assign")
 		 (setq vec nil  enum nil  rvalue nil  signed nil  typedefed nil  multidim nil  sig-paren paren
-		       expect-signal 'sigs-assign))
+		       expect-signal 'sigs-assign  modport nil))
 		((member keywd '("supply0" "supply1" "supply"
 				 "localparam" "genvar"))
 		 (unless io (setq vec nil  enum nil  rvalue nil  signed nil  typedefed nil  multidim nil  sig-paren paren
-				  expect-signal 'sigs-const)))
+				  expect-signal 'sigs-const  modport nil)))
 		((equal keywd "signed")
 		 (setq signed "signed"))
-		((member keywd '("function" "task"))
+		((member keywd '("class" "clocking" "covergroup" "function"
+				 "property" "randsequence" "sequence" "task"))
 		 (setq functask (1+ functask)))
-		((member keywd '("endfunction" "endtask"))
+		((member keywd '("endclass" "endclocking" "endgroup" "endfunction"
+				 "endproperty" "endsequence" "endtask"))
 		 (setq functask (1- functask)))
+		;; Ifdef?  Ignore name of define
 		((member keywd '("`ifdef" "`ifndef"))
 		 (setq rvalue t))
+		;; Type?
 		((verilog-typedef-name-p keywd)
 		 (setq typedefed keywd))
+		;; Interface with optional modport in v2k arglist?
+		;; Skip over parsing modport, and take the interface name as the type
+		((and v2kargs-ok
+		      (eq paren 1)
+		      (looking-at "\\s-*\\(\\.\\(\\s-*[a-zA-Z0-9`_$]+\\)\\|\\)\\s-*[a-zA-Z0-9`_$]+"))
+		 (when (match-end 2) (goto-char (match-end 2)))
+		 (setq vec nil enum nil  rvalue nil  newsig nil  signed nil  typedefed keywd  multidim nil  sig-paren paren
+		       expect-signal 'sigs-intf  io t  modport (match-string 2)))
+		;; New signal, maybe?
 		((and expect-signal
 		      (eq functask 0)
 		      (not rvalue)
 		      (eq paren sig-paren)
 		      (not (member keywd verilog-keywords)))
 		 ;; Add new signal to expect-signal's variable
-		 (setq newsig (list keywd vec nil nil enum signed typedefed multidim))
+		 (setq newsig (list keywd vec nil nil enum signed typedefed multidim modport))
 		 (set expect-signal (cons newsig
 					  (symbol-value expect-signal))))))
 	 (t
@@ -6607,7 +6628,8 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 	      (nreverse sigs-reg)
 	      (nreverse sigs-assign)
 	      (nreverse sigs-const)
-	      (nreverse sigs-gparam)))))
+	      (nreverse sigs-gparam)
+	      (nreverse sigs-intf)))))
 
 (eval-when-compile
   ;; Prevent compile warnings; these are let's, not globals
@@ -6615,7 +6637,8 @@ Return a array of [outputs inouts inputs wire reg assign const]."
   ;; - we want a error when we are debugging this code if they are refed.
   (defvar sigs-in)
   (defvar sigs-inout)
-  (defvar sigs-out))
+  (defvar sigs-out)
+  (defvar sigs-intf))
 
 
 (defsubst verilog-modi-get-decls (modi)
@@ -6644,12 +6667,16 @@ Return a array of [outputs inouts inputs wire reg assign const]."
   (aref decls 6))
 (defsubst verilog-decls-get-gparams (decls)
   (aref decls 7))
+(defsubst verilog-decls-get-interfaces (decls)
+  (aref decls 8))
 (defsubst verilog-subdecls-get-outputs (subdecls)
   (aref subdecls 0))
 (defsubst verilog-subdecls-get-inouts (subdecls)
   (aref subdecls 1))
 (defsubst verilog-subdecls-get-inputs (subdecls)
   (aref subdecls 2))
+(defsubst verilog-subdecls-get-interfaces (subdecls)
+  (aref subdecls 3))
 
 
 (defun verilog-read-sub-decls-sig (submoddecls comment port sig vec multidim)
@@ -6681,6 +6708,12 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 					    (verilog-sig-type portdata)
 					    multidim)
 				      sigs-in)))
+	      ((setq portdata (assoc port (verilog-decls-get-interfaces submoddecls)))
+	       (setq sigs-intf  (cons (list sig vec (concat "To/From " comment) nil nil
+					    (verilog-sig-signed portdata)
+					    (verilog-sig-type portdata)
+					    multidim)
+				      sigs-intf)))
 	      ;; (t  -- warning pin isn't defined.)   ; Leave for lint tool
 	      )))))
 
@@ -6787,7 +6820,7 @@ Outputs comments above subcell signals, for example:
     (let ((end-mod-point (verilog-get-end-of-defun t))
 	  st-point end-inst-point
 	  ;; below 3 modified by verilog-read-sub-decls-line
-	  sigs-out sigs-inout sigs-in)
+	  sigs-out sigs-inout sigs-in sigs-intf)
       (verilog-beg-of-defun)
       (while (verilog-re-search-forward "\\(/\\*AUTOINST\\*/\\|\\.\\*\\)" end-mod-point t)
 	(save-excursion
@@ -6805,6 +6838,9 @@ Outputs comments above subcell signals, for example:
 		(verilog-backward-open-paren)
 		(setq end-inst-point (save-excursion (forward-sexp 1) (point))
 		      st-point (point))
+		(while (re-search-forward "\\s *(?\\s *// Interfaces" end-inst-point t)
+		  (verilog-read-sub-decls-line submoddecls comment)) ;; Modifies sigs-out
+		(goto-char st-point)
 		(while (re-search-forward "\\s *(?\\s *// Outputs" end-inst-point t)
 		  (verilog-read-sub-decls-line submoddecls comment)) ;; Modifies sigs-out
 		(goto-char st-point)
@@ -6818,7 +6854,8 @@ Outputs comments above subcell signals, for example:
       ;;(setq rr (vector sigs-out sigs-inout sigs-in))
       (vector (verilog-signals-combine-bus (nreverse sigs-out))
 	      (verilog-signals-combine-bus (nreverse sigs-inout))
-	      (verilog-signals-combine-bus (nreverse sigs-in))))))
+	      (verilog-signals-combine-bus (nreverse sigs-in))
+	      (verilog-signals-combine-bus (nreverse sigs-intf))))))
 
 (defun verilog-read-inst-pins ()
   "Return an array of [ pins ] for the current instantiation at point.
@@ -7935,6 +7972,8 @@ with appropriate INDENT-PT indentation."
   (indent-to indent-pt)
   ;; Note verilog-signals-matching-dir-re matches on this order
   (insert type)
+  (when (verilog-sig-modport sig)
+    (insert "." (verilog-sig-modport sig)))
   (when (verilog-sig-signed sig)
     (insert " " (verilog-sig-signed sig)))
   (when (verilog-sig-multidim sig)
@@ -7959,7 +7998,7 @@ format.  Sort unless DONT-SORT.  DIRECTION is normally wire/reg/output."
        ;; Want "type x" or "output type x", not "wire type x"
        (cond ((verilog-sig-type sig)
 	      (concat
-	       (if (not (equal direction "wire"))
+	       (if (not (member direction '("wire" "interface")))
 		   (concat direction " "))
 	       (verilog-sig-type sig)))
 	     (t direction))
@@ -8936,13 +8975,25 @@ Lisp Templates:
 		tpl-list (aref tpl-info 1)))
 	;; Find submodule's signals and dump
 	(let ((sig-list (verilog-signals-not-in
+			 (verilog-decls-get-interfaces submoddecls)
+			 skip-pins))
+	      (vl-dir "interface"))
+	  (when sig-list
+	    (when (not did-first) (verilog-auto-inst-first) (setq did-first t))
+	    (indent-to indent-pt)
+            ;; Note these are searched for in verilog-read-sub-decls.
+	    (insert "// Interfaces\n")
+	    (mapc (lambda (port)
+                    (verilog-auto-inst-port port indent-pt
+                                            tpl-list tpl-num for-star par-values))
+                  sig-list)))
+	(let ((sig-list (verilog-signals-not-in
 			 (verilog-decls-get-outputs submoddecls)
 			 skip-pins))
 	      (vl-dir "output"))
 	  (when sig-list
 	    (when (not did-first) (verilog-auto-inst-first) (setq did-first t))
 	    (indent-to indent-pt)
-            ;; Note these are searched for in verilog-read-sub-decls.
 	    (insert "// Outputs\n")
 	    (mapc (lambda (port)
                     (verilog-auto-inst-port port indent-pt
@@ -9640,7 +9691,10 @@ against the previous example's module:
 			     (append (verilog-decls-get-outputs moddecls))))
 	       (sig-list-io (verilog-signals-not-in
 			     (verilog-decls-get-inouts submoddecls)
-			     (append (verilog-decls-get-inouts moddecls)))))
+			     (append (verilog-decls-get-inouts moddecls))))
+	       (sig-list-if (verilog-signals-not-in
+			     (verilog-decls-get-interfaces submoddecls)
+			     (append (verilog-decls-get-interfaces moddecls)))))
 	  (forward-line 1)
 	  (setq sig-list-i  (verilog-signals-matching-dir-re
 			     (verilog-signals-matching-regexp sig-list-i regexp)
@@ -9650,7 +9704,10 @@ against the previous example's module:
 			     "output" direction-re)
 		sig-list-io (verilog-signals-matching-dir-re
 			     (verilog-signals-matching-regexp sig-list-io regexp)
-			     "inout" direction-re))
+			     "inout" direction-re)
+		sig-list-if (verilog-signals-matching-dir-re
+			     (verilog-signals-matching-regexp sig-list-if regexp)
+			     "interface" direction-re))
 	  (when v2k (verilog-repair-open-comma))
 	  (when (or sig-list-i sig-list-o sig-list-io)
 	    (verilog-insert-indent "// Beginning of automatic in/out/inouts (from specific module)\n")
@@ -9658,6 +9715,7 @@ against the previous example's module:
 	    (verilog-insert-definition sig-list-o  "output" indent-pt v2k t)
 	    (verilog-insert-definition sig-list-io "inout" indent-pt v2k t)
 	    (verilog-insert-definition sig-list-i  "input" indent-pt v2k t)
+	    (verilog-insert-definition sig-list-if "interface" indent-pt v2k t)
 	    (verilog-modi-cache-add-inputs modi sig-list-i)
 	    (verilog-modi-cache-add-outputs modi sig-list-o)
 	    (verilog-modi-cache-add-inouts modi sig-list-io)
