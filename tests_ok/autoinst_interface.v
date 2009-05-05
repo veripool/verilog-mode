@@ -33,7 +33,7 @@ module top;
    // End of automatics
    autoinst_interface_sub submod0 (/*AUTOINST*/
                                    // Interfaces
-                                   .my_svi_port         (my_svi_port),
+                                   .my_svi_port         (my_svi_port.master),
                                    .my_svi_noport       (my_svi_noport),
                                    // Outputs
                                    .count               (count[7:0]),

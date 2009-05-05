@@ -8548,6 +8548,7 @@ Avoid declaring ports manually, as it makes code harder to maintain."
 
 (defvar vl-cell-type nil "See `verilog-auto-inst'.") ; Prevent compile warning
 (defvar vl-cell-name nil "See `verilog-auto-inst'.") ; Prevent compile warning
+(defvar vl-modport   nil "See `verilog-auto-inst'.") ; Prevent compile warning
 (defvar vl-name  nil "See `verilog-auto-inst'.") ; Prevent compile warning
 (defvar vl-width nil "See `verilog-auto-inst'.") ; Prevent compile warning
 (defvar vl-dir   nil "See `verilog-auto-inst'.") ; Prevent compile warning
@@ -8565,6 +8566,7 @@ If PAR-VALUES replace final strings with these parameter values."
 	 ;; vl-* are documented for user use
 	 (vl-name (verilog-sig-name port-st))
 	 (vl-width (verilog-sig-width port-st))
+	 (vl-modport (verilog-sig-modport port-st))
 	 (vl-bits (if (or verilog-auto-inst-vector
 			  (not (assoc port vector-skip-list))
 			  (not (equal (verilog-sig-bits port-st)
@@ -8585,10 +8587,12 @@ If PAR-VALUES replace final strings with these parameter values."
 	      check-values (cdr check-values)))
       (setq vl-bits (verilog-simplify-range-expression vl-bits))) ; Not in the loop for speed
     ;; Default net value if not found
-    (setq tpl-net (if (verilog-sig-multidim port-st)
-		      (concat port "/*" (verilog-sig-multidim-string port-st)
-			      vl-bits "*/")
-		    (concat port vl-bits)))
+    (setq tpl-net (concat port
+			  (if vl-modport (concat "." vl-modport) "")
+			  (if (verilog-sig-multidim port-st)
+			      (concat "/*" (verilog-sig-multidim-string port-st)
+				      vl-bits "*/")
+			    (concat vl-bits))))
     ;; Find template
     (cond (tpl-ass	    ; Template of exact port name
 	   (setq tpl-net (nth 1 tpl-ass)))
@@ -8910,7 +8914,8 @@ Lisp Templates:
 	vl-bits        Bus bits portion of the input/output port ('[2:0]').
 	vl-width       Width of the input/output port ('3' for [2:0]).
                        May be a (...) expression if bits isn't a constant.
-	vl-dir         Direction of the pin input/output/inout.
+	vl-dir         Direction of the pin input/output/inout/interface.
+	vl-modport     The modport, if an interface with a modport.
 	vl-cell-type   Module name/type of the cell ('InstModule').
 	vl-cell-name   Instance name of the cell ('instName').
 
