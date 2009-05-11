@@ -10220,6 +10220,10 @@ doesn't care.
 Finally, a AUTOASCIIENUM command is used.
 
   The first parameter is the name of the signal to be decoded.
+  If and only if the first parameter width is 2^(number of states
+  in enum) and does NOT match the width of the enum, the signal
+  is assumed to be a one hot decode.  Otherwise, it's a normal
+  encoded state vector.
 
   The second parameter is the name to store the ASCII code into.  For the
   signal foo, I suggest the name _foo__ascii, where the leading _ indicates
@@ -10237,12 +10241,10 @@ An example:
 			   SM_SEND =  3'b001,
 			   SM_WAIT1 = 3'b010;
 	//== State variables
-	reg [2:0]	/* synopsys enum state_info */
-			state_r;		/* synopsys state_vector state_r */
-	reg [2:0]	/* synopsys enum state_info */
-			state_e1;
-
-	//== ASCII state decoding
+	reg [2:0]  /* synopsys enum state_info */
+		   state_r;  /* synopsys state_vector state_r */
+	reg [2:0]  /* synopsys enum state_info */
+		   state_e1;
 
 	/*AUTOASCIIENUM(\"state_r\", \"state_ascii_r\", \"SM_\")*/
 
@@ -10290,7 +10292,14 @@ Typing \\[verilog-auto] will make this into:
 			   (error "%s: No state definitions for %s" (verilog-point-text) undecode-enum))
 		       nil))
 	   ;;
-	   (enum-chars 0)
+	   (one-hot (and ;; width(enum) != width(sig)
+		     (or (not (verilog-sig-bits (car enum-sigs)))
+			 (not (equal (verilog-sig-width (car enum-sigs))
+				     (verilog-sig-width undecode-sig))))
+		     ;; count(enums) == width(sig)
+		     (equal (number-to-string (length enum-sigs))
+			    (verilog-sig-width undecode-sig))))
+  	   (enum-chars 0)
 	   (ascii-chars 0))
       ;;
       ;; Find number of ascii chars needed
@@ -10316,14 +10325,23 @@ Typing \\[verilog-auto] will make this into:
       (setq indent-pt (+ indent-pt verilog-case-indent))
       ;;
       (let ((tmp-sigs enum-sigs)
-	    (chrfmt (format "%%-%ds %s = \"%%-%ds\";\n" (1+ (max 8 enum-chars))
+	    (chrfmt (format "%%-%ds %s = \"%%-%ds\";\n"
+			    (+ (if one-hot 9 1) (max 8 enum-chars))
 			    ascii-name ascii-chars))
 	    (errname (substring "%Error" 0 (min 6 ascii-chars))))
 	(while tmp-sigs
 	  (verilog-insert-indent
-	   (format chrfmt (concat (verilog-sig-name (car tmp-sigs)) ":")
-		   (verilog-enum-ascii (verilog-sig-name (car tmp-sigs))
-				       elim-regexp)))
+	   (concat
+	    (format chrfmt
+		    (concat (if one-hot "(")
+			    (if one-hot (verilog-sig-width undecode-sig))
+			    ;; We use a shift instead of var[index]
+			    ;; so that a non-one hot value will show as error.
+			    (if one-hot "'b1<<")
+			    (verilog-sig-name (car tmp-sigs))
+			    (if one-hot ")") ":")
+		    (verilog-enum-ascii (verilog-sig-name (car tmp-sigs))
+					elim-regexp))))
 	  (setq tmp-sigs (cdr tmp-sigs)))
 	(verilog-insert-indent (format chrfmt "default:" errname)))
       ;;
