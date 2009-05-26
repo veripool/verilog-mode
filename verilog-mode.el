@@ -4481,15 +4481,14 @@ of the appropriate enclosing block."
     (while (/= 0 nest)
       (verilog-re-search-backward 
        (concat
-	"\\(\\<randcase\\>\\|\\(\\<unique\\s-+\\|priority\\s-+\\)?case[xz]?\\>\\)"
+	"\\(\\<randcase\\>\\|\\(\\<unique\\s-+\\|priority\\s-+\\)?\\<case[xz]?\\>\\)"
 	"\\|\\(\\<endcase\\>\\)" )
        nil 'move)
       (cond
        ((match-end 1)
 	(let ((here (point)))
 	  (verilog-beg-of-statement)
-	  (if (looking-at verilog-extended-case-re)
-	      (throw 'nesting 'case)
+	  (unless (looking-at verilog-extended-case-re)
 	    (goto-char here)))
 	(setq nest (1- nest)))
        ((match-end 3)
