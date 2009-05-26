@@ -32,5 +32,5 @@ module foo;
             14   : out = 6;
           endcase // case (in.value1)
       endcase // case (in.value1)
-   end
+          end
 endmodule
