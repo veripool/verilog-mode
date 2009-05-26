@@ -102,7 +102,7 @@
 ;       verilog-auto-endcomments         t
 ;       verilog-minimum-comment-distance 40
 ;       verilog-indent-begin-after-if    t
-;       verilog-auto-lineup              '(assignments)
+;       verilog-auto-lineup              'declarations
 ;       verilog-highlight-p1800-keywords nil
 ;	verilog-linter			 "my_lint_shell_command"
 ;	)
@@ -398,7 +398,7 @@ entry \"Fontify Buffer\").  XEmacs: turn off and on font locking."
 ;; Note we don't use :safe, as that would break on Emacsen before 22.0.
 (put 'verilog-highlight-translate-off 'safe-local-variable 'verilog-booleanp)
 
-(defcustom verilog-auto-lineup 'assignments
+(defcustom verilog-auto-lineup 'declarations
   "*Type of statements to lineup across multiple lines.
 If 'all' is selected, then all line ups described below are done.
 
@@ -428,8 +428,6 @@ are lineup only when \\[verilog-pretty-declarations] is typed."
 		(const :tag "Line up Declarartions" declarations)
 		(function :tag "Other"))
   :group 'verilog-mode-indent )
-
-(put 'verilog-auto-lineup 'safe-local-variable 'listp)
 
 (defcustom verilog-indent-level 3
   "*Indentation of Verilog statements with respect to containing block."
@@ -2636,7 +2634,7 @@ Variables controlling indentation/edit style:
    will be inserted.  Setting this variable to zero results in every
    end acquiring a comment; the default avoids too many redundant
    comments in tight quarters.
- `verilog-auto-lineup'              (default 'assignments)
+ `verilog-auto-lineup'              (default 'declarations)
    List of contexts where auto lineup of code should be done.
 
 Variables controlling other actions:
@@ -4481,11 +4479,20 @@ of the appropriate enclosing block."
 (defun verilog-leap-to-case-head ()
   (let ((nest 1))
     (while (/= 0 nest)
-      (verilog-re-search-backward "\\(\\<randcase\\>\\|\\<case[xz]?\\>[^:]\\)\\|\\(\\<endcase\\>\\)" nil 'move)
+      (verilog-re-search-backward 
+       (concat
+	"\\(\\<randcase\\>\\|\\(\\<unique\\s-+\\|priority\\s-+\\)?case[xz]?\\>\\)"
+	"\\|\\(\\<endcase\\>\\)" )
+       nil 'move)
       (cond
        ((match-end 1)
+	(let ((here (point)))
+	  (verilog-beg-of-statement)
+	  (if (looking-at verilog-extended-case-re)
+	      (throw 'nesting 'case)
+	    (goto-char here)))
 	(setq nest (1- nest)))
-       ((match-end 2)
+       ((match-end 3)
 	(setq nest (1+ nest)))
        ((bobp)
 	(ding 't)
@@ -4508,8 +4515,11 @@ Jump from end to matching begin, from endcase to matching case, and so on."
       (setq reg "\\(\\<task\\>\\)\\|\\(\\(\\(\\<virtual\\>\\s-+\\)\\|\\(\\<protected\\>\\s-+\\)\\)+\\<task\\>\\)")
       (setq nesting 'no))
      ((looking-at "\\<endcase\\>")
-      ;; 3: Search back for matching case
-      (setq reg "\\(\\<randcase\\>\\|\\<case[xz]?\\>\\)\\|\\(\\<endcase\\>\\)" ))
+      (catch 'nesting
+	(verilog-leap-to-case-head) )
+      (setq reg nil) ; to force skip
+      )
+     
      ((looking-at "\\<join\\(_any\\|_none\\)?\\>")
       ;; 4: Search back for matching fork
       (setq reg "\\(\\<fork\\>\\)\\|\\(\\<join\\(_any\\|_none\\)?\\>\\)" ))
