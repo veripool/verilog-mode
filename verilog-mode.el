@@ -1605,7 +1605,6 @@ find the errors."
 ;; Regular expressions used to calculate indent, etc.
 ;;
 (defconst verilog-symbol-re      "\\<[a-zA-Z_][a-zA-Z_0-9.]*\\>")
-(defconst verilog-case-re        "\\(\\<case[xz]?\\>\\|\\<randcase\\>\\)")
 ;; Want to match
 ;; aa :
 ;; aa,bb :
@@ -2018,7 +2017,7 @@ find the errors."
 	  verilog-end-block-re "\\)"))
 
 (defconst verilog-endcase-re
-  (concat verilog-case-re "\\|"
+  (concat verilog-extended-case-re "\\|"
 	  "\\(endcase\\)\\|"
 	  verilog-defun-re
 	  ))
@@ -4427,7 +4426,7 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 	    (if (verilog-in-case-region-p)
 		(progn
 		  (verilog-leap-to-case-head)
-		  (if (looking-at verilog-case-re)
+		  (if (looking-at verilog-extended-case-re)
 		      (throw 'nesting 'case)))))
 
 	   ((looking-at verilog-defun-level-re)
@@ -5137,7 +5136,7 @@ Do not count named blocks or case-statements."
     (cond
      ((looking-at verilog-named-block-re)
       (current-column))
-     ((and (not (looking-at verilog-case-re))
+     ((and (not (looking-at verilog-extended-case-re))
 	   (looking-at "^[^:;]+[ \t]*:"))
       (verilog-re-search-forward ":" nil t)
       (skip-chars-forward " \t")
