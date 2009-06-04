@@ -6799,10 +6799,12 @@ Return the list of signals found, using submodi to look up each port."
 		  (match-string 2) nil)) ; vec multidim
 		;; Fastpath was above looking-at's.
 		;; For something more complicated invoke a parser
-		((looking-at "\\([^)]+\\)\\s-*)")
+		((looking-at "[^)]+")
 		 (verilog-read-sub-decls-expr
 		  submoddecls comment port
-		  (match-string 1))))) ; expr
+		  (buffer-substring
+		   (point) (1- (progn (backward-char 1) ; start at (
+				      (forward-sexp 1) (point)))))))) ; expr
 	;;
 	(forward-line 1)))))
 
