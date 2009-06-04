@@ -111,7 +111,7 @@ sub read_file {
     print "-*- ChangeLog -*-\n\n";
 
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime();
-    printf "%04d-%02d-%02d  %s\n\n", $year+1900,$mon,$mday,$who;
+    printf "%04d-%02d-%02d  %s\n\n", $year+1900,$mon+1,$mday,$who;
 
     print "\t* verilog-mode.el";
     my $f="";

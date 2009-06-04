@@ -54,7 +54,8 @@
 
 ;; Verilog is a rapidly evolving language, and hence this mode is
 ;; under continuous development.  Hence this is beta code, and likely
-;; has bugs.  Please report any and all bugs to me at mac@verilog.com.
+;; has bugs.  Please report any issues to the issue tracker at
+;; http://www.veripool.org/verilog-mode
 ;; Please use verilog-submit-bug-report to submit a report; type C-c
 ;; C-b to invoke this and as a result I will have a much easier time
 ;; of reproducing the bug you find, and hence fixing it.
@@ -835,6 +836,16 @@ the MSB or LSB of a signal inside an AUTORESET."
   :group 'verilog-mode-auto
   :type 'string)
 (put 'verilog-assignment-delay 'safe-local-variable 'stringp)
+
+(defcustom verilog-auto-arg-sort nil
+  "*If set, AUTOARG will sort signal names, rather than leave them in
+declaration order.  Declaration order is advantageous with order based
+instantiations and is the default for backward compatibility.  Sorted order
+reduces changes when declarations are moved around in a file, and it's bad
+practice to rely on order based instantiations anyhow."
+  :group 'verilog-mode-auto
+  :type 'boolean)
+(put 'verilog-auto-arg-sort 'safe-local-variable 'verilog-booleanp)
 
 (defcustom verilog-auto-inst-param-value nil
   "*If set, AUTOINST will replace parameters with the parameter value.
@@ -8473,6 +8484,8 @@ If FORCE, always reread it."
   "Print a list of ports for a AUTOINST.
 Takes SIGS list, adds MESSAGE to front and inserts each at INDENT-PT."
   (when sigs
+    (when verilog-auto-arg-sort
+      (setq sigs (sort (copy-alist sigs) `verilog-signals-sort-compare)))
     (insert "\n")
     (indent-to indent-pt)
     (insert message)
@@ -8520,6 +8533,10 @@ Typing \\[verilog-auto] will make this into:
 	  input i;
 	  output o;
 	endmodule
+
+The argument declarations may be printed in declaration order to best suit
+order based instantiations, or alphabetically, based on the
+`verilog-auto-arg-sort' variable.
 
 Any ports declared between the ( and /*AUTOARG*/ are presumed to be
 predeclared and are not redeclared by AUTOARG.  AUTOARG will make a
@@ -10443,8 +10460,9 @@ Using \\[describe-function], see also:
     `verilog-read-defines'      for reading `define values
     `verilog-read-includes'     for reading `includes
 
-If you have bugs with these autos, try contacting the AUTOAUTHOR
-Wilson Snyder (wsnyder@wsnyder.org), and/or see http://www.veripool.org."
+If you have bugs with these autos, please file an issue at
+http://www.veripool.org/verilog-mode or contact the AUTOAUTHOR
+Wilson Snyder (wsnyder@wsnyder.org)."
   (interactive)
   (unless noninteractive (message "Updating AUTOs..."))
   (if (fboundp 'dinotrace-unannotate-all)
