@@ -8,7 +8,7 @@ module autoascii_peltan
    
    // Duplicate of what's in _inc
    localparam [3:0] /* synopsys enum xstate */
-  state0  = 4'h0;
+     state0  = 4'h0;
    
    wire [3:0] /* synopsys enum xstate */
               xstate;

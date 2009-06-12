@@ -107,8 +107,8 @@ module testmodule (/*AUTOARG*/
      endcase
    
    parameter READ  = 3'b111,
-       //WRITE     = 3'b111,
-       CFG         = 3'b010;
+     //WRITE       = 3'b111,
+     CFG           = 3'b010;
    //supply1   one;
    
    always @(/*AUTOSENSE*/in1 or in2) begin
