@@ -1736,22 +1736,22 @@ find the errors."
 (defconst verilog-endcomment-reason-re
   ;; Parenthesis indicate type of keyword found
   (concat
-   "\\(\\<fork\\>\\)\\|"
-   "\\(\\<begin\\>\\)\\|"
-   "\\(\\<if\\>\\)\\|"
-   "\\(\\<clocking\\>\\)\\|"
-   "\\(\\<else\\>\\)\\|"
-   "\\(\\<end\\>.*\\<else\\>\\)\\|"
-   "\\(\\<task\\>\\)\\|"
-   "\\(\\<function\\>\\)\\|"
+   "\\(\\<begin\\>\\)\\|"		         ; 1
+   "\\(\\<else\\>\\)\\|"		         ; 2
+   "\\(\\<end\\>\\s-+\\<else\\>\\)\\|"	         ; 3
+   "\\(\\<always_comb\\>\\(\[ \t\]*@\\)?\\)\\|"  ; 4
+   "\\(\\<always_ff\\>\\(\[ \t\]*@\\)?\\)\\|"    ; 5
+   "\\(\\<always_latch\\>\\(\[ \t\]*@\\)?\\)\\|" ; 6
+   "\\(\\<fork\\>\\)\\|"			 ; 7
+   "\\(\\<always\\>\\(\[ \t\]*@\\)?\\)\\|"      
+   "\\(\\<if\\>\\)\\|"		
+   "\\(\\<clocking\\>\\)\\|"	
+   "\\(\\<task\\>\\)\\|"	
+   "\\(\\<function\\>\\)\\|"	
    "\\(\\<initial\\>\\)\\|"
    "\\(\\<interface\\>\\)\\|"
    "\\(\\<package\\>\\)\\|"
    "\\(\\<final\\>\\)\\|"
-   "\\(\\<always\\>\\(\[ \t\]*@\\)?\\)\\|"
-   "\\(\\<always_comb\\>\\(\[ \t\]*@\\)?\\)\\|"
-   "\\(\\<always_ff\\>\\(\[ \t\]*@\\)?\\)\\|"
-   "\\(\\<always_latch\\>\\(\[ \t\]*@\\)?\\)\\|"
    "\\(@\\)\\|"
    "\\(\\<while\\>\\)\\|"
    "\\(\\<for\\(ever\\|each\\)?\\>\\)\\|"
@@ -2015,7 +2015,7 @@ find the errors."
      `(
        "always" "assign" "always_latch" "always_ff" "always_comb" "constraint"
        "import" "initial" "final" "module" "macromodule" "repeat" "randcase" "while"
-       "if" "for" "forever" "foreach" "else" "parameter" "do"
+       "if" "for" "forever" "foreach" "else" "parameter" "do" "localparam"
        ))))
 (defconst verilog-complete-reg
   (concat
@@ -3228,17 +3228,30 @@ With ARG, first kill any existing labels."
 (defun verilog-beg-of-statement-1 ()
   "Move backward to beginning of statement."
   (interactive)
+  (if (verilog-in-comment-p)
+      (verilog-backward-syntactic-ws))
   (let ((pt (point)))
-    (while (and
-            (not (looking-at verilog-complete-reg))
-            (not (bolp))
-            (not (= (preceding-char) ?\;)))
-      (verilog-backward-token)
-      (verilog-backward-syntactic-ws)
-      (setq pt (point)))
-    (goto-char pt)
-    (verilog-forward-syntactic-ws)
-    ))
+    (catch 'done
+      (while (not (looking-at verilog-complete-reg))
+        (setq pt (point))
+        (verilog-backward-syntactic-ws)
+        (if (or (bolp)
+                (= (preceding-char) ?\;))
+            (progn 
+              (goto-char pt)
+              (throw 'done t))
+          (verilog-backward-token))))
+    (verilog-forward-syntactic-ws)))
+;	       
+;    (while (and
+;            (not (looking-at verilog-complete-reg))
+;            (not (bolp))
+;            (not (= (preceding-char) ?\;)))
+;      (verilog-backward-token)
+;      (verilog-backward-syntactic-ws)
+;      (setq pt (point)))
+;    (goto-char pt)
+; ;(verilog-forward-syntactic-ws)
 
 (defun verilog-end-of-statement ()
   "Move forward to end of current statement."
@@ -3534,22 +3547,15 @@ primitive or interface named NAME."
 		      (str "UNMATCHED!!"))
 		  (save-excursion
 		    (verilog-leap-to-head)
-		    (cond
+		    (cond 
 		     ((looking-at "\\<randcase\\>")
 		      (setq str "randcase")
 		      (setq err nil))
-		     ((match-end 0)
-		      (goto-char (match-end 1))
-		      (if nil
-			  (let (s f)
-			    (setq s (match-beginning 1))
-			    (setq f (progn (end-of-line)
-					   (point)))
-			    (setq str  (buffer-substring s f)))
-			(setq err nil))
-		      (setq str (concat (buffer-substring (match-beginning 1) (match-end 1))
-					" "
-					(verilog-get-expr))))))
+		     ((looking-at "\\(\\(unique\\s-+\\|priority\\s-+\\)?case[xz]?\\)")
+		      (goto-char (match-end 0))
+		      (setq str (concat (match-string 0) " " (verilog-get-expr)))
+		      (setq err nil))
+		     ))
 		  (end-of-line)
 		  (if kill-existing-comment
 		      (verilog-kill-existing-comment))
@@ -3606,11 +3612,10 @@ primitive or interface named NAME."
 			    (setq str ""))
 			   ((looking-at verilog-endcomment-reason-re)
 			    (setq there (match-end 0))
-			    (setq cntx (concat
-					(buffer-substring (match-beginning 0) (match-end 0)) " "))
+			    (setq cntx (concat (match-string 0) " "))
 			    (cond
 			     (;- begin
-			      (match-end 2)
+			      (match-end 1)
 			      (setq err nil)
 			      (save-excursion
 				(if (and (verilog-continued-line)
@@ -3619,13 +3624,11 @@ primitive or interface named NAME."
 				      (goto-char (match-end 0))
 				      (setq there (point))
 				      (setq str
-					    (concat " // "
-						    (buffer-substring (match-beginning 0) (match-end 0)) " "
-						    (verilog-get-expr))))
+					    (concat " // " (match-string 0) " " (verilog-get-expr))))
 				  (setq str ""))))
 
 			     (;- else
-			      (match-end 4)
+			      (match-end 2)
 			      (let ((nest 0)
 				    ( reg "\\(\\<begin\\>\\)\\|\\(\\<end\\>\\)\\|\\(\\<if\\>\\)"))
 				(catch 'skip
@@ -3646,7 +3649,7 @@ primitive or interface named NAME."
 					    (throw 'skip 1)))))))))
 
 			     (;- end else
-			      (match-end 5)
+			      (match-end 3)
 			      (goto-char there)
 			      (let ((nest 0)
 				    (reg "\\(\\<begin\\>\\)\\|\\(\\<end\\>\\)\\|\\(\\<if\\>\\)"))
@@ -3666,6 +3669,12 @@ primitive or interface named NAME."
 					    (setq str (verilog-get-expr))
 					    (setq str (concat " // else: !if" str ))
 					    (throw 'skip 1)))))))))
+			     (; always_comb, always_ff, always_latch
+			      (or (match-end 4) (match-end 5) (match-end 6))
+			      (goto-char (match-end 0))
+			      (setq there (point))
+			      (setq err nil)
+			      (setq str (concat " // " cntx )))
 
 			     (;- task/function/initial et cetera
 			      t
@@ -3673,9 +3682,8 @@ primitive or interface named NAME."
 			      (goto-char (match-end 0))
 			      (setq there (point))
 			      (setq err nil)
-			      (setq str (verilog-get-expr))
-			      (setq str (concat " // " cntx str )))
-
+			      (setq str (concat " // " cntx (verilog-get-expr))))
+			     
 			     (;-- otherwise...
 			      (setq str " // auto-endcomment confused "))))
 
