@@ -1744,8 +1744,8 @@ find the errors."
    "\\(\\<always_latch\\>\\(\[ \t\]*@\\)?\\)\\|" ; 6
    "\\(\\<fork\\>\\)\\|"			 ; 7
    "\\(\\<always\\>\\(\[ \t\]*@\\)?\\)\\|"      
-   "\\(\\<if\\>\\)\\|"		
-   "\\(\\<clocking\\>\\)\\|"	
+   "\\(\\<if\\>\\)\\|"
+   "\\(\\<clocking\\>\\)\\|"
    "\\(\\<task\\>\\)\\|"	
    "\\(\\<function\\>\\)\\|"	
    "\\(\\<initial\\>\\)\\|"
@@ -3237,12 +3237,12 @@ With ARG, first kill any existing labels."
         (verilog-backward-syntactic-ws)
         (if (or (bolp)
                 (= (preceding-char) ?\;))
-            (progn 
+            (progn
               (goto-char pt)
               (throw 'done t))
           (verilog-backward-token))))
     (verilog-forward-syntactic-ws)))
-;	       
+;
 ;    (while (and
 ;            (not (looking-at verilog-complete-reg))
 ;            (not (bolp))
@@ -3547,7 +3547,7 @@ primitive or interface named NAME."
 		      (str "UNMATCHED!!"))
 		  (save-excursion
 		    (verilog-leap-to-head)
-		    (cond 
+		    (cond
 		     ((looking-at "\\<randcase\\>")
 		      (setq str "randcase")
 		      (setq err nil))
@@ -3683,7 +3683,7 @@ primitive or interface named NAME."
 			      (setq there (point))
 			      (setq err nil)
 			      (setq str (concat " // " cntx (verilog-get-expr))))
-			     
+
 			     (;-- otherwise...
 			      (setq str " // auto-endcomment confused "))))
 
@@ -4497,7 +4497,7 @@ of the appropriate enclosing block."
 (defun verilog-leap-to-case-head ()
   (let ((nest 1))
     (while (/= 0 nest)
-      (verilog-re-search-backward 
+      (verilog-re-search-backward
        (concat
 	"\\(\\<randcase\\>\\|\\(\\<unique\\s-+\\|priority\\s-+\\)?\\<case[xz]?\\>\\)"
 	"\\|\\(\\<endcase\\>\\)" )
@@ -4536,7 +4536,7 @@ Jump from end to matching begin, from endcase to matching case, and so on."
 	(verilog-leap-to-case-head) )
       (setq reg nil) ; to force skip
       )
-     
+
      ((looking-at "\\<join\\(_any\\|_none\\)?\\>")
       ;; 4: Search back for matching fork
       (setq reg "\\(\\<fork\\>\\)\\|\\(\\<join\\(_any\\|_none\\)?\\>\\)" ))

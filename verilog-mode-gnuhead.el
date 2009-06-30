@@ -1,1 +1,1 @@
-gnuhead/emacs/lisp/progmodes/verilog-mode.el
+../emacs/lisp/progmodes/verilog-mode.el
