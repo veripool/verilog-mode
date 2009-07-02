@@ -20,6 +20,7 @@ dirs:
 test:	.timestamps/test
 .timestamps/test: x/verilog-mode.elc e/verilog-mode.elc mmencoded_verilog-mode verilog.info 0test.el
 	$(MAKE) test_batch
+	$(MAKE) test_errors
 	$(MAKE) test_emacs
 	$(MAKE) test_xemacs
 	@touch $@
@@ -32,8 +33,26 @@ test_xemacs: x/verilog-mode.elc
 	@echo
 	@echo == test_xemacs
 	time $(XEMACS) --batch -q -l x/verilog-mode.elc -l 0test.el
-test_batch:
+test_errors:
 	@echo
+	@echo == test_errors
+	@echo emit a bunch of error messages that Emacs should
+	@echo "recognize if you type C-x \` and take you to the correct line of error_file.v"
+	@echo "Warning: code located there (error_file.v line 9) is dangerous"
+	@echo "(W1800) error_file.v 21: Problems"
+	@echo "f*E,1364 (error_file.v,2) Issues"
+	@echo "Error: code located here (error_file.v line 8) is fatal"
+	@echo "ERROR  : error_file.v, line 1: erroneous"
+	@echo "INFO  : error_file.v, line 7: informational"
+	@echo "WARNING : error_file.v, line 6: curious"
+	@echo "In file error_file.v line 5:"
+	@echo "a"
+	@echo "b"
+	@echo "Failure was obsevred"
+	@echo la di da
+	@echo syntax error: problems
+	@echo error_file.v 7: here is where they are
+test_batch:
 	@echo == test_batch
 	time ./batch_test.pl
 
