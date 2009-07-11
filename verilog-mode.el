@@ -1523,8 +1523,10 @@ find the errors."
     (verilog-regexp-opt
      '(
        "`ovm_component_utils_begin"
+       "`ovm_component_param_utils_begin"
        "`ovm_field_utils_begin"
        "`ovm_object_utils_begin"
+       "`ovm_object_param_utils_begin"
        "`ovm_sequence_utils_begin"
        "`ovm_sequencer_utils_begin"
        ) nil )))
@@ -1812,8 +1814,10 @@ find the errors."
        "task"
        ;;; OVM
        "`ovm_component_utils_begin"
+       "`ovm_component_param_utils_begin"
        "`ovm_field_utils_begin"
        "`ovm_object_utils_begin"
+       "`ovm_object_param_utils_begin"
        "`ovm_sequence_utils_begin"
        "`ovm_sequencer_utils_begin"
 
@@ -1997,8 +2001,10 @@ find the errors."
        "`time_scale"
        ;; OVM Begin tokens
        "`ovm_component_utils_begin"
+       "`ovm_component_param_utils_begin"
        "`ovm_field_utils_begin"
        "`ovm_object_utils_begin"
+       "`ovm_object_param_utils_begin"
        "`ovm_sequence_utils_begin"
        "`ovm_sequencer_utils_begin"
        ;; OVM End tokens
@@ -2049,7 +2055,7 @@ find the errors."
      `(
        "always" "assign" "always_latch" "always_ff" "always_comb" "constraint"
        "import" "initial" "final" "module" "macromodule" "repeat" "randcase" "while"
-       "if" "for" "forever" "foreach" "else" "parameter" "do" "localparam"
+       "if" "for" "forever" "foreach" "else" "parameter" "do" "localparam" "assert"
        ))))
 (defconst verilog-complete-reg
   (concat
@@ -3244,7 +3250,7 @@ With ARG, first kill any existing labels."
 		  (looking-at "\\<")
 		  (forward-word -1)))
 	    (and
-	     (looking-at verilog-extended-complete-re)
+	     (looking-at verilog-complete-reg)
 	     (not (save-excursion
 		    (verilog-backward-token)
 		    (looking-at verilog-extended-complete-re))))
@@ -4666,7 +4672,7 @@ Set point to where line starts."
     continued))
 
 (defun verilog-backward-token ()
-  "Step backward token, returing true if nil if continued line."
+  "Step backward token, returing true if this is a continued line."
   (interactive)
   (verilog-backward-syntactic-ws)
   (cond
