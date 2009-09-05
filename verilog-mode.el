@@ -4142,7 +4142,10 @@ This lets programs calling batch mode to easily extract error messages."
 (defun verilog-batch-execute-func (funref)
   "Internal processing of a batch command, running FUNREF on all command arguments."
   (verilog-batch-error-wrapper
-   ;; !!! FIXME: Setting global variables like that is *VERY NASTY* !!!  --Stef
+   ;; Setting global variables like that is *VERY NASTY* !!!  --Stef
+   ;; However, this function is called only when Emacs is being used as
+   ;; a standalone language instead of as an editor, so we'll live.
+   ;;
    ;; General globals needed
    (setq make-backup-files nil)
    (setq-default make-backup-files nil)
