@@ -10979,8 +10979,7 @@ and the case items."
 ;; second (emacs/xemacs) impl.: G. Van der Plas (spice-mode.el)
 
 (if (featurep 'xemacs)
-    (require 'overlay)
-  (require 'lucid)) ;; what else can we do ??
+    (require 'overlay))
 
 (defconst verilog-include-file-regexp
   "^`include\\s-+\"\\([^\n\"]*\\)\""
