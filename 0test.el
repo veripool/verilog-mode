@@ -126,9 +126,9 @@
                  )
                )
              ))
-      (message (format " %d tests run so far..." tests-run ))
+      (message (format " %d tests run so far, %d left..." tests-run (length files)))
       (setq files (cdr files))))
-  (message "Tests Passed")
+  (message "Tests Passed on %s" (emacs-version))
   "Tests Passed")
 
 (defun vl-indent-file ()
