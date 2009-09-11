@@ -7189,7 +7189,7 @@ list of ( (signal_name connection_name)... )."
 	     (goto-char (match-end 0))
 	     ;; Parse "REGEXP"
 	     ;; We reserve @"..." for future lisp expressions that evaluate once-per-AUTOINST
-	     (when (looking-at "\\s-*\"\\([^\"]*)\\)\"")
+	     (when (looking-at "\\s-*\"\\([^\"]*\\)\"")
 	       (setq tpl-regexp (match-string 1))
 	       (goto-char (match-end 0)))
 	     (search-forward "(")

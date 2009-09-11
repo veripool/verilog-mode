@@ -147,3 +147,11 @@ verilog-mode-tognu.el: verilog-mode.el Makefile
 	 | sed 's/(substring.*\$$\$$Date: \(....-..-..\).*).*$$/"\1-GNU"/g' \
 	 | sed 's/verilog-mode-release-emacs nil/verilog-mode-release-emacs t/g' \
 	 > verilog-mode-tognu.el
+
+######################################################################
+# Clean
+
+clean::
+	/bin/rm -rf .timestamps e/*.elc x/*.elc
+
+
