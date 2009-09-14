@@ -579,6 +579,15 @@ The name of the function or case will be set between the braces."
   :type 'boolean)
 (put 'verilog-auto-endcomments 'safe-local-variable 'verilog-booleanp)
 
+(defcustom verilog-auto-ignore-concat nil
+  "*True means ignore signals in {...} concatenations when reading
+instantiations.  This will exclude signals in the {...} from AUTOWIRE,
+AUTOOUTPUT and friends.  This flag should be set for backward compatibility only
+and not set in new designs; it may be removed in future versions."
+  :group 'verilog-mode-actions
+  :type 'boolean)
+(put 'verilog-auto-ignore-concat 'safe-local-variable 'verilog-booleanp)
+
 (defcustom verilog-auto-read-includes nil
   "*True means to automatically read includes before AUTOs.
 This will do a `verilog-read-defines' and `verilog-read-includes' before
@@ -6795,10 +6804,11 @@ Return a array of [outputs inouts inputs wire reg assign const]."
   (cond
    ;; {..., a, b} requires us to recurse on a,b
    ((string-match "^\\s-*{\\([^{}]*\\)}\\s-*$" expr)
-    (let ((mlst (split-string (match-string 1 expr) ","))
-	  mstr)
-      (while (setq mstr (pop mlst))
-	(verilog-read-sub-decls-expr submoddecls comment port mstr))))
+    (unless verilog-auto-ignore-concat
+      (let ((mlst (split-string (match-string 1 expr) ","))
+	    mstr)
+	(while (setq mstr (pop mlst))
+	  (verilog-read-sub-decls-expr submoddecls comment port mstr)))))
    (t
     (let (sig vec multidim)
       (cond ;; Find \signal. Final space is part of escaped signal name
