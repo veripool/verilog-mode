@@ -1669,6 +1669,7 @@ find the errors."
 ;; a,
 ;;   b :
 
+(defconst verilog-label-re (concat verilog-symbol-re "\s-*:\s-*"))
 (defconst verilog-no-indent-begin-re
   "\\<\\(if\\|else\\|while\\|for\\|repeat\\|always\\|always_comb\\|always_ff\\|always_latch\\)\\>")
 
@@ -4484,11 +4485,13 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 	     ((looking-at "\\<property\\>")
 					; *sigh*
 					;    {assert|assume|cover} property (); are complete
+	                                ;   and could also be labeled: - foo: assert property
 					; but
                                         ;    property ID () ... needs end_property
 	      (verilog-beg-of-statement)
-	      (if (looking-at "\\(assert\\|assume\\|cover\\)\\s-+property\\>")
-		  (throw 'nesting 'statement) ; We don't need an endproperty for these
+	      (if (looking-at (concat "\\(" verilog-label-re "\\)?"
+				      "\\(assert\\|assume\\|cover\\)\\s-+property\\>"))
+		  (throw 'continue 'statement) ; We don't need an endproperty for these
 		(throw 'nesting 'block)	;We still need a endproperty
 		))
 
@@ -4505,7 +4508,7 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 	   ((looking-at verilog-defun-level-re)
 	    (if (looking-at verilog-defun-level-generate-only-re)
 		(if (verilog-in-generate-region-p)
-		    (throw 'continue 'foo)  ; always block in a generate
+		    (throw 'continue 'foo)  ; always block in a generate - keep looking
 		  (throw 'nesting 'defun))
 	      (throw 'nesting 'defun)))
 
