@@ -580,10 +580,11 @@ The name of the function or case will be set between the braces."
 (put 'verilog-auto-endcomments 'safe-local-variable 'verilog-booleanp)
 
 (defcustom verilog-auto-ignore-concat nil
-  "*True means ignore signals in {...} concatenations when reading
-instantiations.  This will exclude signals in the {...} from AUTOWIRE,
-AUTOOUTPUT and friends.  This flag should be set for backward compatibility only
-and not set in new designs; it may be removed in future versions."
+  "*True means ignore signals in {...} concatenations for AUTOWIRE etc.
+This will exclude signals referenced as pin connections in {...}
+from AUTOWIRE, AUTOOUTPUT and friends.  This flag should be set
+for backward compatibility only and not set in new designs; it
+may be removed in future versions."
   :group 'verilog-mode-actions
   :type 'boolean)
 (put 'verilog-auto-ignore-concat 'safe-local-variable 'verilog-booleanp)
@@ -710,7 +711,7 @@ always be saved."
   '(
     ("[^\n]*\\[\\([^:]+\\):\\([0-9]+\\)\\]" 1 bold t)
     ("[^\n]*\\[\\([^:]+\\):\\([0-9]+\\)\\]" 2 bold t)
-    
+
     ("\\(WARNING\\|ERROR\\|INFO\\): \\([^,]+\\), line \\([0-9]+\\):" 2 bold t)
     ("\\(WARNING\\|ERROR\\|INFO\\): \\([^,]+\\), line \\([0-9]+\\):" 3 bold t)
 
@@ -878,11 +879,11 @@ the MSB or LSB of a signal inside an AUTORESET."
 (put 'verilog-assignment-delay 'safe-local-variable 'stringp)
 
 (defcustom verilog-auto-arg-sort nil
-  "*If set, AUTOARG will sort signal names, rather than leave them in
-declaration order.  Declaration order is advantageous with order based
-instantiations and is the default for backward compatibility.  Sorted order
-reduces changes when declarations are moved around in a file, and it's bad
-practice to rely on order based instantiations anyhow."
+  "*If set, AUTOARG signal names will be sorted, not in delaration order.
+Declaration order is advantageous with order based instantiations
+and is the default for backward compatibility.  Sorted order
+reduces changes when declarations are moved around in a file, and
+it's bad practice to rely on order based instantiations anyhow."
   :group 'verilog-mode-auto
   :type 'boolean)
 (put 'verilog-auto-arg-sort 'safe-local-variable 'verilog-booleanp)
@@ -1790,11 +1791,11 @@ find the errors."
    "\\(\\<always_ff\\>\\(\[ \t\]*@\\)?\\)\\|"    ; 5
    "\\(\\<always_latch\\>\\(\[ \t\]*@\\)?\\)\\|" ; 6
    "\\(\\<fork\\>\\)\\|"			 ; 7
-   "\\(\\<always\\>\\(\[ \t\]*@\\)?\\)\\|"      
+   "\\(\\<always\\>\\(\[ \t\]*@\\)?\\)\\|"
    "\\(\\<if\\>\\)\\|"
    "\\(\\<clocking\\>\\)\\|"
-   "\\(\\<task\\>\\)\\|"	
-   "\\(\\<function\\>\\)\\|"	
+   "\\(\\<task\\>\\)\\|"
+   "\\(\\<function\\>\\)\\|"
    "\\(\\<initial\\>\\)\\|"
    "\\(\\<interface\\>\\)\\|"
    "\\(\\<package\\>\\)\\|"
@@ -7034,7 +7035,7 @@ IGNORE-NEXT is true to ignore next token, fake from inside case statement."
 				       (point)))
 		sig-last-tolk sig-tolk
 		sig-tolk nil)
-	  ;;(if dbg (setq dbg (concat dbg (format "\tPt=%S %S\trv=%S in=%S ee=%S\n" (point) keywd rvalue ignore-next end-else-check))))
+	  ;;(if dbg (setq dbg (concat dbg (format "\tPt=%S %S\trv=%S in=%S ee=%S gs=%S\n" (point) keywd rvalue ignore-next end-else-check got-sig))))
 	  (cond
 	   ((equal keywd "\"")
 	    (or (re-search-forward "[^\\]\"" nil t)
@@ -7061,7 +7062,7 @@ IGNORE-NEXT is true to ignore next token, fake from inside case statement."
 	      (setq end-else-check t))
 	    (forward-char 1))
 	   ((equal keywd "'")
-	    (if (looking-at "'s?[hdxbo][0-9a-fA-F_xz? \t]*")
+	    (if (looking-at "'[sS]?[hdxboHDXBO]?[ \t]*[0-9a-fA-F_xzXZ?]+")
 		(goto-char (match-end 0))
 	      (forward-char 1)))
 	   ((equal keywd ":")	;; Case statement, begin/end label, x?y:z
@@ -9746,7 +9747,7 @@ same expansion will result from only extracting signals starting with i:
 
 	   /*AUTOINOUTMODULE(\"ExampMain\",\"^i\")*/
 
-You may also provide an optional second regulat expression, in
+You may also provide an optional second regular expression, in
 which case only signals which have that pin direction and data
 type will be included.  This matches against everything before
 the signal name in the declaration, for example against
