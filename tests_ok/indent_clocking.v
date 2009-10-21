@@ -10,9 +10,9 @@ module t;
       assert property (foo) a;
       assume property (bar) b;
       b1: assume property (bar) b;
-         B2: assert property (foo) a;
-            B2: cover property (foo) a;
-               assume property (bar) b;
-               a;
-            endclocking // Woops should be indent 3
+      B2: assert property (foo) a;
+      B2: cover property (foo) a;
+      assume property (bar) b;
+      a;
+   endclocking // Woops should be indent 3
 endmodule

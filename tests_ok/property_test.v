@@ -45,7 +45,7 @@ module test();
         $error("ERROR! Analog Bypass: Input change not observed on the outputs: %h (lane)",
                lane_inputs);
      end // UNMATCHED !!
-   endproperty //FIXME
+endproperty //FIXME
    
    property p_sup_output_change_on_input_change;
       @(negedge test_clk)
@@ -58,5 +58,5 @@ module test();
         $error("ERROR! Analog Bypass: Input change not observed on the outputs: %h (sup)",
                sup_inputs);
      end
-   endproperty // FIXME
+endproperty
 endmodule // test

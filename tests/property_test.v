@@ -58,5 +58,5 @@ module test();
         $error("ERROR! Analog Bypass: Input change not observed on the outputs: %h (sup)",
                sup_inputs);
      end
-   endproperty // FIXME
+endproperty
 endmodule // test
