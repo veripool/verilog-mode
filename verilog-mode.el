@@ -1670,7 +1670,7 @@ find the errors."
 ;; a,
 ;;   b :
 
-(defconst verilog-label-re (concat verilog-symbol-re "\s-*:\s-*"))
+(defconst verilog-label-re (concat verilog-symbol-re "\\s-*:\\s-*"))
 (defconst verilog-no-indent-begin-re
   "\\<\\(if\\|else\\|while\\|for\\|repeat\\|always\\|always_comb\\|always_ff\\|always_latch\\)\\>")
 
