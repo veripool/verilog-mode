@@ -7155,7 +7155,7 @@ IGNORE-NEXT is true to ignore next token, fake from inside case statement."
 	   uses-delayed)	;; Found signal/rvalue; push if not function
       (search-forward ")")
       (verilog-read-always-signals-recurse nil nil nil)
-      ;;(if dbg (save-excursion (set-buffer (get-buffer-create "*vl-dbg*")) (delete-region (point-min) (point-max)) (insert dbg) (setq dbg "")))
+      ;;(if dbg (with-current-buffer (get-buffer-create "*vl-dbg*")) (delete-region (point-min) (point-max)) (insert dbg) (setq dbg ""))
       ;; Return what was found
       (list sigs-out nil sigs-in uses-delayed))))
 
@@ -7267,19 +7267,19 @@ list of ( (signal_name connection_name)... )."
 (defun verilog-set-define (defname defvalue &optional buffer enumname)
   "Set the definition DEFNAME to the DEFVALUE in the given BUFFER.
 Optionally associate it with the specified enumeration ENUMNAME."
-  (save-excursion
-    (set-buffer (or buffer (current-buffer)))
-    (let ((mac (intern (concat "vh-" defname))))
-      ;;(message "Define %s=%s" defname defvalue) (sleep-for 1)
-      ;; Need to define to a constant if no value given
-      (set (make-variable-buffer-local mac)
-	   (if (equal defvalue "") "1" defvalue)))
-    (if enumname
-	(let ((enumvar (intern (concat "venum-" enumname))))
-	  ;;(message "Define %s=%s" defname defvalue) (sleep-for 1)
-	  (unless (boundp enumvar) (set enumvar nil))
-	  (make-variable-buffer-local enumvar)
-	  (add-to-list enumvar defname)))))
+  (with-current-buffer (or buffer (current-buffer))
+    (save-excursion
+      (let ((mac (intern (concat "vh-" defname))))
+	;;(message "Define %s=%s" defname defvalue) (sleep-for 1)
+	;; Need to define to a constant if no value given
+	(set (make-variable-buffer-local mac)
+	     (if (equal defvalue "") "1" defvalue)))
+      (if enumname
+	  (let ((enumvar (intern (concat "venum-" enumname))))
+	    ;;(message "Define %s=%s" defname defvalue) (sleep-for 1)
+	    (unless (boundp enumvar) (set enumvar nil))
+	    (make-variable-buffer-local enumvar)
+	    (add-to-list enumvar defname))))))
 
 (defun verilog-read-defines (&optional filename recurse subcall)
   "Read `defines and parameters for the current file, or optional FILENAME.
@@ -7515,9 +7515,9 @@ Some macros and such are also found and included.  For dinotrace.el."
 	(forward-line 1)
 	(when (string-match "//" line)
 	  (setq line (substring line 0 (match-beginning 0))))
-	(save-excursion
-	  (set-buffer orig-buffer)  ; Variables are buffer-local, so need right context.
-	  (verilog-getopt line))))))
+	(with-current-buffer orig-buffer  ; Variables are buffer-local, so need right context.
+	  (save-excursion
+	    (verilog-getopt line)))))))
 
 (defun verilog-getopt-flags ()
   "Convert `verilog-library-flags' into standard library variables."
@@ -7617,16 +7617,17 @@ Allows version control to check out the file if need be."
 	   (and (fboundp 'vc-backend)
 		(vc-backend filename)))
        (let (pt)
-	 (save-excursion
-	   (set-buffer (find-file-noselect filename))
-	   (goto-char (point-min))
-	   (while (and
-		   ;; It may be tempting to look for verilog-defun-re, don't, it slows things down a lot!
-		   (verilog-re-search-forward-quick "\\<module\\>" nil t)
-		   (verilog-re-search-forward-quick "[(;]" nil t))
-	     (if (equal module (verilog-read-module-name))
-		 (setq pt (point))))
-	   pt))))
+	 (with-current-buffer (find-file-noselect filename)
+	   (save-excursion
+	     (goto-char (point-min))
+	     (while (and
+		     ;; It may be tempting to look for verilog-defun-re,
+		     ;; don't, it slows things down a lot!
+		     (verilog-re-search-forward-quick "\\<module\\>" nil t)
+		     (verilog-re-search-forward-quick "[(;]" nil t))
+	       (if (equal module (verilog-read-module-name))
+		   (setq pt (point))))
+	     pt)))))
 
 (defun verilog-is-number (symbol)
   "Return true if SYMBOL is number-like."
