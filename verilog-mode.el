@@ -1483,7 +1483,7 @@ find the errors."
 			    (cdr compilation-error-regexp-alist-alist)))))
       (if (boundp 'compilation-font-lock-keywords)
 	  (progn
-	    (make-variable-buffer-local 'compilation-font-lock-keywords)
+	    (make-local-variable 'compilation-font-lock-keywords)
 	    (setq compilation-font-lock-keywords  verilog-error-font-lock-keywords)
 	    (font-lock-set-defaults)))
       ;; Need to re-run compilation-error-regexp builder
@@ -7268,18 +7268,17 @@ list of ( (signal_name connection_name)... )."
   "Set the definition DEFNAME to the DEFVALUE in the given BUFFER.
 Optionally associate it with the specified enumeration ENUMNAME."
   (with-current-buffer (or buffer (current-buffer))
-    (save-excursion
-      (let ((mac (intern (concat "vh-" defname))))
-	;;(message "Define %s=%s" defname defvalue) (sleep-for 1)
-	;; Need to define to a constant if no value given
-	(set (make-variable-buffer-local mac)
-	     (if (equal defvalue "") "1" defvalue)))
-      (if enumname
-	  (let ((enumvar (intern (concat "venum-" enumname))))
-	    ;;(message "Define %s=%s" defname defvalue) (sleep-for 1)
-	    (unless (boundp enumvar) (set enumvar nil))
-	    (make-variable-buffer-local enumvar)
-	    (add-to-list enumvar defname))))))
+    (let ((mac (intern (concat "vh-" defname))))
+      ;;(message "Define %s=%s" defname defvalue) (sleep-for 1)
+      ;; Need to define to a constant if no value given
+      (set (make-local-variable mac)
+	   (if (equal defvalue "") "1" defvalue)))
+    (if enumname
+	(let ((enumvar (intern (concat "venum-" enumname))))
+	  ;;(message "Define %s=%s" defname defvalue) (sleep-for 1)
+	  (unless (boundp enumvar) (set enumvar nil))
+	  (make-local-variable enumvar)
+	  (add-to-list enumvar defname)))))
 
 (defun verilog-read-defines (&optional filename recurse subcall)
   "Read `defines and parameters for the current file, or optional FILENAME.
@@ -7516,8 +7515,7 @@ Some macros and such are also found and included.  For dinotrace.el."
 	(when (string-match "//" line)
 	  (setq line (substring line 0 (match-beginning 0))))
 	(with-current-buffer orig-buffer  ; Variables are buffer-local, so need right context.
-	  (save-excursion
-	    (verilog-getopt line)))))))
+	  (verilog-getopt line))))))
 
 (defun verilog-getopt-flags ()
   "Convert `verilog-library-flags' into standard library variables."
