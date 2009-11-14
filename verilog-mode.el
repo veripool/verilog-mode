@@ -4640,7 +4640,13 @@ Jump from end to matching begin, from endcase to matching case, and so on."
 		(while (verilog-re-search-backward reg nil 'move)
 		  (cond
 		   ((match-end 1) ; begin
-		    (setq nest (1- nest))
+		    (if (looking-at "fork")
+			(let ((here (point)))
+			  (verilog-beg-of-statement)
+			  (unless (looking-at verilog-disable-fork-re)
+			    (goto-char here)
+			    (setq nest (1- nest))))
+		      (setq nest (1- nest)))
 		    (if (= 0 nest)
 			;; Now previous line describes syntax
 			(throw 'skip 1))
@@ -4760,6 +4766,8 @@ Set point to where line starts."
    (;-- any of begin|initial|while are complete statements; 'begin : foo' is also complete
     t
     (forward-word -1)
+    (while (= (preceding-char) ?\_)
+      (forward-word -1))
     (cond
      ((looking-at "\\<else\\>")
       t)
