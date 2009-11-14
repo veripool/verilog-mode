@@ -6935,10 +6935,10 @@ Outputs comments above subcell signals, for example:
 		(while (re-search-forward "\\s *(?\\s *// Outputs" end-inst-point t)
 		  (verilog-read-sub-decls-line submoddecls comment)) ;; Modifies sigs-out
 		(goto-char st-point)
-		(while (re-search-forward "\\s *// Inouts" end-inst-point t)
+		(while (re-search-forward "\\s *(?\\s *// Inouts" end-inst-point t)
 		  (verilog-read-sub-decls-line submoddecls comment)) ;; Modifies sigs-inout
 		(goto-char st-point)
-		(while (re-search-forward "\\s *// Inputs" end-inst-point t)
+		(while (re-search-forward "\\s *(?\\s *// Inputs" end-inst-point t)
 		  (verilog-read-sub-decls-line submoddecls comment)) ;; Modifies sigs-in
 		)))))
       ;; Combine duplicate bits
@@ -8279,7 +8279,7 @@ Deletion stops at the matching end parenthesis."
   "Return if a .* AUTOINST is safe to delete or expand.
 It was created by the AUTOS themselves, or by the user."
   (and verilog-auto-star-expand
-       (looking-at "[ \t\n\f,]*\\([)]\\|// \\(Outputs\\|Inouts\\|Inputs\\)\\)")))
+       (looking-at "[ \t\n\f,]*\\([)]\\|// \\(Outputs\\|Inouts\\|Inputs\\|Interfaces\\)\\)")))
 
 (defun verilog-delete-auto-star-all ()
   "Delete a .* AUTOINST, if it is safe."
@@ -8311,7 +8311,7 @@ removed."
 	  (save-excursion
 	    (while (progn
 		     (forward-line -1)
-		     (looking-at "\\s *//\\s *\\(Outputs\\|Inouts\\|Inputs\\)\n"))
+		     (looking-at "\\s *//\\s *\\(Outputs\\|Inouts\\|Inputs\\|Interfaces\\)\n"))
 	      (delete-region (match-beginning 0) (match-end 0))))
 	  ;; If it is simple, we can put the ); on the same line as the last text
 	  (let ((rtn-pt (point)))
@@ -9003,8 +9003,11 @@ Lisp Templates:
   quotes will be evaluated as a Lisp expression, with @ replaced by the
   instantiation number.  The MAPVALIDP1X example above would put @+1 modulo
   4 into the brackets.  Quote all double-quotes inside the expression with
-  a leading backslash (\\\").  There are special variables defined that are
-  useful in these Lisp functions:
+  a leading backslash (\\\"...\\\"); or if the Lisp template is also a
+  regexp template backslash the backslash quote (\\\\\"...\\\\\").
+
+  There are special variables defined that are useful in these
+  Lisp functions:
 
 	vl-name        Name portion of the input/output port.
 	vl-bits        Bus bits portion of the input/output port ('[2:0]').
@@ -9032,7 +9035,10 @@ Lisp Templates:
   `number-to-string' and `string-to-number'.
 
   After the evaluation is completed, @ substitution and [] substitution
-  occur."
+  occur.
+
+For more information see the \\[verilog-faq] and forums at URL
+`http://www.veripool.org'."
   (save-excursion
     ;; Find beginning
     (let* ((pt (point))
