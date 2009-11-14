@@ -4979,7 +4979,7 @@ Optional BOUND limits search."
   (save-excursion
     (if (and (equal (char-after) ?\{)
              (verilog-backward-token))
-        (looking-at "\\<struct\\|union\\|packed\\>")
+        (looking-at "\\<struct\\|union\\|packed\\|\\(un\\)?signed\\>")
       nil)))
 
 (defun verilog-parenthesis-depth ()
