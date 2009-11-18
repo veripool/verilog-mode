@@ -1,0 +1,2 @@
+  input bar;
+  output foo;

@@ -7738,11 +7738,13 @@ Or, just the existing dirnames themselves if there are no wildcards."
     dirlist))
 ;;(verilog-expand-dirnames (list "." ".." "nonexist" "../*" "/home/wsnyder/*/v"))
 
-(defun verilog-library-filenames (filename current &optional check-ext)
+(defun verilog-library-filenames (filename &optional current check-ext)
   "Return a search path to find the given FILENAME or module name.
-Uses the CURRENT filename, `verilog-library-directories' and
-`verilog-library-extensions' variables to build the path.
-With optional CHECK-EXT also check `verilog-library-extensions'."
+Uses the optional CURRENT filename or buffer-file-name, plus
+`verilog-library-directories' and `verilog-library-extensions'
+variables to build the path.  With optional CHECK-EXT also check
+`verilog-library-extensions'."
+  (unless current (setq current (buffer-file-name)))
   (unless verilog-dir-cache-preserving
     (setq verilog-dir-cache-lib-filenames nil))
   (let* ((cache-key (list filename current check-ext))
@@ -8229,6 +8231,13 @@ This repairs those mis-inserted by a AUTOARG."
       (delete-region pt (point))
       (forward-line 1))))
 
+(defun verilog-delete-empty-auto-pair ()
+  "Delete begin/end auto pair at point, if empty."
+  (forward-line 0)
+  (when (looking-at (concat "\\s-*// Beginning of automatic.*\n"
+			    "\\s-*// End of automatics\n"))
+    (delete-region (point) (save-excursion (forward-line 2) (point)))))
+
 (defun verilog-forward-close-paren ()
   "Find the close parenthesis that match the current point.
 Ignore other close parenthesis with matching open parens."
@@ -8351,7 +8360,7 @@ called before and after this function, respectively."
 		  "AUTOREG" "AUTOREGINPUT" "AUTORESET" "AUTOTIEOFF"
 		  "AUTOUNUSED" "AUTOWIRE")))
 	     ;; Optional parens or quoted parameter or .* for (((...)))
-	     "\\(\\|([^)]*)\\|(\"[^\"]*\")\\|.*?\\)"
+	     "\\(\\|([^)]*)\\|(\"[^\"]*\")\\).*?"
 	     "\\*/")
      'verilog-delete-autos-lined)
     ;; Remove those that are in parenthesis
@@ -9931,17 +9940,14 @@ text:
 				       (point))) ;; Beginning paren
 	   (cmd (buffer-substring-no-properties cmd-beg-pt cmd-end-pt)))
       (forward-line 1)
-      (let ((pre-eval-pt (point)))
-	;;Debug: (insert cmd)
-	;; Don't use eval-region as Xemacs has a bug where it goto-char's begin-pt
-	(eval (read cmd))
-	;; If inserted something add the begin/end blocks
-	(when (not (equal pre-eval-pt (point)))
-	  (when (not (bolp)) (insert "\n"))  ;; If user forgot final newline, add it
-	  (save-excursion
-	    (goto-char pre-eval-pt)
-	    (verilog-insert-indent "// Beginning of automatic insert lisp\n"))
-	  (verilog-insert-indent "// End of automatics\n"))))))
+      ;; Some commands don't move point (like insert-file) so we always
+      ;; add the begin/end comments, then delete it if not needed
+      (verilog-insert-indent "// Beginning of automatic insert lisp\n")
+      (verilog-insert-indent "// End of automatics\n")
+      (forward-line -1)
+      (eval (read cmd))
+      (forward-line -1)
+      (verilog-delete-empty-auto-pair))))
 
 (defun verilog-auto-sense-sigs (moddecls presense-sigs)
   "Return list of signals for current AUTOSENSE block."
