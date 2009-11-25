@@ -5396,7 +5396,7 @@ Be verbose about progress unless optional QUIET set."
           (unless quiet (message ""))))))
 
 (defun verilog-pretty-expr (&optional quiet myre)
-  "Line up expressions around point, or optional regexp MYRE."
+  "Line up expressions around point, optionally QUIET with regexp MYRE."
   (interactive "sRegular Expression: ((<|:)?=) ")
   (save-excursion
     (if (or (eq myre nil)
@@ -5669,13 +5669,13 @@ it displays a list of all possible completions.")
     "triand" "trior" "trireg" "wand" "wire" "wor" "xnor" "xor"
     )
   "*Keywords for types used when completing a word in a declaration or parmlist.
-\(Eg. integer, real, reg...)")
+\(integer, real, reg...)")
 
 (defvar verilog-cpp-keywords
   '("module" "macromodule" "primitive" "timescale" "define" "ifdef" "ifndef" "else"
     "endif")
   "*Keywords to complete when at first word of a line in declarative scope.
-\(Eg. initial, always, begin, assign.)
+\(initial, always, begin, assign...)
 The procedures and variables defined within the Verilog program
 will be completed at runtime and should not be added to this list.")
 
@@ -5689,7 +5689,7 @@ will be completed at runtime and should not be added to this list.")
      )
    verilog-type-keywords)
   "*Keywords to complete when at first word of a line in declarative scope.
-\(Eg. initial, always, begin, assign.)
+\(initial, always, begin, assign...)
 The procedures and variables defined within the Verilog program
 will be completed at runtime and should not be added to this list.")
 
@@ -5700,28 +5700,28 @@ will be completed at runtime and should not be added to this list.")
     "for" "fork" "if" "join" "join_any" "join_none" "repeat" "return"
     "while")
   "*Keywords to complete when at first word of a line in behavioral scope.
-\(Eg. begin, if, then, else, for, fork.)
+\(begin, if, then, else, for, fork...)
 The procedures and variables defined within the Verilog program
 will be completed at runtime and should not be added to this list.")
 
 (defvar verilog-tf-keywords
   '("begin" "break" "fork" "join" "join_any" "join_none" "case" "end" "endtask" "endfunction" "if" "else" "for" "while" "repeat")
   "*Keywords to complete when at first word of a line in a task or function.
-\(Eg. begin, if, then, else, for, fork.)
+\(begin, if, then, else, for, fork.)
 The procedures and variables defined within the Verilog program
 will be completed at runtime and should not be added to this list.")
 
 (defvar verilog-case-keywords
   '("begin" "fork" "join" "join_any" "join_none" "case" "end" "endcase" "if" "else" "for" "repeat")
   "*Keywords to complete when at first word of a line in case scope.
-\(Eg. begin, if, then, else, for, fork.)
+\(begin, if, then, else, for, fork...)
 The procedures and variables defined within the Verilog program
 will be completed at runtime and should not be added to this list.")
 
 (defvar verilog-separator-keywords
   '("else" "then" "begin")
   "*Keywords to complete when NOT standing at the first word of a statement.
-\(Eg. else, then.)
+\(else, then, begin...)
 Variables and function names defined within the Verilog program
 will be completed at runtime and should not be added to this list.")
 
@@ -7997,7 +7997,7 @@ and invalidating the cache."
       (nreverse out-list))))
 
 (defun verilog-signals-matching-dir-re (in-list decl-type regexp)
-  "Return all signals in IN-LIST matching the given directional REGEXP,
+  "Return all signals in IN-LIST matching the given DECL-TYPE and REGEXP,
 if non-nil."
   (if (or (not regexp) (equal regexp ""))
       in-list
@@ -8992,7 +8992,7 @@ Regexp Templates:
   inside the first set of \\( \\).  Thus pci_req2_l becomes pci_req_jtag_[2].
 
   Since \\([0-9]+\\) is so common and ugly to read, a @ in the port name
-  does the same thing. (Note a @ in the connection/replacement text is
+  does the same thing.  (Note a @ in the connection/replacement text is
   completely different -- still use \\1 there!)  Thus this is the same as
   the above template:
 
