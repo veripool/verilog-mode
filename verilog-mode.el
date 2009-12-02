@@ -1553,6 +1553,38 @@ find the errors."
        "`ovm_sequencer_utils_end"
        ) nil )))
 
+(defconst verilog-vmm-begin-re
+  (eval-when-compile
+    (verilog-regexp-opt
+     '(
+       "`vmm_data_member_begin"
+       "`vmm_env_member_begin"
+       "`vmm_scenario_member_begin"
+       "`vmm_subenv_member_begin"
+       "`vmm_xactor_member_begin"
+       ) nil ) ) )
+
+(defconst verilog-vmm-end-re
+  (eval-when-compile
+    (verilog-regexp-opt
+     '(
+       "`vmm_data_member_end"
+       "`vmm_env_member_end"
+       "`vmm_scenario_member_end"
+       "`vmm_subenv_member_end"
+       "`vmm_xactor_member_end"
+       ) nil ) ) )
+
+(defconst verilog-vmm-statement-re
+  (eval-when-compile
+    (verilog-regexp-opt
+     '(
+;;       "`vmm_xactor_member_enum_array"       
+       "`vmm_\\(data\\|env\\|scenario\\|subenv\\|xactor\\)_member_\\(scalar\\|string\\|enum\\|vmm_data\\|channel\\|xactor\\|subenv\\|user_defined\\)\\(_array\\)?"
+;;       "`vmm_xactor_member_scalar_array"
+;;       "`vmm_xactor_member_scalar"
+       ) nil )))
+
 (defconst verilog-ovm-statement-re
   (eval-when-compile
     (verilog-regexp-opt
@@ -1679,7 +1711,8 @@ find the errors."
   (concat
    "\\(\\<else\\>\\)\\|"		; 1
    "\\(\\<if\\>\\)\\|"			; 2
-   "\\(\\<end\\>\\)\\|"			; 3
+   "\\(\\<assert\\>\\)\\|"              ; 3
+   "\\(\\<end\\>\\)\\|"			; 3.1
    "\\(\\<endcase\\>\\)\\|"		; 4
    "\\(\\<endfunction\\>\\)\\|"		; 5
    "\\(\\<endtask\\>\\)\\|"		; 6
@@ -1689,6 +1722,12 @@ find the errors."
    "\\(\\<join\\(_any\\|_none\\)?\\>\\)\\|" ; 10
    "\\(\\<endclass\\>\\)\\|"            ; 11
    "\\(\\<endgroup\\>\\)\\|"            ; 12
+   ;; VMM
+   "\\(\\<`vmm_data_member_end\\>\\)\\|"
+   "\\(\\<`vmm_env_member_end\\>\\)\\|"
+   "\\(\\<`vmm_scenario_member_end\\>\\)\\|"
+   "\\(\\<`vmm_subenv_member_end\\>\\)\\|"
+   "\\(\\<`vmm_xactor_member_end\\>\\)\\|"
    ;; OVM
    "\\(\\<`ovm_component_utils_end\\>\\)\\|"
    "\\(\\<`ovm_field_utils_end\\>\\)\\|"
@@ -1777,7 +1816,12 @@ find the errors."
        "`ovm_object_utils_end"
        "`ovm_sequence_utils_end"
        "`ovm_sequencer_utils_end"
-
+       ;; VMM
+       "`vmm_data_member_end"
+       "`vmm_env_member_end"
+       "`vmm_scenario_member_end"
+       "`vmm_subenv_member_end"
+       "`vmm_xactor_member_end"
        ))))
 
 
@@ -1832,7 +1876,12 @@ find the errors."
        "`ovm_object_param_utils_begin"
        "`ovm_sequence_utils_begin"
        "`ovm_sequencer_utils_begin"
-
+       ;; VMM
+       "`vmm_data_member_begin"
+       "`vmm_env_member_begin"
+       "`vmm_scenario_member_begin"
+       "`vmm_subenv_member_begin"
+       "`vmm_xactor_member_begin"
        ))))
 ;; These are the same words, in a specific order in the regular
 ;; expression so that matching will work nicely for
@@ -1854,6 +1903,7 @@ find the errors."
 	   "\\|\\(\\<\\(rand\\)?sequence\\>\\)" ;21 25
 	   "\\|\\(\\<clocking\\>\\)"          ;22 27
 	   "\\|\\(\\<`ovm_[a-z_]+_begin\\>\\)" ;28
+           "\\|\\(\\<`vmm_[a-z_]+_member_begin\\>\\)"
 	   ;;
 
 	   ))
@@ -2025,6 +2075,18 @@ find the errors."
        "`ovm_object_utils_end"
        "`ovm_sequence_utils_end"
        "`ovm_sequencer_utils_end"
+       ;; VMM Begin tokens
+       "`vmm_data_member_begin"
+       "`vmm_env_member_begin"
+       "`vmm_scenario_member_begin"
+       "`vmm_subenv_member_begin"
+       "`vmm_xactor_member_begin"
+       ;; VMM End tokens
+       "`vmm_data_member_end"
+       "`vmm_env_member_end"
+       "`vmm_scenario_member_end"
+       "`vmm_subenv_member_end"
+       "`vmm_xactor_member_end"
        ))))
 
 (defconst verilog-defun-level-not-generate-re
@@ -4278,7 +4340,8 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 		   ;; if we have a directive, done.
 		   (if (save-excursion (beginning-of-line)
 				       (and (looking-at verilog-directive-re-1)
-					    (not (looking-at "[ \t]*`ovm_"))))
+					    (not (or (looking-at "[ \t]*`ovm_") 
+                                 (looking-at "[ \t]*`vmm_")))))
 		       (throw 'nesting 'directive))
            ;; indent structs as if there were module level
            (if (verilog-in-struct-p)
@@ -4338,6 +4401,14 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 				       (beginning-of-line)
 				       (verilog-forward-syntactic-ws)
 				       (throw 'nesting 'statement)))))
+			      ((match-end 3) ; assert block
+			       (setq elsec (1- elsec))
+			       (verilog-beg-of-statement) ;; doesn't get to begining
+			       (if (looking-at (concat "\\(" verilog-label-re "\\)?"
+						       "\\(assert\\|assume\\|cover\\)\\s-+property\\>"))
+				   (throw 'nesting 'statement) ; We don't need an endproperty for these
+				 (throw 'nesting 'block)	;We still need a endproperty
+				 ))
 			      (t ; endblock
 				; try to leap back to matching outward block by striding across
 				; indent level changing tokens then immediately
@@ -4345,34 +4416,34 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 			       (let (( reg) (nest 1))
 ;;	 verilog-ends =>  else|if|end|join(_any|_none|)|endcase|endclass|endtable|endspecify|endfunction|endtask|endgenerate|endgroup
 				 (cond
-				  ((match-end 3) ; end
+				  ((match-end 4) ; end
 				   ;; Search back for matching begin
 				   (setq reg "\\(\\<begin\\>\\)\\|\\(\\<end\\>\\)" ))
-				  ((match-end 4) ; endcase
+				  ((match-end 5) ; endcase
 				   ;; Search back for matching case
 				   (setq reg "\\(\\<randcase\\>\\|\\<case[xz]?\\>[^:]\\)\\|\\(\\<endcase\\>\\)" ))
-				  ((match-end 5) ; endfunction
+				  ((match-end 6) ; endfunction
 				   ;; Search back for matching function
 				   (setq reg "\\(\\<function\\>\\)\\|\\(\\<endfunction\\>\\)" ))
-				  ((match-end 6) ; endtask
+				  ((match-end 7) ; endtask
 				   ;; Search back for matching task
 				   (setq reg "\\(\\<task\\>\\)\\|\\(\\<endtask\\>\\)" ))
-				  ((match-end 7) ; endspecify
+				  ((match-end 8) ; endspecify
 				   ;; Search back for matching specify
 				   (setq reg "\\(\\<specify\\>\\)\\|\\(\\<endspecify\\>\\)" ))
-				  ((match-end 8) ; endtable
+				  ((match-end 9) ; endtable
 				   ;; Search back for matching table
 				   (setq reg "\\(\\<table\\>\\)\\|\\(\\<endtable\\>\\)" ))
-				  ((match-end 9) ; endgenerate
+				  ((match-end 10) ; endgenerate
 				   ;; Search back for matching generate
 				   (setq reg "\\(\\<generate\\>\\)\\|\\(\\<endgenerate\\>\\)" ))
-				  ((match-end 10) ; joins
+				  ((match-end 11) ; joins
 				   ;; Search back for matching fork
 				   (setq reg "\\(\\<fork\\>\\)\\|\\(\\<join\\(_any\\|none\\)?\\>\\)" ))
-				  ((match-end 11) ; class
+				  ((match-end 12) ; class
 				   ;; Search back for matching class
 				   (setq reg "\\(\\<class\\>\\)\\|\\(\\<endclass\\>\\)" ))
-				  ((match-end 12) ; covergroup
+				  ((match-end 13) ; covergroup
 				   ;; Search back for matching covergroup
 				   (setq reg "\\(\\<covergroup\\>\\)\\|\\(\\<endgroup\\>\\)" )))
 				 (catch 'skip
@@ -4624,6 +4695,9 @@ Jump from end to matching begin, from endcase to matching case, and so on."
      ((looking-at verilog-ovm-end-re)
       ;; 12: Search back for matching sequence
       (setq reg (concat "\\(" verilog-ovm-begin-re "\\|" verilog-ovm-end-re "\\)")))
+     ((looking-at verilog-vmm-end-re)
+      ;; 12: Search back for matching sequence
+      (setq reg (concat "\\(" verilog-vmm-begin-re "\\|" verilog-vmm-end-re "\\)")))
      ((looking-at "\\<endinterface\\>")
       ;; 12: Search back for matching interface
       (setq reg "\\(\\<interface\\>\\)\\|\\(\\<endinterface\\>\\)" ))
@@ -4751,6 +4825,16 @@ Set point to where line starts."
 	  t)
 	 ((looking-at verilog-ovm-end-re)
 	  t)
+     ;; JBA find VMM macros
+     ((looking-at verilog-vmm-statement-re)
+      nil )
+     ((looking-at verilog-vmm-begin-re)
+      t)
+     ((looking-at verilog-vmm-end-re)
+      nil)
+     ;; JBA trying to catch macro lines with no ; at end
+     ((looking-at "\\<`")
+      nil)
 	 (t
 	  (goto-char back)
 	  (cond
