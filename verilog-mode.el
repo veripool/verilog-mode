@@ -6729,8 +6729,14 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 	 ((looking-at "\\s-*\\([a-zA-Z0-9`_$]+\\|\\\\[^ \t\n\f]+\\)")
 	  (goto-char (match-end 0))
 	  (setq keywd (match-string 1))
-	  (when (string-match "^\\\\" keywd)
+	  (when (string-match "^\\\\" (match-string 1))
 	    (setq keywd (concat keywd " ")))  ;; Escaped ID needs space at end
+	  ;; Add any :: package names to same identifier
+	  (while (looking-at "\\s-*::\\s-*\\([a-zA-Z0-9`_$]+\\|\\\\[^ \t\n\f]+\\)")
+	    (goto-char (match-end 0))
+	    (setq keywd (concat keywd "::" (match-string 1)))
+	    (when (string-match "^\\\\" (match-string 1))
+	      (setq keywd (concat keywd " "))))  ;; Escaped ID needs space at end
 	  (cond ((equal keywd "input")
 		 (setq vec nil enum nil  rvalue nil  newsig nil  signed nil  typedefed nil  multidim nil  sig-paren paren
 		       expect-signal 'sigs-in  io t  modport nil))
