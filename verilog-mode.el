@@ -1203,7 +1203,7 @@ If set will become buffer local.")
        :help		"Help on AUTOARG - declaring module port list"]
       ["AUTOASCIIENUM"			(describe-function 'verilog-auto-ascii-enum)
        :help		"Help on AUTOASCIIENUM - creating ASCII for enumerations"]
-      ["AUTOINOUTCOMP"			(describe-function 'verilog-auto-inout-complement)
+      ["AUTOINOUTCOMP"			(describe-function 'verilog-auto-inout-comp)
        :help		"Help on AUTOINOUTCOMP - copying complemented i/o from another file"]
       ["AUTOINOUTMODULE"		(describe-function 'verilog-auto-inout-module)
        :help		"Help on AUTOINOUTMODULE - copying i/o from another file"]
