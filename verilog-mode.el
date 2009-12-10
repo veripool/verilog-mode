@@ -426,7 +426,7 @@ are lineup only when \\[verilog-pretty-declarations] is typed."
 
   :type '(radio (const :tag "Line up Assignments and Declarations" all)
 		(const :tag "Line up Assignment statements" assignments )
-		(const :tag "Line up Declarartions" declarations)
+		(const :tag "Line up Declarations" declarations)
 		(function :tag "Other"))
   :group 'verilog-mode-indent )
 
@@ -1938,7 +1938,7 @@ find the errors."
        "endfunction"
        "endgenerate"
        "endmodule"
-       "endprimative"
+       "endprimitive"
        "endinterface"
        "endpackage"
        "endspecify"
@@ -3313,7 +3313,7 @@ With ARG, first kill any existing labels."
   (while
       ;; If the current point does not begin a new
       ;; statement, as in the character ahead of us is a ';', or SOF
-      ;; or the string after us unambiguosly starts a statement,
+      ;; or the string after us unambiguously starts a statement,
       ;; or the token before us unambiguously ends a statement,
       ;; then move back a token and test again.
       (not (or
@@ -4403,7 +4403,7 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 				       (throw 'nesting 'statement)))))
 			      ((match-end 3) ; assert block
 			       (setq elsec (1- elsec))
-			       (verilog-beg-of-statement) ;; doesn't get to begining
+			       (verilog-beg-of-statement) ;; doesn't get to beginning
 			       (if (looking-at (concat "\\(" verilog-label-re "\\)?"
 						       "\\(assert\\|assume\\|cover\\)\\s-+property\\>"))
 				   (throw 'nesting 'statement) ; We don't need an endproperty for these
@@ -4513,7 +4513,7 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 
 	   ((equal (char-after) ?\})
 	    (let ((there (verilog-at-close-constraint-p)))
-	      (if there ;; we are at the } that closes a constraing.  Find the { that opens it
+	      (if there ;; we are at the } that closes a constraint.  Find the { that opens it
 		  (progn
 		    (forward-char 1)
 		    (backward-list 1)
@@ -5559,7 +5559,7 @@ Be verbose about progress unless optional QUIET set."
               (cond
                ((looking-at myre)
                 (goto-char (match-beginning 2))
-                (if (not (verilog-parenthesis-depth)) ;; ignore parenthsized exprs
+                (if (not (verilog-parenthesis-depth)) ;; ignore parenthesized exprs
                     (if (eq (char-after) ?=)
                         (indent-to (1+ ind))	; line up the = of the <= with surrounding =
                       (indent-to ind)
@@ -5691,7 +5691,7 @@ Region is defined by B and EDPOS."
       (while (progn (setq e (marker-position edpos))
 		    (< (point) e))
 	(if (and (verilog-re-search-forward myre e 'move)
-		 (not (verilog-parenthesis-depth))) ;; skip parenthsized exprs
+		 (not (verilog-parenthesis-depth))) ;; skip parenthesized exprs
 	    (progn
 	      (goto-char (match-beginning 2))
 	      (verilog-backward-syntactic-ws)
@@ -8007,7 +8007,7 @@ Cache the output of function so next call may have faster access."
 	     (nth 3 fass))
 	    (t
 	     ;; Read from file
-	     ;; Clear then restore any hilighting to make emacs19 happy
+	     ;; Clear then restore any highlighting to make emacs19 happy
 	     (let ((fontlocked (when (and (boundp 'font-lock-mode)
 					  font-lock-mode)
 				 (font-lock-mode 0)
@@ -8846,7 +8846,7 @@ If PAR-VALUES replace final strings with these parameter values."
   "Insert , etc before first ever port in this instant, as part of \\[verilog-auto-inst]."
   ;; Do we need a trailing comma?
   ;; There maybe a ifdef or something similar before us.  What a mess.  Thus
-  ;; to avoid trouble we only insert on preceeding ) or *.
+  ;; to avoid trouble we only insert on preceding ) or *.
   ;; Insert first port on new line
   (insert "\n")  ;; Must insert before search, so point will move forward if insert comma
   (save-excursion
@@ -10157,7 +10157,7 @@ registers set elsewhere in the always block.
 Limitations:
   AUTORESET will not clear memories.
 
-  AUTORESET uses <= if there are any <= assigmnents in the block,
+  AUTORESET uses <= if there are any <= assignments in the block,
   else it uses =.
 
 /*AUTORESET*/ presumes that any signals mentioned between the previous
@@ -11233,7 +11233,7 @@ Files are checked based on `verilog-library-directories'."
   (interactive)
   (let ((reporter-prompt-for-summary-p t))
     (reporter-submit-bug-report
-     "mac@verilog.com"
+     "mac@verilog.com, wsnyder@wsnyder.org"
      (concat "verilog-mode v" verilog-mode-version)
      '(
        verilog-align-ifelse
@@ -11275,23 +11275,22 @@ Files are checked based on `verilog-library-directories'."
      nil nil
      (concat "Hi Mac,
 
-I want to report a bug.  I've read the `Bugs' section of `Info' on
-Emacs, so I know how to make a clear and unambiguous report.  To get
-to that Info section, I typed
-
-M-x info RET m " invocation-name " RET m bugs RET
+I want to report a bug.
 
 Before I go further, I want to say that Verilog mode has changed my life.
 I save so much time, my files are colored nicely, my co workers respect
 my coding ability... until now.  I'd really appreciate anything you
 could do to help me out with this minor deficiency in the product.
 
-If you have bugs with the AUTO functions, please CC the AUTOAUTHOR Wilson
-Snyder (wsnyder@wsnyder.org) and/or see http://www.veripool.org.
-You may also want to look at the Verilog-Mode FAQ, see
+I've taken a look at the Verilog-Mode FAQ at
 http://www.veripool.org/verilog-mode-faq.html.
 
-To reproduce the bug, start a fresh Emacs via " invocation-name "
+And, I've considered filing the bug on the issue tracker at
+http://www.veripool.org/verilog-mode-bugs
+since I realize that public bugs are easier for you to track,
+and for others to search, but would prefer to email.
+
+So, to reproduce the bug, start a fresh Emacs via " invocation-name "
 -no-init-file -no-site-file'.  In a new buffer, in Verilog mode, type
 the code included below.
 
