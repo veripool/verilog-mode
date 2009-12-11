@@ -1579,7 +1579,7 @@ find the errors."
   (eval-when-compile
     (verilog-regexp-opt
      '(
-;;       "`vmm_xactor_member_enum_array"       
+;;       "`vmm_xactor_member_enum_array"
        "`vmm_\\(data\\|env\\|scenario\\|subenv\\|xactor\\)_member_\\(scalar\\|string\\|enum\\|vmm_data\\|channel\\|xactor\\|subenv\\|user_defined\\)\\(_array\\)?"
 ;;       "`vmm_xactor_member_scalar_array"
 ;;       "`vmm_xactor_member_scalar"
