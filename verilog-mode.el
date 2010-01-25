@@ -2198,6 +2198,11 @@ find the errors."
      "unique" "unsigned" "use" "uwire" "var" "vectored" "virtual" "void"
      "wait" "wait_order" "wand" "weak0" "weak1" "while" "wildcard"
      "wire" "with" "within" "wor" "xnor" "xor"
+     ;; 1800-2009
+     "accept_on" "checker" "endchecker" "eventually" "global" "implies"
+     "let" "nexttime" "reject_on" "restrict" "s_always" "s_eventually"
+     "s_nexttime" "s_until" "s_until_with" "strong" "sync_accept_on"
+     "sync_reject_on" "unique0" "until" "until_with" "untyped" "weak"
  )
  "List of Verilog keywords.")
 
@@ -2328,7 +2333,7 @@ See also `verilog-font-lock-extra-types'.")
 	   '("surefire" "synopsys" "rtl_synthesis" "verilint" "leda" "0in") nil
 	    )))
 
-       (verilog-p1800-keywords
+       (verilog-1800-2005-keywords
 	(eval-when-compile
 	  (verilog-regexp-opt
 	   '("alias" "assert" "assume" "automatic" "before" "bind"
@@ -2351,6 +2356,15 @@ See also `verilog-font-lock-extra-types'.")
 	     "type" "union" "unsigned" "use" "var" "virtual" "void"
 	     "wait_order" "weak0" "weak1" "wildcard" "with" "within"
 	     ) nil )))
+
+       (verilog-1800-2009-keywords
+	(eval-when-compile
+	  (verilog-regexp-opt
+	   '("accept_on" "checker" "endchecker" "eventually" "global"
+	     "implies" "let" "nexttime" "reject_on" "restrict" "s_always"
+	     "s_eventually" "s_nexttime" "s_until" "s_until_with" "strong"
+	     "sync_accept_on" "sync_reject_on" "unique0" "until"
+	     "until_with" "untyped" "weak" ) nil )))
 
        (verilog-ams-keywords
 	(eval-when-compile
@@ -2403,11 +2417,17 @@ See also `verilog-font-lock-extra-types'.")
 		 'font-lock-type-face))
 	 (cons (concat "\\<\\(" verilog-type-font-keywords "\\)\\>")
           'font-lock-type-face)
-	 ;; Fontify IEEE-P1800 keywords appropriately
+	 ;; Fontify IEEE-1800-2005 keywords appropriately
 	 (if verilog-highlight-p1800-keywords
-	     (cons (concat "\\<\\(" verilog-p1800-keywords "\\)\\>")
+	     (cons (concat "\\<\\(" verilog-1800-2005-keywords "\\)\\>")
 		   'verilog-font-lock-p1800-face)
-	   (cons (concat "\\<\\(" verilog-p1800-keywords "\\)\\>")
+	   (cons (concat "\\<\\(" verilog-1800-2005-keywords "\\)\\>")
+		 'font-lock-type-face))
+	 ;; Fontify IEEE-1800-2009 keywords appropriately
+	 (if verilog-highlight-p1800-keywords
+	     (cons (concat "\\<\\(" verilog-1800-2009-keywords "\\)\\>")
+		   'verilog-font-lock-p1800-face)
+	   (cons (concat "\\<\\(" verilog-1800-2009-keywords "\\)\\>")
 		 'font-lock-type-face))
 	 ;; Fontify Verilog-AMS keywords
 	 (cons (concat "\\<\\(" verilog-ams-keywords "\\)\\>")
