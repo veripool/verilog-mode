@@ -6994,7 +6994,7 @@ Return the list of signals found, using submodi to look up each port."
 		 (verilog-read-sub-decls-expr
 		  submoddecls comment port
 		  (buffer-substring
-		   (point) (1- (progn (backward-char 1) ; start at (
+		   (point) (1- (progn (search-backward "(") ; start at (
 				      (forward-sexp 1) (point)))))))) ; expr
 	;;
 	(forward-line 1)))))
@@ -8767,6 +8767,8 @@ Avoid declaring ports manually, as it makes code harder to maintain."
 (defvar vl-name  nil "See `verilog-auto-inst'.") ; Prevent compile warning
 (defvar vl-width nil "See `verilog-auto-inst'.") ; Prevent compile warning
 (defvar vl-dir   nil "See `verilog-auto-inst'.") ; Prevent compile warning
+(defvar vl-bits  nil "See `verilog-auto-inst'.") ; Prevent compile warning
+(defvar vl-mbits nil "See `verilog-auto-inst'.") ; Prevent compile warning
 
 (defun verilog-auto-inst-port (port-st indent-pt tpl-list tpl-num for-star par-values)
   "Print out a instantiation connection for this PORT-ST.
@@ -8782,6 +8784,8 @@ If PAR-VALUES replace final strings with these parameter values."
 	 (vl-name (verilog-sig-name port-st))
 	 (vl-width (verilog-sig-width port-st))
 	 (vl-modport (verilog-sig-modport port-st))
+	 (vl-mbits (if (verilog-sig-multidim port-st) 
+                       (verilog-sig-multidim-string port-st) ""))
 	 (vl-bits (if (or verilog-auto-inst-vector
 			  (not (assoc port vector-skip-list))
 			  (not (equal (verilog-sig-bits port-st)
@@ -9130,6 +9134,7 @@ Lisp Templates:
 
 	vl-name        Name portion of the input/output port.
 	vl-bits        Bus bits portion of the input/output port ('[2:0]').
+	vl-mbits       Multidimensional array bits for port ('[2:0][3:0]').
 	vl-width       Width of the input/output port ('3' for [2:0]).
                        May be a (...) expression if bits isn't a constant.
 	vl-dir         Direction of the pin input/output/inout/interface.

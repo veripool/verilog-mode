@@ -7,7 +7,6 @@ XEMACS_DEST = /usr/local/lib/xemacs/xemacs-packages/lisp/prog-modes/
 EMACS   = emacs
 EMACS_DEST = /usr/local/share/emacs/site-lisp/
 ELC	= -batch -q -l verilog-mode.el -f batch-byte-compile
-CVS_GNU = cvs -d:pserver:anonymous@cvs.sv.gnu.org:/sources/emacs
 MAKECHANGELOG = perl makechangelog
 
 release : dirs install
@@ -113,32 +112,20 @@ verilog.info : verilog.texinfo
 	makeinfo verilog.texinfo > verilog.info
 
 ######################################################################
-# GNU CVS version
+# GNU BZR version
+#  --- Note gnutrunk needs to be a symlink to a emacs/trunk bazaar checkout
 
-.PHONY: gnu-update gnu-update-22 gnu-update-head
-gnu-update: gnu-update-22 gnu-update-head
-gnu-update-22: gnu22
-	cd gnu22   && $(CVS_GNU) co -rEMACS_22_BASE emacs/lisp/progmodes/verilog-mode.el
-gnu-update-head: gnuhead
-	cd gnuhead && $(CVS_GNU) co -rHEAD          emacs/lisp/progmodes/verilog-mode.el
+.PHONY: gnu-update gnu-update-trunk
+gnu-update: gnu-update-trunk
+gnu-update-trunk:
+	cd gnutrunk && bzr update
 
-gnu22:
-	mkdir -p $@
-gnuhead:
-	mkdir -p $@
-
-.PHONY: gnu-diff-head gnu-diff-22 gnu-diff
-gnu-diff: gnu-diff-head
-
-gnu-diff-head: gnu-update-head verilog-mode-tognu.el
-	diff -c gnuhead/emacs/lisp/progmodes/verilog-mode.el verilog-mode-tognu.el 
+.PHONY: gnu-diff-trunk gnu-diff
+gnu-diff: gnu-diff-trunk
+gnu-diff-trunk: gnu-update-trunk verilog-mode-tognu.el
+	diff -c gnutrunk/lisp/progmodes/verilog-mode.el verilog-mode-tognu.el 
 patch-file: gnu-update-head verilog-mode-tognu.el
-	diff -c gnuhead/emacs/lisp/progmodes/verilog-mode.el verilog-mode-tognu.el > patch-file
-
-gnu-diff-22: gnu-update-22 verilog-mode-tognu.el
-	diff -c gnu22/emacs/lisp/progmodes/verilog-mode.el verilog-mode-tognu.el 
-gnu-diff-each: gnu-update-22 gnu-update-head
-	diff -c gnuhead/emacs/lisp/progmodes/verilog-mode.el gnu22/emacs/lisp/progmodes/verilog-mode.el
+	diff -c gnutrunk/lisp/progmodes/verilog-mode.el verilog-mode-tognu.el > patch-file
 
 verilog-mode-tognu.el: verilog-mode.el Makefile
 	cat verilog-mode.el \
