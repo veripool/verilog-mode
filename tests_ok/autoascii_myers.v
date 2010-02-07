@@ -28,22 +28,22 @@ module testit;
    reg [39:0] _stateascii_r;            // Decode of state_r
    always @(state_r) begin
       case ({state_r})
-        SM_IDLE:  _stateascii_r = "idle ";
-        SM_SEND:  _stateascii_r = "send ";
-        SM_WAIT1: _stateascii_r = "wait1";
-        default:  _stateascii_r = "%Erro";
-        endcase
+        SM_IDLE:  _stateascii_r  = "idle ";
+        SM_SEND:  _stateascii_r  = "send ";
+        SM_WAIT1: _stateascii_r  = "wait1";
+        default:  _stateascii_r  = "%Erro";
+      endcase
    end
    // End of automatics
    
    initial begin
-      clk    = 0;
-      a_i    = 0;
-      b_i    = 0;
-      rst_n  = 0;
-      #20 rst_n = 1;
+      clk        = 0;
+      a_i        = 0;
+      b_i        = 0;
+      rst_n      = 0;
+      #20 rst_n  = 1;
    end
-   always #5 clk = ~clk;
+   always #5 clk  = ~clk;
    
    always @(posedge clk or rst_n) begin
       if (~rst_n) begin

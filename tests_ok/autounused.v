@@ -1,7 +1,7 @@
 module wbuf
   #(parameter width=1)
    (output [width-1:0] q,
-    input [width-1:0]  d);
+    input [width-1:0] d);
 endmodule
 
 module autounused
@@ -21,10 +21,10 @@ module autounused
    /*AUTOINPUT*/
    
    wire               _unused_ok = &{/*AUTOUNUSED*/
-                      // Beginning of automatic unused inputs
-                      dd,
-                      // End of automatics
-                      1'b0};
+                                     // Beginning of automatic unused inputs
+                                     dd,
+                                     // End of automatics
+                                     1'b0};
    
    defparam partbuf.width  = width;
    wbuf wbuf

@@ -2,12 +2,12 @@
 // 2001 Parameter Style
 module v2k_inst_hicks (
                        output wire [7:0] relay,
-                       output wire relay_f,
-                       output wire swen_f0_n,
-                       input [31:0] dcb,
-                       input relay_ce,
-                       input wire simReset,
-                       input wire clock
+                       output wire       relay_f,
+                       output wire       swen_f0_n,
+                       input [31:0]      dcb,
+                       input             relay_ce,
+                       input wire        simReset,
+                       input wire        clock
                        );
    
    input [31:0] dcb_n2k;

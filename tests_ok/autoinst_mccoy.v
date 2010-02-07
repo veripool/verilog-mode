@@ -27,7 +27,7 @@ endmodule
 module xx
   (input clk,
    
-   input  TWI_ia,
-   input  [15:0] TWI_iw,
-   output TWI_qb);
+   input        TWI_ia,
+   input [15:0] TWI_iw,
+   output       TWI_qb);
 endmodule

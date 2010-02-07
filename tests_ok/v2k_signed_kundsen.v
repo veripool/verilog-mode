@@ -5,7 +5,7 @@ module foo_bar (/*AUTOARG*/
                 clk, rst, data, addr
                 )
   
-  input        clk;
+  input                 clk;
    input                 rst;
    input signed [15:-15] data;
    input [11:0]          addr;

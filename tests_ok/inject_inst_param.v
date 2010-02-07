@@ -16,8 +16,8 @@ endmodule
 
 module register #(parameter WIDTH=4) (
                                       output logic [WIDTH-1:0] q,
-                                      input  logic [WIDTH-1:0] d,
-                                      input  logic             clk, rst_n
+                                      input logic [WIDTH-1:0]  d,
+                                      input logic              clk, rst_n
                                       /*AUTOARG*/);
    
    always_ff @(posedge clk or negedge rst_n)

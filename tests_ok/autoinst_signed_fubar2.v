@@ -1,9 +1,9 @@
 
 module autoinst_signed_fubar2
   (
-   input  [1:0] an_input2,
-   output  [1:0] an_output2
-   output  [1:0] another_output2
+   input [1:0]  an_input2,
+   output [1:0] an_output2
+   output [1:0] another_output2
    );
    
    /*AUTOREG*/

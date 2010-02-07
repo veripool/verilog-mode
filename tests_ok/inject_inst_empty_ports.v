@@ -15,8 +15,8 @@ endmodule
 
 module register (
                  output logic [7:0] q, qb,
-                 input  logic [7:0] d,
-                 input  logic       clk, rst_n
+                 input logic [7:0]  d,
+                 input logic        clk, rst_n
                  /*AUTOARG*/);
    
    always_ff @(posedge clk or negedge rst_n)

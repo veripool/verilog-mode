@@ -39,9 +39,9 @@ module x;
      
      begin: MB_READ_WRITE_SEL_P
         
-        mb_reg_wr                     = 'h0;
-        mb_reg_rd                     = 'h0;
-        mb_reg_output                 = interface_from_core_fp;
+        mb_reg_wr      = 'h0;
+        mb_reg_rd      = 'h0;
+        mb_reg_output  = interface_from_core_fp;
         
         for(mb_loop = MB_REG_START; mb_loop < NUMBER_INTERFACE_REGS; mb_loop=mb_loop+1)
           begin

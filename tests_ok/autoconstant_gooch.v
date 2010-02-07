@@ -66,8 +66,8 @@ module autoconstant_gooch
      begin
         /* AUTO_CONSTANT( temp )*/
         /* AxxxUTO_CONSTANT temp */
-        out3       = in1 + in2;
-        temp2      = temp;
+        out3   = in1 + in2;
+        temp2  = temp;
         
         // ERROR here - above constant definition is not
         // correct - no braces - and so parser keeps looking

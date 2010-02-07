@@ -15,7 +15,7 @@ module testmod ();
         THREE[1:0] : begin
            a  = 1;
         end // case: THREE[1:0]
-        endcase // unique case (eeee)
+      endcase // unique case (eeee)
    end // always_comb
    
    always_ff @ (posedge clk) begin

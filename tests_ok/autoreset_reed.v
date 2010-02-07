@@ -6,7 +6,7 @@ module x;
       if ( rst ) begin
          /*AUTORESET*/
          // Beginning of autoreset for uninitialized flops
-         c     = 1'h0;
+         c  = 1'h0;
          // End of automatics
       end
       else begin
@@ -23,11 +23,11 @@ module x;
       if ( rst ) begin
          /*AUTORESET*/
          // Beginning of autoreset for uninitialized flops
-         c    <= 1'h0;
+         c <= 1'h0;
          // End of automatics
       end
       else if ( a <= b ) begin
-         c    <= a;
+         c <= a;
       end
    end
    

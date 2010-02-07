@@ -23,9 +23,9 @@ module sm (/*AUTOARG*/
    reg [31:0] _stateascii_r;            // Decode of state_r
    always @(state_r) begin
       case ({state_r})
-        SM_IDLE:  _stateascii_r = "idle";
-        SM_ACT:   _stateascii_r = "act ";
-        default:  _stateascii_r = "%Err";
+        SM_IDLE:  _stateascii_r  = "idle";
+        SM_ACT:   _stateascii_r  = "act ";
+        default:  _stateascii_r  = "%Err";
       endcase
    end
    // End of automatics

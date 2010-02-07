@@ -5,11 +5,11 @@ module top
     parameter Y=1)
    
    (input clk,
-    input rstb,
+    input              rstb,
     
     /*AUTOINPUT("^x.*\|v.*")*/
     // Beginning of automatic inputs (from unused autoinst inputs)
-    input [X-1:0]       xb,                     // To XX of xx.v, ...
+    input [X-1:0]      xb, // To XX of xx.v, ...
     // End of automatics
     /*AUTOOUTPUT("^c.*\|k.*")*/
     
@@ -17,12 +17,12 @@ module top
     
     /*AUTOINPUT*/
     // Beginning of automatic inputs (from unused autoinst inputs)
-    input [X-1:0]       cb,                     // To XX of xx.v, ...
+    input [X-1:0]      cb, // To XX of xx.v, ...
     // End of automatics
     /*AUTOOUTPUT*/
     // Beginning of automatic outputs (from unused autoinst outputs)
-    output              foobar,                 // From XX of xx.v
-    output [4:0] [2:0]  foobar2         // From YY of yy.v
+    output             foobar, // From XX of xx.v
+    output [4:0] [2:0] foobar2          // From YY of yy.v
     // End of automatics
     );
    
@@ -66,18 +66,18 @@ module xx
   #(parameter X=4,
     parameter Y=1)
    (input clk,
-    input rstb,
+    input              rstb,
     
     input [X-1:0][1:0] xc,
-    input [X-1:0] xa,
-    input [X-1:0] xb,
+    input [X-1:0]      xa,
+    input [X-1:0]      xb,
     
-    input [X-1:0] cb,
-    output sometype_t [1:0]  st,
+    input [X-1:0]      cb,
+    output             sometype_t [1:0] st,
     
-    input [X*Y-1:0] yb,
+    input [X*Y-1:0]    yb,
     
-    output foobar
+    output             foobar
     );
    
 endmodule // xx
@@ -86,18 +86,18 @@ module yy
   #(parameter X=4,
     parameter Y=1)
    (input clk,
-    input rstb,
+    input               rstb,
     
     output [X-1:0][1:0] xc,
-    output [X-1:0] xa,
-    input [X-1:0] xb,
+    output [X-1:0]      xa,
+    input [X-1:0]       xb,
     
-    input [X-1:0] cb,
-    input         sometype_t [1:0] st,
+    input [X-1:0]       cb,
+    input               sometype_t [1:0] st,
     
-    output [X*Y-1:0] yb,
+    output [X*Y-1:0]    yb,
     
-    output [4:0][2:0] foobar2
+    output [4:0][2:0]   foobar2
     );
    
 endmodule // xx

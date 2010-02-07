@@ -1,7 +1,7 @@
 
 module autoinst_signed_fubar
   (
-   input signed [1:0] an_input,
+   input signed [1:0]  an_input,
    output signed [1:0] an_output
    output signed [1:0] another_output
    );

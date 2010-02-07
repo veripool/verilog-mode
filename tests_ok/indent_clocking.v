@@ -4,7 +4,7 @@ module t;
          a  = 8;
       end
       property foo (a)
-        a   = b;
+        a  = b;
       endproperty
       cover property (prop) $display("**COVERAGE**");
       assert property (foo) a;

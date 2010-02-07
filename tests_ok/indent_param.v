@@ -6,9 +6,9 @@ module example_block
     G = 5,
     )
    (// I/O
-    input     reset_n,
-    input     clk
-    input     a, b,
+    input      reset_n,
+    input      clk
+    input      a, b,
     output reg c
     );
 endmodule

@@ -13,8 +13,8 @@ module sub
   #(parameter PARAM1=2,
     PARAM2=3,
     PARAM3=6)
-    ( input wire [PARAM1:0] a,
-      output reg [PARAM2:0] b
+     ( input wire [PARAM1:0] a,
+       output reg [PARAM2:0]   b
       );
 
 

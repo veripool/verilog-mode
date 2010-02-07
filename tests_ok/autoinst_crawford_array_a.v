@@ -25,8 +25,8 @@ module autoinst_crawford_array_a(/*AUTOARG*/
    
    always @(posedge clk or negedge rst_n) begin
       if(~rst_n) begin
-         a_valid    <= `auto_trq 0;
-         a_data     <= `auto_trq 0;
+         a_valid <= `auto_trq 0;
+         a_data  <= `auto_trq 0;
       end
       else begin
          if(a_ready) begin

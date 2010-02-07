@@ -65,12 +65,12 @@ class burst_drv extends vmm_xactor;
    extern virtual function void reconfigure(burst_drv_cfg cfg);
    extern virtual function void reset_xactor(reset_e rst_type = SOFT_RST);
    extern virtual function new (
-                                string     inst,
-                                int        stream_id,
-                                burst_drv_cfg   cfg = null,
+                                string inst,
+                                int    stream_id,
+                                burst_drv_cfg cfg = null,
                                 burst_xn_channel in_chan = null,
                                 burst_xn_channel obs_chan = null,
-                                burst_xn         rx_factory = null);
+                                burst_xn rx_factory = null);
    virtual task start();
       super.start();
       this.tx_dma.start();

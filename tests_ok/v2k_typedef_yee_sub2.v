@@ -21,8 +21,8 @@ module v2k_typedef_yee_sub2
    
    
    always_ff @(posedge cp) begin
-      pixel_ff           <= sub2_in_pixel;
-      sub1_to_sub2_ff    <= sub1_to_sub2;
+      pixel_ff        <= sub2_in_pixel;
+      sub1_to_sub2_ff <= sub1_to_sub2;
    end
    
    assign sub2_out_pixel  = pixel_ff;

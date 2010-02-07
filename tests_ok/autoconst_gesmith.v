@@ -5,9 +5,9 @@ module(/*AUTOARG*/)
            /*AUTOSENSE*/b)
     begin
        /*AUTO_CONSTANT(`ot.BOC) */
-       i   = b;
-       c   = `ot.BOC;
-       d   = `ot.BOZ;
+       i  = b;
+       c  = `ot.BOC;
+       d  = `ot.BOZ;
     end
    
    always @(/*AUTOSENSE*/b)

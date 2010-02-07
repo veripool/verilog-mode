@@ -23,9 +23,9 @@ module autosense (/*AUTOARG*/
    
    always @(/*AUTOSENSE*/ina or inb or inc) begin
       case (inc)
-        1'b1: out = {`Input ? `one : 1'b0, `Input};
-        default: out = {2{inb}};
-        endcase
+        1'b1: out     = {`Input ? `one : 1'b0, `Input};
+        default: out  = {2{inb}};
+      endcase
    end
    
    

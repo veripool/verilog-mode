@@ -1,13 +1,13 @@
 module  xxx_xxxxxx  (input wire clk, input wire reset);
    
    typedef enum reg [4:0] {IDLE, IIII, HHHHH,
-                          AA_OP, AA_CMRD, AA_CMRD_WAIT, AA_RMW, AA_RMW_WAIT, AA_CMLLL, AA_CMLLL_WAIT, AA_NEXT,
-                          BB_OP, BB_CMLLL, BB_CMLLL_WAIT, BB_NEXT,
-                          CC_OP, CC_NEXT_OOOO,
-                          DD_OP, DD_CMRD, DD_CMRD_WAIT, DD_ACCUM, DD_CMLLL, DD_CMLLL_WAIT,
-                          EE_OP, EE_NEXT_OOOO,
-                          FF_OP,
-                          zxcvzxcv, cvbncvbn} xxxxxx_state_e;
+                           AA_OP, AA_CMRD, AA_CMRD_WAIT, AA_RMW, AA_RMW_WAIT, AA_CMLLL, AA_CMLLL_WAIT, AA_NEXT,
+                           BB_OP, BB_CMLLL, BB_CMLLL_WAIT, BB_NEXT,
+                           CC_OP, CC_NEXT_OOOO,
+                           DD_OP, DD_CMRD, DD_CMRD_WAIT, DD_ACCUM, DD_CMLLL, DD_CMLLL_WAIT,
+                           EE_OP, EE_NEXT_OOOO,
+                           FF_OP,
+                           zxcvzxcv, cvbncvbn} xxxxxx_state_e;
    
    xxxxxx_state_e current_state;
    
@@ -19,7 +19,7 @@ module  xxx_xxxxxx  (input wire clk, input wire reset);
          unique case (current_state)
            
            IDLE : begin
-              qwerty          <= '0;
+              qwerty <= '0;
               
               if (~qqq_empty)
                 current_state <= HHHHH;
@@ -28,7 +28,7 @@ module  xxx_xxxxxx  (input wire clk, input wire reset);
               lll_start <= 1'b1;
               
               if (jjjj_left < 4)
-                lll_wcnt    <= jjjj_left[2:0];
+                lll_wcnt <= jjjj_left[2:0];
               else
                 lll_wcnt    <= FOUR[2:0];
               
@@ -36,7 +36,7 @@ module  xxx_xxxxxx  (input wire clk, input wire reset);
            end
            
            HHHHH : begin
-              qqq_opiuy        <= 1'b1;
+              qqq_opiuy <= 1'b1;
               
               if (qqq_opiuy) begin
                  qqq_opiuy     <= '0;
@@ -61,27 +61,27 @@ module  xxx_xxxxxx  (input wire clk, input wire reset);
               current_state <= AA_CMRD_WAIT;
            end
            IIII : begin
-              qqq_opiuy        <= '0;
+              qqq_opiuy <= '0;
               if (err_iiii) begin
                  current_state <= zxcvzxcv;
               end
               else begin
                  unique case (opm_cur)
                    
-                   `XXXCP : current_state <=  AA_OP;
-                   `XXXZR : current_state <=  BB_OP;
+                   `XXXCP : current_state  <= AA_OP;
+                   `XXXZR : current_state  <= BB_OP;
                    
-                   default : current_state <=  zxcvzxcv;
+                   default : current_state <= zxcvzxcv;
                  endcase // unique  case
                  
               end // else: !if(err_iiii)
            end // case: IIII
            
            AA_CMRD_WAIT : begin
-              uuuuu                  <= '0;
+              uuuuu <= '0;
               if (kjkjkjkjk) begin
                  if (err_cmrd_par) begin
-                    current_state    <= zxcvzxcv;
+                    current_state <= zxcvzxcv;
                  end
                  else begin
                     if (err_cmrd_csel) begin
@@ -98,7 +98,7 @@ module  xxx_xxxxxx  (input wire clk, input wire reset);
            end // case: AA_CMRD_WAIT
            
            AA_CMLLL_WAIT : begin
-              lll_start           <= '0;
+              lll_start <= '0;
               
               if (lll_done) begin
                  if (alalala) begin
@@ -120,10 +120,10 @@ module  xxx_xxxxxx  (input wire clk, input wire reset);
                  
                  unique case (opm_cur)
                    
-                   `XXXCP : current_state <=  cvbncvbn;
-                   `XXXSG : current_state <=  CC_NEXT_OOOO;
-                   default : current_state <=  zxcvzxcv;
-                   endcase // unique  case
+                   `XXXCP : current_state  <= cvbncvbn;
+                   `XXXSG : current_state  <= CC_NEXT_OOOO;
+                   default : current_state <= zxcvzxcv;
+                 endcase // unique  case
                  
               end // if (qwerty)
               else begin
@@ -149,14 +149,14 @@ module  xxx_xxxxxx  (input wire clk, input wire reset);
            
            
            BB_CMLLL : begin
-              lll_start     <= 1'b1;
+              lll_start   <= 1'b1;
               
               if (jjjj_left <= 4) begin
-                 lll_wcnt   <= jjjj_left[2:0];
-                 qwerty     <= 1'b1;
+                 lll_wcnt <= jjjj_left[2:0];
+                 qwerty   <= 1'b1;
               end
               else begin
-                 lll_wcnt   <= FOUR[2:0];
+                 lll_wcnt <= FOUR[2:0];
               end
               
               current_state <= BB_CMLLL_WAIT;
@@ -165,7 +165,7 @@ module  xxx_xxxxxx  (input wire clk, input wire reset);
            
            
            BB_CMLLL_WAIT : begin
-              lll_start           <= '0;
+              lll_start <= '0;
               
               if (lll_done) begin
                  if (alalala) begin
@@ -204,10 +204,10 @@ module  xxx_xxxxxx  (input wire clk, input wire reset);
                  jjjj_left   <= tgbyhn;
               end
               else begin
-                 jjjj_left   <= oooo_cur;
+                 jjjj_left <= oooo_cur;
               end
               
-              current_state  <= AA_CMRD;
+              current_state <= AA_CMRD;
               
            end // case: CC_OP
            
@@ -220,16 +220,16 @@ module  xxx_xxxxxx  (input wire clk, input wire reset);
               end
               else begin
                  
-                 rd_rrrr       <= rd_rrrr + ttttt_cur;
-                 lll_rrrr      <= lll_rrrr + oooo_cur;
+                 rd_rrrr      <= rd_rrrr + ttttt_cur;
+                 lll_rrrr     <= lll_rrrr + oooo_cur;
                  
                  
                  if (jjjj_left_oooo <= oooo_cur) begin
-                    last_oooo  <= 1'b1;
-                    jjjj_left  <= jjjj_left_oooo;
+                    last_oooo <= 1'b1;
+                    jjjj_left <= jjjj_left_oooo;
                  end
                  else begin
-                    jjjj_left  <= oooo_cur;
+                    jjjj_left <= oooo_cur;
                  end
                  
                  current_state <= AA_CMRD;
@@ -250,10 +250,10 @@ module  xxx_xxxxxx  (input wire clk, input wire reset);
            
            
            DD_CMRD : begin
-              uuuuu         <= 1'b1;
+              uuuuu     <= 1'b1;
               
               if (jjjj_left <= 4) begin
-                 qwerty     <= 1'b1;
+                 qwerty <= 1'b1;
               end
               
               current_state <= DD_CMRD_WAIT;
@@ -262,7 +262,7 @@ module  xxx_xxxxxx  (input wire clk, input wire reset);
            
            
            DD_CMRD_WAIT : begin
-              uuuuu               <= '0;
+              uuuuu <= '0;
               
               if (kjkjkjkjk) begin
                  if (zazaz) begin

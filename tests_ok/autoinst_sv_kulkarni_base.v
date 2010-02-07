@@ -8,7 +8,7 @@ module autoinst_sv_kulkarni_base
   #(parameter M=5, N=3)
    (
     output logic [N-1:0][M-1:0] a_o1,
-    input [N-1:0][M-1:0] a_i1
+    input [N-1:0][M-1:0]        a_i1
     );
    
    // -----------------------------------------------------------------------------

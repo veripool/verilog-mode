@@ -11,7 +11,7 @@ module x;
    
    // make sure 'state' is listed
    always @ (/*AUTOSENSE*/done or nREQA or nREQB or nREQC or state) begin
-      next              = 6'b0;
+      next  = 6'b0;
       case (1'b1)
         state[CYCLEC] : begin
            if (!nREQA && done)                         next[MSTRA]  = 1'b1;

@@ -8,7 +8,7 @@ module fork_join_any;
             join_any
             a  = b;
             disable fork;
-            end
+         end
       join_any
       foo  = bar;
    end // initial fork

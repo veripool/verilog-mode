@@ -20,9 +20,9 @@ module autoascii_peltan
    reg [47:0] v_xstate;         // Decode of xstate
    always @(xstate) begin
       case ({xstate})
-        state0:   v_xstate = "state0";
-        state1:   v_xstate = "state1";
-        default:  v_xstate = "%Error";
+        state0:   v_xstate  = "state0";
+        state1:   v_xstate  = "state1";
+        default:  v_xstate  = "%Error";
       endcase
    end
    // End of automatics

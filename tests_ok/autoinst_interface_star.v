@@ -3,12 +3,12 @@
 module autoinst_interface
   (/*AUTOINOUTMODULE("autoinst_interface_sub")*/
    // Beginning of automatic in/out/inouts (from specific module)
-   output [7:0]         count,
-   input                        clk,
-   input                        reset,
-   input                        start,
-   my_svi.master                my_svi_port,
-   my_svi               my_svi_noport
+   output [7:0] count,
+   input        clk,
+   input        reset,
+   input        start,
+   my_svi.master my_svi_port,
+   my_svi my_svi_noport
    // End of automatics
    );
 endmodule
@@ -16,12 +16,12 @@ endmodule
 module autoinst_interface
   (/*AUTOINOUTCOMP("autoinst_interface_sub")*/
    // Beginning of automatic in/out/inouts (from specific module)
-   output               clk,
-   output               reset,
-   output               start,
-   input [7:0]          count,
-   my_svi.master                my_svi_port,
-   my_svi               my_svi_noport
+   output      clk,
+   output      reset,
+   output      start,
+   input [7:0] count,
+   my_svi.master my_svi_port,
+   my_svi my_svi_noport
    // End of automatics
    );
 endmodule

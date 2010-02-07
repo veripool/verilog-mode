@@ -14,11 +14,11 @@ module testcase
    
    always @(/*AS*/A or B or C or D or SEL) begin
       case (SEL)
-        sel_a: Z = A;
-        sel_b: Z = B;
-        sel_c: Z = C;
-        sel_d: Z = D;
-        default: Z = D;
+        sel_a: Z    = A;
+        sel_b: Z    = B;
+        sel_c: Z    = C;
+        sel_d: Z    = D;
+        default: Z  = D;
       endcase // case(SEL)
    end // always @ (...
    

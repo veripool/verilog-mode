@@ -4,18 +4,18 @@ module top
   #(parameter COLS = 4
     )
    ( input logic clk,
-     input logic rstb,
-     input logic [COLS-1:0] ival,
-     input logic [COLS-1:0][1:0] idata_some_extra_sig_length,
+     input logic                  rstb,
+     input logic [COLS-1:0]       ival,
+     input logic [COLS-1:0][1:0]  idata_some_extra_sig_length,
      
-     input logic [COLS-1:0][7:0] isig1,
-     input logic [COLS-1:0][6:0] isig2,
-     input logic [COLS-1:0][5:0] isig3,
+     input logic [COLS-1:0][7:0]  isig1,
+     input logic [COLS-1:0][6:0]  isig2,
+     input logic [COLS-1:0][5:0]  isig3,
      /*AUTOINPUT*/
      
-     output logic [COLS-1:0] oval,
+     output logic [COLS-1:0]      oval,
      output logic [COLS-1:0][1:0] odata,
-     output logic [COLS-1:0] s3_oval,
+     output logic [COLS-1:0]      s3_oval,
      output logic [COLS-1:0][1:0] s3_odata
      
      /*AUTOOUTPUT*/
@@ -79,22 +79,22 @@ endmodule // top
 
 module sub1
   ( input logic clk,
-    input logic rstb,
-    input logic ival,
-    input logic [1:0] idata_some_extra_sig_length,
-    input logic [7:0] isig1,
-    input logic [6:0] isig2,
-    input logic [5:0] isig3,
-    output logic oval,
+    input logic        rstb,
+    input logic        ival,
+    input logic [1:0]  idata_some_extra_sig_length,
+    input logic [7:0]  isig1,
+    input logic [6:0]  isig2,
+    input logic [5:0]  isig3,
+    output logic       oval,
     output logic [1:0] odata
     );
 endmodule // sub
 module sub3
   ( input logic clk,
-    input logic rstb,
-    input logic ival,
-    input logic [1:0] idata_some_extra_sig_length,
-    output logic oval,
+    input logic        rstb,
+    input logic        ival,
+    input logic [1:0]  idata_some_extra_sig_length,
+    output logic       oval,
     output logic [1:0] odata
     );
 endmodule // sub
@@ -103,10 +103,10 @@ module sub2
   #(parameter COLS = 4
     )
    ( input logic clk,
-     input logic rstb,
-     input logic [COLS-1:0] ival,
-     input logic [COLS-1:0][1:0] idata_some_extra_sig_length,
-     output logic [COLS-1:0] oval,
+     input logic                   rstb,
+     input logic [COLS-1:0]        ival,
+     input logic [COLS-1:0][1:0]   idata_some_extra_sig_length,
+     output logic [COLS-1:0]       oval,
      output logic [COLS-1:0] [1:0] odata
      );
 endmodule // sub

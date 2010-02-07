@@ -52,13 +52,13 @@ module CmpEng (/*AUTOARG*/
          // End of automatics
       end
       else begin
-         m_wid1_r      <= 0;
-         m_wid3_r      <= 0;
-         m_wid4_r_l    <= 0;
-         m_param_r     <= 0;
-         m_def2_r      <= 0;
-         logic_four    <= 4;
-         paramed       <= 1;
+         m_wid1_r   <= 0;
+         m_wid3_r   <= 0;
+         m_wid4_r_l <= 0;
+         m_param_r  <= 0;
+         m_def2_r   <= 0;
+         logic_four <= 4;
+         paramed    <= 1;
       end
    end
    

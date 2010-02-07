@@ -8,7 +8,7 @@ module test();
          always @(*) begin
             x[i]  = 1;
          end
-         wire y   = 0;
+         wire        y = 0;
       end
    endgenerate
 endmodule // test

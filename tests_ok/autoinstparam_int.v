@@ -3,10 +3,10 @@ module xyz
     parameter logic [5:0] BLUP=3, ZOT=4,
     parameter LDWRDS=5)
    ( input x1, x2,
-     input int i1, i2,
+     input int         i1, i2,
      input logic [5:0] i3, i4,
-     input i5,
-     output y);
+     input             i5,
+     output            y);
 endmodule
 
 module pdq;

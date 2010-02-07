@@ -1,5 +1,5 @@
 module foo(input bit [3:0] def,
-           input bit         ghi,
+           input bit       ghi,
            input bit [1:0] jkl);
    
    task cba(input bit [3:0] a,
@@ -7,7 +7,7 @@ module foo(input bit [3:0] def,
             c);
    endtask // cba
    task abc(input bit [3:0] def,
-            input bit         ghi,
+            input bit       ghi,
             input bit [1:0] jkl);
       
    endtask // abc

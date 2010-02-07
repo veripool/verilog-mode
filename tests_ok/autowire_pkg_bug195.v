@@ -12,8 +12,8 @@ endpackage
    
 module testcase_top
   (
-   input  testcase_pkg::enum_t top_enum,
-   input  logic [testcase_pkg::SIZE-1:0] top_in,
+   input                                 testcase_pkg::enum_t top_enum,
+   input logic [testcase_pkg::SIZE-1:0]  top_in,
    output logic [testcase_pkg::SIZE-1:0] top_out
    );
    import testcase_pkg::*;
@@ -41,8 +41,8 @@ endmodule
 
 module testcase_sub1
   (
-   input  testcase_pkg::enum_t top_enum,
-   output testcase_pkg::enum_t sub_enum,
+   input                                 testcase_pkg::enum_t top_enum,
+   output                                testcase_pkg::enum_t sub_enum,
    output logic [testcase_pkg::SIZE-1:0] sub_in
    );
    import testcase_pkg::*;
@@ -52,8 +52,8 @@ endmodule
 
 module testcase_sub2
   (
-   input  testcase_pkg::enum_t sub_enum,
-   input  logic [testcase_pkg::SIZE-1:0] sub_in,
+   input                                 testcase_pkg::enum_t sub_enum,
+   input logic [testcase_pkg::SIZE-1:0]  sub_in,
    output logic [testcase_pkg::SIZE-1:0] sub_out
    );
    import testcase_pkg::*;

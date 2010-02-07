@@ -9,9 +9,9 @@ module foo;
              );
    input sysclk;
  `ifdef LABEL_B
-   input bclko;
+   input        bclko;
  `endif
-   input cmode;
+   input        cmode;
 `endif
    
    // instead of:
@@ -26,9 +26,9 @@ module foo;
              );
    input sysclk;
  `ifdef LABEL_B
-   input bclko;
+   input        bclko;
  `endif
-   input cmode;
+   input        cmode;
 `endif
    
 endmodule // foo
