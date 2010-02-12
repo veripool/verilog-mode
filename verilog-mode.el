@@ -2116,7 +2116,8 @@ find the errors."
      `(
        "endmodule" "endprimitive" "endinterface" "endpackage" "endprogram" "endclass"
        ))))
-(defconst verilog-disable-fork-re "disable\\s-+fork")
+(defconst verilog-disable-fork-re "disable\\s-+fork\\>")
+(defconst verilog-fork-wait-re "fork\\s-+wait\\>")
 (defconst verilog-extended-case-re "\\(unique\\s-+\\|priority\\s-+\\)?case[xz]?")
 (defconst verilog-extended-complete-re
   (concat "\\(\\<extern\\s-+\\|\\<virtual\\s-+\\|\\<protected\\s-+\\)*\\(\\<function\\>\\|\\<task\\>\\)"
@@ -2600,20 +2601,28 @@ Use filename, if current buffer being edited shorten to just buffer name."
 	(setq md 3) ;; ender is third item in regexp
 	)
        ((match-end 4)
-	;; might be "disable fork"
-	(if (or
-	     (looking-at verilog-disable-fork-re)
-	     (and (looking-at "fork")
-		  (progn
-		    (forward-word -1)
-		    (looking-at verilog-disable-fork-re))))
-	    (progn
-	      (goto-char (match-end 0))
-	      (forward-word 1)
-	      (setq reg nil))
-	  (progn
-	    ;; Search forward for matching join
-	    (setq reg "\\(\\<fork\\>\\)\\|\\(\\<join\\(_any\\|_none\\)?\\>\\)" ))))
+	;; might be "disable fork" or "fork wait"
+	(let
+	    (here)
+	  (if (looking-at verilog-fork-wait-re)
+	      (progn  ;; it is a fork wait; ignore it
+		(goto-char (match-end 0))
+		(setq reg nil))
+	    (if (or
+		 (looking-at verilog-disable-fork-re)
+		 (and (looking-at "fork")
+		      (progn 
+			(setq here (point)) ;; sometimes a fork is just a fork
+			(forward-word -1)
+			(looking-at verilog-disable-fork-re))))
+		(progn ;; it is a disable fork; ignore it
+		  (goto-char (match-end 0))
+		  (forward-word 1)
+		  (setq reg nil))
+	      (progn ;; it is a nice simple fork
+		(goto-char here)   ;; return from looking for "disable fork"
+		;; Search forward for matching join
+		(setq reg "\\(\\<fork\\>\\)\\|\\(\\<join\\(_any\\|_none\\)?\\>\\)" ))))))
        ((match-end 6)
 	;; Search forward for matching endclass
 	(setq reg "\\(\\<class\\>\\)\\|\\(\\<endclass\\>\\)" ))
@@ -2664,12 +2673,27 @@ Use filename, if current buffer being edited shorten to just buffer name."
 		(let ((depth 1))
 		  (while (verilog-re-search-forward reg nil 'move)
 		    (cond
-		     ((match-end md) ; the closer in reg, so we are climbing out
+		     ((match-end md) ; a closer in regular expression, so we are climbing out
 		      (setq depth (1- depth))
 		      (if (= 0 depth) ; we are out!
 			  (throw 'skip 1)))
-		     ((match-end 1) ; the opener in reg, so we are deeper now
-		      (setq depth (1+ depth))))))
+		     ((match-end 1) ; an opener in the r-e, so we are in deeper now
+		      (setq here (point)) ; remember where we started
+		      (goto-char (match-beginning 1))
+		      (cond
+		       ((looking-at verilog-fork-wait-re)
+			(goto-char (match-end 0))) ; false alarm
+		       ((if (or
+			     (looking-at verilog-disable-fork-re)
+			     (and (looking-at "fork")
+				  (progn 
+				    (forward-word -1)
+				    (looking-at verilog-disable-fork-re))))
+			    (progn ;; it is a disable fork; another false alarm
+			      (goto-char (match-end 0)))
+			  (progn ;; it is a simple fork (or has nothing to do with fork)
+			    (goto-char here)
+			    (setq depth (1+ depth))))))))))
 	      (if (verilog-re-search-forward reg nil 'move)
 		  (throw 'skip 1))))))
 
@@ -4552,8 +4576,9 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 	     ((match-end 4)  ; *sigh* could be "disable fork"
 	      (let ((here (point)))
 		(verilog-beg-of-statement)
-		(if (looking-at verilog-disable-fork-re)
-		    t ; is disable fork, this is a normal statement
+		(if (or (looking-at verilog-disable-fork-re)
+			(looking-at verilog-fork-wait-re))
+		    t ; this is a normal statement
 		  (progn ; or is fork, starts a new block
 		    (goto-char here)
 		    (throw 'nesting 'block)))))

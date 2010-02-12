@@ -13,3 +13,12 @@ module fork_join_any;
       foo  = bar;
    end // initial fork
 endmodule // fork_join_any
+
+class x;
+   task y;
+      a  = b;
+      fork wait;
+      $display("I'm indented too far");
+   endtask // y
+endclass // x
+
