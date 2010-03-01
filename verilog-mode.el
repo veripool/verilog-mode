@@ -79,7 +79,7 @@
 ;; .emacs, or in your site's site-load.el
 
 ; (autoload 'verilog-mode "verilog-mode" "Verilog mode" t )
-; (add-to-list 'auto-mode-alist '("\\.[ds]?v\\'" . verilog-mode))
+; (add-to-list 'auto-mode-alist '("\\.[ds]?vh?\\'" . verilog-mode))
 
 ;; If you want to customize Verilog mode to fit your needs better,
 ;; you may add these lines (the values of the variables presented
@@ -2320,7 +2320,7 @@ See also `verilog-font-lock-extra-types'.")
 	     "and" "bit" "buf" "bufif0" "bufif1" "cmos" "defparam"
 	     "event" "genvar" "inout" "input" "integer" "localparam"
 	     "logic" "mailbox" "nand" "nmos" "not" "notif0" "notif1" "or"
-	     "output" "parameter" "pmos" "pull0" "pull1" "pullup"
+	     "output" "parameter" "pmos" "pull0" "pull1" "pulldown" "pullup"
 	     "rcmos" "real" "realtime" "reg" "rnmos" "rpmos" "rtran"
 	     "rtranif0" "rtranif1" "semaphore" "signed" "struct" "supply"
 	     "supply0" "supply1" "time" "tran" "tranif0" "tranif1"
@@ -5810,7 +5810,7 @@ it displays a list of all possible completions.")
   '(
     "and" "buf" "bufif0" "bufif1" "cmos" "defparam" "inout" "input"
     "integer" "localparam" "logic" "mailbox" "nand" "nmos" "nor" "not" "notif0"
-    "notif1" "or" "output" "parameter" "pmos" "pull0" "pull1" "pullup"
+    "notif1" "or" "output" "parameter" "pmos" "pull0" "pull1" "pulldown" "pullup"
     "rcmos" "real" "realtime" "reg" "rnmos" "rpmos" "rtran" "rtranif0"
     "rtranif1" "semaphore" "time" "tran" "tranif0" "tranif1" "tri" "tri0" "tri1"
     "triand" "trior" "trireg" "wand" "wire" "wor" "xnor" "xor"
