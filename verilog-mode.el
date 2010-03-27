@@ -1703,6 +1703,11 @@ find the errors."
 ;;   b :
 
 (defconst verilog-label-re (concat verilog-symbol-re "\\s-*:\\s-*"))
+(defconst verilog-property-re 
+  (concat "\\(" verilog-label-re "\\)?"
+	  "\\(\\(assert\\|assume\\|cover\\)\\>\\s-+\\<property\\>\\)\\|\\(assert\\)"))
+	  ;;  "\\(assert\\|assume\\|cover\\)\\s-+property\\>"
+
 (defconst verilog-no-indent-begin-re
   "\\<\\(if\\|else\\|while\\|for\\|repeat\\|always\\|always_comb\\|always_ff\\|always_latch\\)\\>")
 
@@ -1837,6 +1842,8 @@ find the errors."
    "\\(\\<fork\\>\\)\\|"			 ; 7
    "\\(\\<always\\>\\(\[ \t\]*@\\)?\\)\\|"
    "\\(\\<if\\>\\)\\|"
+   verilog-property-re "\\|"
+   "\\(\\(" verilog-label-re "\\)?\\<assert\\>\\)\\|"
    "\\(\\<clocking\\>\\)\\|"
    "\\(\\<task\\>\\)\\|"
    "\\(\\<function\\>\\)\\|"
@@ -3355,34 +3362,44 @@ With ARG, first kill any existing labels."
   (interactive)
   ;; Move back token by token until we see the end
   ;; of some ealier line.
-  (while
-      ;; If the current point does not begin a new
-      ;; statement, as in the character ahead of us is a ';', or SOF
-      ;; or the string after us unambiguously starts a statement,
-      ;; or the token before us unambiguously ends a statement,
-      ;; then move back a token and test again.
-      (not (or
-	    (bolp)
-	    (= (preceding-char) ?\;)
-	    (looking-at "\\w+\\W*:\\W*\\(coverpoint\\|cross\\|constraint\\)")
-	    (not (or
-		  (looking-at "\\<")
-		  (forward-word -1)))
-	    (and
-	     (looking-at verilog-complete-reg)
-	     (not (save-excursion
-		    (verilog-backward-token)
-		    (looking-at verilog-extended-complete-re))))
-	    (looking-at verilog-basic-complete-re)
-	    (save-excursion
-	      (verilog-backward-token)
-	      (or
-	       (looking-at verilog-end-block-re)
-	       (looking-at verilog-preprocessor-re)))))
-    (verilog-backward-syntactic-ws)
-    (verilog-backward-token))
-  ;; Now point is where the previous line ended.
-  (verilog-forward-syntactic-ws))
+  (let (h)
+    (while
+	;; If the current point does not begin a new
+	;; statement, as in the character ahead of us is a ';', or SOF
+	;; or the string after us unambiguously starts a statement,
+	;; or the token before us unambiguously ends a statement,
+	;; then move back a token and test again.
+	(not (or
+	      (bolp) ; stop if beginning of buffer
+	      (= (preceding-char) ?\;) ; stop if we find a ;
+	      (looking-at "\\w+\\W*:\\W*\\(coverpoint\\|cross\\|constraint\\)")
+	      (not (or
+		    (looking-at "\\<")
+		    (forward-word -1)))
+	      (and
+	       (looking-at "\\(\\<\\(assert\\|assume\\|cover\\)\\>\\s-+\\<property\\>\\)\\|\\(\\<assert\\>\\)")
+	       (progn
+		 (setq h (point))
+		 (save-excursion
+		   (verilog-backward-token)
+		   (if (looking-at verilog-label-re)
+		       (setq h (point))))
+		 (goto-char h)))
+	      (and
+	       (looking-at verilog-complete-reg)
+	       (not (save-excursion
+		      (verilog-backward-token)
+		      (looking-at verilog-extended-complete-re))))
+	      (looking-at verilog-basic-complete-re)
+	      (save-excursion
+		(verilog-backward-token)
+		(or
+		 (looking-at verilog-end-block-re)
+		 (looking-at verilog-preprocessor-re)))))
+      (verilog-backward-syntactic-ws)
+      (verilog-backward-token))
+    ;; Now point is where the previous line ended.
+    (verilog-forward-syntactic-ws)))
 
 (defun verilog-beg-of-statement-1 ()
   "Move backward to beginning of statement."
@@ -3764,8 +3781,8 @@ primitive or interface named NAME."
 			  (cond
 			   (;
 			    (eq here (progn
-				       (verilog-backward-token)
-				       (verilog-beg-of-statement-1)
+				    ;;   (verilog-backward-token)
+				       (verilog-beg-of-statement)
 				       (point)))
 			    (setq err nil)
 			    (setq str ""))
@@ -3789,7 +3806,7 @@ primitive or interface named NAME."
 			     (;- else
 			      (match-end 2)
 			      (let ((nest 0)
-				    ( reg "\\(\\<begin\\>\\)\\|\\(\\<end\\>\\)\\|\\(\\<if\\>\\)"))
+				    ( reg "\\(\\<begin\\>\\)\\|\\(\\<end\\>\\)\\|\\(\\<if\\>\\)\\|\\(assert\\)"))
 				(catch 'skip
 				  (while (verilog-re-search-backward reg nil 'move)
 				    (cond
@@ -3805,13 +3822,21 @@ primitive or interface named NAME."
 					    (setq err nil)
 					    (setq str (verilog-get-expr))
 					    (setq str (concat " // else: !if" str ))
+					    (throw 'skip 1))))
+				     ((match-end 4)
+				      (if (= 0 nest)
+					  (progn
+					    (goto-char (match-end 0))
+					    (setq there (point))
+					    (setq err nil)
+					    (setq str (verilog-get-expr))
+					    (setq str (concat " // else: !assert " str ))
 					    (throw 'skip 1)))))))))
-
 			     (;- end else
 			      (match-end 3)
 			      (goto-char there)
 			      (let ((nest 0)
-				    (reg "\\(\\<begin\\>\\)\\|\\(\\<end\\>\\)\\|\\(\\<if\\>\\)"))
+				    (reg "\\(\\<begin\\>\\)\\|\\(\\<end\\>\\)\\|\\(\\<if\\>\\)\\|\\(assert\\)"))
 				(catch 'skip
 				  (while (verilog-re-search-backward reg nil 'move)
 				    (cond
@@ -3827,7 +3852,17 @@ primitive or interface named NAME."
 					    (setq err nil)
 					    (setq str (verilog-get-expr))
 					    (setq str (concat " // else: !if" str ))
+					    (throw 'skip 1))))
+				     ((match-end 4)
+				      (if (= 0 nest)
+					  (progn
+					    (goto-char (match-end 0))
+					    (setq there (point))
+					    (setq err nil)
+					    (setq str (verilog-get-expr))
+					    (setq str (concat " // else: !assert " str ))
 					    (throw 'skip 1)))))))))
+
 			     (; always_comb, always_ff, always_latch
 			      (or (match-end 4) (match-end 5) (match-end 6))
 			      (goto-char (match-end 0))
@@ -4449,8 +4484,7 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 			      ((match-end 3) ; assert block
 			       (setq elsec (1- elsec))
 			       (verilog-beg-of-statement) ;; doesn't get to beginning
-			       (if (looking-at (concat "\\(" verilog-label-re "\\)?"
-						       "\\(assert\\|assume\\|cover\\)\\s-+property\\>"))
+			       (if (looking-at verilog-property-re)
 				   (throw 'nesting 'statement) ; We don't need an endproperty for these
 				 (throw 'nesting 'block)	;We still need a endproperty
 				 ))
@@ -4614,8 +4648,7 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 					; but
                                         ;    property ID () ... needs end_property
 	      (verilog-beg-of-statement)
-	      (if (looking-at (concat "\\(" verilog-label-re "\\)?"
-				      "\\(assert\\|assume\\|cover\\)\\s-+property\\>"))
+	      (if (looking-at verilog-property-re)
 		  (throw 'continue 'statement) ; We don't need an endproperty for these
 		(throw 'nesting 'block)	;We still need a endproperty
 		))
