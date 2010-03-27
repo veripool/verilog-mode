@@ -2670,7 +2670,8 @@ Use filename, if current buffer being edited shorten to just buffer name."
 	       (forward-word 1))
 	  (catch 'skip
 	    (if (eq nest 'yes)
-		(let ((depth 1))
+		(let ((depth 1)
+		      here )
 		  (while (verilog-re-search-forward reg nil 'move)
 		    (cond
 		     ((match-end md) ; a closer in regular expression, so we are climbing out
@@ -4583,6 +4584,13 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 		    (goto-char here)
 		    (throw 'nesting 'block)))))
 
+	     ((match-end 27)  ; *sigh* might be a clocking declaration
+	      (let ((here (point)))
+		(if (verilog-in-paren)
+		    t ; this is a normal statement
+		  (progn ; or is fork, starts a new block
+		    (goto-char here)
+		    (throw 'nesting 'block)))))
 
 	     ;; need to consider typedef struct here...
 	     ((looking-at "\\<class\\|struct\\|function\\|task\\>")
