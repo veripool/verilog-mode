@@ -3511,6 +3511,20 @@ More specifically, point @ in the line foo : @ begin"
 	       (t
 		(throw 'found (= nest 0)))))))
       nil)))
+(defun verilog-backward-up-list (arg)
+  "Like backward-up-list, but deal with comments"
+  (if (> arg 0)
+      (let ((cnt arg))
+	(while (not (= cnt 0))
+	  (backward-up-list 1)
+	  (unless (verilog-in-comment-p)
+	    (setq cnt (1- cnt)))))
+    (let ((cnt arg))
+      (while (not (= cnt 0))
+	(backward-up-list -1)
+	  (unless (verilog-in-comment-p)
+	    (setq cnt (1+ cnt)))))))
+	
 (defun verilog-in-struct-region-p ()
   "Return true if in a struct region.
 More specifically, in a list after a struct|union keyword."
@@ -3519,7 +3533,7 @@ More specifically, in a list after a struct|union keyword."
     (let* ((state (verilog-syntax-ppss))
 	   (depth (nth 0 state)))
       (if depth
-	  (progn (backward-up-list depth)
+	  (progn (verilog-backward-up-list depth)
 		 (verilog-beg-of-statement)
 		 (looking-at "\\<typedef\\>?\\s-*\\<struct\\|union\\>"))))))
 
@@ -4897,7 +4911,7 @@ Set point to where line starts."
     (= (preceding-char) ?\))
     (progn
       (backward-char)
-      (backward-up-list 1)
+      (verilog-backward-up-list 1)
       (verilog-backward-syntactic-ws)
       (let ((back (point)))
 	(forward-word -1)
@@ -5085,7 +5099,7 @@ Optional BOUND limits search."
  (save-excursion
    (if (verilog-in-paren)
        (progn
-	 (backward-up-list 1)
+	 (verilog-backward-up-list 1)
 	 (verilog-at-struct-p)
 	 )
      nil)))
@@ -5096,7 +5110,7 @@ Optional BOUND limits search."
  (save-excursion
    (if (verilog-in-paren)
        (progn
-	 (backward-up-list 1)
+	 (verilog-backward-up-list 1)
 	 (verilog-at-constraint-p)
 	 )
      nil)))
@@ -5277,7 +5291,7 @@ Only look at a few lines to determine indent level."
 			    ((= (following-char) ?\[)
 			     (progn
 			       (forward-char 1)
-			       (backward-up-list -1)
+			       (verilog-backward-up-list -1)
 			       (skip-chars-forward " \t"))))
 			   (current-column))
 		       (progn
@@ -5303,7 +5317,7 @@ Only look at a few lines to determine indent level."
      (; handle inside parenthetical expressions
       (eq type 'cparenexp)
       (let ((val (save-excursion
-		   (backward-up-list 1)
+		   (verilog-backward-up-list 1)
 		   (forward-char 1)
 		   (skip-chars-forward " \t")
 		   (current-column))))
@@ -5465,10 +5479,10 @@ Be verbose about progress unless optional QUIET set."
 	  (progn
 	    (if (verilog-parenthesis-depth)  
 		;; in an argument list or parameter block		
-		(setq el (backward-up-list -1)		      
+		(setq el (verilog-backward-up-list -1)		      
 		      start (progn
 			      (goto-char e)
-			      (backward-up-list 1)
+			      (verilog-backward-up-list 1)
 			      (forward-line) ;; ignore ( input foo,
 			      (verilog-re-search-forward verilog-declaration-re el 'move)
 			      (goto-char (match-beginning 0))
@@ -5477,7 +5491,7 @@ Be verbose about progress unless optional QUIET set."
 		      startpos (set-marker (make-marker) start)
 		      end (progn
 			    (goto-char start)
-			    (backward-up-list -1)
+			    (verilog-backward-up-list -1)
 			    (forward-char -1)
 			    (verilog-backward-syntactic-ws)
 			    (point))
