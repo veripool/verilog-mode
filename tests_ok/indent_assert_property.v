@@ -13,9 +13,9 @@ module myassert(input clk,
    myassert0: assert property(myproperty) begin
       $display("myassert0 was successful");
    end
-              else begin
-                 $fatal("myassert0 was unsuccessful");
-              end
+   else begin
+      $fatal("myassert0 was unsuccessful");
+   end
    
    //Also, any statements following the assert,
    //cover, and assume property statements get
