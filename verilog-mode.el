@@ -3513,17 +3513,11 @@ More specifically, point @ in the line foo : @ begin"
       nil)))
 (defun verilog-backward-up-list (arg)
   "Like backward-up-list, but deal with comments"
-  (if (> arg 0)
-      (let ((cnt arg))
-	(while (not (= cnt 0))
-	  (backward-up-list 1)
-	  (unless (verilog-in-comment-p)
-	    (setq cnt (1- cnt)))))
-    (let ((cnt arg))
-      (while (not (= cnt 0))
-	(backward-up-list -1)
-	  (unless (verilog-in-comment-p)
-	    (setq cnt (1+ cnt)))))))
+  (let (saved-psic parse-sexp-ignore-comments)
+    (setq parse-sexp-ignore-comments 1)
+    (backward-up-list arg)
+    (setq parse-sexp-ignore-comments saved-psic)
+    ))
 	
 (defun verilog-in-struct-region-p ()
   "Return true if in a struct region.
