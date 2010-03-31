@@ -24,7 +24,7 @@ module foo;
       real    Mbps;
       if( RxByteCnt && systemTop.intMonitor.frgRxedCnt >= 2 ) begin
          ibps  =
-                                                          (RxByteCnt*8*1000000000)/(RxLastByteTime-RxFirstByteTime);
+                (RxByteCnt*8*1000000000)/(RxLastByteTime-RxFirstByteTime);
          Mbps  = ibps/1000000;
          $display("%t: %s - RX average performance: %fMbps (Mbits/sec)",
                   $time, myName, Mbps );

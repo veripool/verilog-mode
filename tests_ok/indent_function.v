@@ -8,7 +8,7 @@ class C;
       a;
    endfunction // int
    
-   integer      foo;
+   integer foo;
 endclass // C
    C a;
    initial begin

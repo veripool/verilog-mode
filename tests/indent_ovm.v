@@ -55,3 +55,16 @@ class my_trans extends ovm_sequence_item;
    endfunction : new
 endclass : my_trans
 endmodule // ovm
+
+module tt;
+
+   initial begin
+      while (1) begin
+         `ovm_do_with(aa, {bb == 0;})
+	   `ovm_do(cc)
+	   `ovm_do(cc)	     
+	     end // while (1)
+   end // initial begin
+   
+endmodule // tt
+

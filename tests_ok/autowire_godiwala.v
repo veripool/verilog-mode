@@ -476,53 +476,53 @@ module FswArbiter (/*AUTOARG*/
    // ================
    
    // lint_checking SCX_UNUSED off
-   wire                      _unused_ok = &{1'b0,
-                                            
-                                            bp_select,
-                                            
-                                            bp3_hold_wait_vector,
-                                            bp2_hold_wait_vector_d1,
-                                            bp1_hold_wait_vector_d1,
-                                            
-                                            bp3_header,
-                                            bp3_header_d1,
-                                            bp3_select,
-                                            bp3_select_d1,
-                                            bp3_next_winner[1:0],
-                                            bp3_next_winner_d1[1:0],
-                                            bp3_nextxbe[3:0],
-                                            bp3_nextxbe_d1[3:0],
-                                            
-                                            
-                                            bp2_grant_cycle_d2,
-                                            bp2_header,
-                                            bp2_header_d2,
-                                            bp2_select,
-                                            bp2_select_d2,
-                                            bp2_next_winner[1:0],
-                                            bp2_next_winner_d2[1:0],
-                                            bp2_nextxbe[3:0],
-                                            bp2_nextxbe_d2[3:0],
-                                            
-                                            bp1_header_d1,
-                                            bp1_header_d2,
-                                            bp1_select_d1,
-                                            bp1_select_d2,
-                                            bp1_next_winner_d1[1:0],
-                                            bp1_next_winner_d2[1:0],
-                                            bp1_nextxbe_d1[3:0],
-                                            bp1_nextxbe_d2[3:0],
-                                            
-                                            xb0_obx_NextXbe_s3a, // This is unused signal now.
-                                            xb1_obx_NextXbe_s3a,
-                                            xb2_obx_NextXbe_s3a,
-                                            xb3_obx_NextXbe_s3a,
-                                            
-                                            syn64,
-                                            dataout64,
-                                            
-                                            1'b0
-                                            };
+   wire _unused_ok = &{1'b0,
+                       
+                       bp_select,
+                       
+                       bp3_hold_wait_vector,
+                       bp2_hold_wait_vector_d1,
+                       bp1_hold_wait_vector_d1,
+                       
+                       bp3_header,
+                       bp3_header_d1,
+                       bp3_select,
+                       bp3_select_d1,
+                       bp3_next_winner[1:0],
+                       bp3_next_winner_d1[1:0],
+                       bp3_nextxbe[3:0],
+                       bp3_nextxbe_d1[3:0],
+                       
+                       
+                       bp2_grant_cycle_d2,
+                       bp2_header,
+                       bp2_header_d2,
+                       bp2_select,
+                       bp2_select_d2,
+                       bp2_next_winner[1:0],
+                       bp2_next_winner_d2[1:0],
+                       bp2_nextxbe[3:0],
+                       bp2_nextxbe_d2[3:0],
+                       
+                       bp1_header_d1,
+                       bp1_header_d2,
+                       bp1_select_d1,
+                       bp1_select_d2,
+                       bp1_next_winner_d1[1:0],
+                       bp1_next_winner_d2[1:0],
+                       bp1_nextxbe_d1[3:0],
+                       bp1_nextxbe_d2[3:0],
+                       
+                       xb0_obx_NextXbe_s3a, // This is unused signal now.
+                       xb1_obx_NextXbe_s3a,
+                       xb2_obx_NextXbe_s3a,
+                       xb3_obx_NextXbe_s3a,
+                       
+                       syn64,
+                       dataout64,
+                       
+                       1'b0
+                       };
    // lint_checking SCX_UNUSED on
    
    

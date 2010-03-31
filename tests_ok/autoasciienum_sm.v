@@ -78,7 +78,7 @@ module sm (/*AUTOARG*/
    
    /*AUTOASCIIENUM("state_r", "_stateascii_r")*/
    // Beginning of automatic ASCII enum decoding
-   reg [55:0]                _stateascii_r;             // Decode of state_r
+   reg [55:0] _stateascii_r;            // Decode of state_r
    always @(state_r) begin
       case ({state_r})
         IDLE:     _stateascii_r  = "idle   ";
