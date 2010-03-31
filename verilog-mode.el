@@ -3412,7 +3412,10 @@ With ARG, first kill any existing labels."
         (setq pt (point))
         (verilog-backward-syntactic-ws)
         (if (or (bolp)
-                (= (preceding-char) ?\;))
+                (= (preceding-char) ?\;)
+		(save-excursion
+		  (verilog-backward-token)
+		  (looking-at verilog-ends-re)))
             (progn
               (goto-char pt)
               (throw 'done t))
