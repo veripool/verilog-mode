@@ -5068,6 +5068,12 @@ Optional BOUND limits search."
  (let ((state (save-excursion (verilog-syntax-ppss))))
    (or (nth 3 state) (nth 4 state) (nth 7 state)))) ; Inside string or comment)
 
+(defun verilog-in-attribute-p ()
+ "Return true if point is in an attribute (* [] attribute *)."
+ (save-excursion 
+   (verilog-re-search-backward "\\<(*\\|*)\\>" nil 'move)
+   (match-end 1)))
+
 (defun verilog-in-escaped-name-p ()
  "Return true if in an escaped name."
  (save-excursion
@@ -5077,7 +5083,7 @@ Optional BOUND limits search."
        t
      nil)))
 (defun verilog-in-directive-p ()
- "Return true if in a star or // comment."
+ "Return true if in a directive."
  (save-excursion
    (beginning-of-line)
    (looking-at verilog-directive-re-1)))
@@ -5195,30 +5201,70 @@ Optional BOUND limits search."
 	       (search-backward "/*")
 	       (skip-chars-backward " \t\n\f")
 	       t)
-	      ((if (and (not (bobp))
-			(= (char-before) ?\/)
-			(= (char-before (1- (point))) ?\*))
-		   (goto-char (- (point) 2))
-		 (/= (skip-chars-backward " \t\n\f") 0)))))))))
+	      ((and (not (bobp))
+		    (= (char-before) ?\/)
+		    (= (char-before (1- (point))) ?\*))
+	       (goto-char (- (point) 2))
+	       t) ;; Let nth 4 state handle the rest
+	      ((and (not (bobp))
+		    (= (char-before) ?\))
+		    (= (char-before (1- (point))) ?\*))
+	       (goto-char (- (point) 2))
+	       (if (search-backward "(*" nil t)
+		   (progn 
+		     (skip-chars-backward " \t\n\f")
+		     t)
+		 (progn
+		   (goto-char (+ (point) 2))
+		   nil)))
+	      (t
+	       (/= (skip-chars-backward " \t\n\f") 0))))))))
 
 (defun verilog-skip-forward-comment-p ()
   "If in comment, move to end and return true."
-  (let (state)
-    (progn
-      (setq state (save-excursion (verilog-syntax-ppss)))
-      (cond
-       ((nth 3 state)                   ;Inside string
-	t)
-       ((nth 7 state)			;Inside // comment
-	(end-of-line)
-	(forward-char 1)
-	t)
-       ((nth 4 state)			;Inside any comment
-	(search-forward "*/")
-	(skip-chars-forward " \t\n\f")
-	t)
-       (t
-	(skip-chars-forward " \t\n\f"))))))
+  (let* (h
+	 (state (save-excursion (verilog-syntax-ppss)))
+	 (skip (cond
+		((nth 3 state)		;Inside string
+		 t)
+		((nth 7 state)		;Inside // comment
+		 (end-of-line)
+		 (forward-char 1)
+		 t)
+		((nth 4 state)		;Inside /* comment
+		 (search-forward "*/")
+		 t)
+		((verilog-in-attribute-p)  ;Inside (* attribute
+		 (search-forward "*)" nil t)
+		 t)
+		(t nil))))
+    (skip-chars-forward " \t\n\f")
+    (while 
+	(cond
+	 ((looking-at "\\/\\*")
+	  (progn
+	    (setq h (point))
+	    (goto-char (match-end 0))
+	    (if (search-forward "*/" nil t)
+		(progn 
+		  (skip-chars-forward " \t\n\f")
+		  (setq skip 't))
+	      (progn
+		(goto-char h)
+		nil))))
+	 ((looking-at "(\\*")
+	  (progn
+	    (setq h (point))
+	    (goto-char (match-end 0))
+	    (if (search-forward "*)" nil t)
+		(progn
+		  (skip-chars-forward " \t\n\f")
+		  (setq skip 't))
+	      (progn
+		(goto-char h)
+		nil))))
+	 (t nil)))
+    skip))
 
 (defun verilog-indent-line-relative ()
   "Cheap version of indent line.
