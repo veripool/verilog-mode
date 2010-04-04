@@ -1394,6 +1394,46 @@ so there may be a large up front penalty for the first search."
 	  (setq pt (match-end 0))))
     pt))
 
+(defsubst verilog-re-search-forward-substr (substr regexp bound noerror)
+  "Like `re-search-forward', but first searches for SUBSTR constant.
+Then searched for the normal REGEXP (which contains SUBSTR), with given
+BOUND and NOERROR.  The REGEXP must fit within a single line.
+This speeds up complicated regexp matches."
+  ;; Problem with overlap: search-forward BAR then FOOBARBAZ won't match.
+  ;; thus require matches to be on one line, and use beginning-of-line.
+  (let (done)
+    (while (and (not done)
+		(search-forward substr bound noerror))
+      (save-excursion
+	(beginning-of-line)
+	(setq done (re-search-forward regexp (verilog-get-end-of-line) noerror)))
+      (unless (and (<= (match-beginning 0) (point))
+		   (>= (match-end 0) (point)))   
+	(setq done nil)))
+    (when done (goto-char done))
+    done))
+;;(verilog-re-search-forward-substr "-end" "get-end-of" nil t) ;;-end (test bait)
+
+(defsubst verilog-re-search-backward-substr (substr regexp bound noerror)
+  "Like `re-search-backward', but first searches for SUBSTR constant.
+Then searched for the normal REGEXP (which contains SUBSTR), with given
+BOUND and NOERROR.  The REGEXP must fit within a single line.
+This speeds up complicated regexp matches."
+  ;; Problem with overlap: search-backward BAR then FOOBARBAZ won't match.
+  ;; thus require matches to be on one line, and use beginning-of-line.
+  (let (done)
+    (while (and (not done)
+		(search-backward substr bound noerror))
+      (save-excursion
+	(end-of-line)
+	(setq done (re-search-backward regexp (verilog-get-beg-of-line) noerror)))
+      (unless (and (<= (match-beginning 0) (point))
+		   (>= (match-end 0) (point)))   
+	(setq done nil)))
+    (when done (goto-char done))
+    done))
+;;(verilog-re-search-backward-substr "-end" "get-end-of" nil t) ;;-end (test bait)
+
 (defsubst verilog-get-beg-of-line (&optional arg)
   (save-excursion
     (beginning-of-line arg)
@@ -7464,15 +7504,29 @@ list of ( (signal_name connection_name)... )."
     (let ((tpl-regexp "\\([0-9]+\\)")
 	  (lineno 0)
 	  (templateno 0)
+	  (pt (point))
 	  tpl-sig-list tpl-wild-list tpl-end-pt rep)
+      ;; Note this search is expensive, as we hunt from mod-begin to point
+      ;; for every instantiation.  Likewise in verilog-read-auto-lisp.
+      ;; So, we look first for an exact string rather than a slow regexp.
+      ;; Someday we may keep a cache of every template, but this would also
+      ;; need to record the relative position of each AUTOINST, as multiple
+      ;; templates exist for each module, and we're inserting lines.
       (cond ((or
-	     (re-search-backward (concat "^\\s-*/?\\*?\\s-*" module "\\s-+AUTO_TEMPLATE") nil t)
-	     (progn
-	       (goto-char (point-min))
-	       (re-search-forward (concat "^\\s-*/?\\*?\\s-*" module "\\s-+AUTO_TEMPLATE") nil t)))
+	      (verilog-re-search-backward-substr
+	       "AUTO_TEMPLATE"
+	       (concat "^\\s-*/?\\*?\\s-*" module "\\s-+AUTO_TEMPLATE") nil t)
+	      ;; Also try forward of this AUTOINST
+	      ;; This is for historical support; this isn't speced as working
+	      (progn
+		(goto-char pt)
+		(verilog-re-search-forward-substr
+		 "AUTO_TEMPLATE"
+		 (concat "^\\s-*/?\\*?\\s-*" module "\\s-+AUTO_TEMPLATE") nil t)))
 	     (goto-char (match-end 0))
 	     ;; Parse "REGEXP"
-	     ;; We reserve @"..." for future lisp expressions that evaluate once-per-AUTOINST
+	     ;; We reserve @"..." for future lisp expressions that evaluate
+	     ;; once-per-AUTOINST
 	     (when (looking-at "\\s-*\"\\([^\"]*\\)\"")
 	       (setq tpl-regexp (match-string 1))
 	       (goto-char (match-end 0)))
