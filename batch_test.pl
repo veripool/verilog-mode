@@ -33,6 +33,10 @@ foreach my $test (@tests) {
     run("diff tests_batch_ok/$test e/$test");
 }
 
+run("emacs --batch --no-site-file -l $tmpdir/verilog-mode.elc"
+    ." -l ./batch_prof.el"
+    );
+
 #######################################################################
 
 sub run {

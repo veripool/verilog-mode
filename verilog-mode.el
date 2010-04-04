@@ -7245,16 +7245,27 @@ For example if declare A A (.B(SIG)) then B will be included in the list."
 	  (setq sig-list (cons (list (match-string 1) nil nil) sig-list))))
       sig-list)))
 
-(defun verilog-read-auto-lisp (start end)
-  "Look for and evaluate a AUTO_LISP between START and END."
+(defvar verilog-cache-has-lisp nil "True if any AUTO_LISP in buffer.")
+(make-variable-buffer-local 'verilog-cache-has-lisp)
+
+(defun verilog-read-auto-lisp-present ()
+  "Set `verilog-cache-has-lisp' if any AUTO_LISP in this buffer."
   (save-excursion
-    (goto-char start)
-    (while (re-search-forward "\\<AUTO_LISP(" end t)
-      (backward-char)
-      (let* ((beg-pt (prog1 (point)
-		       (forward-sexp 1)))	;; Closing paren
-	     (end-pt (point)))
-	(eval-region beg-pt end-pt nil)))))
+    (setq verilog-cache-has-lisp (re-search-forward "\\<AUTO_LISP(" nil t))))
+
+(defun verilog-read-auto-lisp (start end)
+  "Look for and evaluate a AUTO_LISP between START and END.
+Must call `verilog-read-auto-lisp-present' before this function."
+  ;; This function is expensive for large buffers, so we cache if any AUTO_LISP exists
+  (when verilog-cache-has-lisp
+    (save-excursion
+      (goto-char start)
+      (while (re-search-forward "\\<AUTO_LISP(" end t)
+	(backward-char)
+	(let* ((beg-pt (prog1 (point)
+			 (forward-sexp 1)))	;; Closing paren
+	       (end-pt (point)))
+	  (eval-region beg-pt end-pt nil))))))
 
 (eval-when-compile
   ;; Prevent compile warnings; these are let's, not globals
@@ -7455,10 +7466,10 @@ list of ( (signal_name connection_name)... )."
 	  (templateno 0)
 	  tpl-sig-list tpl-wild-list tpl-end-pt rep)
       (cond ((or
-	       (re-search-backward (concat "^\\s-*/?\\*?\\s-*" module "\\s-+AUTO_TEMPLATE") nil t)
-	       (progn
-		 (goto-char (point-min))
-		 (re-search-forward (concat "^\\s-*/?\\*?\\s-*" module "\\s-+AUTO_TEMPLATE") nil t)))
+	     (re-search-backward (concat "^\\s-*/?\\*?\\s-*" module "\\s-+AUTO_TEMPLATE") nil t)
+	     (progn
+	       (goto-char (point-min))
+	       (re-search-forward (concat "^\\s-*/?\\*?\\s-*" module "\\s-+AUTO_TEMPLATE") nil t)))
 	     (goto-char (match-end 0))
 	     ;; Parse "REGEXP"
 	     ;; We reserve @"..." for future lisp expressions that evaluate once-per-AUTOINST
@@ -8087,7 +8098,10 @@ Return modi if successful, else print message unless IGNORE-ERROR is true."
 		allow-cache
 		(equal verilog-modi-lookup-last-mod module)
 		(equal verilog-modi-lookup-last-current current)
-		(equal verilog-modi-lookup-last-tick (buffer-modified-tick)))
+		;; Iff hit is in current buffer, then tick must match
+		(or (equal verilog-modi-lookup-last-tick (buffer-modified-tick))
+		    (not (equal current (verilog-modi-file-or-buffer
+					 verilog-modi-lookup-last-modi)))))
 	   ;; ok as is
 	   )
 	  (t (let* ((realmod (verilog-symbol-detick module t))
@@ -10823,6 +10837,7 @@ Wilson Snyder (wsnyder@wsnyder.org)."
 	  (run-hooks 'verilog-before-auto-hook)
 	  ;; Try to save the user from needing to revert-file to reread file local-variables
 	  (verilog-auto-reeval-locals)
+	  (verilog-read-auto-lisp-present)
 	  (verilog-read-auto-lisp (point-min) (point-max))
 	  (verilog-getopt-flags)
 	  ;; From here on out, we can cache anything we read from disk

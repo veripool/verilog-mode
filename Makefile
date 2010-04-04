@@ -53,6 +53,7 @@ test_errors:
 	@echo error_file.v 7: here is where they are
 test_batch:
 	@echo == test_batch
+	mkdir -p test_dir
 	time ./batch_test.pl
 
 local:	.timestamps/local
@@ -124,8 +125,8 @@ gnu-update-trunk:
 gnu-diff: gnu-diff-trunk
 gnu-diff-trunk: gnu-update-trunk verilog-mode-tognu.el
 	diff -c gnutrunk/lisp/progmodes/verilog-mode.el verilog-mode-tognu.el 
-patch-file: gnu-update-head verilog-mode-tognu.el
-	diff -c gnutrunk/lisp/progmodes/verilog-mode.el verilog-mode-tognu.el > patch-file
+gnu.patch: gnu-update verilog-mode-tognu.el
+	diff -c gnutrunk/lisp/progmodes/verilog-mode.el verilog-mode-tognu.el > $@
 
 verilog-mode-tognu.el: verilog-mode.el Makefile
 	cat verilog-mode.el \
@@ -139,6 +140,4 @@ verilog-mode-tognu.el: verilog-mode.el Makefile
 # Clean
 
 clean::
-	/bin/rm -rf .timestamps e/*.elc x/*.elc
-
-
+	/bin/rm -rf .timestamps e/*.elc x/*.elc test_dir
