@@ -8124,8 +8124,34 @@ Use `verilog-preserve-modi-cache' to set it.")
 (defvar verilog-modi-cache-preserve-buffer nil
   "Modification tick after which the cache is still considered valid.
 Use `verilog-preserve-modi-cache' to set it.")
+(defvar verilog-modi-cache-current-enable nil
+  "If true, allow caching `verilog-modi-current', set by let().")
+(defvar verilog-modi-cache-current nil
+  "Currently active `verilog-modi-current', if any, set by let().")
+(defvar verilog-modi-cache-current-max nil
+  "Current endmodule point for `verilog-modi-cache-current', if any.")
 
 (defun verilog-modi-current ()
+  "Return the modi structure for the module currently at point, possibly cached."
+  (cond ((and verilog-modi-cache-current
+	      (>= (point) (verilog-modi-point verilog-modi-cache-current))
+	      (<= (point) verilog-modi-cache-current-max))
+	 ;; Slow assertion, for debugging the cache:
+	 ;;(or (equal verilog-modi-cache-current (verilog-modi-current-get)) (debug))
+	 verilog-modi-cache-current)
+	(verilog-modi-cache-current-enable
+	 (setq verilog-modi-cache-current (verilog-modi-current-get)
+	       verilog-modi-cache-current-max
+	       ;; The cache expires when we pass "endmodule" as then the
+	       ;; current modi may change to the next module
+	       ;; This relies on the AUTOs generally inserting, not deleting text
+	       (save-excursion
+		 (verilog-re-search-forward-quick verilog-end-defun-re nil nil)))
+	 verilog-modi-cache-current)
+	(t
+	 (verilog-modi-current-get))))
+
+(defun verilog-modi-current-get ()
   "Return the modi structure for the module currently at point."
   (let* (name pt)
     ;; read current module's name
@@ -10882,7 +10908,11 @@ Wilson Snyder (wsnyder@wsnyder.org)."
 		      (font-lock-mode 0)
 		      t))
 	;; Cache directories; we don't write new files, so can't change
-	(verilog-dir-cache-preserving t))
+	(verilog-dir-cache-preserving t)
+	;; Cache current module
+	(verilog-modi-cache-current-enable t)
+	(verilog-modi-cache-current-max (point-min)) ; IE it's invalid
+	verilog-modi-cache-current)
     (unwind-protect
 	(save-excursion
 	  ;; If we're not in verilog-mode, change syntax table so parsing works right

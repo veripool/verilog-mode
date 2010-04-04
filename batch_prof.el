@@ -59,8 +59,9 @@ module EX_TIME_CONSUME (/*AUTOARG*/);
   ;;(setq t10000 (t-size-test 10000))
 
   (setq slope (/ t1000 t100))
-  (if (< slope 1.0) (setq slope 1.0))
-  (setq order (1+ (/ (log (if (< slope 1.0) 1.0 slope))
+  (setq order (1+ (/ (log slope)
 		     (log 10))))
   (message "Slope: %f  Complexity: O(n^%f)" slope order)
+  (if (> slope 1.2)
+      (error "Test failed, large modules are too slow compared to small modules"))
 )
