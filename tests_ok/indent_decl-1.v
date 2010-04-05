@@ -16,12 +16,12 @@ module soft_rst
    output soft_rst, // Soft (sync) reset to VC3 side
    output hs_async_rst_n  // Async reset to host side
    );
-
-   reg [1:0]    state;
-
-   reg [1:0] IDLE = 2'h0,
-     HALT  = 2'h1,
-     RST   = 2'h2,
-     DONE  = 2'h3;
+   
+   reg [1:0] state;
+   
+   reg [1:0] IDLE  = 2'h0,
+             HALT  = 2'h1,
+             RST   = 2'h2,
+             DONE  = 2'h3;
    
 endmodule // soft_rst
