@@ -5072,14 +5072,19 @@ Optional BOUND limits search."
 	    (let ((state (save-excursion (verilog-syntax-ppss))))
 	      (cond
 	       ((nth 7 state) ;; in // comment
-		(verilog-re-search-forward "//" nil 'move))
+		(end-of-line)
+		(forward-char 1)
+		(skip-chars-forward " \t\n\f")
+		)
 	       ((nth 4 state) ;; in /* */ comment
-		(verilog-re-search-forward "/\*" nil 'move))))
+		(verilog-re-search-forward "\*\/\\s-*" nil 'move))))
 	    (narrow-to-region (point) bound)
 	    (while (/= here (point))
 	      (setq here (point)
 		    jump nil)
 	      (forward-comment (buffer-size))
+	      (and (looking-at "\\s-*(\\*.*\\*)\\s-*") ;; Attribute
+		   (goto-char (match-end 0)))
 	      (save-excursion
 		(beginning-of-line)
 		(if (looking-at verilog-directive-re-1)
@@ -5114,8 +5119,8 @@ Optional BOUND limits search."
 (defun verilog-in-attribute-p ()
  "Return true if point is in an attribute (* [] attribute *)."
  (save-excursion 
-   (verilog-re-search-backward "\\<(*\\|*)\\>" nil 'move)
-   (match-end 1)))
+   (verilog-re-search-backward "\\((\\*\\)\\|\\(\\*)\\)" nil 'move)
+   (numberp (match-beginning 1))))
 
 (defun verilog-in-escaped-name-p ()
  "Return true if in an escaped name."
