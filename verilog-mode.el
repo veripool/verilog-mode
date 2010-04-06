@@ -7065,11 +7065,11 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 
 (defun verilog-read-sub-decls-sig (submoddecls comment port sig vec multidim)
   "For `verilog-read-sub-decls-line', add a signal."
+  ;;(message "vrsds: '%s'" sig)
   (let (portdata)
     (when sig
       (setq port (verilog-symbol-detick-denumber port))
       (setq sig  (verilog-symbol-detick-denumber sig))
-      (if sig (setq sig  (verilog-string-replace-matches "^\\s-*[---+~!|&]+\\s-*" "" nil nil sig)))
       (if vec (setq vec  (verilog-symbol-detick-denumber vec)))
       (if multidim (setq multidim  (mapcar `verilog-symbol-detick-denumber multidim)))
       (unless (or (not sig)
@@ -7120,13 +7120,16 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 	  (verilog-read-sub-decls-expr submoddecls comment port mstr)))))
    (t
     (let (sig vec multidim)
+      ;; Remove leading reduction operators, etc
+      (setq expr (verilog-string-replace-matches "^\\s-*[---+~!|&]+\\s-*" "" nil nil expr))
+      ;;(message "vrsde-ptop: '%s'" expr)
       (cond ;; Find \signal. Final space is part of escaped signal name
        ((string-match "^\\s-*\\(\\\\[^ \t\n\f]+\\s-\\)" expr)
 	;;(message "vrsde-s: '%s'" (match-string 1 expr))
 	(setq sig (match-string 1 expr)
 	      expr (substring expr (match-end 0))))
        ;; Find signal
-       ((string-match "^\\s-*\\([^[({).\\]+\\)" expr)
+       ((string-match "^\\s-*\\([a-zA-Z_][a-zA-Z_0-9]*\\)" expr)
 	;;(message "vrsde-s: '%s'" (match-string 1 expr))
 	(setq sig (verilog-string-remove-spaces (match-string 1 expr))
 	      expr (substring expr (match-end 0)))))
@@ -7164,13 +7167,13 @@ Return the list of signals found, using submodi to look up each port."
 	;; We intentionally ignore (non-escaped) signals with .s in them
 	;; this prevents AUTOWIRE etc from noticing hierarchical sigs.
 	(when port
-	  (cond ((looking-at "\\([^[({).\\]*\\)\\s-*)")
+	  (cond ((looking-at "\\([a-zA-Z_][a-zA-Z_0-9]*\\)\\s-*)")
 		 (verilog-read-sub-decls-sig
 		  submoddecls comment port
 		  (verilog-string-remove-spaces (match-string 1)) ; sig
 		  nil nil)) ; vec multidim
 		;;
-		((looking-at "\\([^[({).\\]*\\)\\s-*\\(\\[[^]]+\\]\\)\\s-*)")
+		((looking-at "\\([a-zA-Z_][a-zA-Z_0-9]*\\)\\s-*\\(\\[[^]]+\\]\\)\\s-*)")
 		 (verilog-read-sub-decls-sig
 		  submoddecls comment port
 		  (verilog-string-remove-spaces (match-string 1)) ; sig

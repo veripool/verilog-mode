@@ -13,6 +13,9 @@ module top_test(/*AUTOARG*/);
     .b  ( ~ ba),
     .c  ({\c-escaped-nvec , \c-escaped-vec [2:0] }),
     .d  ({da,~ db [1:0] , dc [2:0]}),
+    // Msg246
+    .e ({{4*1{1'b0}},Z_int[15:0],{1'b4{1'b0}},Z0_int[7:0]}),
+    .f (hi.ear.ial),
     );
     */
    leaf l1 (/*AUTOINST*/);
@@ -24,4 +27,6 @@ module leaf(/*AUTOARG*/);
    input c;
    input d;
    input e;
+   input f;
+   input z;
 endmodule
