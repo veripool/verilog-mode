@@ -50,9 +50,9 @@
       
 ;      (message (concat file ": testing auto endcomments..."))
 ;      (verilog-label-be)
-      )
   
-    (untabify (point-min) (point-max))
+      (untabify (point-min) (point-max))
+      )
     
     (write-file (concat "../" temp-file))
     (kill-buffer nil))

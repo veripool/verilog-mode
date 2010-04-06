@@ -7111,9 +7111,10 @@ Return a array of [outputs inouts inputs wire reg assign const]."
   ;;
   (cond
    ;; {..., a, b} requires us to recurse on a,b
-   ((string-match "^\\s-*{\\([^{}]*\\)}\\s-*$" expr)
+   ;; To support {#{},{#{a,b}} we'll just split everything on [{},]
+   ((string-match "^\\s-*{\\(.*\\)}\\s-*$" expr)
     (unless verilog-auto-ignore-concat
-      (let ((mlst (split-string (match-string 1 expr) ","))
+      (let ((mlst (split-string (match-string 1 expr) "[{},]"))
 	    mstr)
 	(while (setq mstr (pop mlst))
 	  (verilog-read-sub-decls-expr submoddecls comment port mstr)))))
