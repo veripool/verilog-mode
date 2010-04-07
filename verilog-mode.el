@@ -264,6 +264,10 @@ STRING should be given if the last search was by `string-match' on STRING."
   (defun verilog-regexp-words (a)
     "Call 'regexp-opt' with word delimiters for the words A."
     (concat "\\<" (verilog-regexp-opt a t) "\\>")))
+(defun verilog-regexp-words (a)
+  "Call 'regexp-opt' with word delimiters for the words A."
+  ;; The FAQ references this function, so user LISP sometimes calls it
+  (concat "\\<" (verilog-regexp-opt a t) "\\>"))
 
 (defun verilog-easy-menu-filter (menu)
   "Filter `easy-menu-define' MENU to support new features."
