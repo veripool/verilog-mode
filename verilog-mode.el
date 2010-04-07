@@ -1399,7 +1399,7 @@ so there may be a large up front penalty for the first search."
     pt))
 
 (defsubst verilog-re-search-forward-substr (substr regexp bound noerror)
-  "Like `re-search-forward', but first searches for SUBSTR constant.
+  "Like `re-search-forward', but first search for SUBSTR constant.
 Then searched for the normal REGEXP (which contains SUBSTR), with given
 BOUND and NOERROR.  The REGEXP must fit within a single line.
 This speeds up complicated regexp matches."
@@ -1412,14 +1412,14 @@ This speeds up complicated regexp matches."
 	(beginning-of-line)
 	(setq done (re-search-forward regexp (verilog-get-end-of-line) noerror)))
       (unless (and (<= (match-beginning 0) (point))
-		   (>= (match-end 0) (point)))   
+		   (>= (match-end 0) (point)))
 	(setq done nil)))
     (when done (goto-char done))
     done))
 ;;(verilog-re-search-forward-substr "-end" "get-end-of" nil t) ;;-end (test bait)
 
 (defsubst verilog-re-search-backward-substr (substr regexp bound noerror)
-  "Like `re-search-backward', but first searches for SUBSTR constant.
+  "Like `re-search-backward', but first search for SUBSTR constant.
 Then searched for the normal REGEXP (which contains SUBSTR), with given
 BOUND and NOERROR.  The REGEXP must fit within a single line.
 This speeds up complicated regexp matches."
@@ -1432,7 +1432,7 @@ This speeds up complicated regexp matches."
 	(end-of-line)
 	(setq done (re-search-backward regexp (verilog-get-beg-of-line) noerror)))
       (unless (and (<= (match-beginning 0) (point))
-		   (>= (match-end 0) (point)))   
+		   (>= (match-end 0) (point)))
 	(setq done nil)))
     (when done (goto-char done))
     done))
@@ -1477,8 +1477,9 @@ In the former case, the path to the current buffer is concat'ed to the
 value of `verilog-tool'; in the later, the path to the current buffer is
 substituted for the %s.
 
-Where __FILE__ appears in the string, the `buffer-file-name' of the
-current buffer, without the directory portion, will be substituted."
+Where __FILE__ appears in the string, the variable
+`buffer-file-name' of the current buffer, without the directory
+portion, will be substituted."
   (interactive)
   (cond
    ((or (file-exists-p "makefile")	;If there is a makefile, use it
@@ -1747,7 +1748,7 @@ find the errors."
 ;;   b :
 
 (defconst verilog-label-re (concat verilog-symbol-re "\\s-*:\\s-*"))
-(defconst verilog-property-re 
+(defconst verilog-property-re
   (concat "\\(" verilog-label-re "\\)?"
 	  "\\(\\(assert\\|assume\\|cover\\)\\>\\s-+\\<property\\>\\)\\|\\(assert\\)"))
 	  ;;  "\\(assert\\|assume\\|cover\\)\\s-+property\\>"
@@ -2662,7 +2663,7 @@ Use filename, if current buffer being edited shorten to just buffer name."
 	    (if (or
 		 (looking-at verilog-disable-fork-re)
 		 (and (looking-at "fork")
-		      (progn 
+		      (progn
 			(setq here (point)) ;; sometimes a fork is just a fork
 			(forward-word -1)
 			(looking-at verilog-disable-fork-re))))
@@ -2738,7 +2739,7 @@ Use filename, if current buffer being edited shorten to just buffer name."
 		       ((if (or
 			     (looking-at verilog-disable-fork-re)
 			     (and (looking-at "fork")
-				  (progn 
+				  (progn
 				    (forward-word -1)
 				    (looking-at verilog-disable-fork-re))))
 			    (progn ;; it is a disable fork; another false alarm
@@ -3559,7 +3560,7 @@ More specifically, point @ in the line foo : @ begin"
 		(throw 'found (= nest 0)))))))
       nil)))
 (defun verilog-backward-up-list (arg)
-  "Like backward-up-list, but deal with comments"
+  "Like backward-up-list, but deal with comments."
   (let (saved-psic parse-sexp-ignore-comments)
     (setq parse-sexp-ignore-comments 1)
     (backward-up-list arg)
@@ -4475,7 +4476,7 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 		   ;; if we have a directive, done.
 		   (if (save-excursion (beginning-of-line)
 				       (and (looking-at verilog-directive-re-1)
-					    (not (or (looking-at "[ \t]*`ovm_") 
+					    (not (or (looking-at "[ \t]*`ovm_")
                                  (looking-at "[ \t]*`vmm_")))))
 		       (throw 'nesting 'directive))
            ;; indent structs as if there were module level
@@ -5122,7 +5123,7 @@ Optional BOUND limits search."
 
 (defun verilog-in-attribute-p ()
  "Return true if point is in an attribute (* [] attribute *)."
- (save-excursion 
+ (save-excursion
    (verilog-re-search-backward "\\((\\*\\)\\|\\(\\*)\\)" nil 'move)
    (numberp (match-beginning 1))))
 
@@ -5263,7 +5264,7 @@ Optional BOUND limits search."
 		    (= (char-before (1- (point))) ?\*))
 	       (goto-char (- (point) 2))
 	       (if (search-backward "(*" nil t)
-		   (progn 
+		   (progn
 		     (skip-chars-backward " \t\n\f")
 		     t)
 		 (progn
@@ -5291,14 +5292,14 @@ Optional BOUND limits search."
 		 t)
 		(t nil))))
     (skip-chars-forward " \t\n\f")
-    (while 
+    (while
 	(cond
 	 ((looking-at "\\/\\*")
 	  (progn
 	    (setq h (point))
 	    (goto-char (match-end 0))
 	    (if (search-forward "*/" nil t)
-		(progn 
+		(progn
 		  (skip-chars-forward " \t\n\f")
 		  (setq skip 't))
 	      (progn
@@ -5565,13 +5566,13 @@ Be verbose about progress unless optional QUIET set."
       (if (progn
 ;          (verilog-beg-of-statement-1)
           (beginning-of-line)
-          (verilog-forward-syntactic-ws)          
+          (verilog-forward-syntactic-ws)
           (and (not (verilog-in-directive-p))    ;; could have `define input foo
                (looking-at verilog-declaration-re)))
 	  (progn
-	    (if (verilog-parenthesis-depth)  
-		;; in an argument list or parameter block		
-		(setq el (verilog-backward-up-list -1)		      
+	    (if (verilog-parenthesis-depth)
+		;; in an argument list or parameter block
+		(setq el (verilog-backward-up-list -1)
 		      start (progn
 			      (goto-char e)
 			      (verilog-backward-up-list 1)
@@ -5595,7 +5596,7 @@ Be verbose about progress unless optional QUIET set."
 				 (current-column))
 		      )
 	      ;; in a declaration block (not in argument list)
-	      (setq 
+	      (setq
 	       start (progn
 		       (verilog-beg-of-statement-1)
 		       (while (and (looking-at verilog-declaration-re)
@@ -5634,7 +5635,7 @@ Be verbose about progress unless optional QUIET set."
 	    (while (progn (setq e (marker-position endpos))
 			  (< (point) e))
 	      (cond
-	       ((save-excursion (skip-chars-backward " \t") 
+	       ((save-excursion (skip-chars-backward " \t")
 				(bolp))
 		 (verilog-forward-ws&directives)
 		 (indent-line-to base-ind)
@@ -5694,7 +5695,7 @@ Be verbose about progress unless optional QUIET set."
     (if (or (eq myre nil)
 	    (string-equal myre ""))
 	(setq myre "\\(<\\|:\\)?="))
-    ;; want to match the first <= |  := | = 
+    ;; want to match the first <= |  := | =
     (setq myre (concat "\\(^.*?\\)\\(" myre "\\)"))
     (let ((rexp(concat "^\\s-*" verilog-complete-reg)))
       (beginning-of-line)
@@ -7149,7 +7150,7 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 	(verilog-read-sub-decls-sig submoddecls comment port sig vec multidim))))))
 
 (defun verilog-read-sub-decls-line (submoddecls comment)
-  "For `verilog-read-sub-decls', read lines of port defs until none match anymore.
+  "For `verilog-read-sub-decls', read lines of port defs until none match.
 Return the list of signals found, using submodi to look up each port."
   (let (done port)
     (save-excursion
@@ -9032,7 +9033,7 @@ If PAR-VALUES replace final strings with these parameter values."
 	 (vl-name (verilog-sig-name port-st))
 	 (vl-width (verilog-sig-width port-st))
 	 (vl-modport (verilog-sig-modport port-st))
-	 (vl-mbits (if (verilog-sig-multidim port-st) 
+	 (vl-mbits (if (verilog-sig-multidim port-st)
                        (verilog-sig-multidim-string port-st) ""))
 	 (vl-bits (if (or verilog-auto-inst-vector
 			  (not (assoc port vector-skip-list))
