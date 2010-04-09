@@ -4,6 +4,7 @@
 ;;   VERILOG_MODE_TEST_NO_INDENTS=1    # Disable indent checks
 ;;   VERILOG_MODE_TEST_FILE=filename   # Run only specified test
 ;;   VERILOG_MODE_START_FILE=filename  # Start at specified test
+;;   VERILOG_MODE_THREAD=#of#          # Multithreaded testing
 
 (defun global-replace-regexp (from to)
   (goto-char (point-min))
@@ -57,9 +58,9 @@
     (write-file (concat "../" temp-file))
     (kill-buffer nil))
   ;;
-  (diff-file file temp-file))
+  (vl-diff-file file temp-file))
 
-(defun diff-file (file temp-file)
+(defun vl-diff-file (file temp-file)
   (message (concat file ": running diff of " file " and tests_ok/" file ))
   (with-temp-buffer
     (let* ((status
@@ -75,11 +76,22 @@
 	    (t
 	     (message "Verified %s" file))))))
 
+(defun vl-do-on-thread (file-num)
+  "Return true to process due to multithreading"
+  (cond ((getenv "VERILOG_MODE_THREAD")
+	 (or (string-match "\\([0-9]+\\)of\\([0-9]+\\)" (getenv "VERILOG_MODE_THREAD"))
+	     (error "VERILOG_MODE_THREAD not in #of# form"))
+	 (let ((th (string-to-number (match-string 1 (getenv "VERILOG_MODE_THREAD"))))
+	       (numth (string-to-number (match-string 2 (getenv "VERILOG_MODE_THREAD")))))
+	   (equal (1+ (mod file-num numth)) th)))
+	(t t)))
+
 (defun verilog-test ()
   (let ((files (directory-files "tests"))
         (tests-run 0)
-	file cf
-        )
+	(file-num 0)
+	file cf temp-file)
+
     (when (getenv "VERILOG_MODE_TEST_FILE")
       (setq files (list (getenv "VERILOG_MODE_TEST_FILE")))
       (message "**** Only testing files in $VERILOG_MODE_TEST_FILE"))
@@ -100,6 +112,8 @@
     
     (while files
       (setq file (car files))
+      (setq temp-file (concat (if running-on-xemacs "x/t/" "e/t/")
+			      file))
       (cond ((equal "." file))
             ((equal ".." file))
             ((string-match "^#" file))  ;; Backups
@@ -108,6 +122,8 @@
             ((string-match "\.dontrun$" file))
             ((string-match "\.\#.*$" file))
             ((file-directory-p (concat "tests/" file)))
+	    ((progn (setq file-num (1+ file-num))
+		    (not (vl-do-on-thread file-num))))
             (t
              (message (concat "Considering test " file ))
              (if running-on-xemacs 
@@ -116,17 +132,16 @@
                    (if (file-exists-p cf ) ; 
                        (message (concat "Skipping testing " file " on Xemacs because file " cf "exists"))
                      (progn
-                       (verilog-test-file file "tests_ok/0temp.v")
+		       (verilog-test-file file temp-file)
                        (setq tests-run (1+ tests-run))
                        )
                      ))
                (progn
-                 (verilog-test-file file "tests_ok/0temp.v")
+		 (verilog-test-file file temp-file)
                  (setq tests-run (1+ tests-run))
-                 )
-               )
-             ))
-      (message (format " %d tests run so far, %d left..." tests-run (length files)))
+                 ))
+	     (message (format " %d tests run so far, %d left..." tests-run (length files)))
+	     ))
       (setq files (cdr files))))
   (message "Tests Passed on %s" (emacs-version))
   "Tests Passed")
@@ -167,4 +182,3 @@
     (setq again "make test_emacs"))
   (verilog-test)
 )
-

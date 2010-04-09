@@ -7,8 +7,8 @@ my @tests = map { s!^.*/!!; $_;} glob("tests_batch_ok/*");
 
 my @tests_args;
 foreach my $test (@tests) {
-    run("/bin/cp tests/$test e/$test");
-    push @tests_args, "e/$test";
+    run("/bin/cp tests/$test e/b/$test");
+    push @tests_args, "e/b/$test";
 }
 
 run("emacs --batch --no-site-file -l $tmpdir/verilog-mode.elc"
@@ -30,7 +30,7 @@ run("emacs --batch --no-site-file -l $tmpdir/verilog-mode.elc"
     );
 
 foreach my $test (@tests) {
-    run("diff tests_batch_ok/$test e/$test");
+    run("diff tests_batch_ok/$test e/b/$test");
 }
 
 run("emacs --batch --no-site-file -l $tmpdir/verilog-mode.elc"

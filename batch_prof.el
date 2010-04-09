@@ -25,7 +25,7 @@ module EX_TIME_CONSUME (/*AUTOARG*/);
 
 (defun t-size-test (count)
   ;; Note is running in tests_batch_ok directory
-  (setq filename (format "test_dir/batch_prof_%s.v" count))
+  (setq filename (format "e/b/batch_prof_%s.v" count))
   (t-make-test count filename)
   (when profile
     (elp-reset-all))
@@ -40,19 +40,24 @@ module EX_TIME_CONSUME (/*AUTOARG*/);
 	   count delta msper filename)
   (when profile
     (elp-results))
+  (when nil
+    (save-excursion
+      (find-file filename)
+      (save-buffer)))
   msper)
 
 ;;======================================================================
 
 (setq make-backup-files nil)
-(setq verilog-library-flags "-I. -I../tests")
+(setq verilog-library-flags "-I. -I../../tests")
+(setq verilog-auto-star-expand nil)
 (setq profile nil)
 
 (when profile
   (elp-restore-all)
   (elp-instrument-package "verilog"))
 
-(progn
+(when t
   ;; Need to read the templated file
   (setq t1 (t-size-test 1))
   (setq t10 (t-size-test 10))

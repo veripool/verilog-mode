@@ -9,29 +9,52 @@ EMACS_DEST = /usr/local/share/emacs/site-lisp/
 ELC	= -batch -q -l verilog-mode.el -f batch-byte-compile
 MAKECHANGELOG = perl makechangelog
 
-release : dirs install
-install : dirs ChangeLog test $(D)/mmencoded_verilog-mode $(D)/emacs-version.h\
+release : .timestamps install
+install : .timestamps ChangeLog test $(D)/mmencoded_verilog-mode $(D)/emacs-version.h\
 	$(S)ChangeLog.txt email $(S)bits/verilog-mode.el local \
 #	ftp  
 	@echo Installation up to date
-dirs:	
-	@mkdir -p .timestamps
-test:	.timestamps/test
-.timestamps/test: x/verilog-mode.elc e/verilog-mode.elc mmencoded_verilog-mode verilog.info 0test.el
-	$(MAKE) test_batch
-	$(MAKE) test_errors
-	$(MAKE) test_emacs
-	$(MAKE) test_xemacs
-	@touch $@
 
-test_emacs: e/verilog-mode.elc
+.timestamps:
+	@mkdir -p $@
+
+test:	.timestamps/test
+.timestamps/test: x/verilog-mode.elc e/verilog-mode.elc mmencoded_verilog-mode verilog.info 0test.el .timestamps
+	mkdir -p e/t x/t
+	$(MAKE) test_batch test_errors test_emacs test_xemacs
+	@touch $@
+	@echo ======= ALL TESTS PASSED
+
+#Usage: $(call test-emacs_sub,label,threading)
+define test_emacs_sub
+test_emacs:: $(1)
+$(1): e/verilog-mode.elc
 	@echo
-	@echo == test_emacs
-	time $(EMACS)  --batch -q -l e/verilog-mode.elc -l 0test.el
-test_xemacs: x/verilog-mode.elc
+	@echo == $(1)
+	VERILOG_MODE_THREAD=$(2) time $(EMACS)  --batch -q -l e/verilog-mode.elc -l 0test.el
+endef
+
+$(eval $(call test_emacs_sub,test_emacs_1,1of5))
+$(eval $(call test_emacs_sub,test_emacs_2,2of5))
+$(eval $(call test_emacs_sub,test_emacs_3,3of5))
+$(eval $(call test_emacs_sub,test_emacs_4,4of5))
+$(eval $(call test_emacs_sub,test_emacs_5,5of5))
+
+#Usage: $(call test_xemacs_sub,label,threading)
+define test_xemacs_sub
+test_xemacs:: $(1)
+$(1): x/verilog-mode.elc
 	@echo
-	@echo == test_xemacs
-	time $(XEMACS) --batch -q -l x/verilog-mode.elc -l 0test.el
+	@echo == $(1)
+	VERILOG_MODE_THREAD=$(2) time $(XEMACS)  --batch -q -l x/verilog-mode.elc -l 0test.el
+endef
+
+$(eval $(call test_xemacs_sub,test_xemacs_1,1of5))
+$(eval $(call test_xemacs_sub,test_xemacs_2,2of5))
+$(eval $(call test_xemacs_sub,test_xemacs_3,3of5))
+$(eval $(call test_xemacs_sub,test_xemacs_4,4of5))
+$(eval $(call test_xemacs_sub,test_xemacs_5,5of5))
+
 test_errors:
 	@echo
 	@echo == test_errors
@@ -51,9 +74,10 @@ test_errors:
 	@echo la di da
 	@echo syntax error: problems
 	@echo error_file.v 7: here is where they are
-test_batch:
+
+test_batch: e/verilog-mode.elc
 	@echo == test_batch
-	mkdir -p test_dir
+	mkdir -p e/b
 	time ./batch_test.pl
 
 local:	.timestamps/local
@@ -140,4 +164,4 @@ verilog-mode-tognu.el: verilog-mode.el Makefile
 # Clean
 
 clean::
-	/bin/rm -rf .timestamps e/*.elc x/*.elc test_dir
+	/bin/rm -rf .timestamps e x test_dir
