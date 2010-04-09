@@ -6634,25 +6634,29 @@ See also `verilog-sk-header' for an alternative format."
   "Return list of signals in IN-LIST that aren't also in NOT-LIST.
 Also remove any duplicates in IN-LIST.
 Signals must be in standard (base vector) form."
-  (let (out-list)
-    (while in-list
-      (if (not (or (assoc (car (car in-list)) not-list)
-		   (assoc (car (car in-list)) out-list)))
-	  (setq out-list (cons (car in-list) out-list)))
-      (setq in-list (cdr in-list)))
-    (nreverse out-list)))
+  ;; This function is hot, so implemented as O(1)
+  (cond ((eval-when-compile (fboundp 'make-hash-table))
+	 (let ((ht (make-hash-table :test 'equal :rehash-size 4.0))
+	       out-list)
+	   (while not-list
+	     (puthash (car (car not-list)) t ht)
+	     (setq not-list (cdr not-list)))
+	   (while in-list
+	     (when (not (gethash (car (car in-list)) ht))
+	       (setq out-list (cons (car in-list) out-list))
+	       (puthash (car (car in-list)) t ht))
+	     (setq in-list (cdr in-list)))
+	   (nreverse out-list)))
+	;; Slower Fallback if no hash tables (pre Emacs 21.1/XEmacs 21.4)
+	(t
+	 (let (out-list)
+	   (while in-list
+	     (if (not (or (assoc (car (car in-list)) not-list)
+			  (assoc (car (car in-list)) out-list)))
+		 (setq out-list (cons (car in-list) out-list)))
+	     (setq in-list (cdr in-list)))
+	   (nreverse out-list)))))
 ;;(verilog-signals-not-in '(("A" "") ("B" "") ("DEL" "[2:3]")) '(("DEL" "") ("EXT" "")))
-
-(defun verilog-signals-in (in-list other-list)
-  "Return list of signals in IN-LIST that are also in OTHER-LIST.
-Signals must be in standard (base vector) form."
-  (let (out-list)
-    (while in-list
-      (if (assoc (car (car in-list)) other-list)
-	  (setq out-list (cons (car in-list) out-list)))
-      (setq in-list (cdr in-list)))
-    (nreverse out-list)))
-;;(verilog-signals-in '(("A" "") ("B" "") ("DEL" "[2:3]")) '(("DEL" "") ("EXT" "")))
 
 (defun verilog-signals-memory (in-list)
   "Return list of signals in IN-LIST that are memoried (multidimensional)."
