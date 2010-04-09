@@ -46,7 +46,7 @@ module EX_TIME_CONSUME (/*AUTOARG*/);
 
 (setq make-backup-files nil)
 (setq verilog-library-flags "-I. -I../tests")
-(setq profile t)
+(setq profile nil)
 
 (when profile
   (elp-restore-all)
@@ -58,7 +58,7 @@ module EX_TIME_CONSUME (/*AUTOARG*/);
   (setq t10 (t-size-test 10))
   (setq t100 (t-size-test 100))
   (setq t1000 (t-size-test 1000))
-  (setq t10000 (t-size-test 10000))
+  ;;(setq t10000 (t-size-test 10000))
 
   (setq slope (/ t1000 t100))
   (setq order (1+ (/ (log slope)
