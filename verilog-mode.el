@@ -2971,13 +2971,14 @@ Key bindings specific to `verilog-mode-map' are:
   ;;------------------------------------------------------------
   ;; now hook in 'verilog-colorize-include-files (eldo-mode.el&spice-mode.el)
   ;; all buffer local:
-  (when (featurep 'xemacs)
-    (make-local-hook 'font-lock-mode-hook)
-    (make-local-hook 'font-lock-after-fontify-buffer-hook); doesn't exist in Emacs
-    (make-local-hook 'after-change-functions))
-  (add-hook 'font-lock-mode-hook 'verilog-colorize-include-files-buffer t t)
-  (add-hook 'font-lock-after-fontify-buffer-hook 'verilog-colorize-include-files-buffer t t) ; not in Emacs
-  (add-hook 'after-change-functions 'verilog-colorize-include-files t t)
+  (unless noninteractive  ;; Else can't see the result, and change hooks are slow
+    (when (featurep 'xemacs)
+      (make-local-hook 'font-lock-mode-hook)
+      (make-local-hook 'font-lock-after-fontify-buffer-hook); doesn't exist in Emacs
+      (make-local-hook 'after-change-functions))
+    (add-hook 'font-lock-mode-hook 'verilog-colorize-include-files-buffer t t)
+    (add-hook 'font-lock-after-fontify-buffer-hook 'verilog-colorize-include-files-buffer t t) ; not in Emacs
+    (add-hook 'after-change-functions 'verilog-colorize-include-files t t))
 
   ;; Tell imenu how to handle Verilog.
   (make-local-variable 'imenu-generic-expression)
@@ -10921,6 +10922,8 @@ Wilson Snyder (wsnyder@wsnyder.org)."
 			       font-lock-mode)
 		      (font-lock-mode 0)
 		      t))
+	;; Disable change hooks for speed
+	(after-change-functions nil)
 	;; Cache directories; we don't write new files, so can't change
 	(verilog-dir-cache-preserving t)
 	;; Cache current module
