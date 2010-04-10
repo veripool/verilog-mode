@@ -3744,9 +3744,11 @@ primitive or interface named NAME."
 	      (setq nest (1- nest)))
 	     ((match-end 5) ; `ifndef
 	      (setq nest (1- nest)))
-		 ((match-end 6) ; `elsif
+	     ((match-end 6) ; `elsif
 	      (if (= nest 1)
-		  (setq else "!")))))
+		  (progn
+		    (setq else "!")
+		    (setq nest 0))))))
 	  (if (match-end 0)
 	      (setq
 	       m (buffer-substring
