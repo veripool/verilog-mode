@@ -1556,11 +1556,11 @@ find the errors."
 (if (featurep 'emacs) (add-hook 'compilation-mode-hook 'verilog-error-regexp-add-emacs))
 
 (defconst verilog-directive-re
-  ;; "`case" "`default" "`define" "`define" "`else" "`endfor" "`endif"
+  ;; "`case" "`default" "`define" "`define" "`else" "`elsif" "`endfor" "`endif"
   ;; "`endprotect" "`endswitch" "`endwhile" "`for" "`format" "`if" "`ifdef"
   ;; "`ifndef" "`include" "`let" "`protect" "`switch" "`timescale"
-  ;; "`time_scale" "`undef" "`while"
-  "\\<`\\(case\\|def\\(ault\\|ine\\(\\)?\\)\\|e\\(lse\\|nd\\(for\\|if\\|protect\\|switch\\|while\\)\\)\\|for\\(mat\\)?\\|i\\(f\\(def\\|ndef\\)?\\|nclude\\)\\|let\\|protect\\|switch\\|time\\(_scale\\|scale\\)\\|undef\\|while\\)\\>")
+  ;; "`time_scale" "`undef" "`while"  
+  "\\<`\\(case\\|def\\(ault\\|ine\\(\\)?\\)\\|e\\(lse\\|nd\\(for\\|if\\|protect\\|switch\\|while\\)\\)\\|for\\(mat\\)?\\|i\\(f\\(def\\|ndef\\)?\\|nclude\\)\\|\\(elsif\\)?\\|let\\|protect\\|switch\\|time\\(_scale\\|scale\\)\\|undef\\|while\\)\\>")  
 
 (defconst verilog-directive-re-1
   (concat "[ \t]*"  verilog-directive-re))
@@ -1569,7 +1569,7 @@ find the errors."
   "\\<`\\(for\\|i\\(f\\|fdef\\|fndef\\)\\|switch\\|while\\)\\>")
 
 (defconst verilog-directive-middle
-  "\\<`\\(else\\|default\\|case\\)\\>")
+  "\\<`\\(else\\|elsif\\|default\\|case\\)\\>")
 
 (defconst verilog-directive-end
   "`\\(endfor\\|endif\\|endswitch\\|endwhile\\)\\>")
@@ -2103,7 +2103,7 @@ find the errors."
        "`case"
        "`default"
        "`define" "`undef"
-       "`if" "`ifdef" "`ifndef" "`else" "`endif"
+       "`if" "`ifdef" "`ifndef" "`else" "`elsif" "`endif"
        "`while" "`endwhile"
        "`for" "`endfor"
        "`format"
@@ -3702,7 +3702,8 @@ Limit search to point LIM."
 	  "\\(`endif\\>\\)\\|"
 	  "\\(`if\\>\\)\\|"
 	  "\\(`ifdef\\>\\)\\|"
-	  "\\(`ifndef\\>\\)"))
+	  "\\(`ifndef\\>\\)\\|"
+	  "\\(`elsif\\>\\)"))
 (defun verilog-set-auto-endcomments (indent-str kill-existing-comment)
   "Add ending comment with given INDENT-STR.
 With KILL-EXISTING-COMMENT, remove what was there before.
@@ -3742,7 +3743,10 @@ primitive or interface named NAME."
 	     ((match-end 4) ; `ifdef
 	      (setq nest (1- nest)))
 	     ((match-end 5) ; `ifndef
-	      (setq nest (1- nest)))))
+	      (setq nest (1- nest)))
+		 ((match-end 6) ; `elsif
+	      (if (= nest 1)
+		  (setq else "!")))))
 	  (if (match-end 0)
 	      (setq
 	       m (buffer-substring
@@ -3759,7 +3763,7 @@ primitive or interface named NAME."
 	    (if (> (count-lines (point) b) verilog-minimum-comment-distance)
 		(insert (concat " // " else m " " (buffer-substring b e))))
 	  (progn
-	    (insert " // unmatched `else or `endif")
+	    (insert " // unmatched `else, `elsif or `endif")
 	    (ding 't)))))
 
      (; Comment close case/class/function/task/module and named block
