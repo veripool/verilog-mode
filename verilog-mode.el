@@ -10832,13 +10832,16 @@ Typing \\[verilog-auto] will make this into:
   "Replace Templated relative line numbers with absolute line numbers.
 Internal use only.  This hacks around the line numbers in AUTOINST Templates
 being different from the final output's line numbering."
-  (let ((templateno 0) (template-line (list 0)))
+  (let ((templateno 0) (template-line (list 0)) (buf-line 1))
     ;; Find line number each template is on
+    ;; Count lines as we go, as otherwise it's O(n^2) to use count-lines
     (goto-char (point-min))
-    (while (search-forward "AUTO_TEMPLATE" nil t)
-      (setq templateno (1+ templateno))
-      (setq template-line
-	    (cons (count-lines (point-min) (point)) template-line)))
+    (while (not (eobp))
+      (when (looking-at ".*AUTO_TEMPLATE")
+	(setq templateno (1+ templateno))
+	(setq template-line (cons buf-line template-line)))
+      (setq buf-line (1+ buf-line))
+      (forward-line 1))
     (setq template-line (nreverse template-line))
     ;; Replace T# L# with absolute line number
     (goto-char (point-min))
@@ -11002,7 +11005,8 @@ Wilson Snyder (wsnyder@wsnyder.org)."
 	    ;; Must be after all inputs outputs are generated
 	    (verilog-auto-re-search-do "/\\*AUTOARG\\*/" 'verilog-auto-arg)
 	    ;; Fix line numbers (comments only)
-	    (verilog-auto-templated-rel)))
+	    (when verilog-auto-inst-template-numbers
+	      (verilog-auto-templated-rel))))
 	  ;;
 	  (run-hooks 'verilog-auto-hook)
 	  ;;
