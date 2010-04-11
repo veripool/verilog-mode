@@ -51,7 +51,7 @@ module EX_TIME_CONSUME (/*AUTOARG*/);
 (setq make-backup-files nil)
 (setq verilog-library-flags "-I. -I../../tests")
 (setq verilog-auto-star-expand nil)
-(setq profile t)
+(setq profile (getenv "VERILOG_MODE_PROFILE"))
 
 (when profile
   (elp-restore-all)

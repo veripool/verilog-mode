@@ -1,10 +1,13 @@
 ;; $Id$
 (defvar diff-flags "-c")
+(defvar vl-threading (getenv "VERILOG_MODE_THREAD"))
+
 ;;
 ;;   VERILOG_MODE_TEST_NO_INDENTS=1    # Disable indent checks
 ;;   VERILOG_MODE_TEST_FILE=filename   # Run only specified test
 ;;   VERILOG_MODE_START_FILE=filename  # Start at specified test
 ;;   VERILOG_MODE_THREAD=#of#          # Multithreaded testing
+;;   VERILOG_MODE_PROFILE=1            # Profile - see batch_prof.el
 
 (defun global-replace-regexp (from to)
   (goto-char (point-min))
@@ -78,11 +81,11 @@
 
 (defun vl-do-on-thread (file-num)
   "Return true to process due to multithreading"
-  (cond ((getenv "VERILOG_MODE_THREAD")
-	 (or (string-match "\\([0-9]+\\)of\\([0-9]+\\)" (getenv "VERILOG_MODE_THREAD"))
+  (cond (vl-threading
+	 (or (string-match "\\([0-9]+\\)of\\([0-9]+\\)" vl-threading)
 	     (error "VERILOG_MODE_THREAD not in #of# form"))
-	 (let ((th (string-to-number (match-string 1 (getenv "VERILOG_MODE_THREAD"))))
-	       (numth (string-to-number (match-string 2 (getenv "VERILOG_MODE_THREAD")))))
+	 (let ((th (string-to-number (match-string 1 vl-threading)))
+	       (numth (string-to-number (match-string 2 vl-threading))))
 	   (equal (1+ (mod file-num numth)) th)))
 	(t t)))
 
@@ -140,7 +143,9 @@
 		 (verilog-test-file file temp-file)
                  (setq tests-run (1+ tests-run))
                  ))
-	     (message (format " %d tests run so far, %d left..." tests-run (length files)))
+	     (message (format " %d tests run so far, %d left... %s"
+			      tests-run (length files)
+			      (if vl-threading (concat "Thread " vl-threading) "")))
 	     ))
       (setq files (cdr files))))
   (message "Tests Passed on %s" (emacs-version))

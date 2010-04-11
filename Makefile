@@ -31,6 +31,7 @@ test_emacs:: $(1)
 $(1): e/verilog-mode.elc
 	@echo
 	@echo == $(1)
+	@mkdir -p e/t x/t
 	VERILOG_MODE_THREAD=$(2) time $(EMACS)  --batch -q -l e/verilog-mode.elc -l 0test.el
 endef
 
