@@ -2532,22 +2532,78 @@ See also `verilog-font-lock-extra-types'.")
 		     (0 'verilog-font-lock-translate-off-face prepend))
 		   )))))
 
+;;
+;; Comment detection and caching
+
+(defvar verilog-scan-cache-preserving nil
+  "If set, the specified buffer's comment properties are static.
+Buffer changes will be ignored. See `verilog-inside-comment-p'
+and `verilog-scan'.")
+
+(defvar verilog-scan-cache-tick nil
+  "Modification tick at which `verilog-scan' was last completed.")
+(make-variable-buffer-local 'verilog-scan-cache-tick)
+
+(defun verilog-scan-region (beg end)
+  "Parse comments between BEG and END for `verilog-inside-comment-p'."
+  (save-excursion
+    (let (pt)
+      (goto-char beg)
+      (while (< (point) end)
+	(cond ((looking-at "//")
+	       (setq pt (point))
+	       (or (search-forward "\n" end t)
+		   (goto-char end))
+	       ;; "1+": The leading // or /* itself isn't considered as
+	       ;; being "inside" the comment, so that a (search-backward)
+	       ;; that lands at the start of the // won't mis-indicate
+	       ;; it's inside a comment
+	       (put-text-property (1+ pt) (point) 'v-cmt t))
+	      ((looking-at "/\\*")
+	       (setq pt (point))
+	       (or (search-forward "*/" end t)
+		   ;; No error - let later code indicate it so we can
+		   ;; use inside functions on-the-fly
+		   ;;(error "%s: Unmatched /* */, at char %d"
+		   ;;       (verilog-point-text) (point))
+		   (goto-char end))
+	       (put-text-property (1+ pt) (point) 'v-cmt t))
+	      (t
+	       (forward-char 1)
+	       (if (search-forward "/" end t)
+		   (backward-char 1)
+		 (goto-char end))))))))
+
+(defun verilog-scan ()
+  "Parse the buffer, marking all comments with properties.
+Also assumes any text inserted since `verilog-scan-cache-tick'
+either is ok to parse as a non-comment, or `verilog-insert' was used."
+  (unless (or (and verilog-scan-cache-preserving
+		   (eq verilog-scan-cache-preserving (current-buffer)))
+	      (equal verilog-scan-cache-tick (buffer-modified-tick)))
+    (setq verilog-scan-cache-tick (buffer-modified-tick))
+    (save-excursion
+      (let ((was-mod (buffer-modified-p)))
+	(remove-text-properties (point-min) (point-max) '(v-cmt nil))
+	(verilog-scan-region (point-min) (point-max))
+	(unless was-mod (set-buffer-modified-p nil))))))
 
 (defun verilog-inside-comment-p ()
-  "Check if point inside a nested comment."
-  (save-excursion
-    (let ((st-point (point)) hitbeg)
-      (or (search-backward "//" (verilog-get-beg-of-line) t)
-	  (if (progn
-		;; This is for tricky case //*, we keep searching if /*
-		;; is proceeded by // on same line.
-		(while
-		    (and (setq hitbeg (search-backward "/*" nil t))
-			 (progn
-			   (forward-char 1)
-			   (search-backward "//" (verilog-get-beg-of-line) t))))
-		hitbeg)
-	      (not (search-forward "*/" st-point t)))))))
+  "Check if point inside a comment.
+This may require a slow pre-parse of the buffer with `verilog-scan'
+to establish comment properties on all text."
+  (verilog-scan)
+  (get-text-property (point) 'v-cmt))
+
+(defun verilog-insert (&rest stuff)
+  "Insert arguments, tracking comments for `verilog-inside-comment-p'."
+  (let ((pt (point)))
+    (while stuff
+      (insert (car stuff))
+      (setq stuff (cdr stuff)))
+    (verilog-scan-region pt (point))))
+
+;; More searching 
 
 (defun verilog-declaration-end ()
   (search-forward ";"))
@@ -7908,7 +7964,7 @@ See `verilog-dir-exists-p' and `verilog-dir-files'.")
   "Execute the BODY forms, allowing directory cache preservation within BODY.
 This means that changes inside BODY made to the file system will not be
 seen by the `verilog-dir-files' and related functions."
-  `(let ((verilog-dir-cache-preserving t)
+  `(let ((verilog-dir-cache-preserving (current-buffer))
 	 verilog-dir-cache-list
 	 verilog-dir-cache-lib-filenames)
      (progn ,@body)))
@@ -8470,7 +8526,7 @@ format.  Sort unless DONT-SORT.  DIRECTION is normally wire/reg/output."
 	      (equal "" (verilog-sig-comment sig)))
 	  (insert "\n")
 	(indent-to (max 48 (+ indent-pt 40)))
-	(insert (concat "// " (verilog-sig-comment sig) "\n")))
+	(verilog-insert "// " (verilog-sig-comment sig) "\n"))
       (setq sigs (cdr sigs)))))
 
 (eval-when-compile
@@ -8484,7 +8540,7 @@ Presumes that any newlines end a list element."
     (while stuff
       (if need-indent (indent-to indent-pt))
       (setq need-indent nil)
-      (insert (car stuff))
+      (verilog-insert (car stuff))
       (setq need-indent (string-match "\n$" (car stuff))
 	    stuff (cdr stuff)))))
 ;;(let ((indent-pt 10)) (verilog-insert-indent "hello\n" "addon" "there\n"))
@@ -8816,7 +8872,7 @@ Typing \\[verilog-inject-auto] will make this into:
 	  (verilog-backward-syntactic-ws)
 	  (backward-char 1) ; Moves to paren that closes argdecl's
 	  (when (looking-at ")")
-	    (insert "/*AUTOARG*/")))))))
+	    (verilog-insert "/*AUTOARG*/")))))))
 
 (defun verilog-inject-sense ()
   "Inject AUTOSENSE into new code.  See `verilog-inject-auto'."
@@ -8838,7 +8894,7 @@ Typing \\[verilog-inject-auto] will make this into:
 	  (when (not (or (verilog-signals-not-in pre-sigs got-sigs)  ; Both are equal?
 			 (verilog-signals-not-in got-sigs pre-sigs)))
 	    (delete-region start-pt (point))
-	    (insert "/*AS*/")))))))
+	    (verilog-insert "/*AS*/")))))))
 
 (defun verilog-inject-inst ()
   "Inject AUTOINST into new code.  See `verilog-inject-auto'."
@@ -8872,9 +8928,8 @@ Typing \\[verilog-inject-auto] will make this into:
 		 ;; Not verilog-re-search, as we don't want to strip comments
 		 (while (re-search-backward "[ \t\n\f]+" (- (point) 1) t)
 		   (delete-region (match-beginning 0) (match-end 0)))
-		 (insert "\n")
-		 (indent-to indent-pt)
-		 (insert "/*AUTOINST*/")))))))))
+		 (verilog-insert "\n")
+		 (verilog-insert-indent "/*AUTOINST*/")))))))))
 
 ;;
 ;; Auto save
@@ -9113,14 +9168,15 @@ If PAR-VALUES replace final strings with these parameter values."
     (cond (tpl-ass
 	   (indent-to (+ (if (< verilog-auto-inst-column 48) 24 16)
 			 verilog-auto-inst-column))
-	   (insert " // Templated")
-	   (when verilog-auto-inst-template-numbers
-	     (insert " T" (int-to-string (nth 2 tpl-ass))
-		     " L" (int-to-string (nth 3 tpl-ass)))))
+	   (if verilog-auto-inst-template-numbers
+	       (verilog-insert " // Templated"
+			       " T" (int-to-string (nth 2 tpl-ass))
+			       " L" (int-to-string (nth 3 tpl-ass)))
+	     (verilog-insert " // Templated")))
 	  (for-star
 	   (indent-to (+ (if (< verilog-auto-inst-column 48) 24 16)
 			 verilog-auto-inst-column))
-	   (insert " // Implicit .\*"))) ;For some reason the . or * must be escaped...
+	   (verilog-insert " // Implicit .\*"))) ;For some reason the . or * must be escaped...
     (insert "\n")))
 ;;(verilog-auto-inst-port (list "foo" "[5:0]") 10 (list (list "foo" "a@\"(% (+ @ 1) 4)\"a")) "3")
 ;;(x "incom[@\"(+ (* 8 @) 7)\":@\"(* 8 @)\"]")
@@ -9471,9 +9527,8 @@ For more information see the \\[verilog-faq] and forums at URL
 	      (vl-dir "interface"))
 	  (when sig-list
 	    (when (not did-first) (verilog-auto-inst-first) (setq did-first t))
-	    (indent-to indent-pt)
             ;; Note these are searched for in verilog-read-sub-decls.
-	    (insert "// Interfaces\n")
+	    (verilog-insert-indent "// Interfaces\n")
 	    (mapc (lambda (port)
                     (verilog-auto-inst-port port indent-pt
                                             tpl-list tpl-num for-star par-values))
@@ -9484,8 +9539,7 @@ For more information see the \\[verilog-faq] and forums at URL
 	      (vl-dir "output"))
 	  (when sig-list
 	    (when (not did-first) (verilog-auto-inst-first) (setq did-first t))
-	    (indent-to indent-pt)
-	    (insert "// Outputs\n")
+	    (verilog-insert-indent "// Outputs\n")
 	    (mapc (lambda (port)
                     (verilog-auto-inst-port port indent-pt
                                             tpl-list tpl-num for-star par-values))
@@ -9496,8 +9550,7 @@ For more information see the \\[verilog-faq] and forums at URL
 	      (vl-dir "inout"))
 	  (when sig-list
 	    (when (not did-first) (verilog-auto-inst-first) (setq did-first t))
-	    (indent-to indent-pt)
-	    (insert "// Inouts\n")
+	    (verilog-insert-indent "// Inouts\n")
 	    (mapc (lambda (port)
                     (verilog-auto-inst-port port indent-pt
                                             tpl-list tpl-num for-star par-values))
@@ -9508,8 +9561,7 @@ For more information see the \\[verilog-faq] and forums at URL
 	      (vl-dir "input"))
 	  (when sig-list
 	    (when (not did-first) (verilog-auto-inst-first) (setq did-first t))
-	    (indent-to indent-pt)
-	    (insert "// Inputs\n")
+	    (verilog-insert-indent "// Inputs\n")
 	    (mapc (lambda (port)
                     (verilog-auto-inst-port port indent-pt
                                             tpl-list tpl-num for-star par-values))
@@ -9614,9 +9666,8 @@ Templates:
 	      (vl-dir "parameter"))
 	  (when sig-list
 	    (when (not did-first) (verilog-auto-inst-first) (setq did-first t))
-	    (indent-to indent-pt)
             ;; Note these are searched for in verilog-read-sub-decls.
-	    (insert "// Parameters\n")
+	    (verilog-insert-indent "// Parameters\n")
 	    (mapc (lambda (port)
                     (verilog-auto-inst-port port indent-pt
                                             tpl-list tpl-num nil nil))
@@ -10322,6 +10373,7 @@ text:
       (forward-line -1)
       (eval (read cmd))
       (forward-line -1)
+      (setq verilog-scan-cache-tick nil) ;; Clear cache; inserted unknown text
       (verilog-delete-empty-auto-pair))))
 
 (defun verilog-auto-sense-sigs (moddecls presense-sigs)
@@ -10413,7 +10465,7 @@ operator.  (This was added to the language in part due to AUTOSENSE!)
       (when sig-memories
 	(let ((tlen (length sig-list)))
 	  (setq sig-list (verilog-signals-not-in sig-list sig-memories))
-	  (if (not (eq tlen (length sig-list))) (insert " /*memory or*/ "))))
+	  (if (not (eq tlen (length sig-list))) (verilog-insert " /*memory or*/ "))))
       (if (and presense-sigs  ;; Add a "or" if not "(.... or /*AUTOSENSE*/"
 	       (save-excursion (goto-char (point))
 			       (verilog-re-search-backward "[a-zA-Z0-9$_.%`]+" start-pt t)
@@ -10517,8 +10569,7 @@ Typing \\[verilog-auto] will make this into:
       (setq sig-list (sort sig-list `verilog-signals-sort-compare))
       (when sig-list
 	(insert "\n");
-	(indent-to indent-pt)
-	(insert "// Beginning of autoreset for uninitialized flops\n");
+	(verilog-insert-indent "// Beginning of autoreset for uninitialized flops\n");
 	(indent-to indent-pt)
 	(while sig-list
 	  (let ((sig (or (assoc (verilog-sig-name (car sig-list)) all-list) ;; As sig-list has no widths
@@ -10529,7 +10580,7 @@ Typing \\[verilog-auto] will make this into:
 		    ";\n")
 	    (indent-to indent-pt)
 	    (setq sig-list (cdr sig-list))))
-	(insert "// End of automatics")))))
+	(verilog-insert "// End of automatics")))))
 
 (defun verilog-auto-tieoff ()
   "Expand AUTOTIEOFF statements, as part of \\[verilog-auto].
@@ -10939,6 +10990,8 @@ Wilson Snyder (wsnyder@wsnyder.org)."
 	(after-change-functions nil)
 	;; Cache directories; we don't write new files, so can't change
 	(verilog-dir-cache-preserving t)
+	(verilog-scan-cache-preserving (current-buffer))
+	(verilog-scan-cache-tick nil)
 	;; Cache current module
 	(verilog-modi-cache-current-enable t)
 	(verilog-modi-cache-current-max (point-min)) ; IE it's invalid
