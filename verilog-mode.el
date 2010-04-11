@@ -8244,27 +8244,29 @@ Use `verilog-preserve-modi-cache' to set it.")
     ;; return
     (vector name (or (buffer-file-name) (current-buffer)) pt)))
 
-(defvar verilog-modi-lookup-last-mod nil "Cache of last module looked up.")
-(defvar verilog-modi-lookup-last-modi nil "Cache of last modi returned.")
-(defvar verilog-modi-lookup-last-current nil "Cache of last `current-buffer' looked up.")
-(defvar verilog-modi-lookup-last-tick nil "Cache of last `buffer-modified-tick' looked up.")
+(defvar verilog-modi-lookup-cache nil "Hash of (modulename modi).")
+(defvar verilog-modi-lookup-last-current nil "Cache of `current-buffer' at last lookup.")
+(defvar verilog-modi-lookup-last-tick nil "Cache of `buffer-modified-tick' at last lookup.")
 
 (defun verilog-modi-lookup (module allow-cache &optional ignore-error)
   "Find the file and point at which MODULE is defined.
 If ALLOW-CACHE is set, check and remember cache of previous lookups.
 Return modi if successful, else print message unless IGNORE-ERROR is true."
-  (let* ((current (or (buffer-file-name) (current-buffer))))
-    (cond ((and verilog-modi-lookup-last-modi
+  (let* ((current (or (buffer-file-name) (current-buffer)))
+	 modi)
+    ;; Check cache
+    ;;(message "verilog-modi-lookup: %s" module)
+    (cond ((and verilog-modi-lookup-cache
 		verilog-cache-enabled
 		allow-cache
-		(equal verilog-modi-lookup-last-mod module)
+		(setq modi (gethash module verilog-modi-lookup-cache))
 		(equal verilog-modi-lookup-last-current current)
 		;; Iff hit is in current buffer, then tick must match
 		(or (equal verilog-modi-lookup-last-tick (buffer-modified-tick))
-		    (not (equal current (verilog-modi-file-or-buffer
-					 verilog-modi-lookup-last-modi)))))
-	   ;; ok as is
-	   )
+		    (not (equal current (verilog-modi-file-or-buffer modi)))))
+	   ;;(message "verilog-modi-lookup: HIT %S" modi)
+	   modi)
+	  ;; Miss
 	  (t (let* ((realmod (verilog-symbol-detick module t))
 		    (orig-filenames (verilog-module-filenames realmod current))
 		    (filenames orig-filenames)
@@ -8272,9 +8274,8 @@ Return modi if successful, else print message unless IGNORE-ERROR is true."
 	       (while (and filenames (not pt))
 		 (if (not (setq pt (verilog-module-inside-filename-p realmod (car filenames))))
 		     (setq filenames (cdr filenames))))
-	       (cond (pt (setq verilog-modi-lookup-last-modi
-			       (vector realmod (car filenames) pt)))
-		     (t (setq verilog-modi-lookup-last-modi nil)
+	       (cond (pt (setq modi (vector realmod (car filenames) pt)))
+		     (t (setq modi nil)
 			(or ignore-error
 			    (error (concat (verilog-point-text)
 					   ": Can't locate " module " module definition"
@@ -8284,10 +8285,14 @@ Return modi if successful, else print message unless IGNORE-ERROR is true."
 					   "\n    Check the verilog-library-directories variable."
 					   "\n    I looked in (if not listed, doesn't exist):\n\t"
 					   (mapconcat 'concat orig-filenames "\n\t"))))))
-	       (setq verilog-modi-lookup-last-mod module
-		     verilog-modi-lookup-last-current current
+	       (when (eval-when-compile (fboundp 'make-hash-table))
+		 (unless verilog-modi-lookup-cache
+		   (setq verilog-modi-lookup-cache
+			 (make-hash-table :test 'equal :rehash-size 4.0)))
+		 (puthash module modi verilog-modi-lookup-cache))
+	       (setq verilog-modi-lookup-last-current current
 		     verilog-modi-lookup-last-tick (buffer-modified-tick)))))
-    verilog-modi-lookup-last-modi))
+    modi))
 
 (defsubst verilog-modi-name (modi)
   (aref modi 0))
