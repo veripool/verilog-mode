@@ -1,12 +1,12 @@
 module t;
 class C;
    function int f();
-      f = 17;
+      f  = 17;
    endfunction
    extern function int g();
-      virtual function int f();
+   virtual function int f();
       a;
-endfunction // int
+   endfunction // int
    
    integer foo;
 endclass // C
@@ -16,6 +16,6 @@ endclass // C
       $display("a of f is %d, g is %d", a.f(),a.g());
    end
    function int C::g();
-      g = 18;
+      g  = 18;
    endfunction
 endmodule
