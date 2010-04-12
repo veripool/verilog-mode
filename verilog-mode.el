@@ -2583,7 +2583,8 @@ either is ok to parse as a non-comment, or `verilog-insert' was used."
 	      (equal verilog-scan-cache-tick (buffer-modified-tick)))
     (setq verilog-scan-cache-tick (buffer-modified-tick))
     (save-excursion
-      (let ((was-mod (buffer-modified-p)))
+      (let ((was-mod (buffer-modified-p))
+	    (buffer-read-only nil))
 	(remove-text-properties (point-min) (point-max) '(v-cmt nil))
 	(verilog-scan-region (point-min) (point-max))
 	(unless was-mod (set-buffer-modified-p nil))))))
