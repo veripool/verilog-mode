@@ -33,51 +33,56 @@
       (message (concat file ": testing auto..."))
       (verilog-auto)))
     (message (concat file ": auto OK..."))
-    
+
     (unless (getenv "VERILOG_MODE_TEST_NO_INDENTS")
-      (message (concat file ": testing indent..."))
-      (save-excursion
-	(goto-char (point-min))
-	(let* ((ln 0))
-	  (while (not (eobp))
-	    (message (format "%d" ln))
-	    ;;(message (format "%s : %d - indent" file ln))
-	    (electric-verilog-tab)
-	    ;;(message (format "%s : %d - pretty-expr" file ln))
-	    (verilog-pretty-expr t )
-	    ;;(message (format "%s : %d - pretty-declaration" file ln))
-	    (verilog-pretty-declarations t)
-	    (forward-line 1)
-	    (setq ln (1+ ln))
-	    )))
-      (message (concat file ": indents OK..."))
+      (verilog-test-indent-buffer file)
       
-;      (message (concat file ": testing auto endcomments..."))
-;      (verilog-label-be)
+;;      (message (concat file ": testing auto endcomments..."))
+;;      (verilog-label-be)
   
       (untabify (point-min) (point-max))
       )
-    
     (write-file (concat "../" temp-file))
     (kill-buffer nil))
   ;;
-  (vl-diff-file file temp-file))
+  (vl-diff-file (concat "tests_ok/" file) temp-file))
 
-(defun vl-diff-file (file temp-file)
-  (message (concat file ": running diff of " file " and tests_ok/" file ))
+(defun verilog-test-indent-buffer (file )
+  (interactive)
+  (message (concat file ": testing indent..."))
+  (save-excursion
+    (goto-char (point-min))
+    (let* ((ln 0))
+      (while (not (eobp))
+	;;(message (format "%d" ln))
+	;;(message (format "%s : %d - indent" file ln))
+	(electric-verilog-tab)
+	;;(message (format "%s : %d - pretty-expr" file ln))
+	(verilog-pretty-expr t )
+	;;(message (format "%s : %d - pretty-declaration" file ln))
+	(verilog-pretty-declarations t)
+	(forward-line 1)
+	(setq ln (1+ ln))
+	)
+      (message (format "Indented %d lines" ln))
+      ))
+  (message (concat file ": indents OK...")))
+  
+(defun vl-diff-file (golden-file temp-file)
+  (message (concat golden-file ": running diff of " golden-file " and " temp-file ))
   (with-temp-buffer
     (let* ((status
-	    (call-process "diff" nil t t diff-flags "--label" "GOLDEN_REFERENCE" (concat "tests_ok/" file) "--label" "CURRENT_BEHAVIOR" temp-file )))
+	    (call-process "diff" nil t t diff-flags "--label" "GOLDEN_REFERENCE" golden-file "--label" "CURRENT_BEHAVIOR" temp-file )))
       (cond ((not (equal status 0))
-	     (message (concat "diff -c tests_ok/" file " " temp-file))
+	     (message (concat "diff -c " golden-file " " temp-file))
 	     (message "***Golden Reference File\n---Generated Test File")
 	     (message "%s" (buffer-string))
 	     (message "To promote current to golden, in shell buffer hit newline anywhere in next line (^P RETURN):")
-	     (message (concat "cp " temp-file " tests_ok/" file "; VERILOG_MODE_START_FILE=" file " " again ))
+	     (message (concat "cp " temp-file " " golden-file "; VERILOG_MODE_START_FILE=" golden-file " " again ))
 	     (error ""))
 	    
 	    (t
-	     (message "Verified %s" file))))))
+	     (message "Verified %s" golden-file))))))
 
 (defun vl-do-on-thread (file-num)
   "Return true to process due to multithreading"
@@ -102,11 +107,11 @@
     (when (getenv "VERILOG_MODE_START_FILE")
       (let* ((startfiles (list (getenv "VERILOG_MODE_START_FILE")))
 	     (startfile (car startfiles)))
-	(message (concat "Staring from file " startfile))
+	(message (concat "Starting from file " startfile))
 	(catch 'done
 	  (while files
 	    (setq file (car files))
-	    (if (string-equal file startfile)
+	    (if (string-equal (concat "tests_ok/" file) startfile)
 		(progn
 		  (message (concat "matched " file))
 		  (throw 'done 0))
