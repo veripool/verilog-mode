@@ -9,9 +9,9 @@ module foo;
              );
    input sysclk;
  `ifdef LABEL_B
-   input        bclko;
+   input bclko;
  `endif
-   input        cmode;
+   input cmode;
 `endif
    
    // instead of:
@@ -26,9 +26,44 @@ module foo;
              );
    input sysclk;
  `ifdef LABEL_B
-   input        bclko;
+   input bclko;
  `endif
-   input        cmode;
-`endif
+   input cmode;
+`endif //  `ifdef LABEL_A
+   reg 	 a,b;
+`ifdef A
+   always @(a) begin
+      b = a; // asfSDfsdfsasa
+      b = a; // asfSDfsdfsasa
+      b = a; // asfSDfsdfsasa      //
+      b = a; // asfSDfsdfsasa      //       
+      b = a; // asfSDfsdfsasa      //
+      b = a; // asfSDfsdfsasa      //       
+      b = a; // asfSDfsdfsasa      //       
+      b = a; // asfSDfsdfsasa      //       
+      b = a; // asfSDfsdfsasa      //       
+   end
+`elsif B
+   always @(b) begin
+      a = b; // asfSDfsdfsasa
+      a = b; // asfSDfsdfsasa
+      a = b; // asfSDfsdfsasa      //       
+      a = b; // asfSDfsdfsasa
+      a = b; // asfSDfsdfsasa
+      a = b; // asfSDfsdfsasa      //       
+      a = b; // asfSDfsdfsasa
+      a = b; // asfSDfsdfsasa
+      a = b; // asfSDfsdfsasa      //       
+      a = b; // asfSDfsdfsasa
+      a = b; // asfSDfsdfsasa
+      a = b; // asfSDfsdfsasa      //       
+   end
+`else // !`elsif B
+   always @(a or b) begin
+      a <= b;
+      b <= a;
+   end
+`endif // !`elsif B
+   
    
 endmodule // foo
