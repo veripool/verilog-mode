@@ -14,8 +14,8 @@ module foo;
    input cmode;
 `endif
    
-// instead of:
-
+   // instead of:
+   
 `ifdef LABEL_A
    CHIP CPU (
              .clkin(clkin),
@@ -29,6 +29,41 @@ module foo;
    input bclko;
  `endif
    input cmode;
-`endif
-
+`endif //  `ifdef LABEL_A
+   reg 	 a,b;
+`ifdef A
+   always @(a) begin
+      b = a; // asfSDfsdfsasa
+      b = a; // asfSDfsdfsasa
+      b = a; // asfSDfsdfsasa      //
+      b = a; // asfSDfsdfsasa      //       
+      b = a; // asfSDfsdfsasa      //
+      b = a; // asfSDfsdfsasa      //       
+      b = a; // asfSDfsdfsasa      //       
+      b = a; // asfSDfsdfsasa      //       
+      b = a; // asfSDfsdfsasa      //       
+   end
+`elsif B
+   always @(b) begin
+      a = b; // asfSDfsdfsasa
+      a = b; // asfSDfsdfsasa
+      a = b; // asfSDfsdfsasa      //       
+      a = b; // asfSDfsdfsasa
+      a = b; // asfSDfsdfsasa
+      a = b; // asfSDfsdfsasa      //       
+      a = b; // asfSDfsdfsasa
+      a = b; // asfSDfsdfsasa
+      a = b; // asfSDfsdfsasa      //       
+      a = b; // asfSDfsdfsasa
+      a = b; // asfSDfsdfsasa
+      a = b; // asfSDfsdfsasa      //       
+   end
+`else // !`elsif B
+   always @(a or b) begin
+      a <= b;
+      b <= a;
+   end
+`endif // !`elsif B
+   
+   
 endmodule // foo
