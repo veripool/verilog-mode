@@ -1,6 +1,7 @@
 ;; $Id$
 (defvar diff-flags "-c")
-(defvar vl-threading (getenv "VERILOG_MODE_THREAD"))
+(defvar vl-threading (and (not (getenv "VERILOG_MODE_TEST_FILE"))
+			  (getenv "VERILOG_MODE_THREAD")))
 
 ;;
 ;;   VERILOG_MODE_TEST_NO_INDENTS=1    # Disable indent checks

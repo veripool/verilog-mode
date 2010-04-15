@@ -6663,10 +6663,12 @@ See also `verilog-sk-header' for an alternative format."
 (defsubst verilog-sig-width (sig)
   (verilog-make-width-expression (verilog-sig-bits sig)))
 
-(defsubst verilog-alw-get-inputs (sigs)
-  (nth 2 sigs))
 (defsubst verilog-alw-get-outputs (sigs)
   (nth 0 sigs))
+(defsubst verilog-alw-get-temps (sigs)
+  (nth 1 sigs))
+(defsubst verilog-alw-get-inputs (sigs)
+  (nth 2 sigs))
 (defsubst verilog-alw-get-uses-delayed (sigs)
   (nth 3 sigs))
 
@@ -7372,20 +7374,20 @@ Must call `verilog-read-auto-lisp-present' before this function."
   ;; - we want a error when we are debugging this code if they are refed.
   (defvar sigs-in)
   (defvar sigs-out)
-  (defvar got-sig)
-  (defvar got-rvalue)
+  (defvar sigs-temp)
   (defvar uses-delayed)
   (defvar vector-skip-list))
 
 (defun verilog-read-always-signals-recurse
-  (exit-keywd rvalue ignore-next)
+  (exit-keywd rvalue temp-next)
   "Recursive routine for parentheses/bracket matching.
 EXIT-KEYWD is expression to stop at, nil if top level.
 RVALUE is true if at right hand side of equal.
 IGNORE-NEXT is true to ignore next token, fake from inside case statement."
   (let* ((semi-rvalue (equal "endcase" exit-keywd)) ;; true if after a ; we are looking for rvalue
-	 keywd last-keywd sig-tolk sig-last-tolk gotend got-sig got-rvalue end-else-check)
-    ;;(if dbg (setq dbg (concat dbg (format "Recursion %S %S %S\n" exit-keywd rvalue ignore-next))))
+	 keywd last-keywd sig-tolk sig-last-tolk gotend got-sig got-list end-else-check
+	 ignore-next)
+    ;;(if dbg (setq dbg (concat dbg (format "Recursion %S %S %S\n" exit-keywd rvalue temp-next))))
     (while (not (or (eobp) gotend))
       (cond
        ((looking-at "//")
@@ -7463,7 +7465,9 @@ IGNORE-NEXT is true to ignore next token, fake from inside case statement."
 	    (cond (sig-last-tolk	;; Function call; zap last signal
 		   (setq got-sig nil)))
 	    (cond ((equal last-keywd "for")
-		   (verilog-read-always-signals-recurse ";" nil nil)
+		   ;; temp-next: Variables on LHS are lvalues, but generally we want
+		   ;; to ignore them, assuming they are loop increments
+		   (verilog-read-always-signals-recurse ";" nil t)
 		   (verilog-read-always-signals-recurse ";" t nil)
 		   (verilog-read-always-signals-recurse ")" nil nil))
 		  (t (verilog-read-always-signals-recurse ")" t nil))))
@@ -7491,14 +7495,16 @@ IGNORE-NEXT is true to ignore next token, fake from inside case statement."
 		  (t
 		   (setq keywd (verilog-symbol-detick-denumber keywd))
 		   (when got-sig
-		     (if got-rvalue (setq sigs-in (cons got-sig sigs-in))
-		       (setq sigs-out (cons got-sig sigs-out)))
-		     ;;(if dbg (setq dbg (concat dbg (format "\t\tgot-sig=%S rv=%S\n" got-sig got-rvalue))))
+		     (set got-list (cons got-sig (symbol-value got-list)))
+		     ;;(if dbg (setq dbg (concat dbg (format "\t\tgot-sig=%S got-list=%S\n" got-sig got-list))))
 		     )
-		   (setq got-rvalue rvalue
+		   (setq got-list (cond (temp-next 'sigs-temp)
+					(rvalue 'sigs-in)
+					(t 'sigs-out))
 			 got-sig (if (or (not keywd)
-					 (assoc keywd (if got-rvalue sigs-in sigs-out)))
+					 (assoc keywd (symbol-value got-list)))
 				     nil (list keywd nil nil))
+			 temp-next nil
 			 sig-tolk t)))
 	    (skip-chars-forward "a-zA-Z0-9$_.%`"))
 	   (t
@@ -7508,25 +7514,23 @@ IGNORE-NEXT is true to ignore next token, fake from inside case statement."
       (skip-syntax-forward " "))
     ;; Append the final pending signal
     (when got-sig
-      (if got-rvalue (setq sigs-in (cons got-sig sigs-in))
-	(setq sigs-out (cons got-sig sigs-out)))
-      ;;(if dbg (setq dbg (concat dbg (format "\t\tgot-sig=%S rv=%S\n" got-sig got-rvalue))))
+      ;;(if dbg (setq dbg (concat dbg (format "\t\tfinal got-sig=%S got-list=%s\n" got-sig got-list))))
+      (set got-list (cons got-sig (symbol-value got-list)))
       (setq got-sig nil))
     ;;(if dbg (setq dbg (concat dbg (format "ENDRecursion %s\n" exit-keywd))))
     ))
 
 (defun verilog-read-always-signals ()
   "Parse always block at point and return list of (outputs inout inputs)."
-  ;; Insert new
   (save-excursion
     (let* (;;(dbg "")
-	   sigs-in sigs-out
+	   sigs-out sigs-temp sigs-in
 	   uses-delayed)	;; Found signal/rvalue; push if not function
       (search-forward ")")
       (verilog-read-always-signals-recurse nil nil nil)
       ;;(if dbg (with-current-buffer (get-buffer-create "*vl-dbg*")) (delete-region (point-min) (point-max)) (insert dbg) (setq dbg ""))
       ;; Return what was found
-      (list sigs-out nil sigs-in uses-delayed))))
+      (list sigs-out sigs-temp sigs-in uses-delayed))))
 
 (defun verilog-read-instants ()
   "Parse module at point and return list of ( ( file instance ) ... )."
@@ -10366,6 +10370,7 @@ text:
 		    (verilog-signals-not-in (verilog-alw-get-inputs sigss)
 					    (append (and (not verilog-auto-sense-include-inputs)
 							 (verilog-alw-get-outputs sigss))
+						    (verilog-alw-get-temps sigss)
 						    (verilog-decls-get-consts moddecls)
 						    (verilog-decls-get-gparams moddecls)
 						    presense-sigs)))))
@@ -10548,7 +10553,9 @@ Typing \\[verilog-auto] will make this into:
 			       (concat " <= " verilog-assignment-delay)
 			     " = "))
       (setq sig-list (verilog-signals-not-in (verilog-alw-get-outputs sigss)
-					     prereset-sigs))
+					     (append
+					      (verilog-alw-get-temps sigss)
+					      prereset-sigs)))
       (setq sig-list (sort sig-list `verilog-signals-sort-compare))
       (when sig-list
 	(insert "\n");

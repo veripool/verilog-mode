@@ -20,4 +20,22 @@ module x;
 		      :                rd_dat1_s3[MPND:0]);
      end
 
+   // 2010-04-15
+   integer i;
+   always @(posedge usclk)
+     if (~sso_srst_n) begin
+	for (int j=0; j<10; j++) blob[j] <= 0;
+	/*AUTORESET*/
+     end
+     else begin
+	for (i=0; i<10; i++) blob[i] <= blob[i+1];
+	for (i=0; i<10; i++) zz <= 1;
+	for (int isv=0; isv<10; isv++) zsv <= 1;
+     end
+
+   always @(/*AS*/) begin
+	for (i=0; i<10; i++) zz <= in;
+	for (int isv=0; isv<10; isv++) zsv <= in;
+   end
+
 endmodule
