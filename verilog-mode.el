@@ -3010,9 +3010,9 @@ Key bindings specific to `verilog-mode-map' are:
       (make-local-hook 'font-lock-mode-hook)
       (make-local-hook 'font-lock-after-fontify-buffer-hook); doesn't exist in Emacs
       (make-local-hook 'after-change-functions))
-    (add-hook 'font-lock-mode-hook 'verilog-colorize-include-files-buffer t t)
-    (add-hook 'font-lock-after-fontify-buffer-hook 'verilog-colorize-include-files-buffer t t) ; not in Emacs
-    (add-hook 'after-change-functions 'verilog-colorize-include-files t t))
+    (add-hook 'font-lock-mode-hook 'verilog-colorize-buffer t t)
+    (add-hook 'font-lock-after-fontify-buffer-hook 'verilog-colorize-buffer t t) ; not in Emacs
+    (add-hook 'after-change-functions 'verilog-colorize-region t t))
 
   ;; Tell imenu how to handle Verilog.
   (make-local-variable 'imenu-generic-expression)
@@ -6839,20 +6839,26 @@ Ignore width if optional NO-WIDTH is set."
       (verilog-re-search-backward-quick "\\(\\b[a-zA-Z0-9`_\$]\\|\\]\\)" nil nil))
     (skip-chars-backward "a-zA-Z0-9`_$"))
 
+(defun verilog-read-inst-module-matcher ()
+  "Set match data 0 with module_name when point is inside instantiation."
+  (verilog-read-inst-backward-name)
+  ;; Skip over instantiation name
+  (verilog-re-search-backward-quick "\\(\\b[a-zA-Z0-9`_\$]\\|)\\)" nil nil)  ; ) isn't word boundary
+  ;; Check for parameterized instantiations
+  (when (looking-at ")")
+    (verilog-backward-open-paren)
+    (verilog-re-search-backward-quick "\\b[a-zA-Z0-9`_\$]" nil nil))
+  (skip-chars-backward "a-zA-Z0-9'_$")
+  (looking-at "[a-zA-Z0-9`_\$]+")
+  ;; Important: don't use match string, this must work with Emacs 19 font-lock on
+  (buffer-substring-no-properties (match-beginning 0) (match-end 0))
+  ;; Caller assumes match-beginning/match-end is still set
+  )
+
 (defun verilog-read-inst-module ()
   "Return module_name when point is inside instantiation."
   (save-excursion
-    (verilog-read-inst-backward-name)
-    ;; Skip over instantiation name
-    (verilog-re-search-backward-quick "\\(\\b[a-zA-Z0-9`_\$]\\|)\\)" nil nil)  ; ) isn't word boundary
-    ;; Check for parameterized instantiations
-    (when (looking-at ")")
-      (verilog-backward-open-paren)
-      (verilog-re-search-backward-quick "\\b[a-zA-Z0-9`_\$]" nil nil))
-    (skip-chars-backward "a-zA-Z0-9'_$")
-    (looking-at "[a-zA-Z0-9`_\$]+")
-    ;; Important: don't use match string, this must work with Emacs 19 font-lock on
-    (buffer-substring-no-properties (match-beginning 0) (match-end 0))))
+    (verilog-read-inst-module-matcher)))
 
 (defun verilog-read-inst-name ()
   "Return instance_name when point is inside instantiation."
@@ -11461,91 +11467,117 @@ and the case items."
   "Map containing mouse bindings for `verilog-mode'.")
 
 
-(defun verilog-colorize-include-files (beg end old-len)
-  "This function colorizes included files when the mouse passes over them.
+(defun verilog-colorize-region (beg end old-len)
+  "Colorize included files and modules in the (changed?) region.
 Clicking on the middle-mouse button loads them in a buffer (as in dired)."
   (save-excursion
     (save-match-data
-      (let (end-point)
-	(goto-char end)
-	(setq end-point (verilog-get-end-of-line))
-	(goto-char beg)
-	(beginning-of-line)  ; scan entire line !
-	;; delete overlays existing on this line
-	(let ((overlays (overlays-in (point) end-point)))
-	  (while overlays
-	    (if (and
-		 (overlay-get (car overlays) 'detachable)
-		 (overlay-get (car overlays) 'verilog-include-file))
-		(delete-overlay (car overlays)))
-	    (setq overlays (cdr overlays)))) ; let
-	;; make new ones, could reuse deleted one ?
-	(while (search-forward-regexp verilog-include-file-regexp end-point t)
-	  (let (ov)
-	    (goto-char (match-beginning 1))
-	    (setq ov (make-overlay (match-beginning 1) (match-end 1)))
-	    (overlay-put ov 'start-closed 't)
-	    (overlay-put ov 'end-closed 't)
-	    (overlay-put ov 'evaporate 't)
-	    (overlay-put ov 'verilog-include-file 't)
-	    (overlay-put ov 'mouse-face 'highlight)
-	    (overlay-put ov 'local-map verilog-mode-mouse-map)))))))
+      (let (;; Cached scanning
+	    (verilog-scan-cache-preserving (current-buffer))
+	    (verilog-scan-cache-tick nil))
+	(let (end-point)
+	  (goto-char end)
+	  (setq end-point (verilog-get-end-of-line))
+	  (goto-char beg)
+	  (beginning-of-line)  ; scan entire line
+	  ;; delete overlays existing on this line
+	  (let ((overlays (overlays-in (point) end-point)))
+	    (while overlays
+	      (if (and
+		   (overlay-get (car overlays) 'detachable)
+		   (or (overlay-get (car overlays) 'verilog-include-file)
+		       (overlay-get (car overlays) 'verilog-inst-module)))
+		  (delete-overlay (car overlays)))
+	      (setq overlays (cdr overlays)))) ; let
+	  ;;
+	  ;; make new include overlays
+	  (while (search-forward-regexp verilog-include-file-regexp end-point t)
+	    (let (ov)
+	      (goto-char (match-beginning 1))
+	      (setq ov (make-overlay (match-beginning 1) (match-end 1)))
+	      (overlay-put ov 'start-closed 't)
+	      (overlay-put ov 'end-closed 't)
+	      (overlay-put ov 'evaporate 't)
+	      (overlay-put ov 'verilog-include-file 't)
+	      (overlay-put ov 'mouse-face 'highlight)
+	      (overlay-put ov 'local-map verilog-mode-mouse-map)))
+	  ;;
+	  ;; make new module overlays
+	  (goto-char beg)
+	  ;; This scanner is syntax-fragile, so don't get bent
+	  (condition-case nil
+	      (while (verilog-re-search-forward "\\(/\\*AUTOINST\\*/\\|\\.\\*\\)" end-point t)
+		(save-excursion
+		  (goto-char (match-beginning 0))
+		  (unless (verilog-inside-comment-p)
+		    (let* ((inst (verilog-read-inst-module-matcher))   ;; sets match 0
+			   (ov (make-overlay (match-beginning 0) (match-end 0))))
+		      (overlay-put ov 'start-closed 't)
+		      (overlay-put ov 'end-closed 't)
+		      (overlay-put ov 'evaporate 't)
+		      (overlay-put ov 'verilog-inst-module 't)
+		      (overlay-put ov 'mouse-face 'highlight)
+		      (overlay-put ov 'local-map verilog-mode-mouse-map)))))
+	    (error nil))
+	  ;;
+	  ;; Future highlights:
+	  ;;  variables - make an Occur buffer of where referenced
+	  ;;  pins - make an Occur buffer of the sig in the declaration module
+	  )))))
 
-
-(defun verilog-colorize-include-files-buffer ()
-  "Colorize an include file."
+(defun verilog-colorize-buffer ()
+  "Colorize included files and modules across the whole buffer."
+  ;; Invoked via verilog-mode calling font-lock then `font-lock-mode-hook'
   (interactive)
-  ;; delete overlays
-  (let ((overlays (overlays-in (point-min) (point-max))))
-    (while overlays
-      (if (and
-	   (overlay-get (car overlays) 'detachable)
-	   (overlay-get (car overlays) 'verilog-include-file))
-	  (delete-overlay (car overlays)))
-      (setq overlays (cdr overlays)))) ; let
-  ;; remake overlays
-  (verilog-colorize-include-files (point-min) (point-max) nil))
+  ;; delete and remake overlays
+  (verilog-colorize-region (point-min) (point-max) nil))
+
+;; Deprecated, but was interactive, so we'll keep it around
+(defalias 'verilog-colorize-include-files-buffer 'verilog-colorize-buffer)
 
 ;; ffap-at-mouse isn't useful for Verilog mode. It uses library paths.
 ;; so define this function to do more or less the same as ffap-at-mouse
 ;; but first resolve filename...
 (defun verilog-load-file-at-mouse (event)
   "Load file under button 2 click's EVENT.
-Files are checked based on `verilog-library-directories'."
+Files are checked based on `verilog-library-flags'."
   (interactive "@e")
   (save-excursion ;; implement a Verilog specific ffap-at-mouse
     (mouse-set-point event)
-    (beginning-of-line)
-    (if (looking-at verilog-include-file-regexp)
+    (verilog-load-file-at-point t)))
+
+;; ffap isn't useable for Verilog mode. It uses library paths.
+;; so define this function to do more or less the same as ffap
+;; but first resolve filename...
+(defun verilog-load-file-at-point (&optional warn)
+  "Load file under point.
+If WARN, throw warning if not found.
+Files are checked based on `verilog-library-flags'."
+  (interactive)
+  (save-excursion ;; implement a Verilog specific ffap
+    (let ((overlays (overlays-in (point) (point)))
+	  hit)
+      (while (and overlays (not hit))
+	(when (overlay-get (car overlays) 'verilog-inst-module)
+	  (verilog-goto-defun-file (buffer-substring
+				    (overlay-start (car overlays))
+				    (overlay-end (car overlays))))
+	  (setq hit t))
+	(setq overlays (cdr overlays)))
+      ;; Include?
+      (beginning-of-line)
+      (when (and (not hit)
+		 (looking-at verilog-include-file-regexp))
 	(if (and (car (verilog-library-filenames
 		       (match-string 1) (buffer-file-name)))
 		 (file-readable-p (car (verilog-library-filenames
 					(match-string 1) (buffer-file-name)))))
 	    (find-file (car (verilog-library-filenames
 			     (match-string 1) (buffer-file-name))))
-	  (progn
+	  (when warn
 	    (message
 	     "File '%s' isn't readable, use shift-mouse2 to paste in this field"
-	     (match-string 1)))))))
-
-;; ffap isn't useable for Verilog mode. It uses library paths.
-;; so define this function to do more or less the same as ffap
-;; but first resolve filename...
-(defun verilog-load-file-at-point ()
-  "Load file under point.
-Files are checked based on `verilog-library-directories'."
-  (interactive)
-  (save-excursion ;; implement a Verilog specific ffap
-    (beginning-of-line)
-    (if (looking-at verilog-include-file-regexp)
-	(if (and
-	     (car (verilog-library-filenames
-		   (match-string 1) (buffer-file-name)))
-	     (file-readable-p (car (verilog-library-filenames
-				    (match-string 1) (buffer-file-name)))))
-	    (find-file (car (verilog-library-filenames
-			     (match-string 1) (buffer-file-name))))))))
-
+	     (match-string 1))))))))
 
 ;;
 ;; Bug reporting
