@@ -39,7 +39,6 @@
 39;
 40;
 
-  
-  
-   
-   
+// Local Variables:
+// compile-command: "make test_errors "
+// End:

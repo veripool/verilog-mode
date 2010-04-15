@@ -1,0 +1,30 @@
+A bunch of error messages that Emacs should
+recognize if you type C-x ` and take you to the correct line of error_file.v
+Note the 'gnu' compilation-error-regexp-alist in messes some up - to be fixed.
+(setq compilation-error-regexp-alist (delete 'gnu compilation-error-regexp-alist))
+
+Warning: code located there (error_file.v line 9) is dangerous
+(W1800) error_file.v 21: Problems
+f*E,1364 (error_file.v,2) Issues
+Error: code located here (error_file.v line 8) is fatal
+ERROR  : error_file.v, line 1: erroneous
+INFO  : error_file.v, line 7: informational
+WARNING : error_file.v, line 6: curious
+nctool: *E,UNDIDN (error_file.v,11|22): 'zz': the message [12.5(IEEE)].
+nctool: *W,TRUNCZ (error_file.v,14|0): a W message.
+nctool: *W,URDREG[CN_ABSTR] (error_file.v,15|0): another W message in 'foo'.
+Verilog-Perl: %Error: error_file.v:16: Some message from Verilog-Perl etc.
+Verilog-Perl: %Warning: ./error_file.v:17: Some message from Verilog-Perl etc.
+%Warning: ./error_file.v:17: Some message from Verilator etc.
+# This must be in one echo, or the comint may not match it
+In file error_file.v line 5:
+a
+b
+Failure was obsevred
+la di da
+syntax error: problems
+error_file.v 7: here is where they are
+
+// Local Variables:
+// compile-command: "make test_errors "
+// End:

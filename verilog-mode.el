@@ -644,9 +644,7 @@ always be saved."
 ;;; Compile support
 (require 'compile)
 (defvar verilog-error-regexp-added nil)
-; List of regexps for Verilog compilers, like verilint. See compilation-error-regexp-alist
-;   for the formatting.
-; Here is the version for Emacs 22:
+
 (defvar verilog-error-regexp-emacs-alist
   '(
     (verilog-xl-1
@@ -654,7 +652,7 @@ always be saved."
     (verilog-xl-2
      "([WE][0-9A-Z]+)[ \t]+\\([^ \t\n,]+\\)[, \t]+\\(line[ \t]+\\)?\\([0-9]+\\):.*$" 1 3)
     (verilog-IES
-     ".*\\*[WE],[0-9A-Z]+ (\\([^ \t,]+\\),\\([0-9]+\\)" 1 2)
+     ".*\\*[WE],[0-9A-Z]+\\(\[[0-9A-Z_,]+\]\\)? (\\([^ \t,]+\\),\\([0-9]+\\)" 2 3)
     (verilog-surefire-1
      "[^\n]*\\[\\([^:]+\\):\\([0-9]+\\)\\]" 1 2)
     (verilog-surefire-2
@@ -676,87 +674,64 @@ always be saved."
     (verilog-verilator
      "%?\\(Error\\|Warning\\)\\(-[^:]+\\|\\):[\n ]*\\([^ \t:]+\\):\\([0-9]+\\):" 3 4)
     (verilog-leda
-     "In file \\([^ \t]+\\)[ \t]+line[ \t]+\\([0-9]+\\):
-.*
-.*
-.*
-\\(Warning\\|Error\\|Failure\\)" 1 2)
-    ))
-;; And the version for XEmacs:
-(defvar verilog-error-regexp-xemacs-alist
-  '(verilog
-    ("[^\n]*\\[\\([^:]+\\):\\([0-9]+\\)\\]" 1 2)
-    ("\\(WARNING\\|ERROR\\|INFO\\)[^:]*: \\([^,]+\\),\\s-+\\(line \\)?\\([0-9]+\\):" 2 4 )
-    ("\
-\\([a-zA-Z]?:?[^:( \t\n]+\\)[:(][ \t]*\\([0-9]+\\)\\([) \t]\\|\
-:\\([^0-9\n]\\|\\([0-9]+:\\)\\)\\)" 1 2 5)
-; xsim
-; Error! in file /homes/mac/Axis/Xsim/test.v at line 13		[OBJ_NOT_DECLARED]
-    ("\\(Error\\|Warning\\).*in file (\\([^ \t]+\\) at line *\\([0-9]+\\))" 2 3)
-; vcs
-    ("\\(Error\\|Warning\\):[^(]*(\\([^ \t]+\\) line *\\([0-9]+\\))" 2 3)
-    ("Warning:.*(port.*(\\([^ \t]+\\) line \\([0-9]+\\))" 1 2)
-    ("\\(Error\\|Warning\\):[\n.]*\\([^ \t]+\\) *\\([0-9]+\\):" 2 3)
-    ("syntax error:.*\n\\([^ \t]+\\) *\\([0-9]+\\):" 1 2)
-; Verilator
-    ("%?\\(Error\\|Warning\\)\\(-[^:]+\\|\\):[\n ]*\\([^ \t:]+\\):\\([0-9]+\\):" 3 4)
-; verilog-xl
-    ("\\(Error\\|Warning\\)!.*\n?.*\"\\([^\"]+\\)\", \\([0-9]+\\)" 2 3)
-    ("([WE][0-9A-Z]+)[ \t]+\\([^ \t\n,]+\\)[, \t]+\\([0-9]+\\):.*$" 1 2)	       ; vxl
-    ("([WE][0-9A-Z]+)[ \t]+\\([^ \t\n,]+\\)[, \t]+line[ \t]+\\([0-9]+\\):.*$" 1 2)
-; nc-verilog
-    (".*\\*[WE],[0-9A-Z]+ (\\([^ \t,]+\\),\\([0-9]+\\)|" 1 2)
-; Leda
-    ("In file \\([^ \t]+\\)[ \t]+line[ \t]+\\([0-9]+\\):\n[^\n]*\n[^\n]*\n\\[\\(Warning\\|Error\\|Failure\\)\\][^\n]*" 1 2)
+     "^In file \\([^ \t]+\\)[ \t]+line[ \t]+\\([0-9]+\\):\n[^\n]*\n[^\n]*\n\\(Warning\\|Error\\|Failure\\)[^\n]*" 1 2)
     )
-  )
+  "List of regexps for Verilog compilers.
+See `compilation-error-regexp-alist' for the formatting.  For Emacs 22+.")
+
+(defvar verilog-error-regexp-xemacs-alist
+  ;; Emacs form is '((v-tool "re" 1 2) ...)
+  ;; XEmacs form is '(verilog ("re" 1 2) ...)
+  ;; So we can just map from Emacs to Xemacs
+  (list 'verilog (mapcar 'cdr verilog-error-regexp-emacs-alist))
+  "List of regexps for Verilog compilers.
+See `compilation-error-regexp-alist' for the formatting.  For XEmacs.")
 
 (defvar verilog-error-font-lock-keywords
   '(
+    ;; verilog-xl-1
+    ("\\(Error\\|Warning\\)!.*\n?.*\"\\([^\"]+\\)\", \\([0-9]+\\)" 2 bold t)
+    ("\\(Error\\|Warning\\)!.*\n?.*\"\\([^\"]+\\)\", \\([0-9]+\\)" 2 bold t)
+    ;; verilog-xl-2
+    ("([WE][0-9A-Z]+)[ \t]+\\([^ \t\n,]+\\)[, \t]+\\(line[ \t]+\\)?\\([0-9]+\\):.*$" 1 bold t)
+    ("([WE][0-9A-Z]+)[ \t]+\\([^ \t\n,]+\\)[, \t]+\\(line[ \t]+\\)?\\([0-9]+\\):.*$" 3 bold t)
+    ;; verilog-IES (nc-verilog)
+    (".*\\*[WE],[0-9A-Z]+\\(\[[0-9A-Z_,]+\]\\)? (\\([^ \t,]+\\),\\([0-9]+\\)|" 2 bold t)
+    (".*\\*[WE],[0-9A-Z]+\\(\[[0-9A-Z_,]+\]\\)? (\\([^ \t,]+\\),\\([0-9]+\\)|" 3 bold t)
+    ;; verilog-surefire-1
     ("[^\n]*\\[\\([^:]+\\):\\([0-9]+\\)\\]" 1 bold t)
     ("[^\n]*\\[\\([^:]+\\):\\([0-9]+\\)\\]" 2 bold t)
-
+    ;; verilog-surefire-2
     ("\\(WARNING\\|ERROR\\|INFO\\): \\([^,]+\\), line \\([0-9]+\\):" 2 bold t)
     ("\\(WARNING\\|ERROR\\|INFO\\): \\([^,]+\\), line \\([0-9]+\\):" 3 bold t)
-
+    ;; verilog-verbose
     ("\
 \\([a-zA-Z]?:?[^:( \t\n]+\\)[:(][ \t]*\\([0-9]+\\)\\([) \t]\\|\
 :\\([^0-9\n]\\|\\([0-9]+:\\)\\)\\)" 1 bold t)
     ("\
 \\([a-zA-Z]?:?[^:( \t\n]+\\)[:(][ \t]*\\([0-9]+\\)\\([) \t]\\|\
 :\\([^0-9\n]\\|\\([0-9]+:\\)\\)\\)" 1 bold t)
-
+    ;; verilog-vcs-1
     ("\\(Error\\|Warning\\):[^(]*(\\([^ \t]+\\) line *\\([0-9]+\\))" 2 bold t)
     ("\\(Error\\|Warning\\):[^(]*(\\([^ \t]+\\) line *\\([0-9]+\\))" 3 bold t)
-
-    ("%?\\(Error\\|Warning\\)\\(-[^:]+\\|\\):[\n ]*\\([^ \t:]+\\):\\([0-9]+\\):" 3 bold t)
-    ("%?\\(Error\\|Warning\\)\\(-[^:]+\\|\\):[\n ]*\\([^ \t:]+\\):\\([0-9]+\\):" 4 bold t)
-
+    ;; verilog-vcs-2
     ("Warning:.*(port.*(\\([^ \t]+\\) line \\([0-9]+\\))" 1 bold t)
     ("Warning:.*(port.*(\\([^ \t]+\\) line \\([0-9]+\\))" 1 bold t)
-
+    ;; verilog-vcs-3
     ("\\(Error\\|Warning\\):[\n.]*\\([^ \t]+\\) *\\([0-9]+\\):" 2 bold t)
     ("\\(Error\\|Warning\\):[\n.]*\\([^ \t]+\\) *\\([0-9]+\\):" 3 bold t)
-
+    ;; verilog-vcs-4
     ("syntax error:.*\n\\([^ \t]+\\) *\\([0-9]+\\):" 1 bold t)
     ("syntax error:.*\n\\([^ \t]+\\) *\\([0-9]+\\):" 2 bold t)
-       ; vxl
-    ("\\(Error\\|Warning\\)!.*\n?.*\"\\([^\"]+\\)\", \\([0-9]+\\)" 2 bold t)
-    ("\\(Error\\|Warning\\)!.*\n?.*\"\\([^\"]+\\)\", \\([0-9]+\\)" 2 bold t)
-
-    ("([WE][0-9A-Z]+)[ \t]+\\([^ \t\n,]+\\)[, \t]+\\([0-9]+\\):.*$" 1 bold t)
-    ("([WE][0-9A-Z]+)[ \t]+\\([^ \t\n,]+\\)[, \t]+\\([0-9]+\\):.*$" 2 bold t)
-
-    ("([WE][0-9A-Z]+)[ \t]+\\([^ \t\n,]+\\)[, \t]+line[ \t]+\\([0-9]+\\):.*$" 1 bold t)
-    ("([WE][0-9A-Z]+)[ \t]+\\([^ \t\n,]+\\)[, \t]+line[ \t]+\\([0-9]+\\):.*$" 2 bold t)
-        ; nc-verilog
-    (".*[WE],[0-9A-Z]+ (\\([^ \t,]+\\),\\([0-9]+\\)|" 1 bold t)
-    (".*[WE],[0-9A-Z]+ (\\([^ \t,]+\\),\\([0-9]+\\)|" 2 bold t)
-       ; Leda
-    ("In file \\([^ \t]+\\)[ \t]+line[ \t]+\\([0-9]+\\):\n[^\n]*\n[^\n]*\n\\[\\(Warning\\|Error\\|Failure\\)\\][^\n]*" 1 bold t)
-    ("In file \\([^ \t]+\\)[ \t]+line[ \t]+\\([0-9]+\\):\n[^\n]*\n[^\n]*\n\\[\\(Warning\\|Error\\|Failure\\)\\][^\n]*" 2 bold t)
+    ;; verilog-verilator
+    (".*%?\\(Error\\|Warning\\)\\(-[^:]+\\|\\):[\n ]*\\([^ \t:]+\\):\\([0-9]+\\):" 3 bold t)
+    (".*%?\\(Error\\|Warning\\)\\(-[^:]+\\|\\):[\n ]*\\([^ \t:]+\\):\\([0-9]+\\):" 4 bold t)
+    ;; verilog-leda
+    ("^In file \\([^ \t]+\\)[ \t]+line[ \t]+\\([0-9]+\\):\n[^\n]*\n[^\n]*\n\\(Warning\\|Error\\|Failure\\)[^\n]*" 1 bold t)
+    ("^In file \\([^ \t]+\\)[ \t]+line[ \t]+\\([0-9]+\\):\n[^\n]*\n[^\n]*\n\\(Warning\\|Error\\|Failure\\)[^\n]*" 2 bold t)
     )
-  "*Keywords to also highlight in Verilog *compilation* buffers.")
+  "*Keywords to also highlight in Verilog *compilation* buffers.
+Only used in XEmacs; GNU Emacs uses `verilog-error-regexp-emacs-alist'.")
 
 (defcustom verilog-library-flags '("")
   "*List of standard Verilog arguments to use for /*AUTOINST*/.

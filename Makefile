@@ -59,22 +59,8 @@ $(eval $(call test_xemacs_sub,test_xemacs_5,5of5))
 test_errors:
 	@echo
 	@echo == test_errors
-	@echo emit a bunch of error messages that Emacs should
-	@echo "recognize if you type C-x \` and take you to the correct line of error_file.v"
-	@echo "Warning: code located there (error_file.v line 9) is dangerous"
-	@echo "(W1800) error_file.v 21: Problems"
-	@echo "f*E,1364 (error_file.v,2) Issues"
-	@echo "Error: code located here (error_file.v line 8) is fatal"
-	@echo "ERROR  : error_file.v, line 1: erroneous"
-	@echo "INFO  : error_file.v, line 7: informational"
-	@echo "WARNING : error_file.v, line 6: curious"
-	@echo "In file error_file.v line 5:"
-	@echo "a"
-	@echo "b"
-	@echo "Failure was obsevred"
-	@echo la di da
-	@echo syntax error: problems
-	@echo error_file.v 7: here is where they are
+	-# The multiline errors must be in one read()s output or the comint may not match it
+	-cat error_msgs.out
 
 test_batch: e/verilog-mode.elc
 	@echo == test_batch
