@@ -1534,8 +1534,8 @@ find the errors."
   ;; "`case" "`default" "`define" "`define" "`else" "`elsif" "`endfor" "`endif"
   ;; "`endprotect" "`endswitch" "`endwhile" "`for" "`format" "`if" "`ifdef"
   ;; "`ifndef" "`include" "`let" "`protect" "`switch" "`timescale"
-  ;; "`time_scale" "`undef" "`while"  
-  "\\<`\\(case\\|def\\(ault\\|ine\\(\\)?\\)\\|e\\(lse\\|nd\\(for\\|if\\|protect\\|switch\\|while\\)\\)\\|for\\(mat\\)?\\|i\\(f\\(def\\|ndef\\)?\\|nclude\\)\\|\\(elsif\\)?\\|let\\|protect\\|switch\\|time\\(_scale\\|scale\\)\\|undef\\|while\\)\\>")  
+  ;; "`time_scale" "`undef" "`while"
+  "\\<`\\(case\\|def\\(ault\\|ine\\(\\)?\\)\\|e\\(lse\\|nd\\(for\\|if\\|protect\\|switch\\|while\\)\\)\\|for\\(mat\\)?\\|i\\(f\\(def\\|ndef\\)?\\|nclude\\)\\|\\(elsif\\)?\\|let\\|protect\\|switch\\|time\\(_scale\\|scale\\)\\|undef\\|while\\)\\>")
 
 (defconst verilog-directive-re-1
   (concat "[ \t]*"  verilog-directive-re))
@@ -2581,7 +2581,7 @@ to establish comment properties on all text."
       (setq stuff (cdr stuff)))
     (verilog-scan-region pt (point))))
 
-;; More searching 
+;; More searching
 
 (defun verilog-declaration-end ()
   (search-forward ";"))
@@ -3601,7 +3601,7 @@ More specifically, point @ in the line foo : @ begin"
     (backward-up-list arg)
     (setq parse-sexp-ignore-comments saved-psic)
     ))
-	
+
 (defun verilog-in-struct-region-p ()
   "Return true if in a struct region.
 More specifically, in a list after a struct|union keyword."
