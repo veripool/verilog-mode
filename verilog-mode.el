@@ -11510,8 +11510,8 @@ Clicking on the middle-mouse button loads them in a buffer (as in dired)."
 		(save-excursion
 		  (goto-char (match-beginning 0))
 		  (unless (verilog-inside-comment-p)
-		    (let* ((inst (verilog-read-inst-module-matcher))   ;; sets match 0
-			   (ov (make-overlay (match-beginning 0) (match-end 0))))
+		    (verilog-read-inst-module-matcher)   ;; sets match 0
+		    (let* ((ov (make-overlay (match-beginning 0) (match-end 0))))
 		      (overlay-put ov 'start-closed 't)
 		      (overlay-put ov 'end-closed 't)
 		      (overlay-put ov 'evaporate 't)
