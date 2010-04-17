@@ -65,7 +65,8 @@ sub read_file {
     my $b = shift;
     my @l = (read_lines($a), read_lines($b));
 
-    my $fh = IO::File->new("diff -c $a $b |") or die "%Error: $!,";
+    # Note we ignore whitespace
+    my $fh = IO::File->new("diff -b -c $a $b |") or die "%Error: $!,";
     my @ln = (0,0);
     my %difffuncs;
     my $mode = 0;

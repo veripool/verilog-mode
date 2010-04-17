@@ -2522,32 +2522,34 @@ and `verilog-scan'.")
 (defun verilog-scan-region (beg end)
   "Parse comments between BEG and END for `verilog-inside-comment-p'."
   (save-excursion
-    (let (pt)
-      (goto-char beg)
-      (while (< (point) end)
-	(cond ((looking-at "//")
-	       (setq pt (point))
-	       (or (search-forward "\n" end t)
-		   (goto-char end))
-	       ;; "1+": The leading // or /* itself isn't considered as
-	       ;; being "inside" the comment, so that a (search-backward)
-	       ;; that lands at the start of the // won't mis-indicate
-	       ;; it's inside a comment
-	       (put-text-property (1+ pt) (point) 'v-cmt t))
-	      ((looking-at "/\\*")
-	       (setq pt (point))
-	       (or (search-forward "*/" end t)
-		   ;; No error - let later code indicate it so we can
-		   ;; use inside functions on-the-fly
-		   ;;(error "%s: Unmatched /* */, at char %d"
-		   ;;       (verilog-point-text) (point))
-		   (goto-char end))
-	       (put-text-property (1+ pt) (point) 'v-cmt t))
-	      (t
-	       (forward-char 1)
-	       (if (search-forward "/" end t)
-		   (backward-char 1)
-		 (goto-char end))))))))
+    (save-match-data
+      (let ((after-change-functions nil)
+	    pt)
+	(goto-char beg)
+	(while (< (point) end)
+	  (cond ((looking-at "//")
+		 (setq pt (point))
+		 (or (search-forward "\n" end t)
+		     (goto-char end))
+		 ;; "1+": The leading // or /* itself isn't considered as
+		 ;; being "inside" the comment, so that a (search-backward)
+		 ;; that lands at the start of the // won't mis-indicate
+		 ;; it's inside a comment
+		 (put-text-property (1+ pt) (point) 'v-cmt t))
+		((looking-at "/\\*")
+		 (setq pt (point))
+		 (or (search-forward "*/" end t)
+		     ;; No error - let later code indicate it so we can
+		     ;; use inside functions on-the-fly
+		     ;;(error "%s: Unmatched /* */, at char %d"
+		     ;;       (verilog-point-text) (point))
+		     (goto-char end))
+		 (put-text-property (1+ pt) (point) 'v-cmt t))
+		(t
+		 (forward-char 1)
+		 (if (search-forward "/" end t)
+		     (backward-char 1)
+		   (goto-char end)))))))))
 
 (defun verilog-scan ()
   "Parse the buffer, marking all comments with properties.
@@ -10982,8 +10984,6 @@ Wilson Snyder (wsnyder@wsnyder.org)."
 			       font-lock-mode)
 		      (font-lock-mode 0)
 		      t))
-	;; Disable change hooks for speed
-	(after-change-functions nil)
 	;; Cache directories; we don't write new files, so can't change
 	(verilog-dir-cache-preserving t)
 	(verilog-scan-cache-preserving (current-buffer))
@@ -10993,85 +10993,91 @@ Wilson Snyder (wsnyder@wsnyder.org)."
 	(verilog-modi-cache-current-max (point-min)) ; IE it's invalid
 	verilog-modi-cache-current)
     (unwind-protect
-	(save-excursion
-	  ;; If we're not in verilog-mode, change syntax table so parsing works right
-	  (unless (eq major-mode `verilog-mode) (verilog-mode))
-	  ;; Allow user to customize
-	  (run-hooks 'verilog-before-auto-hook)
-	  ;; Try to save the user from needing to revert-file to reread file local-variables
-	  (verilog-auto-reeval-locals)
-	  (verilog-read-auto-lisp-present)
-	  (verilog-read-auto-lisp (point-min) (point-max))
-	  (verilog-getopt-flags)
-	  ;; From here on out, we can cache anything we read from disk
-	  (verilog-preserve-dir-cache
-	   ;; These two may seem obvious to do always, but on large includes it can be way too slow
-	   (when verilog-auto-read-includes
-	     (verilog-read-includes)
-	     (verilog-read-defines nil nil t))
-	   ;; This particular ordering is important
-	   ;; INST: Lower modules correct, no internal dependencies, FIRST
-	   (verilog-preserve-modi-cache
-	    ;; Clear existing autos else we'll be screwed by existing ones
-	    (verilog-delete-auto)
-	    ;; Injection if appropriate
-	    (when inject
-	      (verilog-inject-inst)
-	      (verilog-inject-sense)
-	      (verilog-inject-arg))
+	(let ;; Disable change hooks for speed
+	    ;; This let can't be part of above let; must restore
+	    ;; before font-lock resumes
+	    ((after-change-functions nil))
+	  (save-excursion
+	    ;; If we're not in verilog-mode, change syntax table so parsing works right
+	    (unless (eq major-mode `verilog-mode) (verilog-mode))
+	    ;; Allow user to customize
+	    (run-hooks 'verilog-before-auto-hook)
+	    ;; Try to save the user from needing to revert-file to reread file local-variables
+	    (verilog-auto-reeval-locals)
+	    (verilog-read-auto-lisp-present)
+	    (verilog-read-auto-lisp (point-min) (point-max))
+	    (verilog-getopt-flags)
+	    ;; From here on out, we can cache anything we read from disk
+	    (verilog-preserve-dir-cache
+	     ;; These two may seem obvious to do always, but on large includes it can be way too slow
+	     (when verilog-auto-read-includes
+	       (verilog-read-includes)
+	       (verilog-read-defines nil nil t))
+	     ;; This particular ordering is important
+	     ;; INST: Lower modules correct, no internal dependencies, FIRST
+	     (verilog-preserve-modi-cache
+	      ;; Clear existing autos else we'll be screwed by existing ones
+	      (verilog-delete-auto)
+	      ;; Injection if appropriate
+	      (when inject
+		(verilog-inject-inst)
+		(verilog-inject-sense)
+		(verilog-inject-arg))
+	      ;;
+	      ;; Do user inserts first, so their code can insert AUTOs
+	      ;; We may provide a AUTOINSERTLISPLAST if another cleanup pass is needed
+	      (verilog-auto-re-search-do "/\\*AUTOINSERTLISP(.*?)\\*/"
+					 'verilog-auto-insert-lisp)
+	      ;; Expand instances before need the signals the instances input/output
+	      (verilog-auto-re-search-do "/\\*AUTOINSTPARAM\\*/" 'verilog-auto-inst-param)
+	      (verilog-auto-re-search-do "/\\*AUTOINST\\*/" 'verilog-auto-inst)
+	      (verilog-auto-re-search-do "\\.\\*" 'verilog-auto-star)
+	      ;; Doesn't matter when done, but combine it with a common changer
+	      (verilog-auto-re-search-do "/\\*\\(AUTOSENSE\\|AS\\)\\*/" 'verilog-auto-sense)
+	      (verilog-auto-re-search-do "/\\*AUTORESET\\*/" 'verilog-auto-reset)
+	      ;; Must be done before autoin/out as creates a reg
+	      (verilog-auto-re-search-do "/\\*AUTOASCIIENUM([^)]*)\\*/" 'verilog-auto-ascii-enum)
+	      ;;
+	      ;; first in/outs from other files
+	      (verilog-auto-re-search-do "/\\*AUTOINOUTMODULE([^)]*)\\*/" 'verilog-auto-inout-module)
+	      (verilog-auto-re-search-do "/\\*AUTOINOUTCOMP([^)]*)\\*/" 'verilog-auto-inout-comp)
+	      ;; next in/outs which need previous sucked inputs first
+	      (verilog-auto-re-search-do "/\\*AUTOOUTPUT\\((\"[^\"]*\")\\)\\*/"
+					 '(lambda () (verilog-auto-output t)))
+	      (verilog-auto-re-search-do "/\\*AUTOOUTPUT\\*/" 'verilog-auto-output)
+	      (verilog-auto-re-search-do "/\\*AUTOINPUT\\((\"[^\"]*\")\\)\\*/"
+					 '(lambda () (verilog-auto-input t)))
+	      (verilog-auto-re-search-do "/\\*AUTOINPUT\\*/"  'verilog-auto-input)
+	      (verilog-auto-re-search-do "/\\*AUTOINOUT\\((\"[^\"]*\")\\)\\*/"
+					 '(lambda () (verilog-auto-inout t)))
+	      (verilog-auto-re-search-do "/\\*AUTOINOUT\\*/" 'verilog-auto-inout)
+	      ;; Then tie off those in/outs
+	      (verilog-auto-re-search-do "/\\*AUTOTIEOFF\\*/" 'verilog-auto-tieoff)
+	      ;; Wires/regs must be after inputs/outputs
+	      (verilog-auto-re-search-do "/\\*AUTOWIRE\\*/" 'verilog-auto-wire)
+	      (verilog-auto-re-search-do "/\\*AUTOREG\\*/" 'verilog-auto-reg)
+	      (verilog-auto-re-search-do "/\\*AUTOREGINPUT\\*/" 'verilog-auto-reg-input)
+	      ;; outputevery needs AUTOOUTPUTs done first
+	      (verilog-auto-re-search-do "/\\*AUTOOUTPUTEVERY\\*/" 'verilog-auto-output-every)
+	      ;; After we've created all new variables
+	      (verilog-auto-re-search-do "/\\*AUTOUNUSED\\*/" 'verilog-auto-unused)
+	      ;; Must be after all inputs outputs are generated
+	      (verilog-auto-re-search-do "/\\*AUTOARG\\*/" 'verilog-auto-arg)
+	      ;; Fix line numbers (comments only)
+	      (when verilog-auto-inst-template-numbers
+		(verilog-auto-templated-rel))))
 	    ;;
-	    ;; Do user inserts first, so their code can insert AUTOs
-	    ;; We may provide a AUTOINSERTLISPLAST if another cleanup pass is needed
-	    (verilog-auto-re-search-do "/\\*AUTOINSERTLISP(.*?)\\*/"
-				       'verilog-auto-insert-lisp)
-	    ;; Expand instances before need the signals the instances input/output
-	    (verilog-auto-re-search-do "/\\*AUTOINSTPARAM\\*/" 'verilog-auto-inst-param)
-	    (verilog-auto-re-search-do "/\\*AUTOINST\\*/" 'verilog-auto-inst)
-	    (verilog-auto-re-search-do "\\.\\*" 'verilog-auto-star)
-	    ;; Doesn't matter when done, but combine it with a common changer
-	    (verilog-auto-re-search-do "/\\*\\(AUTOSENSE\\|AS\\)\\*/" 'verilog-auto-sense)
-	    (verilog-auto-re-search-do "/\\*AUTORESET\\*/" 'verilog-auto-reset)
-	    ;; Must be done before autoin/out as creates a reg
-	    (verilog-auto-re-search-do "/\\*AUTOASCIIENUM([^)]*)\\*/" 'verilog-auto-ascii-enum)
+	    (run-hooks 'verilog-auto-hook)
 	    ;;
-	    ;; first in/outs from other files
-	    (verilog-auto-re-search-do "/\\*AUTOINOUTMODULE([^)]*)\\*/" 'verilog-auto-inout-module)
-	    (verilog-auto-re-search-do "/\\*AUTOINOUTCOMP([^)]*)\\*/" 'verilog-auto-inout-comp)
-	    ;; next in/outs which need previous sucked inputs first
-	    (verilog-auto-re-search-do "/\\*AUTOOUTPUT\\((\"[^\"]*\")\\)\\*/"
-				       '(lambda () (verilog-auto-output t)))
-	    (verilog-auto-re-search-do "/\\*AUTOOUTPUT\\*/" 'verilog-auto-output)
-	    (verilog-auto-re-search-do "/\\*AUTOINPUT\\((\"[^\"]*\")\\)\\*/"
-				       '(lambda () (verilog-auto-input t)))
-	    (verilog-auto-re-search-do "/\\*AUTOINPUT\\*/"  'verilog-auto-input)
-	    (verilog-auto-re-search-do "/\\*AUTOINOUT\\((\"[^\"]*\")\\)\\*/"
-				       '(lambda () (verilog-auto-inout t)))
-	    (verilog-auto-re-search-do "/\\*AUTOINOUT\\*/" 'verilog-auto-inout)
-	    ;; Then tie off those in/outs
-	    (verilog-auto-re-search-do "/\\*AUTOTIEOFF\\*/" 'verilog-auto-tieoff)
-	    ;; Wires/regs must be after inputs/outputs
-	    (verilog-auto-re-search-do "/\\*AUTOWIRE\\*/" 'verilog-auto-wire)
-	    (verilog-auto-re-search-do "/\\*AUTOREG\\*/" 'verilog-auto-reg)
-	    (verilog-auto-re-search-do "/\\*AUTOREGINPUT\\*/" 'verilog-auto-reg-input)
-	    ;; outputevery needs AUTOOUTPUTs done first
-	    (verilog-auto-re-search-do "/\\*AUTOOUTPUTEVERY\\*/" 'verilog-auto-output-every)
-	    ;; After we've created all new variables
-	    (verilog-auto-re-search-do "/\\*AUTOUNUSED\\*/" 'verilog-auto-unused)
-	    ;; Must be after all inputs outputs are generated
-	    (verilog-auto-re-search-do "/\\*AUTOARG\\*/" 'verilog-auto-arg)
-	    ;; Fix line numbers (comments only)
-	    (when verilog-auto-inst-template-numbers
-	      (verilog-auto-templated-rel))))
-	  ;;
-	  (run-hooks 'verilog-auto-hook)
-	  ;;
-	  (set (make-local-variable 'verilog-auto-update-tick) (buffer-modified-tick))
-	  ;;
-	  ;; If end result is same as when started, clear modified flag
-	  (cond ((and oldbuf (equal oldbuf (buffer-string)))
-		 (set-buffer-modified-p nil)
-		 (unless noninteractive (message "Updating AUTOs...done (no changes)")))
-		(t (unless noninteractive (message "Updating AUTOs...done")))))
+	    (set (make-local-variable 'verilog-auto-update-tick) (buffer-modified-tick))
+	    ;;
+	    ;; If end result is same as when started, clear modified flag
+	    (cond ((and oldbuf (equal oldbuf (buffer-string)))
+		   (set-buffer-modified-p nil)
+		   (unless noninteractive (message "Updating AUTOs...done (no changes)")))
+		  (t (unless noninteractive (message "Updating AUTOs...done"))))
+	    ;; End of after-change protection
+	    ))
       ;; Unwind forms
       (progn
 	;; Restore font-lock
@@ -11488,13 +11494,12 @@ Clicking on the middle-mouse button loads them in a buffer (as in dired)."
 		   (or (overlay-get (car overlays) 'verilog-include-file)
 		       (overlay-get (car overlays) 'verilog-inst-module)))
 		  (delete-overlay (car overlays)))
-	      (setq overlays (cdr overlays)))) ; let
+	      (setq overlays (cdr overlays))))
 	  ;;
 	  ;; make new include overlays
 	  (while (search-forward-regexp verilog-include-file-regexp end-point t)
-	    (let (ov)
-	      (goto-char (match-beginning 1))
-	      (setq ov (make-overlay (match-beginning 1) (match-end 1)))
+	    (goto-char (match-beginning 1))
+	    (let ((ov (make-overlay (match-beginning 1) (match-end 1))))
 	      (overlay-put ov 'start-closed 't)
 	      (overlay-put ov 'end-closed 't)
 	      (overlay-put ov 'evaporate 't)
