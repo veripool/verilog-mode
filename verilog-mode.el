@@ -8186,7 +8186,6 @@ variables to build the path."
   "Cache of ((Module Function) Buf-Tick Buf-Modtime Func-Returns)...
 For speeding up verilog-modi-get-* commands.
 Buffer-local.")
-
 (make-variable-buffer-local 'verilog-modi-cache-list)
 
 (defvar verilog-modi-cache-preserve-tick nil
@@ -8235,6 +8234,7 @@ Use `verilog-preserve-modi-cache' to set it.")
     (vector name (or (buffer-file-name) (current-buffer)) pt)))
 
 (defvar verilog-modi-lookup-cache nil "Hash of (modulename modi).")
+(make-variable-buffer-local 'verilog-modi-lookup-cache)
 (defvar verilog-modi-lookup-last-current nil "Cache of `current-buffer' at last lookup.")
 (defvar verilog-modi-lookup-last-tick nil "Cache of `buffer-modified-tick' at last lookup.")
 
