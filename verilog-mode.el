@@ -867,6 +867,16 @@ it's bad practice to rely on order based instantiations anyhow."
   :type 'boolean)
 (put 'verilog-auto-arg-sort 'safe-local-variable 'verilog-booleanp)
 
+(defcustom verilog-auto-inst-dot-name nil
+  "*If true, when creating ports with AUTOINST, use .name syntax.
+This will use \".port\" instead of \".port(port)\" when possible.
+This is only legal in SystemVerilog files, and will confuse older
+simulators.  Setting `verilog-auto-inst-vector' to nil may also
+be desirable to increase how often .name will be used."
+  :group 'verilog-mode-auto
+  :type 'boolean)
+(put 'verilog-auto-inst-dot-name 'safe-local-variable 'verilog-booleanp)
+
 (defcustom verilog-auto-inst-param-value nil
   "*If set, AUTOINST will replace parameters with the parameter value.
 If nil, leave parameters as symbolic names.
@@ -7125,39 +7135,53 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 
 (defun verilog-read-sub-decls-sig (submoddecls comment port sig vec multidim)
   "For `verilog-read-sub-decls-line', add a signal."
-  ;;(message "vrsds: '%s'" sig)
-  (let (portdata)
+  ;; sig eq t to indicate .name syntax
+  ;;(message "vrsds: %s(%S)" port sig)
+  (let ((dotname (eq sig t))
+	portdata)
     (when sig
       (setq port (verilog-symbol-detick-denumber port))
-      (setq sig  (verilog-symbol-detick-denumber sig))
+      (setq sig  (if dotname port (verilog-symbol-detick-denumber sig)))
       (if vec (setq vec  (verilog-symbol-detick-denumber vec)))
       (if multidim (setq multidim  (mapcar `verilog-symbol-detick-denumber multidim)))
       (unless (or (not sig)
 		  (equal sig ""))  ;; Ignore .foo(1'b1) assignments
 	(cond ((setq portdata (assoc port (verilog-decls-get-inouts submoddecls)))
-	       (setq sigs-inout (cons (list sig vec (concat "To/From " comment) nil nil
-					    (verilog-sig-signed portdata)
-					    (verilog-sig-type portdata)
-					    multidim)
-				      sigs-inout)))
+	       (setq sigs-inout
+		     (cons (list sig
+				 (if dotname (verilog-sig-bits portdata) vec)
+				 (concat "To/From " comment) nil nil
+				 (verilog-sig-signed portdata)
+				 (verilog-sig-type portdata)
+				 multidim)
+			   sigs-inout)))
 	      ((setq portdata (assoc port (verilog-decls-get-outputs submoddecls)))
-	       (setq sigs-out   (cons (list sig vec (concat "From " comment) nil nil
-					    (verilog-sig-signed portdata)
-					    (verilog-sig-type portdata)
-					    multidim)
-				      sigs-out)))
+	       (setq sigs-out
+		     (cons (list sig
+				 (if dotname (verilog-sig-bits portdata) vec)
+				 (concat "From " comment) nil nil
+				 (verilog-sig-signed portdata)
+				 (verilog-sig-type portdata)
+				 multidim)
+			   sigs-out)))
 	      ((setq portdata (assoc port (verilog-decls-get-inputs submoddecls)))
-	       (setq sigs-in    (cons (list sig vec (concat "To " comment) nil nil
-					    (verilog-sig-signed portdata)
-					    (verilog-sig-type portdata)
-					    multidim)
-				      sigs-in)))
+	       (setq sigs-in
+		     (cons (list sig
+				 (if dotname (verilog-sig-bits portdata) vec)
+				 (concat "To " comment) nil nil
+				 (verilog-sig-signed portdata)
+				 (verilog-sig-type portdata)
+				 multidim)
+			   sigs-in)))
 	      ((setq portdata (assoc port (verilog-decls-get-interfaces submoddecls)))
-	       (setq sigs-intf  (cons (list sig vec (concat "To/From " comment) nil nil
-					    (verilog-sig-signed portdata)
-					    (verilog-sig-type portdata)
-					    multidim)
-				      sigs-intf)))
+	       (setq sigs-intf
+		     (cons (list sig
+				 (if dotname (verilog-sig-bits portdata) vec)
+				 (concat "To/From " comment) nil nil
+				 (verilog-sig-signed portdata)
+				 (verilog-sig-type portdata)
+				 multidim)
+			   sigs-intf)))
 	      ;; (t  -- warning pin isn't defined.)   ; Leave for lint tool
 	      )))))
 
@@ -7215,9 +7239,23 @@ Return the list of signals found, using submodi to look up each port."
 	(cond ((looking-at "\\s-*\\.\\s-*\\([a-zA-Z0-9`_$]*\\)\\s-*(\\s-*")
 	       (setq port (match-string 1))
 	       (goto-char (match-end 0)))
+	      ;; .\escaped (
 	      ((looking-at "\\s-*\\.\\s-*\\(\\\\[^ \t\n\f]*\\)\\s-*(\\s-*")
 	       (setq port (concat (match-string 1) " ")) ;; escaped id's need trailing space
 	       (goto-char (match-end 0)))
+	      ;; .name
+	      ((looking-at "\\s-*\\.\\s-*\\([a-zA-Z0-9`_$]*\\)\\s-*[,)/]")
+	       (verilog-read-sub-decls-sig
+		submoddecls comment (match-string 1) t ; sig==t for .name
+		nil nil) ; vec multidim
+	       (setq port nil))
+	      ;; .\escaped_name
+	      ((looking-at "\\s-*\\.\\s-*\\(\\\\[^ \t\n\f]*\\)\\s-*[,)/]")
+	       (verilog-read-sub-decls-sig
+		submoddecls comment (concat (match-string 1) " ") t ; sig==t for .name
+		nil nil) ; vec multidim
+	       (setq port nil))
+	      ;; random
 	      ((looking-at "\\s-*\\.[^(]*(")
 	       (setq port nil) ;; skip this line
 	       (goto-char (match-end 0)))
@@ -9158,8 +9196,11 @@ If PAR-VALUES replace final strings with these parameter values."
     ;; Insert it
     (indent-to indent-pt)
     (insert "." port)
-    (indent-to verilog-auto-inst-column)
-    (insert "(" tpl-net "),")
+    (unless (and verilog-auto-inst-dot-name
+		 (equal port tpl-net))
+      (indent-to verilog-auto-inst-column)
+      (insert "(" tpl-net ")"))
+    (insert ",")
     (cond (tpl-ass
 	   (indent-to (+ (if (< verilog-auto-inst-column 48) 24 16)
 			 verilog-auto-inst-column))
@@ -9231,6 +9272,8 @@ Limitations:
   Typedefs must match `verilog-typedef-regexp', which is disabled by default.
 
   SystemVerilog multidimensional input/output has only experimental support.
+
+  SystemVerilog .name syntax is used if `verilog-auto-inst-dot-name' is set.
 
   Parameters referenced by the instantiation will remain symbolic, unless
   `verilog-auto-inst-param-value' is set.
