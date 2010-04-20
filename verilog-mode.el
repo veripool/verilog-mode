@@ -11612,22 +11612,43 @@ Files are checked based on `verilog-library-flags'."
      "mac@verilog.com, wsnyder@wsnyder.org"
      (concat "verilog-mode v" verilog-mode-version)
      '(
+       verilog-active-low-regexp
        verilog-align-ifelse
+       verilog-assignment-delay
+       verilog-auto-arg-sort
        verilog-auto-endcomments
        verilog-auto-hook
+       verilog-auto-ignore-concat
        verilog-auto-indent-on-newline
-       verilog-auto-inst-vector
+       verilog-auto-inout-ignore-regexp
+       verilog-auto-input-ignore-regexp
+       verilog-auto-inst-column
+       verilog-auto-inst-dot-name
+       verilog-auto-inst-param-value
        verilog-auto-inst-template-numbers
+       verilog-auto-inst-vector
        verilog-auto-lineup
        verilog-auto-newline
+       verilog-auto-output-ignore-regexp
+       verilog-auto-read-includes
+       verilog-auto-reset-widths
        verilog-auto-save-policy
        verilog-auto-sense-defines-constant
        verilog-auto-sense-include-inputs
+       verilog-auto-star-expand
+       verilog-auto-star-save
+       verilog-auto-unused-ignore-regexp
        verilog-before-auto-hook
+       verilog-before-delete-auto-hook
+       verilog-before-getopt-flags-hook
        verilog-case-indent
        verilog-cexp-indent
        verilog-compiler
        verilog-coverage
+       verilog-delete-auto-hook
+       verilog-getopt-flags-hook
+       verilog-highlight-grouping-keywords
+       verilog-highlight-p1800-keywords
        verilog-highlight-translate-off
        verilog-indent-begin-after-if
        verilog-indent-declaration-macros
@@ -11637,16 +11658,17 @@ Files are checked based on `verilog-library-flags'."
        verilog-indent-level-directive
        verilog-indent-level-module
        verilog-indent-lists
-       verilog-library-flags
        verilog-library-directories
        verilog-library-extensions
        verilog-library-files
+       verilog-library-flags
        verilog-linter
        verilog-minimum-comment-distance
        verilog-mode-hook
        verilog-simulator
        verilog-tab-always-indent
        verilog-tab-to-comment
+       verilog-typedef-regexp
        )
      nil nil
      (concat "Hi Mac,
