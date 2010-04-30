@@ -49,7 +49,9 @@ module EX_TIME_CONSUME (/*AUTOARG*/);
 ;;======================================================================
 
 (setq make-backup-files nil)
-(setq verilog-library-flags "-I. -I../../tests")
+(copy-file "tests/batch_prof_cell.v" "e/b/batch_prof_cell.v" t)
+(setq verilog-debug t)
+(setq verilog-library-flags "-I.")
 (setq verilog-auto-star-expand nil)
 (setq profile (getenv "VERILOG_MODE_PROFILE"))
 
@@ -63,7 +65,8 @@ module EX_TIME_CONSUME (/*AUTOARG*/);
   (setq t10 (t-size-test 10))
   (setq t100 (t-size-test 100))
   (setq t1000 (t-size-test 1000))
-;;  (setq t10000 (t-size-test 10000))
+  (when (getenv "VERILOG_MODE_10000")
+    (setq t10000 (t-size-test 10000)))
 
   (setq slope (/ t1000 t100))
   (setq order (1+ (/ (log slope)

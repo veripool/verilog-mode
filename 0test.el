@@ -1,14 +1,15 @@
 ;; $Id$
-(defvar diff-flags "-c")
-(defvar vl-threading (and (not (getenv "VERILOG_MODE_TEST_FILE"))
-			  (getenv "VERILOG_MODE_THREAD")))
-
 ;;
-;;   VERILOG_MODE_TEST_NO_INDENTS=1    # Disable indent checks
+;;   VERILOG_MODE_DEBUG=1	       # Enable verilog-debug
+;;   VERILOG_MODE_NO_INDENTS=1         # Disable indent checks
 ;;   VERILOG_MODE_TEST_FILE=filename   # Run only specified test
 ;;   VERILOG_MODE_START_FILE=filename  # Start at specified test
 ;;   VERILOG_MODE_THREAD=#of#          # Multithreaded testing
 ;;   VERILOG_MODE_PROFILE=1            # Profile - see batch_prof.el
+
+(defvar diff-flags "-c")
+(defvar vl-threading (and (not (getenv "VERILOG_MODE_TEST_FILE"))
+			  (getenv "VERILOG_MODE_THREAD")))
 
 (defun global-replace-regexp (from to)
   (goto-char (point-min))
@@ -35,7 +36,7 @@
       (verilog-auto)))
     (message (concat file ": auto OK..."))
 
-    (unless (getenv "VERILOG_MODE_TEST_NO_INDENTS")
+    (unless (getenv "VERILOG_MODE_NO_INDENTS")
       (verilog-test-indent-buffer file)
       
 ;;      (message (concat file ": testing auto endcomments..."))
@@ -100,6 +101,9 @@
         (tests-run 0)
 	(file-num 0)
 	file cf temp-file)
+
+    (when (getenv "VERILOG_MODE_DEBUG")
+      (setq verilog-debug t))
 
     (when (getenv "VERILOG_MODE_TEST_FILE")
       (setq files (list (getenv "VERILOG_MODE_TEST_FILE")))
@@ -182,7 +186,7 @@
   (setq running-on-xemacs (string-match "XEmacs" emacs-version))
   (setq make-backup-files nil)
   (setq-default make-backup-files nil)
-  (setq diff-flags (if (getenv "VERILOG_MODE_TEST_NO_INDENTS") "-wBc" "-c"))
+  (setq diff-flags (if (getenv "VERILOG_MODE_NO_INDENTS") "-wBc" "-c"))
   ;;(setq verilog-auto-lineup 'all)
   (setq enable-local-variables t)
   (setq enable-local-eval t)
