@@ -593,6 +593,23 @@ grouping constructs allow the structure of the code to be understood at a glance
   :type 'boolean)
 (put 'verilog-highlight-grouping-keywords 'safe-local-variable 'verilog-booleanp)
 
+(defcustom verilog-highlight-modules nil
+  "*True means highlight module statements for `verilog-load-file-at-point'.
+When true, mousing over module names will allow jumping to the
+module definition.  If false, this is not supported.  Setting
+this is experimental, and may lead to bad performance."
+  :group 'verilog-mode-indent
+  :type 'boolean)
+(put 'verilog-highlight-modules 'safe-local-variable 'verilog-booleanp)
+
+(defcustom verilog-highlight-includes t
+  "*True means highlight module statements for `verilog-load-file-at-point'.
+When true, mousing over include file names will allow jumping to the
+file referenced.  If false, this is not supported."
+  :group 'verilog-mode-indent
+  :type 'boolean)
+(put 'verilog-highlight-includes 'safe-local-variable 'verilog-booleanp)
+
 (defcustom verilog-auto-endcomments t
   "*True means insert a comment /* ... */ after 'end's.
 The name of the function or case will be set between the braces."
@@ -3093,16 +3110,16 @@ Key bindings specific to `verilog-mode-map' are:
 	      nil
 	    'verilog-beg-of-defun)))
   ;;------------------------------------------------------------
-  ;; now hook in 'verilog-colorize-include-files (eldo-mode.el&spice-mode.el)
+  ;; now hook in 'verilog-highlight-include-files (eldo-mode.el&spice-mode.el)
   ;; all buffer local:
   (unless noninteractive  ;; Else can't see the result, and change hooks are slow
     (when (featurep 'xemacs)
       (make-local-hook 'font-lock-mode-hook)
       (make-local-hook 'font-lock-after-fontify-buffer-hook); doesn't exist in Emacs
       (make-local-hook 'after-change-functions))
-    (add-hook 'font-lock-mode-hook 'verilog-colorize-buffer t t)
-    (add-hook 'font-lock-after-fontify-buffer-hook 'verilog-colorize-buffer t t) ; not in Emacs
-    (add-hook 'after-change-functions 'verilog-colorize-region t t))
+    (add-hook 'font-lock-mode-hook 'verilog-highlight-buffer t t)
+    (add-hook 'font-lock-after-fontify-buffer-hook 'verilog-highlight-buffer t t) ; not in Emacs
+    (add-hook 'after-change-functions 'verilog-highlight-region t t))
 
   ;; Tell imenu how to handle Verilog.
   (make-local-variable 'imenu-generic-expression)
@@ -11595,70 +11612,74 @@ and the case items."
   "Map containing mouse bindings for `verilog-mode'.")
 
 
-(defun verilog-colorize-region (beg end old-len)
+(defun verilog-highlight-region (beg end old-len)
   "Colorize included files and modules in the (changed?) region.
 Clicking on the middle-mouse button loads them in a buffer (as in dired)."
-  (save-excursion
-    (verilog-save-buffer-state
-     (verilog-save-scan-cache
-      (let (end-point)
-	(goto-char end)
-	(setq end-point (verilog-get-end-of-line))
-	(goto-char beg)
-	(beginning-of-line)  ; scan entire line
-	;; delete overlays existing on this line
-	(let ((overlays (overlays-in (point) end-point)))
-	  (while overlays
-	    (if (and
-		 (overlay-get (car overlays) 'detachable)
-		 (or (overlay-get (car overlays) 'verilog-include-file)
-		     (overlay-get (car overlays) 'verilog-inst-module)))
-		(delete-overlay (car overlays)))
-	    (setq overlays (cdr overlays))))
-	;;
-	;; make new include overlays
-	(while (search-forward-regexp verilog-include-file-regexp end-point t)
-	  (goto-char (match-beginning 1))
-	  (let ((ov (make-overlay (match-beginning 1) (match-end 1))))
-	    (overlay-put ov 'start-closed 't)
-	    (overlay-put ov 'end-closed 't)
-	    (overlay-put ov 'evaporate 't)
-	    (overlay-put ov 'verilog-include-file 't)
-	    (overlay-put ov 'mouse-face 'highlight)
-	    (overlay-put ov 'local-map verilog-mode-mouse-map)))
-	;;
-	;; make new module overlays
-	(goto-char beg)
-	;; This scanner is syntax-fragile, so don't get bent
-	(condition-case nil
-	    (while (verilog-re-search-forward "\\(/\\*AUTOINST\\*/\\|\\.\\*\\)" end-point t)
-	      (save-excursion
-		(goto-char (match-beginning 0))
-		(unless (verilog-inside-comment-p)
-		  (verilog-read-inst-module-matcher)   ;; sets match 0
-		  (let* ((ov (make-overlay (match-beginning 0) (match-end 0))))
-		    (overlay-put ov 'start-closed 't)
-		    (overlay-put ov 'end-closed 't)
-		    (overlay-put ov 'evaporate 't)
-		    (overlay-put ov 'verilog-inst-module 't)
-		    (overlay-put ov 'mouse-face 'highlight)
-		    (overlay-put ov 'local-map verilog-mode-mouse-map)))))
-	  (error nil))
-	;;
-	;; Future highlights:
-	;;  variables - make an Occur buffer of where referenced
-	;;  pins - make an Occur buffer of the sig in the declaration module
-	)))))
+  (when (or verilog-highlight-includes
+	    verilog-highlight-modules)
+    (save-excursion
+      (verilog-save-buffer-state
+       (verilog-save-scan-cache
+	(let (end-point)
+	  (goto-char end)
+	  (setq end-point (verilog-get-end-of-line))
+	  (goto-char beg)
+	  (beginning-of-line)  ; scan entire line
+	  ;; delete overlays existing on this line
+	  (let ((overlays (overlays-in (point) end-point)))
+	    (while overlays
+	      (if (and
+		   (overlay-get (car overlays) 'detachable)
+		   (or (overlay-get (car overlays) 'verilog-include-file)
+		       (overlay-get (car overlays) 'verilog-inst-module)))
+		  (delete-overlay (car overlays)))
+	      (setq overlays (cdr overlays))))
+	  ;;
+	  ;; make new include overlays
+	  (when verilog-highlight-includes
+	    (while (search-forward-regexp verilog-include-file-regexp end-point t)
+	      (goto-char (match-beginning 1))
+	      (let ((ov (make-overlay (match-beginning 1) (match-end 1))))
+		(overlay-put ov 'start-closed 't)
+		(overlay-put ov 'end-closed 't)
+		(overlay-put ov 'evaporate 't)
+		(overlay-put ov 'verilog-include-file 't)
+		(overlay-put ov 'mouse-face 'highlight)
+		(overlay-put ov 'local-map verilog-mode-mouse-map))))
+	  ;;
+	  ;; make new module overlays
+	  (goto-char beg)
+	  ;; This scanner is syntax-fragile, so don't get bent
+	  (when verilog-highlight-modules
+	    (condition-case nil
+		(while (verilog-re-search-forward "\\(/\\*AUTOINST\\*/\\|\\.\\*\\)" end-point t)
+		  (save-excursion
+		    (goto-char (match-beginning 0))
+		    (unless (verilog-inside-comment-p)
+		      (verilog-read-inst-module-matcher)   ;; sets match 0
+		      (let* ((ov (make-overlay (match-beginning 0) (match-end 0))))
+			(overlay-put ov 'start-closed 't)
+			(overlay-put ov 'end-closed 't)
+			(overlay-put ov 'evaporate 't)
+			(overlay-put ov 'verilog-inst-module 't)
+			(overlay-put ov 'mouse-face 'highlight)
+			(overlay-put ov 'local-map verilog-mode-mouse-map)))))
+	      (error nil)))
+	  ;;
+	  ;; Future highlights:
+	  ;;  variables - make an Occur buffer of where referenced
+	  ;;  pins - make an Occur buffer of the sig in the declaration module
+	  ))))))
 
-(defun verilog-colorize-buffer ()
+(defun verilog-highlight-buffer ()
   "Colorize included files and modules across the whole buffer."
   ;; Invoked via verilog-mode calling font-lock then `font-lock-mode-hook'
   (interactive)
   ;; delete and remake overlays
-  (verilog-colorize-region (point-min) (point-max) nil))
+  (verilog-highlight-region (point-min) (point-max) nil))
 
 ;; Deprecated, but was interactive, so we'll keep it around
-(defalias 'verilog-colorize-include-files-buffer 'verilog-colorize-buffer)
+(defalias 'verilog-colorize-include-files-buffer 'verilog-highlight-buffer)
 
 ;; ffap-at-mouse isn't useful for Verilog mode. It uses library paths.
 ;; so define this function to do more or less the same as ffap-at-mouse
