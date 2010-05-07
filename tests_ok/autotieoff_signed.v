@@ -1,12 +1,14 @@
 module autotieoff_signed (/*AUTOARG*/
                           // Outputs
-                          an_output2, an_outputpre, another_output, another_output2, ExtraOut, active_low_l,
+                          an_output2, an_outputpre, another_output, another_output2, ExtraOut, SubOut, active_low_l,
                           // Inputs
-                          ExtraIn
+                          ExtraIn, SubIn
                           );
    
    input [2:0]         ExtraIn;
+   input [2:0]         SubIn;
    output [2:0]        ExtraOut;
+   output [2:0]        SubOut;
    output [3:0]        active_low_l;
    
    /*AUTOINOUTMODULE("autoinst_signed")*/
@@ -39,18 +41,31 @@ module autotieoff_signed (/*AUTOARG*/
    // End of automatics
    
    // =============================
+   
+   sub sub (/*AUTOINST*/
+            // Outputs
+            .SubOut                     (SubOut),
+            // Inputs
+            .SubIn                      (SubIn));
+   
+   // =============================
    // Unused signals
    // =============================
    
    // lint_checking SCX_UNUSED OFF
-   wire                _unused_ok = &{1'b0,
-                                      /*AUTOUNUSED*/
-                                      // Beginning of automatic unused inputs
-                                      ExtraIn,
-                                      // End of automatics
-                                      1'b0};
+   wire _unused_ok = &{1'b0,
+                       /*AUTOUNUSED*/
+                       // Beginning of automatic unused inputs
+                       ExtraIn,
+                       // End of automatics
+                       1'b0 } ;
    // lint_checking SCX_UNUSED OFF
    
+endmodule
+
+module sub;
+   input  SubIn;
+   output SubOut;
 endmodule
 
 // Local Variables:

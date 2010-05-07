@@ -158,11 +158,6 @@
             (cons 'if (cons cond (cons nil body)))))
       (error nil))
     (condition-case nil
-        (if (fboundp 'buffer-chars-modified-tick)
-            nil ;; fab
-          (defmacro buffer-chars-modified-tick () (buffer-modified-tick)))
-      (error nil))
-    (condition-case nil
         (if (fboundp 'store-match-data)
             nil ;; fab
           (defmacro store-match-data (&rest args) nil))
@@ -271,6 +266,13 @@ STRING should be given if the last search was by `string-match' on STRING."
         )
     ;; Emacs.
     (defalias 'verilog-regexp-opt 'regexp-opt)))
+
+(eval-and-compile
+  ;; Both xemacs and emacs
+  (condition-case nil
+      (unless (fboundp 'buffer-chars-modified-tick)  ;; Emacs 22 added
+	(defmacro buffer-chars-modified-tick () (buffer-modified-tick)))
+    (error nil)))
 
 (eval-when-compile
   (defun verilog-regexp-words (a)
