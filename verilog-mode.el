@@ -1341,6 +1341,20 @@ If set will become buffer local.")
 ;;  Macros
 ;;
 
+(defsubst verilog-get-beg-of-line (&optional arg)
+  (save-excursion
+    (beginning-of-line arg)
+    (point)))
+
+(defsubst verilog-get-end-of-line (&optional arg)
+  (save-excursion
+    (end-of-line arg)
+    (point)))
+
+(defsubst verilog-within-string ()
+  (save-excursion
+    (nth 3 (parse-partial-sexp (verilog-get-beg-of-line) (point)))))
+
 (defsubst verilog-string-replace-matches (from-string to-string fixedcase literal string)
   "Replace occurrences of FROM-STRING with TO-STRING.
 FIXEDCASE and LITERAL as in `replace-match`.  STRING is what to replace.
@@ -1456,20 +1470,6 @@ This speeds up complicated regexp matches."
     (when done (goto-char done))
     done))
 ;;(verilog-re-search-backward-substr "-end" "get-end-of" nil t) ;;-end (test bait)
-
-(defsubst verilog-get-beg-of-line (&optional arg)
-  (save-excursion
-    (beginning-of-line arg)
-    (point)))
-
-(defsubst verilog-get-end-of-line (&optional arg)
-  (save-excursion
-    (end-of-line arg)
-    (point)))
-
-(defsubst verilog-within-string ()
-  (save-excursion
-    (nth 3 (parse-partial-sexp (verilog-get-beg-of-line) (point)))))
 
 (defvar compile-command)
 
@@ -8335,6 +8335,13 @@ Use `verilog-preserve-modi-cache' to set it.")
 (defvar verilog-modi-cache-current-max nil
   "Current endmodule point for `verilog-modi-cache-current', if any.")
 
+(defsubst verilog-modi-name (modi)
+  (aref modi 0))
+(defsubst verilog-modi-file-or-buffer (modi)
+  (aref modi 1))
+(defsubst verilog-modi-point (modi)
+  (aref modi 2))
+
 (defun verilog-modi-current ()
   "Return the modi structure for the module currently at point, possibly cached."
   (cond ((and verilog-modi-cache-current
@@ -8417,13 +8424,6 @@ Return modi if successful, else print message unless IGNORE-ERROR is true."
 	       (setq verilog-modi-lookup-last-current current
 		     verilog-modi-lookup-last-tick (buffer-chars-modified-tick)))))
     modi))
-
-(defsubst verilog-modi-name (modi)
-  (aref modi 0))
-(defsubst verilog-modi-file-or-buffer (modi)
-  (aref modi 1))
-(defsubst verilog-modi-point (modi)
-  (aref modi 2))
 
 (defun verilog-modi-filename (modi)
   "Filename of MODI, or name of buffer if it's never been saved."
