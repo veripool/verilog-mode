@@ -1575,11 +1575,13 @@ find the errors."
 (if (featurep 'emacs) (add-hook 'compilation-mode-hook 'verilog-error-regexp-add-emacs))
 
 (defconst verilog-directive-re
-  ;; "`case" "`default" "`define" "`define" "`else" "`elsif" "`endfor" "`endif"
-  ;; "`endprotect" "`endswitch" "`endwhile" "`for" "`format" "`if" "`ifdef"
-  ;; "`ifndef" "`include" "`let" "`protect" "`switch" "`timescale"
-  ;; "`time_scale" "`undef" "`while"
-  "\\<`\\(case\\|def\\(ault\\|ine\\(\\)?\\)\\|e\\(lse\\|nd\\(for\\|if\\|protect\\|switch\\|while\\)\\)\\|for\\(mat\\)?\\|i\\(f\\(def\\|ndef\\)?\\|nclude\\)\\|\\(elsif\\)?\\|let\\|protect\\|switch\\|time\\(_scale\\|scale\\)\\|undef\\|while\\)\\>")
+  (eval-when-compile
+    (verilog-regexp-words
+     '(
+   "`case" "`default" "`define" "`else" "`elsif" "`endfor" "`endif"
+   "`endprotect" "`endswitch" "`endwhile" "`for" "`format" "`if" "`ifdef"
+   "`ifndef" "`include" "`let" "`protect" "`switch" "`timescale"
+   "`time_scale" "`undef" "`while" ))))
 
 (defconst verilog-directive-re-1
   (concat "[ \t]*"  verilog-directive-re))
@@ -2191,7 +2193,7 @@ find the errors."
 (defconst verilog-fork-wait-re "fork\\s-+wait\\>")
 (defconst verilog-extended-case-re "\\(unique\\s-+\\|priority\\s-+\\)?case[xz]?")
 (defconst verilog-extended-complete-re
-  (concat "\\(\\<extern\\s-+\\|\\<virtual\\s-+\\|\\<protected\\s-+\\)*\\(\\<function\\>\\|\\<task\\>\\)"
+  (concat "\\(\\<extern\\s-+\\|\\<\\(\\<pure\\>\\s-+\\)?virtual\\s-+\\|\\<protected\\s-+\\)*\\(\\<function\\>\\|\\<task\\>\\)"
 	  "\\|\\(\\<typedef\\>\\s-+\\)*\\(\\<struct\\>\\|\\<union\\>\\|\\<class\\>\\)"
 	  "\\|\\(\\<import\\>\\s-+\\)?\"DPI-C\"\\s-+\\(function\\>\\|task\\>\\)"
 	  "\\|" verilog-extended-case-re ))
@@ -3558,34 +3560,43 @@ With ARG, first kill any existing labels."
 	;; or the token before us unambiguously ends a statement,
 	;; then move back a token and test again.
 	(not (or
-	      (bolp) ; stop if beginning of buffer
-	      (= (preceding-char) ?\;) ; stop if we find a ;
+          ;; stop if beginning of buffer
+	      (bolp)
+          ;; stop if we find a ;
+	      (= (preceding-char) ?\;) 
+          ;; stop if we see a named coverpoint
 	      (looking-at "\\w+\\W*:\\W*\\(coverpoint\\|cross\\|constraint\\)")
-	      (not (or
-		    (looking-at "\\<")
-		    (forward-word -1)))
+          ;; keep going if we are in the middle of a word
+	      (not (or (looking-at "\\<") (forward-word -1)))
+          ;; stop if we see an assertion (perhaps labled)
 	      (and
 	       (looking-at "\\(\\<\\(assert\\|assume\\|cover\\)\\>\\s-+\\<property\\>\\)\\|\\(\\<assert\\>\\)")
 	       (progn
-		 (setq h (point))
-		 (save-excursion
-		   (verilog-backward-token)
-		   (if (looking-at verilog-label-re)
-		       (setq h (point))))
-		 (goto-char h)))
+             (setq h (point))
+             (save-excursion
+               (verilog-backward-token)
+               (if (looking-at verilog-label-re)
+                   (setq h (point))))
+             (goto-char h)))
+          ;; stop if we see a complete reg, perhaps an extended one
 	      (and
-	       (looking-at verilog-complete-reg)
-	       (not (save-excursion
-		      (verilog-backward-token)
-		      (looking-at verilog-extended-complete-re))))
+           (looking-at verilog-complete-reg)
+           (let* ((p (point)))
+             (while (and (looking-at verilog-extended-complete-re)
+                         (progn (setq p (point))
+                                (verilog-backward-token)
+                                (/= p (point)))))
+             (goto-char p)))
+          ;; stop if we see a complete reg (previous found extended ones)
 	      (looking-at verilog-basic-complete-re)
+          ;; stop if previous token is an ender
 	      (save-excursion
-		(verilog-backward-token)
-		(or
-		 (looking-at verilog-end-block-re)
-		 (looking-at verilog-preprocessor-re)))))
-      (verilog-backward-syntactic-ws)
-      (verilog-backward-token))
+            (verilog-backward-token)
+            (or
+             (looking-at verilog-end-block-re)
+             (looking-at verilog-preprocessor-re))))) ;; end of test
+    (verilog-backward-syntactic-ws)
+    (verilog-backward-token))
     ;; Now point is where the previous line ended.
     (verilog-forward-syntactic-ws)))
 
