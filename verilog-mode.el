@@ -2613,10 +2613,11 @@ This requires that insertions must use `verilog-insert'."
   ;; If the buffer is out of date, trash it, as we'll not check later the tick
   ;; Note this must work properly if there's multiple layers of calls
   ;; to verilog-save-scan-cache even with differing ticks.
-  (unless (verilog-scan-cache-ok-p)  ;; Must be before let
-    (setq verilog-scan-cache-tick nil))
-  `(let* ((verilog-scan-cache-preserving (current-buffer)))
-     (progn ,@body)))
+  `(progn
+     (unless (verilog-scan-cache-ok-p)  ;; Must be before let
+       (setq verilog-scan-cache-tick nil))
+     (let* ((verilog-scan-cache-preserving (current-buffer)))
+       (progn ,@body))))
 
 (defun verilog-scan-region (beg end)
   "Parse comments between BEG and END for `verilog-inside-comment-p'.
