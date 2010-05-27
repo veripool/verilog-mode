@@ -11630,58 +11630,59 @@ Clicking on the middle-mouse button loads them in a buffer (as in dired)."
   (when (or verilog-highlight-includes
 	    verilog-highlight-modules)
     (save-excursion
-      (verilog-save-buffer-state
-       (verilog-save-scan-cache
-	(let (end-point)
-	  (goto-char end)
-	  (setq end-point (verilog-get-end-of-line))
-	  (goto-char beg)
-	  (beginning-of-line)  ; scan entire line
-	  ;; delete overlays existing on this line
-	  (let ((overlays (overlays-in (point) end-point)))
-	    (while overlays
-	      (if (and
-		   (overlay-get (car overlays) 'detachable)
-		   (or (overlay-get (car overlays) 'verilog-include-file)
-		       (overlay-get (car overlays) 'verilog-inst-module)))
-		  (delete-overlay (car overlays)))
-	      (setq overlays (cdr overlays))))
-	  ;;
-	  ;; make new include overlays
-	  (when verilog-highlight-includes
-	    (while (search-forward-regexp verilog-include-file-regexp end-point t)
-	      (goto-char (match-beginning 1))
-	      (let ((ov (make-overlay (match-beginning 1) (match-end 1))))
-		(overlay-put ov 'start-closed 't)
-		(overlay-put ov 'end-closed 't)
-		(overlay-put ov 'evaporate 't)
-		(overlay-put ov 'verilog-include-file 't)
-		(overlay-put ov 'mouse-face 'highlight)
-		(overlay-put ov 'local-map verilog-mode-mouse-map))))
-	  ;;
-	  ;; make new module overlays
-	  (goto-char beg)
-	  ;; This scanner is syntax-fragile, so don't get bent
-	  (when verilog-highlight-modules
-	    (condition-case nil
-		(while (verilog-re-search-forward "\\(/\\*AUTOINST\\*/\\|\\.\\*\\)" end-point t)
-		  (save-excursion
-		    (goto-char (match-beginning 0))
-		    (unless (verilog-inside-comment-p)
-		      (verilog-read-inst-module-matcher)   ;; sets match 0
-		      (let* ((ov (make-overlay (match-beginning 0) (match-end 0))))
-			(overlay-put ov 'start-closed 't)
-			(overlay-put ov 'end-closed 't)
-			(overlay-put ov 'evaporate 't)
-			(overlay-put ov 'verilog-inst-module 't)
-			(overlay-put ov 'mouse-face 'highlight)
-			(overlay-put ov 'local-map verilog-mode-mouse-map)))))
-	      (error nil)))
-	  ;;
-	  ;; Future highlights:
-	  ;;  variables - make an Occur buffer of where referenced
-	  ;;  pins - make an Occur buffer of the sig in the declaration module
-	  ))))))
+      (save-match-data  ;; A query-replace may call this function - do not disturb
+	(verilog-save-buffer-state
+	 (verilog-save-scan-cache
+	  (let (end-point)
+	    (goto-char end)
+	    (setq end-point (verilog-get-end-of-line))
+	    (goto-char beg)
+	    (beginning-of-line)  ; scan entire line
+	    ;; delete overlays existing on this line
+	    (let ((overlays (overlays-in (point) end-point)))
+	      (while overlays
+		(if (and
+		     (overlay-get (car overlays) 'detachable)
+		     (or (overlay-get (car overlays) 'verilog-include-file)
+			 (overlay-get (car overlays) 'verilog-inst-module)))
+		    (delete-overlay (car overlays)))
+		(setq overlays (cdr overlays))))
+	    ;;
+	    ;; make new include overlays
+	    (when verilog-highlight-includes
+	      (while (search-forward-regexp verilog-include-file-regexp end-point t)
+		(goto-char (match-beginning 1))
+		(let ((ov (make-overlay (match-beginning 1) (match-end 1))))
+		  (overlay-put ov 'start-closed 't)
+		  (overlay-put ov 'end-closed 't)
+		  (overlay-put ov 'evaporate 't)
+		  (overlay-put ov 'verilog-include-file 't)
+		  (overlay-put ov 'mouse-face 'highlight)
+		  (overlay-put ov 'local-map verilog-mode-mouse-map))))
+	    ;;
+	    ;; make new module overlays
+	    (goto-char beg)
+	    ;; This scanner is syntax-fragile, so don't get bent
+	    (when verilog-highlight-modules
+	      (condition-case nil
+		  (while (verilog-re-search-forward "\\(/\\*AUTOINST\\*/\\|\\.\\*\\)" end-point t)
+		    (save-excursion
+		      (goto-char (match-beginning 0))
+		      (unless (verilog-inside-comment-p)
+			(verilog-read-inst-module-matcher)   ;; sets match 0
+			(let* ((ov (make-overlay (match-beginning 0) (match-end 0))))
+			  (overlay-put ov 'start-closed 't)
+			  (overlay-put ov 'end-closed 't)
+			  (overlay-put ov 'evaporate 't)
+			  (overlay-put ov 'verilog-inst-module 't)
+			  (overlay-put ov 'mouse-face 'highlight)
+			  (overlay-put ov 'local-map verilog-mode-mouse-map)))))
+		(error nil)))
+	    ;;
+	    ;; Future highlights:
+	    ;;  variables - make an Occur buffer of where referenced
+	    ;;  pins - make an Occur buffer of the sig in the declaration module
+	    )))))))
 
 (defun verilog-highlight-buffer ()
   "Colorize included files and modules across the whole buffer."
