@@ -399,11 +399,24 @@ you to the next lint error."
   :group 'verilog-mode-actions)
 ;; We don't mark it safe, as it's used as a shell command
 
+(defcustom verilog-preprocessor
+  ;; Very few tools give preprocessed output, so we'll default to Verilog-Perl
+  "vppreproc __FLAGS__ __FILE__"
+  "*Program and arguments to use to preprocess Verilog source.
+This is invoked with `verilog-preprocess', and depending on the
+`verilog-set-compile-command', may also be invoked when you type
+\\[compile].  When the compile completes, \\[next-error] will
+take you to the next lint error."
+  :type 'string
+  :group 'verilog-mode-actions)
+;; We don't mark it safe, as it's used as a shell command
+
 (defvar verilog-tool 'verilog-linter
   "Which tool to use for building compiler-command.
-Either nil, `verilog-linter, `verilog-coverage, `verilog-simulator, or
-`verilog-compiler.  Alternatively use the \"Choose Compilation Action\"
-menu.  See `verilog-set-compile-command' for more information.")
+Either nil, `verilog-linter, `verilog-compiler,
+`verilog-coverage, `verilog-preprocessor, or `verilog-simulator.
+Alternatively use the \"Choose Compilation Action\" menu.  See
+`verilog-set-compile-command' for more information.")
 
 (defcustom verilog-highlight-translate-off nil
   "*Non-nil means background-highlight code excluded from translation.
@@ -1103,6 +1116,7 @@ If set will become buffer local.")
     (define-key map "\C-c\C-k" 'verilog-delete-auto)
     (define-key map "\C-c\C-a" 'verilog-auto)
     (define-key map "\C-c\C-s" 'verilog-auto-save-compile)
+    (define-key map "\C-c\C-p" 'verilog-preprocess)
     (define-key map "\C-c\C-z" 'verilog-inject-auto)
     (define-key map "\C-c\C-e" 'verilog-expand-vector)
     (define-key map "\C-c\C-h" 'verilog-header)
@@ -1150,6 +1164,13 @@ If set will become buffer local.")
        :style radio
        :selected (equal verilog-tool `verilog-compiler)
        :help "When invoking compilation, compile Verilog source"]
+      ["Preprocessor"
+       (progn
+	 (setq verilog-tool 'verilog-preprocessor)
+	 (verilog-set-compile-command))
+       :style radio
+       :selected (equal verilog-tool `verilog-preprocessor)
+       :help "When invoking compilation, preprocess Verilog source, see also `verilog-preprocess'"]
       )
      ("Move"
       ["Beginning of function"		verilog-beg-of-defun
@@ -1481,10 +1502,11 @@ This reads `verilog-tool' and sets `compile-command'.  This specifies the
 program that executes when you type \\[compile] or
 \\[verilog-auto-save-compile].
 
-By default `verilog-tool' uses a Makefile if one exists in the current
-directory.  If not, it is set to the `verilog-linter', `verilog-coverage',
-`verilog-simulator', or `verilog-compiler' variables, as selected with the
-Verilog -> \"Choose Compilation Action\" menu.
+By default `verilog-tool' uses a Makefile if one exists in the
+current directory.  If not, it is set to the `verilog-linter',
+`verilog-compiler', `verilog-coverage', `verilog-preprocessor',
+or `verilog-simulator' variables, as selected with the Verilog ->
+\"Choose Compilation Action\" menu.
 
 You should set `verilog-tool' or the other variables to the path and
 arguments for your Verilog simulator.  For example:
@@ -1495,6 +1517,9 @@ or a string like:
 In the former case, the path to the current buffer is concat'ed to the
 value of `verilog-tool'; in the later, the path to the current buffer is
 substituted for the %s.
+
+Where __FLAGS__ appears in the string `verilog-current-flags'
+will be substituted.
 
 Where __FILE__ appears in the string, the variable
 `buffer-file-name' of the current buffer, without the directory
@@ -1515,18 +1540,27 @@ portion, will be substituted."
 	    ""))))
   (verilog-modify-compile-command))
 
+(defun verilog-expand-command (command)
+  "Replace meta-information in COMMAND and return it.
+Where __FLAGS__ appears in the string `verilog-current-flags'
+will be substituted.  Where __FILE__ appears in the string, the
+current buffer's file-name, without the directory portion, will
+be substituted."
+  (setq command	(verilog-string-replace-matches
+		 "\\b__FLAGS__\\b" (verilog-current-flags)
+		 t t command))
+  (setq command	(verilog-string-replace-matches
+		 "\\b__FILE__\\b" (file-name-nondirectory (buffer-file-name))
+		 t t command))
+  command)
+
 (defun verilog-modify-compile-command ()
-  "Replace meta-information in `compile-command'.
-Where __FILE__ appears in the string, the current buffer's file-name,
-without the directory portion, will be substituted."
+  "Update `compile-command' using `verilog-expand-command'."
   (when (and
 	 (stringp compile-command)
-	 (string-match "\\b__FILE__\\b" compile-command))
+	 (string-match "\\b\\(__FLAGS__\\|__FILE__\\)\\b" compile-command))
     (make-local-variable 'compile-command)
-    (setq compile-command
-	  (verilog-string-replace-matches
-	   "\\b__FILE__\\b" (file-name-nondirectory (buffer-file-name))
-	   t t compile-command))))
+    (setq compile-command (verilog-expand-command compile-command))))
 
 (if (featurep 'xemacs)
     ;; Following code only gets called from compilation-mode-hook on XEmacs to add error handling.
@@ -4494,6 +4528,24 @@ becomes:
   (save-buffer)
   (compile compile-command))
 
+(defun verilog-preprocess (&optional filename command)
+  "Preprocess the buffer, similar to `compile', but leave output in Verilog-Mode.
+Takes optional FILENAME or use `buffer-file-name` and optional
+COMMAND or defaults to `verilog-preprocessor'."
+  (interactive)
+  (setq command (or command
+		    (verilog-expand-command verilog-preprocessor))
+	filename (or filename buffer-file-name ""))
+  (let* ((dir (file-name-directory filename))
+	 (file (file-name-nondirectory filename))
+	 (cmd (concat "cd " dir "; " command " " file)))
+    (with-output-to-temp-buffer "*Verilog-Preprocessed*"
+      (save-excursion
+	(set-buffer "*Verilog-Preprocessed*")
+	(insert (concat "// " cmd "\n"))
+	(shell-command cmd "*Verilog-Preprocessed*")
+	(verilog-mode)
+	(font-lock-mode)))))
 
 
 ;;
@@ -8079,6 +8131,20 @@ unless it is already a member of the variable's list."
     (set varref (append (symbol-value varref) (list object))))
   varref)
 ;;(progn (setq l '()) (verilog-add-list-unique `l "a") (verilog-add-list-unique `l "a") l)
+
+(defun verilog-current-flags ()
+  "Convert `verilog-library-flags' and similar variables to command line.
+Used for __FLAGS__ in `verilog-expand-command'." 
+  (let ((cmd (mapconcat `concat verilog-library-flags " ")))
+    (when (equal cmd "")
+      (setq cmd (concat
+		 "+libext+" (mapconcat `concat verilog-library-extensions "+")
+		 (mapconcat (lambda (i) (concat " -y " i " +incdir+" i))
+			    verilog-library-directories "")
+		 (mapconcat (lambda (i) (concat " -v " i))
+			    verilog-library-files ""))))
+    cmd))
+;;(verilog-current-flags)
 
 
 ;;
@@ -11819,6 +11885,7 @@ Files are checked based on `verilog-library-flags'."
        verilog-linter
        verilog-minimum-comment-distance
        verilog-mode-hook
+       verilog-preprocessor
        verilog-simulator
        verilog-tab-always-indent
        verilog-tab-to-comment
