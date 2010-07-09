@@ -185,6 +185,7 @@
   (require `compile)
   (setq running-on-xemacs (string-match "XEmacs" emacs-version))
   (setq make-backup-files nil)
+  (setq ask-user-about-lock t)
   (setq-default make-backup-files nil)
   (setq diff-flags (if (getenv "VERILOG_MODE_NO_INDENTS") "-wBc" "-c"))
   ;;(setq verilog-auto-lineup 'all)

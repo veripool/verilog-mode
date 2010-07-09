@@ -411,6 +411,9 @@ take you to the next lint error."
   :group 'verilog-mode-actions)
 ;; We don't mark it safe, as it's used as a shell command
 
+(defvar verilog-preprocess-history nil
+  "History for `verilog-preprocess'.")
+
 (defvar verilog-tool 'verilog-linter
   "Which tool to use for building compiler-command.
 Either nil, `verilog-linter, `verilog-compiler,
@@ -1547,10 +1550,12 @@ will be substituted.  Where __FILE__ appears in the string, the
 current buffer's file-name, without the directory portion, will
 be substituted."
   (setq command	(verilog-string-replace-matches
+		 ;; Note \\b only works if under verilog syntax table
 		 "\\b__FLAGS__\\b" (verilog-current-flags)
 		 t t command))
   (setq command	(verilog-string-replace-matches
-		 "\\b__FILE__\\b" (file-name-nondirectory (buffer-file-name))
+		 "\\b__FILE__\\b" (file-name-nondirectory
+				   (or (buffer-file-name) ""))
 		 t t command))
   command)
 
@@ -4528,16 +4533,20 @@ becomes:
   (save-buffer)
   (compile compile-command))
 
-(defun verilog-preprocess (&optional filename command)
+(defun verilog-preprocess (&optional command filename)
   "Preprocess the buffer, similar to `compile', but leave output in Verilog-Mode.
-Takes optional FILENAME or use `buffer-file-name` and optional
-COMMAND or defaults to `verilog-preprocessor'."
-  (interactive)
-  (setq command (or command
-		    (verilog-expand-command verilog-preprocessor))
-	filename (or filename buffer-file-name ""))
-  (let* ((dir (file-name-directory filename))
-	 (file (file-name-nondirectory filename))
+Takes optional COMMAND or defaults to `verilog-preprocessor', and
+FILENAME or defaults to `buffer-file-name`."
+  (interactive
+   (list
+    (let ((default (verilog-expand-command verilog-preprocessor)))
+      (set (make-local-variable `verilog-preprocessor)
+	   (read-from-minibuffer "Run Preprocessor (like this): "
+				 default nil nil
+				 'verilog-preprocess-history default)))))
+  (unless command (setq command (verilog-expand-command verilog-preprocessor)))
+  (let* ((dir (file-name-directory (or filename buffer-file-name)))
+	 (file (file-name-nondirectory (or filename buffer-file-name)))
 	 (cmd (concat "cd " dir "; " command " " file)))
     (with-output-to-temp-buffer "*Verilog-Preprocessed*"
       (save-excursion
