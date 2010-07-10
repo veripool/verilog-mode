@@ -733,9 +733,9 @@ See `compilation-error-regexp-alist' for the formatting.  For Emacs 22+.")
   ;; Emacs form is '((v-tool "re" 1 2) ...)
   ;; XEmacs form is '(verilog ("re" 1 2) ...)
   ;; So we can just map from Emacs to Xemacs
-  (list 'verilog (mapcar 'cdr verilog-error-regexp-emacs-alist))
+  (cons 'verilog (mapcar 'cdr verilog-error-regexp-emacs-alist))
   "List of regexps for Verilog compilers.
-See `compilation-error-regexp-alist' for the formatting.  For XEmacs.")
+See `compilation-error-regexp-alist-alist' for the formatting.  For XEmacs.")
 
 (defvar verilog-error-font-lock-keywords
   '(
