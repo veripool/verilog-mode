@@ -1,6 +1,7 @@
 module autotieoff_signed (/*AUTOARG*/
                           // Outputs
                           an_output2, an_outputpre, another_output, another_output2, ExtraOut, SubOut, active_low_l,
+                          ignored_by_regexp,
                           // Inputs
                           ExtraIn, SubIn
                           );
@@ -10,6 +11,7 @@ module autotieoff_signed (/*AUTOARG*/
    output [2:0]        ExtraOut;
    output [2:0]        SubOut;
    output [3:0]        active_low_l;
+   output [3:0]        ignored_by_regexp;
    
    /*AUTOINOUTMODULE("autoinst_signed")*/
    // Beginning of automatic in/out/inouts (from specific module)
@@ -25,6 +27,9 @@ module autotieoff_signed (/*AUTOARG*/
    
    /*AUTOWIRE*/
    /*AUTOREG*/
+   // Beginning of automatic regs (for this module's undeclared outputs)
+   reg [3:0]           ignored_by_regexp;
+   // End of automatics
    
    // =============================
    // Tieoffs
@@ -70,4 +75,5 @@ endmodule
 
 // Local Variables:
 // verilog-active-low-regexp: "_l$"
+// verilog-auto-tieoff-ignore-regexp: "ignored"
 // End:

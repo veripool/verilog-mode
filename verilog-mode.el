@@ -1010,6 +1010,13 @@ See the \\[verilog-faq] for examples on using this."
   :type 'string)
 (put 'verilog-auto-output-ignore-regexp 'safe-local-variable 'stringp)
 
+(defcustom verilog-auto-tieoff-ignore-regexp nil
+  "*If set, when creating AUTOTIEOFF list, ignore signals matching this regexp.
+See the \\[verilog-faq] for examples on using this."
+  :group 'verilog-mode-auto
+  :type 'string)
+(put 'verilog-auto-tieoff-ignore-regexp 'safe-local-variable 'stringp)
+
 (defcustom verilog-auto-unused-ignore-regexp nil
   "*If set, when creating AUTOUNUSED list, ignore signals matching this regexp.
 See the \\[verilog-faq] for examples on using this."
@@ -10821,6 +10828,9 @@ AUTORESET ties signals to deasserted, which is presumed to be zero.
 Signals that match `verilog-active-low-regexp' will be deasserted by tieing
 them to a one.
 
+You can add signals you do not want included in AUTOTIEOFF with
+`verilog-auto-tieoff-ignore-regexp'.
+
 An example of making a stub for another module:
 
     module ExampStub (/*AUTOINST*/);
@@ -10863,6 +10873,8 @@ Typing \\[verilog-auto] will make this into:
 			      (verilog-decls-get-gparams moddecls)
 			      (verilog-subdecls-get-outputs modsubdecls)
 			      (verilog-subdecls-get-inouts modsubdecls)))))
+      (setq sig-list (verilog-signals-not-matching-regexp
+		      sig-list verilog-auto-tieoff-ignore-regexp))
       (when sig-list
 	(forward-line 1)
 	(verilog-insert-indent "// Beginning of automatic tieoffs (for this module's unterminated outputs)\n")

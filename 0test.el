@@ -2,8 +2,8 @@
 ;;
 ;;   VERILOG_MODE_DEBUG=1	       # Enable verilog-debug
 ;;   VERILOG_MODE_NO_INDENTS=1         # Disable indent checks
-;;   VERILOG_MODE_TEST_FILE=filename   # Run only specified test
-;;   VERILOG_MODE_START_FILE=filename  # Start at specified test
+;;   VERILOG_MODE_TEST_FILE=tests_ok/filename.v   # Run only specified test
+;;   VERILOG_MODE_START_FILE=tests_ok/filename.v  # Start at specified test
 ;;   VERILOG_MODE_THREAD=#of#          # Multithreaded testing
 ;;   VERILOG_MODE_PROFILE=1            # Profile - see batch_prof.el
 
