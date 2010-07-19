@@ -6578,7 +6578,7 @@ VERILOG-STR is an exact match, nil otherwise."
       (verilog-completion-response))))
 
 (defun verilog-goto-defun ()
-  "Move to specified Verilog module/task/function.
+  "Move to specified Verilog module/interface/task/function.
 The default is a name found in the buffer around point.
 If search fails, other files are checked based on
 `verilog-library-flags'."
@@ -7270,9 +7270,18 @@ Return a array of [outputs inouts inputs wire reg assign const]."
   (defvar sigs-intf))
 
 
+(defsubst verilog-modi-new (name fob pt type)
+  (vector name fob pt type))
+(defsubst verilog-modi-name (modi)
+  (aref modi 0))
+(defsubst verilog-modi-file-or-buffer (modi)
+  (aref modi 1))
+(defsubst verilog-modi-get-point (modi)
+  (aref modi 2))
+(defsubst verilog-modi-get-type (modi) ;; "module" or "interface" 
+  (aref modi 3))
 (defsubst verilog-modi-get-decls (modi)
   (verilog-modi-cache-results modi 'verilog-read-decls))
-
 (defsubst verilog-modi-get-sub-decls (modi)
   (verilog-modi-cache-results modi 'verilog-read-sub-decls))
 
@@ -7941,7 +7950,8 @@ warning message, you need to add to your .emacs file:
       (when recurse
 	(goto-char (point-min))
 	(while (re-search-forward "^\\s-*`include\\s-+\\([^ \t\n\f]+\\)" nil t)
-	  (let ((inc (verilog-string-replace-matches "\"" "" nil nil (match-string-no-properties 1))))
+	  (let ((inc (verilog-string-replace-matches
+		      "\"" "" nil nil (match-string-no-properties 1))))
 	    (unless (verilog-inside-comment-p)
 	      (verilog-read-defines inc recurse t)))))
       ;; Read `defines
@@ -7964,7 +7974,8 @@ warning message, you need to add to your .emacs file:
 	      (setq enumname (match-string-no-properties 1)))
 	  (forward-comment 999)
 	  (while (looking-at "\\s-*,?\\s-*\\([a-zA-Z0-9_$]+\\)\\s-*=\\s-*\\([^;,]*\\),?\\s-*")
-	    (verilog-set-define (match-string-no-properties 1) (match-string-no-properties 2) origbuf enumname)
+	    (verilog-set-define (match-string-no-properties 1)
+				(match-string-no-properties 2) origbuf enumname)
 	    (goto-char (match-end 0))
 	    (forward-comment 999)))))))
 
@@ -8231,23 +8242,24 @@ Like `file-exists-p' but results are cached if inside
 ;;
 
 (defun verilog-module-inside-filename-p (module filename)
-  "Return point if MODULE is specified inside FILENAME, else nil.
+  "Return modi if MODULE is specified inside FILENAME, else nil.
 Allows version control to check out the file if need be."
   (and (or (file-exists-p filename)
 	   (and (fboundp 'vc-backend)
 		(vc-backend filename)))
-       (let (pt)
+       (let (modi type)
 	 (with-current-buffer (find-file-noselect filename)
 	   (save-excursion
 	     (goto-char (point-min))
 	     (while (and
 		     ;; It may be tempting to look for verilog-defun-re,
 		     ;; don't, it slows things down a lot!
-		     (verilog-re-search-forward-quick "\\<module\\>" nil t)
+		     (verilog-re-search-forward-quick "\\<\\(module\\|interface\\)\\>" nil t)
+		     (setq type (match-string-no-properties 0))
 		     (verilog-re-search-forward-quick "[(;]" nil t))
 	       (if (equal module (verilog-read-module-name))
-		   (setq pt (point))))
-	     pt)))))
+		   (setq modi (verilog-modi-new module filename (point) type))))
+	     modi)))))
 
 (defun verilog-is-number (symbol)
   "Return true if SYMBOL is number-like."
@@ -8428,17 +8440,10 @@ Use `verilog-preserve-modi-cache' to set it.")
 (defvar verilog-modi-cache-current-max nil
   "Current endmodule point for `verilog-modi-cache-current', if any.")
 
-(defsubst verilog-modi-name (modi)
-  (aref modi 0))
-(defsubst verilog-modi-file-or-buffer (modi)
-  (aref modi 1))
-(defsubst verilog-modi-point (modi)
-  (aref modi 2))
-
 (defun verilog-modi-current ()
   "Return the modi structure for the module currently at point, possibly cached."
   (cond ((and verilog-modi-cache-current
-	      (>= (point) (verilog-modi-point verilog-modi-cache-current))
+	      (>= (point) (verilog-modi-get-point verilog-modi-cache-current))
 	      (<= (point) verilog-modi-cache-current-max))
 	 ;; Slow assertion, for debugging the cache:
 	 ;;(or (equal verilog-modi-cache-current (verilog-modi-current-get)) (debug))
@@ -8457,15 +8462,16 @@ Use `verilog-preserve-modi-cache' to set it.")
 
 (defun verilog-modi-current-get ()
   "Return the modi structure for the module currently at point."
-  (let* (name pt)
+  (let* (name type pt)
     ;; read current module's name
     (save-excursion
       (verilog-re-search-backward-quick verilog-defun-re nil nil)
+      (setq type (match-string-no-properties 0))
       (verilog-re-search-forward-quick "(" nil nil)
       (setq name (verilog-read-module-name))
       (setq pt (point)))
-    ;; return
-    (vector name (or (buffer-file-name) (current-buffer)) pt)))
+    ;; return modi - note this vector built two places
+    (verilog-modi-new name (or (buffer-file-name) (current-buffer)) pt type)))
 
 (defvar verilog-modi-lookup-cache nil "Hash of (modulename modi).")
 (make-variable-buffer-local 'verilog-modi-lookup-cache)
@@ -8494,11 +8500,12 @@ Return modi if successful, else print message unless IGNORE-ERROR is true."
 	  (t (let* ((realmod (verilog-symbol-detick module t))
 		    (orig-filenames (verilog-module-filenames realmod current))
 		    (filenames orig-filenames)
-		    pt)
-	       (while (and filenames (not pt))
-		 (if (not (setq pt (verilog-module-inside-filename-p realmod (car filenames))))
+		    mif)
+	       (while (and filenames (not mif))
+		 (if (not (setq mif (verilog-module-inside-filename-p realmod (car filenames))))
 		     (setq filenames (cdr filenames))))
-	       (cond (pt (setq modi (vector realmod (car filenames) pt)))
+	       ;; mif has correct form to become later elements of modi
+	       (cond (mif (setq modi mif))
 		     (t (setq modi nil)
 			(or ignore-error
 			    (error (concat (verilog-point-text)
@@ -8533,7 +8540,7 @@ Return modi if successful, else print message unless IGNORE-ERROR is true."
 		(find-file-noselect (verilog-modi-file-or-buffer modi))))
   (or (equal major-mode `verilog-mode)	;; Put into Verilog mode to get syntax
       (verilog-mode))
-  (goto-char (verilog-modi-point modi)))
+  (goto-char (verilog-modi-get-point modi)))
 
 (defun verilog-goto-defun-file (module)
   "Move point to the file at which a given MODULE is defined."
