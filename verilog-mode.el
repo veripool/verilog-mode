@@ -5918,7 +5918,7 @@ Be verbose about progress unless optional QUIET set."
 
 (defun verilog-pretty-expr (&optional quiet myre)
   "Line up expressions around point, optionally QUIET with regexp MYRE."
-  (interactive "sRegular Expression: ((<|:)?=) ")
+  (interactive "i\nsRegular Expression: ((<|:)?=) ")
   (save-excursion
     (if (or (eq myre nil)
 	    (string-equal myre ""))
@@ -10389,6 +10389,7 @@ Take input/output/inout statements from the specified module and insert
 into the current module.  This is useful for making null templates and
 shell modules which need to have identical I/O with another module.
 Any I/O which are already defined in this module will not be redefined.
+For the complement of this function, see `verilog-auto-inout-comp'.
 
 Limitations:
   If placed inside the parenthesis of a module declaration, it creates
