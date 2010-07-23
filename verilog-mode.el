@@ -10508,7 +10508,8 @@ insert the inverse into the current module (inputs become outputs
 and vice-versa.)  This is useful for making test and stimulus
 modules which need to have complementing I/O with another module.
 Any I/O which are already defined in this module will not be
-redefined.
+redefined.  For the complement of this function, see
+`verilog-auto-inout-module'.
 
 Limitations:
   If placed inside the parenthesis of a module declaration, it creates
