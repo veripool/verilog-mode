@@ -7117,6 +7117,7 @@ Optional NUM-PARAM and MAX-PARAM check for a specific number of parameters."
 Return a array of [outputs inouts inputs wire reg assign const]."
   (let ((end-mod-point (or (verilog-get-end-of-defun t) (point-max)))
 	(functask 0) (paren 0) (sig-paren 0) (v2kargs-ok t)
+	in-modport
 	sigs-in sigs-out sigs-inout sigs-wire sigs-reg sigs-assign sigs-const
 	sigs-gparam sigs-intf
 	vec expect-signal keywd newsig rvalue enum io signed typedefed multidim
@@ -7147,7 +7148,7 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 	      (error "%s: Unmatched quotes, at char %d" (verilog-point-text) (point))))
 	 ((eq ?\; (following-char))
 	  (setq vec nil  io nil  expect-signal nil  newsig nil  paren 0  rvalue nil
-		v2kargs-ok nil)
+		v2kargs-ok nil  in-modport nil)
 	  (forward-char 1))
 	 ((eq ?= (following-char))
 	  (setq rvalue t  newsig nil)
@@ -7223,6 +7224,8 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 		((member keywd '("endclass" "endclocking" "endgroup" "endfunction"
 				 "endproperty" "endsequence" "endtask"))
 		 (setq functask (1- functask)))
+		((equal keywd "modport")
+		 (setq in-modport t))
 		;; Ifdef?  Ignore name of define
 		((member keywd '("`ifdef" "`ifndef"))
 		 (setq rvalue t))
@@ -7239,8 +7242,9 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 		       expect-signal 'sigs-intf  io t  modport (match-string 2)))
 		;; New signal, maybe?
 		((and expect-signal
-		      (eq functask 0)
 		      (not rvalue)
+		      (eq functask 0)
+		      (not in-modport)
 		      (not (member keywd verilog-keywords)))
 		 ;; Add new signal to expect-signal's variable
 		 (setq newsig (list keywd vec nil nil enum signed typedefed multidim modport))
@@ -7267,7 +7271,8 @@ Return a array of [outputs inouts inputs wire reg assign const]."
   (defvar sigs-in)
   (defvar sigs-inout)
   (defvar sigs-out)
-  (defvar sigs-intf))
+  (defvar sigs-intf)
+  (defvar sigs-intfd))
 
 
 (defsubst verilog-modi-new (name fob pt type)
@@ -7307,6 +7312,9 @@ Return a array of [outputs inouts inputs wire reg assign const]."
   (aref decls 7))
 (defsubst verilog-decls-get-interfaces (decls)
   (aref decls 8))
+
+(defsubst verilog-subdecls-new (out inout in intf intfd)
+  (vector out inout in intf intfd))
 (defsubst verilog-subdecls-get-outputs (subdecls)
   (aref subdecls 0))
 (defsubst verilog-subdecls-get-inouts (subdecls)
@@ -7315,7 +7323,11 @@ Return a array of [outputs inouts inputs wire reg assign const]."
   (aref subdecls 2))
 (defsubst verilog-subdecls-get-interfaces (subdecls)
   (aref subdecls 3))
+(defsubst verilog-subdecls-get-interfaced (subdecls)
+  (aref subdecls 4))
 
+(defvar verilog-read-sub-decls-in-interfaced nil
+  "For `verilog-read-sub-decls', process next signal as under interfaced block.")
 
 (defun verilog-read-sub-decls-sig (submoddecls comment port sig vec multidim)
   "For `verilog-read-sub-decls-line', add a signal."
@@ -7359,6 +7371,17 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 			   sigs-in)))
 	      ((setq portdata (assoc port (verilog-decls-get-interfaces submoddecls)))
 	       (setq sigs-intf
+		     (cons (list sig
+				 (if dotname (verilog-sig-bits portdata) vec)
+				 (concat "To/From " comment) nil nil
+				 (verilog-sig-signed portdata)
+				 (verilog-sig-type portdata)
+				 multidim)
+			   sigs-intf)))
+	      ((setq portdata (and verilog-read-sub-decls-in-interfaced
+				   (or (assoc port (verilog-decls-get-regs submoddecls))
+				       (assoc port (verilog-decls-get-wires submoddecls)))))
+	       (setq sigs-intfd
 		     (cons (list sig
 				 (if dotname (verilog-sig-bits portdata) vec)
 				 (concat "To/From " comment) nil nil
@@ -7493,7 +7516,7 @@ Outputs comments above subcell signals, for example:
     (let ((end-mod-point (verilog-get-end-of-defun t))
 	  st-point end-inst-point
 	  ;; below 3 modified by verilog-read-sub-decls-line
-	  sigs-out sigs-inout sigs-in sigs-intf)
+	  sigs-out sigs-inout sigs-in sigs-intf sigs-intfd)
       (verilog-beg-of-defun)
       (while (verilog-re-search-forward "\\(/\\*AUTOINST\\*/\\|\\.\\*\\)" end-mod-point t)
 	(save-excursion
@@ -7511,6 +7534,10 @@ Outputs comments above subcell signals, for example:
 		(verilog-backward-open-paren)
 		(setq end-inst-point (save-excursion (forward-sexp 1) (point))
 		      st-point (point))
+		(let ((verilog-read-sub-decls-in-interfaced t))
+		  (while (re-search-forward "\\s *(?\\s *// Interfaced" end-inst-point t)
+		    (verilog-read-sub-decls-line submoddecls comment))) ;; Modifies sigs-ifd
+		(goto-char st-point)
 		(while (re-search-forward "\\s *(?\\s *// Interfaces" end-inst-point t)
 		  (verilog-read-sub-decls-line submoddecls comment)) ;; Modifies sigs-out
 		(goto-char st-point)
@@ -7525,10 +7552,12 @@ Outputs comments above subcell signals, for example:
 		)))))
       ;; Combine duplicate bits
       ;;(setq rr (vector sigs-out sigs-inout sigs-in))
-      (vector (verilog-signals-combine-bus (nreverse sigs-out))
-	      (verilog-signals-combine-bus (nreverse sigs-inout))
-	      (verilog-signals-combine-bus (nreverse sigs-in))
-	      (verilog-signals-combine-bus (nreverse sigs-intf))))))
+      (verilog-subdecls-new
+       (verilog-signals-combine-bus (nreverse sigs-out))
+       (verilog-signals-combine-bus (nreverse sigs-inout))
+       (verilog-signals-combine-bus (nreverse sigs-in))
+       (verilog-signals-combine-bus (nreverse sigs-intf))
+       (verilog-signals-combine-bus (nreverse sigs-intfd))))))
 
 (defun verilog-read-inst-pins ()
   "Return an array of [ pins ] for the current instantiation at point.
@@ -9450,8 +9479,9 @@ See `verilog-auto-inst' for examples, templates, and more information."
 
 (defun verilog-auto-inst ()
   "Expand AUTOINST statements, as part of \\[verilog-auto].
-Replace the pin connections to an instantiation with ones
-automatically derived from the module header of the instantiated netlist.
+Replace the pin connections to an instantiation or interface
+declaration with ones automatically derived from the module or
+interface header of the instantiated item.
 
 If `verilog-auto-star-expand' is set, also expand SystemVerilog .* ports,
 and delete them before saving unless `verilog-auto-star-save' is set.
@@ -9757,6 +9787,20 @@ For more information see the \\[verilog-faq] and forums at URL
 			  "")
 		tpl-list (aref tpl-info 1)))
 	;; Find submodule's signals and dump
+	(let ((sig-list (and (equal (verilog-modi-get-type submodi) "interface")
+			     (verilog-signals-not-in
+			      (append (verilog-decls-get-wires submoddecls)
+				      (verilog-decls-get-regs submoddecls))
+			      skip-pins)))
+	      (vl-dir "interfaced"))
+	  (when sig-list
+	    (when (not did-first) (verilog-auto-inst-first) (setq did-first t))
+            ;; Note these are searched for in verilog-read-sub-decls.
+	    (verilog-insert-indent "// Interfaced\n")
+	    (mapc (lambda (port)
+                    (verilog-auto-inst-port port indent-pt
+                                            tpl-list tpl-num for-star par-values))
+                  sig-list)))
 	(let ((sig-list (verilog-signals-not-in
 			 (verilog-decls-get-interfaces submoddecls)
 			 skip-pins))
@@ -9962,6 +10006,7 @@ Typing \\[verilog-auto] will make this into:
 			      (verilog-decls-get-assigns moddecls)
 			      (verilog-decls-get-consts moddecls)
 			      (verilog-decls-get-gparams moddecls)
+			      (verilog-subdecls-get-interfaced modsubdecls)
 			      (verilog-subdecls-get-outputs modsubdecls)
 			      (verilog-subdecls-get-inouts modsubdecls)))))
       (forward-line 1)
@@ -10289,6 +10334,7 @@ same expansion will result from only extracting inputs starting with i:
 			      (verilog-decls-get-regs moddecls)
 			      (verilog-decls-get-consts moddecls)
 			      (verilog-decls-get-gparams moddecls)
+			      (verilog-subdecls-get-interfaced modsubdecls)
 			      (verilog-subdecls-get-outputs modsubdecls)
 			      (verilog-subdecls-get-inouts modsubdecls)))))
       (when regexp
@@ -10880,6 +10926,7 @@ Typing \\[verilog-auto] will make this into:
 			      (verilog-decls-get-assigns moddecls)
 			      (verilog-decls-get-consts moddecls)
 			      (verilog-decls-get-gparams moddecls)
+			      (verilog-subdecls-get-interfaced modsubdecls)
 			      (verilog-subdecls-get-outputs modsubdecls)
 			      (verilog-subdecls-get-inouts modsubdecls)))))
       (setq sig-list (verilog-signals-not-matching-regexp
