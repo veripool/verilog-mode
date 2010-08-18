@@ -5,18 +5,18 @@ module foo;
       TxByteCnt++;
       TxLastByteTime  = $time;
    endtask // nextTxByte
-   
-   function foo();
+   task automatic blah();
+      t;
+   endtask // blah
+   function static foo();
       foo  = 1;
    endfunction // foo
-   
    // start counting when txmacphy sees first in-air byte
    task firstTxByte();
       TxByteCnt        = 1;
       TxFirstByteTime  = $time;
       TxLastByteTime   = $time;
    endtask // firstTxByte
-   
    
    // outputs the overall performance of the RX path in Mbps (MBits per second)
    task printRxPerformance();

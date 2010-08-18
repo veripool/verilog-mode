@@ -4257,6 +4257,10 @@ primitive or interface named NAME."
 			(setq b (progn
 				  (skip-chars-forward "^ \t")
 				  (verilog-forward-ws&directives)
+				  (if (looking-at "static\\|automatic")
+				      (progn
+					(goto-char (match-end 0))
+					(verilog-forward-ws&directives)))
 				  (if (and name-re (verilog-re-search-forward name-re nil 'move))
 				      (progn
 					(goto-char (match-beginning 0))
