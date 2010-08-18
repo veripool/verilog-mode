@@ -15,3 +15,5 @@ verilog-mode.elc
 verilog.info
 x
 *.elc
+*.old
+*.new

@@ -127,11 +127,14 @@ verilog.info : verilog.texinfo
 
 ######################################################################
 # GNU BZR version
-#  --- Note gnutrunk needs to be a symlink to a emacs/trunk bazaar checkout
+
+gnutrunk:
+	@echo "gnutrunk needs to be a symlink to a emacs/trunk bazaar checkout"
+	false
 
 .PHONY: gnu-update gnu-update-trunk
 gnu-update: gnu-update-trunk
-gnu-update-trunk:
+gnu-update-trunk: gnutrunk
 	cd gnutrunk && bzr update
 
 .PHONY: gnu-diff-trunk gnu-diff
@@ -153,4 +156,4 @@ verilog-mode-tognu.el: verilog-mode.el Makefile
 # Clean
 
 clean::
-	/bin/rm -rf .timestamps e x test_dir
+	/bin/rm -rf .timestamps e x test_dir gnu.patch verilog-mode-tognu.el mmencoded_verilog-mode
