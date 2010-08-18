@@ -2587,7 +2587,7 @@ See also `verilog-font-lock-extra-types'.")
 		 '("\\(@\\)\\|\\(#\\s-*\\(\\(\[0-9_.\]+\\('s?[hdxbo][0-9a-fA-F_xz]*\\)?\\)\\|\\(([^()]+)\\|\\sw+\\)\\)\\)"
 		   0 font-lock-type-face append)
 		 ;; Fontify instantiation names
-		 '("\\([A-Za-z][A-Za-z0-9_]+\\)\\s-*(" 1 font-lock-function-name-face)
+		 '("\\([A-Za-z][A-Za-z0-9_]*\\)\\s-*(" 1 font-lock-function-name-face)
 		 )))
 
   (setq verilog-font-lock-keywords-3
