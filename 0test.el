@@ -2,8 +2,8 @@
 ;;
 ;;   VERILOG_MODE_DEBUG=1	       # Enable verilog-debug
 ;;   VERILOG_MODE_NO_INDENTS=1         # Disable indent checks
-;;   VERILOG_MODE_TEST_FILE=tests_ok/filename.v   # Run only specified test
-;;   VERILOG_MODE_START_FILE=tests_ok/filename.v  # Start at specified test
+;;   VERILOG_MODE_TEST_FILE=filename.v # Run only specified test
+;;   VERILOG_MODE_START_FILE=filename.v  # Start at specified test
 ;;   VERILOG_MODE_THREAD=#of#          # Multithreaded testing
 ;;   VERILOG_MODE_PROFILE=1            # Profile - see batch_prof.el
 
@@ -116,7 +116,8 @@
 	(catch 'done
 	  (while files
 	    (setq file (car files))
-	    (if (string-equal (concat "tests_ok/" file) startfile)
+	    (if (or (string-equal file startfile)
+		    (string-equal (concat "tests_ok/" file) startfile))
 		(progn
 		  (message (concat "matched " file))
 		  (throw 'done 0))

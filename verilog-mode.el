@@ -7210,7 +7210,9 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 				  expect-signal 'sigs-wire  modport nil)))
 		((member keywd '("reg" "trireg"
 				 "byte" "shortint" "int" "longint" "integer" "time"
-				 "bit" "logic"))
+				 "bit" "logic"
+				 "shortreal" "real" "realtime"
+				 "string" "event" "chandle"))
 		 (unless io (setq vec nil  enum nil  rvalue nil  signed nil  typedefed nil  multidim nil  sig-paren paren
 				  expect-signal 'sigs-reg  modport nil)))
 		((equal keywd "assign")
