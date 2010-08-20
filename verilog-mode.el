@@ -7231,7 +7231,7 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 		((equal keywd "modport")
 		 (setq in-modport t))
 		;; Ifdef?  Ignore name of define
-		((member keywd '("`ifdef" "`ifndef"))
+		((member keywd '("`ifdef" "`ifndef" "`elsif"))
 		 (setq rvalue t))
 		;; Type?
 		((verilog-typedef-name-p keywd)
@@ -7740,16 +7740,13 @@ IGNORE-NEXT is true to ignore next token, fake from inside case statement."
 	    ;;(if dbg (setq dbg (concat dbg (format "\tgot-end %s\n" exit-keywd))))
 	    (setq ignore-next nil  rvalue semi-rvalue)
 	    (if (not exit-keywd) (setq end-else-check t)))
-	   ((or (equal keywd "case")
-		(equal keywd "casex")
-		(equal keywd "casez"))
+	   ((member keywd '("case" "casex" "casez"))
 	    (skip-syntax-forward "w_")
 	    (verilog-read-always-signals-recurse "endcase" t nil)
 	    (setq ignore-next nil  rvalue semi-rvalue)
 	    (if (not exit-keywd) (setq gotend t)))	;; top level begin/end
 	   ((string-match "^[$`a-zA-Z_]" keywd)	;; not exactly word constituent
-	    (cond ((or (equal keywd "`ifdef")
-		       (equal keywd "`ifndef"))
+	    (cond ((member keywd '("`ifdef" "`ifndef" "`elsif"))
 		   (setq ignore-next t))
 		  ((or ignore-next
 		       (member keywd verilog-keywords)
