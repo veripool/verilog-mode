@@ -938,7 +938,7 @@ be replaced, and will remain symbolic.
 For example, imagine a submodule uses parameters to declare the size of its
 inputs.  This is then used by a upper module:
 
-	module InstModule (o,i)
+	module InstModule (o,i);
 	   parameter WIDTH;
 	   input [WIDTH-1:0] i;
 	endmodule
@@ -9511,7 +9511,7 @@ Limitations:
 
 For example, first take the submodule InstModule.v:
 
-	module InstModule (o,i)
+	module InstModule (o,i);
 	   output [31:0] o;
 	   input i;
 	   wire [31:0] o = {32{i}};
@@ -9519,7 +9519,7 @@ For example, first take the submodule InstModule.v:
 
 This is then used in a upper level module:
 
-	module ExampInst (o,i)
+	module ExampInst (o,i);
 	   output o;
 	   input i;
 	   InstModule instName
@@ -9528,7 +9528,7 @@ This is then used in a upper level module:
 
 Typing \\[verilog-auto] will make this into:
 
-	module ExampInst (o,i)
+	module ExampInst (o,i);
 	   output o;
 	   input i;
 	   InstModule instName
@@ -9872,13 +9872,13 @@ output.
 
 For example, first take the submodule InstModule.v:
 
-	module InstModule (o,i)
+	module InstModule (o,i);
 	   parameter PAR;
 	endmodule
 
 This is then used in a upper level module:
 
-	module ExampInst (o,i)
+	module ExampInst (o,i);
 	   parameter PAR;
 	   InstModule #(/*AUTOINSTPARAM*/)
 		instName (/*AUTOINST*/);
@@ -9886,7 +9886,7 @@ This is then used in a upper level module:
 
 Typing \\[verilog-auto] will make this into:
 
-	module ExampInst (o,i)
+	module ExampInst (o,i);
 	   output o;
 	   input i;
 	   InstModule #(/*AUTOINSTPARAM*/
@@ -9978,7 +9978,7 @@ Limitations:
 
 An example:
 
-	module ExampReg (o,i)
+	module ExampReg (o,i);
 	   output o;
 	   input i;
 	   /*AUTOREG*/
@@ -9987,7 +9987,7 @@ An example:
 
 Typing \\[verilog-auto] will make this into:
 
-	module ExampReg (o,i)
+	module ExampReg (o,i);
 	   output o;
 	   input i;
 	   /*AUTOREG*/
@@ -10032,7 +10032,7 @@ Limitations:
 
 An example (see `verilog-auto-inst' for what else is going on here):
 
-	module ExampRegInput (o,i)
+	module ExampRegInput (o,i);
 	   output o;
 	   input i;
 	   /*AUTOREGINPUT*/
@@ -10042,7 +10042,7 @@ An example (see `verilog-auto-inst' for what else is going on here):
 
 Typing \\[verilog-auto] will make this into:
 
-	module ExampRegInput (o,i)
+	module ExampRegInput (o,i);
 	   output o;
 	   input i;
 	   /*AUTOREGINPUT*/
@@ -10094,7 +10094,7 @@ Limitations:
 
 An example (see `verilog-auto-inst' for what else is going on here):
 
-	module ExampWire (o,i)
+	module ExampWire (o,i);
 	   output o;
 	   input i;
 	   /*AUTOWIRE*/
@@ -10104,7 +10104,7 @@ An example (see `verilog-auto-inst' for what else is going on here):
 
 Typing \\[verilog-auto] will make this into:
 
-	module ExampWire (o,i)
+	module ExampWire (o,i);
 	   output o;
 	   input i;
 	   /*AUTOWIRE*/
@@ -10164,7 +10164,7 @@ Limitations:
 
 An example (see `verilog-auto-inst' for what else is going on here):
 
-	module ExampOutput (ov,i)
+	module ExampOutput (ov,i);
 	   input i;
 	   /*AUTOOUTPUT*/
 	   InstModule instName
@@ -10173,7 +10173,7 @@ An example (see `verilog-auto-inst' for what else is going on here):
 
 Typing \\[verilog-auto] will make this into:
 
-	module ExampOutput (ov,i)
+	module ExampOutput (ov,i);
 	   input i;
 	   /*AUTOOUTPUT*/
 	   // Beginning of automatic outputs (from unused autoinst outputs)
@@ -10230,7 +10230,7 @@ won't optimize away the outputs.
 
 An example:
 
-	module ExampOutputEvery (o,i,tempa,tempb)
+	module ExampOutputEvery (o,i,tempa,tempb);
 	   output o;
 	   input i;
 	   /*AUTOOUTPUTEVERY*/
@@ -10241,7 +10241,7 @@ An example:
 
 Typing \\[verilog-auto] will make this into:
 
-	module ExampOutputEvery (o,i,tempa,tempb)
+	module ExampOutputEvery (o,i,tempa,tempb);
 	   output o;
 	   input i;
 	   /*AUTOOUTPUTEVERY*/
@@ -10293,7 +10293,7 @@ Limitations:
 
 An example (see `verilog-auto-inst' for what else is going on here):
 
-	module ExampInput (ov,i)
+	module ExampInput (ov,i);
 	   output [31:0] ov;
 	   /*AUTOINPUT*/
 	   InstModule instName
@@ -10302,7 +10302,7 @@ An example (see `verilog-auto-inst' for what else is going on here):
 
 Typing \\[verilog-auto] will make this into:
 
-	module ExampInput (ov,i)
+	module ExampInput (ov,i);
 	   output [31:0] ov;
 	   /*AUTOINPUT*/
 	   // Beginning of automatic inputs (from unused autoinst inputs)
@@ -10374,7 +10374,7 @@ Limitations:
 
 An example (see `verilog-auto-inst' for what else is going on here):
 
-	module ExampInout (ov,i)
+	module ExampInout (ov,i);
 	   input i;
 	   /*AUTOINOUT*/
 	   InstModule instName
@@ -10383,7 +10383,7 @@ An example (see `verilog-auto-inst' for what else is going on here):
 
 Typing \\[verilog-auto] will make this into:
 
-	module ExampInout (ov,i)
+	module ExampInout (ov,i);
 	   input i;
 	   /*AUTOINOUT*/
 	   // Beginning of automatic inouts (from unused autoinst inouts)
@@ -10454,11 +10454,11 @@ Limitations:
 
 An example:
 
-	module ExampShell (/*AUTOARG*/)
+	module ExampShell (/*AUTOARG*/);
 	   /*AUTOINOUTMODULE(\"ExampMain\")*/
 	endmodule
 
-	module ExampMain (i,o,io)
+	module ExampMain (i,o,io);
           input i;
           output o;
           inout io;
@@ -10466,7 +10466,7 @@ An example:
 
 Typing \\[verilog-auto] will make this into:
 
-	module ExampShell (/*AUTOARG*/i,o,io)
+	module ExampShell (/*AUTOARG*/i,o,io);
 	   /*AUTOINOUTMODULE(\"ExampMain\")*/
            // Beginning of automatic in/out/inouts (from specific module)
            output o;
@@ -10574,11 +10574,11 @@ Limitations:
 
 An example:
 
-	module ExampShell (/*AUTOARG*/)
+	module ExampShell (/*AUTOARG*/);
 	   /*AUTOINOUTCOMP(\"ExampMain\")*/
 	endmodule
 
-	module ExampMain (i,o,io)
+	module ExampMain (i,o,io);
           input i;
           output o;
           inout io;
@@ -10586,7 +10586,7 @@ An example:
 
 Typing \\[verilog-auto] will make this into:
 
-	module ExampShell (/*AUTOARG*/i,o,io)
+	module ExampShell (/*AUTOARG*/i,o,io);
 	   /*AUTOINOUTCOMP(\"ExampMain\")*/
            // Beginning of automatic in/out/inouts (from specific module)
            output i;
@@ -11227,7 +11227,7 @@ The hooks `verilog-before-auto-hook' and `verilog-auto-hook' are
 called before and after this function, respectively.
 
 For example:
-	module ModuleName (/*AUTOARG*/)
+	module ModuleName (/*AUTOARG*/);
 	/*AUTOINPUT*/
 	/*AUTOOUTPUT*/
 	/*AUTOWIRE*/
