@@ -7130,7 +7130,7 @@ Return a array of [outputs inouts inputs wire reg assign const]."
       (verilog-beg-of-defun)
       (setq sigs-const (verilog-read-auto-constants (point) end-mod-point))
       (while (< (point) end-mod-point)
-	;;(if dbg (setq dbg (cons (format "Pt %s  Vec %s   Kwd'%s'\n" (point) vec keywd) dbg)))
+	;;(if dbg (setq dbg (concat dbg (format "Pt %s  Vec %s   Kwd'%s'\n" (point) vec keywd))))
 	(cond
 	 ((looking-at "//")
 	  (if (looking-at "[^\n]*synopsys\\s +enum\\s +\\([a-zA-Z0-9_]+\\)")
@@ -7242,7 +7242,8 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 		;; Skip over parsing modport, and take the interface name as the type
 		((and v2kargs-ok
 		      (eq paren 1)
-		      (looking-at "\\s-*\\(\\.\\(\\s-*[a-zA-Z0-9`_$]+\\)\\|\\)\\s-*[a-zA-Z0-9`_$]+"))
+		      (not rvalue)
+		      (looking-at "\\s-*\\(\\.\\(\\s-*[a-zA-Z`_$][a-zA-Z0-9`_$]*\\)\\|\\)\\s-*[a-zA-Z`_$][a-zA-Z0-9`_$]*"))
 		 (when (match-end 2) (goto-char (match-end 2)))
 		 (setq vec nil enum nil  rvalue nil  newsig nil  signed nil  typedefed keywd  multidim nil  sig-paren paren
 		       expect-signal 'sigs-intf  io t  modport (match-string 2)))
