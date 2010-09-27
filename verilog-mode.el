@@ -6826,6 +6826,8 @@ See also `verilog-sk-header' for an alternative format."
 ;;
 
 ;; Elements of a signal list
+(defsubst verilog-sig-new (name bits comment mem enum signed type multidim modport)
+  (list name bits comment mem enum signed type multidim modport))
 (defsubst verilog-sig-name (sig)
   (car sig))
 (defsubst verilog-sig-bits (sig)
@@ -6854,6 +6856,8 @@ See also `verilog-sk-header' for an alternative format."
 (defsubst verilog-sig-width (sig)
   (verilog-make-width-expression (verilog-sig-bits sig)))
 
+(defsubst verilog-alw-new (outputs temps inputs delayed)
+  (list outputs temps inputs delayed))
 (defsubst verilog-alw-get-outputs (sigs)
   (nth 0 sigs))
 (defsubst verilog-alw-get-temps (sigs)
@@ -6862,6 +6866,57 @@ See also `verilog-sk-header' for an alternative format."
   (nth 2 sigs))
 (defsubst verilog-alw-get-uses-delayed (sigs)
   (nth 3 sigs))
+
+(defsubst verilog-modi-new (name fob pt type)
+  (vector name fob pt type))
+(defsubst verilog-modi-name (modi)
+  (aref modi 0))
+(defsubst verilog-modi-file-or-buffer (modi)
+  (aref modi 1))
+(defsubst verilog-modi-get-point (modi)
+  (aref modi 2))
+(defsubst verilog-modi-get-type (modi) ;; "module" or "interface" 
+  (aref modi 3))
+(defsubst verilog-modi-get-decls (modi)
+  (verilog-modi-cache-results modi 'verilog-read-decls))
+(defsubst verilog-modi-get-sub-decls (modi)
+  (verilog-modi-cache-results modi 'verilog-read-sub-decls))
+
+;; Signal reading for given module
+;; Note these all take modi's - as returned from verilog-modi-current
+(defsubst verilog-decls-new (out inout in wires regs assigns consts gparams interfaces)
+  (vector out inout in wires regs assigns consts gparams interfaces))
+(defsubst verilog-decls-get-outputs (decls)
+  (aref decls 0))
+(defsubst verilog-decls-get-inouts (decls)
+  (aref decls 1))
+(defsubst verilog-decls-get-inputs (decls)
+  (aref decls 2))
+(defsubst verilog-decls-get-wires (decls)
+  (aref decls 3))
+(defsubst verilog-decls-get-regs (decls)
+  (aref decls 4))
+(defsubst verilog-decls-get-assigns (decls)
+  (aref decls 5))
+(defsubst verilog-decls-get-consts (decls)
+  (aref decls 6))
+(defsubst verilog-decls-get-gparams (decls)
+  (aref decls 7))
+(defsubst verilog-decls-get-interfaces (decls)
+  (aref decls 8))
+
+(defsubst verilog-subdecls-new (out inout in intf intfd)
+  (vector out inout in intf intfd))
+(defsubst verilog-subdecls-get-outputs (subdecls)
+  (aref subdecls 0))
+(defsubst verilog-subdecls-get-inouts (subdecls)
+  (aref subdecls 1))
+(defsubst verilog-subdecls-get-inputs (subdecls)
+  (aref subdecls 2))
+(defsubst verilog-subdecls-get-interfaces (subdecls)
+  (aref subdecls 3))
+(defsubst verilog-subdecls-get-interfaced (subdecls)
+  (aref subdecls 4))
 
 (defun verilog-signals-not-in (in-list not-list)
   "Return list of signals in IN-LIST that aren't also in NOT-LIST.
@@ -6984,15 +7039,15 @@ Duplicate signals are also removed.  For example A[2] and A[1] become A[2:1]."
 	    ;; Note sig may also be nil for the last signal in the list
 	    (t
 	     (setq out-list
-		   (cons
-		    (list sv-name
+		   (cons (verilog-sig-new
+			  sv-name
 			  (or sv-busstring
 			      (if sv-highbit
 				  (concat "[" (int-to-string sv-highbit) ":"
 					  (int-to-string sv-lowbit) "]")))
 			  (concat sv-comment combo buswarn)
 			  sv-memory sv-enum sv-signed sv-type sv-multidim sv-modport)
-		    out-list)
+			 out-list)
 		   sv-name nil))))
     ;;
     out-list))
@@ -7254,22 +7309,25 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 		      (not in-modport)
 		      (not (member keywd verilog-keywords)))
 		 ;; Add new signal to expect-signal's variable
-		 (setq newsig (list keywd vec nil nil enum signed typedefed multidim modport))
+		 (setq newsig (verilog-sig-new keywd vec nil nil enum signed typedefed multidim modport))
 		 (set expect-signal (cons newsig
 					  (symbol-value expect-signal))))))
 	 (t
 	  (forward-char 1)))
 	(skip-syntax-forward " "))
       ;; Return arguments
-      (vector (nreverse sigs-out)
-	      (nreverse sigs-inout)
-	      (nreverse sigs-in)
-	      (nreverse sigs-wire)
-	      (nreverse sigs-reg)
-	      (nreverse sigs-assign)
-	      (nreverse sigs-const)
-	      (nreverse sigs-gparam)
-	      (nreverse sigs-intf)))))
+      (verilog-decls-new (nreverse sigs-out)
+			 (nreverse sigs-inout)
+			 (nreverse sigs-in)
+			 (nreverse sigs-wire)
+			 (nreverse sigs-reg)
+			 (nreverse sigs-assign)
+			 (nreverse sigs-const)
+			 (nreverse sigs-gparam)
+			 (nreverse sigs-intf)))))
+
+(defvar verilog-read-sub-decls-in-interfaced nil
+  "For `verilog-read-sub-decls', process next signal as under interfaced block.")
 
 (eval-when-compile
   ;; Prevent compile warnings; these are let's, not globals
@@ -7280,61 +7338,6 @@ Return a array of [outputs inouts inputs wire reg assign const]."
   (defvar sigs-out)
   (defvar sigs-intf)
   (defvar sigs-intfd))
-
-
-(defsubst verilog-modi-new (name fob pt type)
-  (vector name fob pt type))
-(defsubst verilog-modi-name (modi)
-  (aref modi 0))
-(defsubst verilog-modi-file-or-buffer (modi)
-  (aref modi 1))
-(defsubst verilog-modi-get-point (modi)
-  (aref modi 2))
-(defsubst verilog-modi-get-type (modi) ;; "module" or "interface" 
-  (aref modi 3))
-(defsubst verilog-modi-get-decls (modi)
-  (verilog-modi-cache-results modi 'verilog-read-decls))
-(defsubst verilog-modi-get-sub-decls (modi)
-  (verilog-modi-cache-results modi 'verilog-read-sub-decls))
-
-
-;; Signal reading for given module
-;; Note these all take modi's - as returned from the
-;; verilog-modi-current function.
-(defsubst verilog-decls-get-outputs (decls)
-  (aref decls 0))
-(defsubst verilog-decls-get-inouts (decls)
-  (aref decls 1))
-(defsubst verilog-decls-get-inputs (decls)
-  (aref decls 2))
-(defsubst verilog-decls-get-wires (decls)
-  (aref decls 3))
-(defsubst verilog-decls-get-regs (decls)
-  (aref decls 4))
-(defsubst verilog-decls-get-assigns (decls)
-  (aref decls 5))
-(defsubst verilog-decls-get-consts (decls)
-  (aref decls 6))
-(defsubst verilog-decls-get-gparams (decls)
-  (aref decls 7))
-(defsubst verilog-decls-get-interfaces (decls)
-  (aref decls 8))
-
-(defsubst verilog-subdecls-new (out inout in intf intfd)
-  (vector out inout in intf intfd))
-(defsubst verilog-subdecls-get-outputs (subdecls)
-  (aref subdecls 0))
-(defsubst verilog-subdecls-get-inouts (subdecls)
-  (aref subdecls 1))
-(defsubst verilog-subdecls-get-inputs (subdecls)
-  (aref subdecls 2))
-(defsubst verilog-subdecls-get-interfaces (subdecls)
-  (aref subdecls 3))
-(defsubst verilog-subdecls-get-interfaced (subdecls)
-  (aref subdecls 4))
-
-(defvar verilog-read-sub-decls-in-interfaced nil
-  "For `verilog-read-sub-decls', process next signal as under interfaced block.")
 
 (defun verilog-read-sub-decls-sig (submoddecls comment port sig vec multidim)
   "For `verilog-read-sub-decls-line', add a signal."
@@ -7351,50 +7354,55 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 		  (equal sig ""))  ;; Ignore .foo(1'b1) assignments
 	(cond ((setq portdata (assoc port (verilog-decls-get-inouts submoddecls)))
 	       (setq sigs-inout
-		     (cons (list sig
-				 (if dotname (verilog-sig-bits portdata) vec)
-				 (concat "To/From " comment) nil nil
-				 (verilog-sig-signed portdata)
-				 (verilog-sig-type portdata)
-				 multidim)
+		     (cons (verilog-sig-new
+			    sig
+			    (if dotname (verilog-sig-bits portdata) vec)
+			    (concat "To/From " comment) nil nil
+			    (verilog-sig-signed portdata)
+			    (verilog-sig-type portdata)
+			    multidim nil)
 			   sigs-inout)))
 	      ((setq portdata (assoc port (verilog-decls-get-outputs submoddecls)))
 	       (setq sigs-out
-		     (cons (list sig
-				 (if dotname (verilog-sig-bits portdata) vec)
-				 (concat "From " comment) nil nil
-				 (verilog-sig-signed portdata)
-				 (verilog-sig-type portdata)
-				 multidim)
+		     (cons (verilog-sig-new
+			    sig
+			    (if dotname (verilog-sig-bits portdata) vec)
+			    (concat "From " comment) nil nil
+			    (verilog-sig-signed portdata)
+			    (verilog-sig-type portdata)
+			    multidim nil)
 			   sigs-out)))
 	      ((setq portdata (assoc port (verilog-decls-get-inputs submoddecls)))
 	       (setq sigs-in
-		     (cons (list sig
-				 (if dotname (verilog-sig-bits portdata) vec)
-				 (concat "To " comment) nil nil
-				 (verilog-sig-signed portdata)
-				 (verilog-sig-type portdata)
-				 multidim)
+		     (cons (verilog-sig-new
+			    sig
+			    (if dotname (verilog-sig-bits portdata) vec)
+			    (concat "To " comment) nil nil
+			    (verilog-sig-signed portdata)
+			    (verilog-sig-type portdata)
+			    multidim nil)
 			   sigs-in)))
 	      ((setq portdata (assoc port (verilog-decls-get-interfaces submoddecls)))
 	       (setq sigs-intf
-		     (cons (list sig
-				 (if dotname (verilog-sig-bits portdata) vec)
-				 (concat "To/From " comment) nil nil
-				 (verilog-sig-signed portdata)
-				 (verilog-sig-type portdata)
-				 multidim)
+		     (cons (verilog-sig-new
+			    sig
+			    (if dotname (verilog-sig-bits portdata) vec)
+			    (concat "To/From " comment) nil nil
+			    (verilog-sig-signed portdata)
+			    (verilog-sig-type portdata)
+			    multidim nil)
 			   sigs-intf)))
 	      ((setq portdata (and verilog-read-sub-decls-in-interfaced
 				   (or (assoc port (verilog-decls-get-regs submoddecls))
 				       (assoc port (verilog-decls-get-wires submoddecls)))))
 	       (setq sigs-intfd
-		     (cons (list sig
-				 (if dotname (verilog-sig-bits portdata) vec)
-				 (concat "To/From " comment) nil nil
-				 (verilog-sig-signed portdata)
-				 (verilog-sig-type portdata)
-				 multidim)
+		     (cons (verilog-sig-new
+			    sig
+			    (if dotname (verilog-sig-bits portdata) vec)
+			    (concat "To/From " comment) nil nil
+			    (verilog-sig-signed portdata)
+			    (verilog-sig-type portdata)
+			    multidim nil)
 			   sigs-intf)))
 	      ;; (t  -- warning pin isn't defined.)   ; Leave for lint tool
 	      )))))
@@ -7793,7 +7801,7 @@ IGNORE-NEXT is true to ignore next token, fake from inside case statement."
       (verilog-read-always-signals-recurse nil nil nil)
       ;;(if dbg (with-current-buffer (get-buffer-create "*vl-dbg*")) (delete-region (point-min) (point-max)) (insert dbg) (setq dbg ""))
       ;; Return what was found
-      (list sigs-out sigs-temp sigs-in uses-delayed))))
+      (verilog-alw-new sigs-out sigs-temp sigs-in uses-delayed))))
 
 (defun verilog-read-instants ()
   "Parse module at point and return list of ( ( file instance ) ... )."
