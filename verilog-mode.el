@@ -5641,13 +5641,24 @@ Only look at a few lines to determine indent level."
 
      (; handle inside parenthetical expressions
       (eq type 'cparenexp)
-      (let ((val (save-excursion
-		   (verilog-backward-up-list 1)
-		   (forward-char 1)
-		   (skip-chars-forward " \t")
-		   (current-column))))
-	(indent-line-to val)
-      ))
+      (let* ( here
+	      (val (save-excursion
+		     (verilog-backward-up-list 1)
+		     (forward-char 1)
+             (if verilog-indent-lists
+                 (skip-chars-forward " \t")
+               (verilog-forward-syntactic-ws))
+             (setq here (point))
+             (current-column)))
+
+	      (decl (save-excursion
+		      (goto-char here)
+		      (verilog-forward-syntactic-ws)
+		      (setq here (point))
+		      (looking-at verilog-declaration-re))))
+        (indent-line-to val)
+        (if decl
+            (verilog-pretty-declarations))))
 
      (;-- Handle the ends
       (or
@@ -5823,9 +5834,9 @@ Be verbose about progress unless optional QUIET set."
 		      endpos (set-marker (make-marker) end)
 		      base-ind (progn
 				 (goto-char start)
-				 (verilog-do-indent (verilog-calculate-indent))
-				 (verilog-forward-ws&directives)
-				 (current-column))
+                 (forward-char 1)
+                 (skip-chars-forward " \t")
+                 (current-column))
 		      )
 	      ;; in a declaration block (not in argument list)
 	      (setq
@@ -5847,7 +5858,6 @@ Be verbose about progress unless optional QUIET set."
 		     (setq e (point))	;Might be on last line
 		     (verilog-forward-syntactic-ws)
 		     (while (looking-at verilog-declaration-re)
-		       ;;(beginning-of-line)
 		       (verilog-end-of-statement)
 		       (setq e (point))
 		       (verilog-forward-syntactic-ws))
@@ -5888,7 +5898,7 @@ Be verbose about progress unless optional QUIET set."
 			  (> r 0))
 	      (setq e (point))
 	      (unless quiet (message "%d" r))
-	      (verilog-indent-line)
+          ;;(verilog-do-indent (verilog-calculate-indent)))
 	      (verilog-forward-ws&directives)
 	      (cond
 	       ((or (and verilog-indent-declaration-macros
