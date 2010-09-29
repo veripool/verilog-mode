@@ -81,15 +81,21 @@
 ; (autoload 'verilog-mode "verilog-mode" "Verilog mode" t )
 ; (add-to-list 'auto-mode-alist '("\\.[ds]?vh?\\'" . verilog-mode))
 
-;; If you want to customize Verilog mode to fit your needs better,
-;; you may add these lines (the values of the variables presented
-;; here are the defaults). Note also that if you use an Emacs that
-;; supports custom, it's probably better to use the custom menu to
-;; edit these.
-;;
 ;; Be sure to examine at the help for verilog-auto, and the other
 ;; verilog-auto-* functions for some major coding time savers.
 ;;
+;; If you want to customize Verilog mode to fit your needs better,
+;; you may add the below lines (the values of the variables presented
+;; here are the defaults). Note also that if you use an Emacs that
+;; supports custom, it's probably better to use the custom menu to
+;; edit these. If working as a member of a large team these settings
+;; should be common across all users (in a site-start file), or set
+;; in Local Variables in every file.  Otherwise, different people's
+;; AUTO expansion may result different whitespace changes.
+;;
+; ;; Enable syntax highlighting of **all** languages
+; (global-font-lock-mode t)
+;
 ; ;; User customization for Verilog mode
 ; (setq verilog-indent-level             3
 ;       verilog-indent-level-module      3
@@ -3609,7 +3615,7 @@ With ARG, first kill any existing labels."
           ;; stop if beginning of buffer
 	      (bolp)
           ;; stop if we find a ;
-	      (= (preceding-char) ?\;) 
+	      (= (preceding-char) ?\;)
           ;; stop if we see a named coverpoint
 	      (looking-at "\\w+\\W*:\\W*\\(coverpoint\\|cross\\|constraint\\)")
           ;; keep going if we are in the middle of a word
@@ -6885,7 +6891,7 @@ See also `verilog-sk-header' for an alternative format."
   (aref modi 1))
 (defsubst verilog-modi-get-point (modi)
   (aref modi 2))
-(defsubst verilog-modi-get-type (modi) ;; "module" or "interface" 
+(defsubst verilog-modi-get-type (modi) ;; "module" or "interface"
   (aref modi 3))
 (defsubst verilog-modi-get-decls (modi)
   (verilog-modi-cache-results modi 'verilog-read-decls))
@@ -8212,7 +8218,7 @@ unless it is already a member of the variable's list."
 
 (defun verilog-current-flags ()
   "Convert `verilog-library-flags' and similar variables to command line.
-Used for __FLAGS__ in `verilog-expand-command'." 
+Used for __FLAGS__ in `verilog-expand-command'."
   (let ((cmd (mapconcat `concat verilog-library-flags " ")))
     (when (equal cmd "")
       (setq cmd (concat
