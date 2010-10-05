@@ -6268,6 +6268,39 @@ will be completed at runtime and should not be added to this list.")
 Variables and function names defined within the Verilog program
 will be completed at runtime and should not be added to this list.")
 
+(defvar verilog-gate-ios
+  ;; All these have an implied {"input"...} at the end
+  '(("and"	"output")
+    ("buf"	"output")
+    ("bufif0"	"output")
+    ("bufif1"	"output")
+    ("cmos"	"output")
+    ("nand"	"output")
+    ("nmos"	"output")
+    ("nor"	"output")
+    ("not"	"output")
+    ("notif0"	"output")
+    ("notif1"	"output")
+    ("or"	"output")
+    ("pmos"	"output")
+    ("pulldown"	"output")
+    ("pullup"	"output")
+    ("rcmos"	"output")
+    ("rnmos"	"output")
+    ("rpmos"	"output")
+    ("rtran"	"inout" "inout")
+    ("rtranif0"	"inout" "inout")
+    ("rtranif1"	"inout" "inout")
+    ("tran"	"inout" "inout")
+    ("tranif0"	"inout" "inout")
+    ("tranif1"	"inout" "inout")
+    ("xnor"	"output")
+    ("xor"	"output"))
+  "*Map of direction for each positional argument to each gate primitive.")
+
+(defvar verilog-gate-keywords (mapcar `car verilog-gate-ios)
+  "*Keywords for gate primitives.")
+
 (defun verilog-string-diff (str1 str2)
   "Return index of first letter where STR1 and STR2 differs."
   (catch 'done
@@ -7345,6 +7378,9 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 (defvar verilog-read-sub-decls-in-interfaced nil
   "For `verilog-read-sub-decls', process next signal as under interfaced block.")
 
+(defvar verilog-read-sub-decls-gate-ios nil
+  "For `verilog-read-sub-decls', gate IO pins remaining, nil if non-primitive.")
+
 (eval-when-compile
   ;; Prevent compile warnings; these are let's, not globals
   ;; Do not remove the eval-when-compile
@@ -7368,7 +7404,8 @@ Return a array of [outputs inouts inputs wire reg assign const]."
       (if multidim (setq multidim  (mapcar `verilog-symbol-detick-denumber multidim)))
       (unless (or (not sig)
 		  (equal sig ""))  ;; Ignore .foo(1'b1) assignments
-	(cond ((setq portdata (assoc port (verilog-decls-get-inouts submoddecls)))
+	(cond ((or (setq portdata (assoc port (verilog-decls-get-inouts submoddecls)))
+		   (equal "inout" verilog-read-sub-decls-gate-ios))
 	       (setq sigs-inout
 		     (cons (verilog-sig-new
 			    sig
@@ -7378,7 +7415,8 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 			    (verilog-sig-type portdata)
 			    multidim nil)
 			   sigs-inout)))
-	      ((setq portdata (assoc port (verilog-decls-get-outputs submoddecls)))
+	      ((or (setq portdata (assoc port (verilog-decls-get-outputs submoddecls)))
+		   (equal "output" verilog-read-sub-decls-gate-ios))
 	       (setq sigs-out
 		     (cons (verilog-sig-new
 			    sig
@@ -7388,7 +7426,8 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 			    (verilog-sig-type portdata)
 			    multidim nil)
 			   sigs-out)))
-	      ((setq portdata (assoc port (verilog-decls-get-inputs submoddecls)))
+	      ((or (setq portdata (assoc port (verilog-decls-get-inputs submoddecls)))
+		   (equal "input" verilog-read-sub-decls-gate-ios))
 	       (setq sigs-in
 		     (cons (verilog-sig-new
 			    sig
@@ -7468,7 +7507,7 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 
 (defun verilog-read-sub-decls-line (submoddecls comment)
   "For `verilog-read-sub-decls', read lines of port defs until none match.
-Return the list of signals found, using submodi to look up each port."
+Inserts the list of signals found, using submodi to look up each port."
   (let (done port)
     (save-excursion
       (forward-line 1)
@@ -7525,6 +7564,35 @@ Return the list of signals found, using submodi to look up each port."
 	;;
 	(forward-line 1)))))
 
+(defun verilog-read-sub-decls-gate (submoddecls comment submod end-inst-point)
+  "For `verilog-read-sub-decls', read lines of UDP gate decl until none match.
+Inserts the list of signals found."
+  (save-excursion
+    (let ((iolist (cdr (assoc submod verilog-gate-ios))))
+      (while (< (point) end-inst-point)
+	;; Get primitive's signal name, as will never have port, and no trailing )
+	(cond ((looking-at "//")
+	       (search-forward "\n"))
+	      ((looking-at "/\\*")
+	       (or (search-forward "*/")
+		   (error "%s: Unmatched /* */, at char %d" (verilog-point-text) (point))))
+	      ((looking-at "(\\*")
+	       (or (looking-at "(\\*\\s-*)")   ; It's a "always @ (*)"
+		   (search-forward "*)")
+		   (error "%s: Unmatched (* *), at char %d" (verilog-point-text) (point))))
+	      ;; On pins, parse and advance to next pin
+	      ;; Looking at pin, but *not* an // Output comment, or ) to end the inst
+	      ((looking-at "\\s-*[a-zA-Z0-9`_$({}\\\\][^,]*")
+	       (goto-char (match-end 0))
+	       (setq verilog-read-sub-decls-gate-ios (or (car iolist) "input")
+		     iolist (cdr iolist))
+	       (verilog-read-sub-decls-expr
+		submoddecls comment "primitive_port"
+		(match-string 0)))
+	      (t
+	       (forward-char 1)
+	       (skip-syntax-forward " ")))))))
+
 (defun verilog-read-sub-decls ()
   "Internally parse signals going to modules under this module.
 Return a array of [ outputs inouts inputs ] signals for modules that are
@@ -7556,31 +7624,45 @@ Outputs comments above subcell signals, for example:
 	    ;; Attempt to snarf a comment
 	    (let* ((submod (verilog-read-inst-module))
 		   (inst (verilog-read-inst-name))
+		   (subprim (member submod verilog-gate-keywords))
 		   (comment (concat inst " of " submod ".v"))
 		   submodi submoddecls)
-	      (when (setq submodi (verilog-modi-lookup submod t))
-		(setq submoddecls (verilog-modi-get-decls submodi))
-		;; This could have used a list created by verilog-auto-inst
-		;; However I want it to be runnable even on user's manually added signals
+    	      (cond
+	       (subprim
+		(setq submodi `primitive
+		      submoddecls (verilog-decls-new nil nil nil nil nil nil nil nil nil)
+		      comment (concat inst " of " submod))
 		(verilog-backward-open-paren)
 		(setq end-inst-point (save-excursion (forward-sexp 1) (point))
 		      st-point (point))
-		(let ((verilog-read-sub-decls-in-interfaced t))
-		  (while (re-search-forward "\\s *(?\\s *// Interfaced" end-inst-point t)
-		    (verilog-read-sub-decls-line submoddecls comment))) ;; Modifies sigs-ifd
-		(goto-char st-point)
-		(while (re-search-forward "\\s *(?\\s *// Interfaces" end-inst-point t)
-		  (verilog-read-sub-decls-line submoddecls comment)) ;; Modifies sigs-out
-		(goto-char st-point)
-		(while (re-search-forward "\\s *(?\\s *// Outputs" end-inst-point t)
-		  (verilog-read-sub-decls-line submoddecls comment)) ;; Modifies sigs-out
-		(goto-char st-point)
-		(while (re-search-forward "\\s *(?\\s *// Inouts" end-inst-point t)
-		  (verilog-read-sub-decls-line submoddecls comment)) ;; Modifies sigs-inout
-		(goto-char st-point)
-		(while (re-search-forward "\\s *(?\\s *// Inputs" end-inst-point t)
-		  (verilog-read-sub-decls-line submoddecls comment)) ;; Modifies sigs-in
-		)))))
+		(forward-char 1)
+		(verilog-read-sub-decls-gate submoddecls comment submod end-inst-point))
+	       ;; Non-primitive
+	       (t
+		(when (setq submodi (verilog-modi-lookup submod t))
+		  (setq submoddecls (verilog-modi-get-decls submodi)
+			verilog-read-sub-decls-gate-ios nil)
+		  (verilog-backward-open-paren)
+		  (setq end-inst-point (save-excursion (forward-sexp 1) (point))
+			st-point (point))
+		  ;; This could have used a list created by verilog-auto-inst
+		  ;; However I want it to be runnable even on user's manually added signals
+		  (let ((verilog-read-sub-decls-in-interfaced t))
+		    (while (re-search-forward "\\s *(?\\s *// Interfaced" end-inst-point t)
+		      (verilog-read-sub-decls-line submoddecls comment))) ;; Modifies sigs-ifd
+		  (goto-char st-point)
+		  (while (re-search-forward "\\s *(?\\s *// Interfaces" end-inst-point t)
+		    (verilog-read-sub-decls-line submoddecls comment)) ;; Modifies sigs-out
+		  (goto-char st-point)
+		  (while (re-search-forward "\\s *(?\\s *// Outputs" end-inst-point t)
+		    (verilog-read-sub-decls-line submoddecls comment)) ;; Modifies sigs-out
+		  (goto-char st-point)
+		  (while (re-search-forward "\\s *(?\\s *// Inouts" end-inst-point t)
+		    (verilog-read-sub-decls-line submoddecls comment)) ;; Modifies sigs-inout
+		  (goto-char st-point)
+		  (while (re-search-forward "\\s *(?\\s *// Inputs" end-inst-point t)
+		    (verilog-read-sub-decls-line submoddecls comment)) ;; Modifies sigs-in
+		  )))))))
       ;; Combine duplicate bits
       ;;(setq rr (vector sigs-out sigs-inout sigs-in))
       (verilog-subdecls-new
@@ -9534,6 +9616,10 @@ Limitations:
   Parameters referenced by the instantiation will remain symbolic, unless
   `verilog-auto-inst-param-value' is set.
 
+  Gate primitives (and/or) may have AUTOINST for the purpose of
+  AUTOWIRE declarations, etc.  Gates are the only case when
+  position based connections are passed.
+
 For example, first take the submodule InstModule.v:
 
 	module InstModule (o,i);
@@ -9804,7 +9890,8 @@ For more information see the \\[verilog-faq] and forums at URL
 
       ;; Lookup position, etc of submodule
       ;; Note this may raise an error
-      (when (setq submodi (verilog-modi-lookup submod t))
+      (when (and (not (member submod verilog-gate-keywords))
+		 (setq submodi (verilog-modi-lookup submod t)))
 	(setq submoddecls (verilog-modi-get-decls submodi))
 	;; If there's a number in the instantiation, it may be a argument to the
 	;; automatic variable instantiation program.

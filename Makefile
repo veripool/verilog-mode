@@ -21,9 +21,13 @@ install : .timestamps ChangeLog test $(D)/mmencoded_verilog-mode $(D)/emacs-vers
 test:	.timestamps/test
 .timestamps/test: x/verilog-mode.elc e/verilog-mode.elc mmencoded_verilog-mode verilog.info 0test.el .timestamps
 	mkdir -p e/t x/t
+ifeq ($(VERILOG_MODE_TEST_FILE),)
 	$(MAKE) test_batch test_errors test_emacs test_xemacs
 	@touch $@
 	@echo ======= ALL TESTS PASSED
+else
+	$(MAKE) test_emacs test_xemacs
+endif
 
 #Usage: $(call test-emacs_sub,label,threading)
 define test_emacs_sub

@@ -9,12 +9,12 @@ module v2k_typedef_yee_sub2
    );
    
    output pixel24_t sub2_out_pixel,
-          output logic_t ready,
-          input pixel24_t sub2_in_pixel,
-          input logic_t cp,
-          input logic_t reset,
-          input logic_t sub1_to_sub2,
-          input logic_t sub1_to_sub2_and_top
+   output logic_t ready,
+   input  pixel24_t sub2_in_pixel,
+   input  logic_t cp,
+   input  logic_t reset,
+   input  logic_t sub1_to_sub2,
+   input  logic_t sub1_to_sub2_and_top
           
           pixel24_t pixel_ff;
    ff_t      sub1_to_sub2_ff;
