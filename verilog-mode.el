@@ -7234,7 +7234,7 @@ Return a array of [outputs inouts inputs wire reg assign const]."
       (verilog-beg-of-defun)
       (setq sigs-const (verilog-read-auto-constants (point) end-mod-point))
       (while (< (point) end-mod-point)
-	;;(if dbg (setq dbg (concat dbg (format "Pt %s  Vec %s   Kwd'%s'\n" (point) vec keywd))))
+	;;(if dbg (setq dbg (concat dbg (format "Pt %s  Vec %s   C%c Kwd'%s'\n" (point) vec (following-char) keywd))))
 	(cond
 	 ((looking-at "//")
 	  (if (looking-at "[^\n]*synopsys\\s +enum\\s +\\([a-zA-Z0-9_]+\\)")
@@ -7351,6 +7351,11 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 		 (when (match-end 2) (goto-char (match-end 2)))
 		 (setq vec nil enum nil  rvalue nil  newsig nil  signed nil  typedefed keywd  multidim nil  sig-paren paren
 		       expect-signal 'sigs-intf  io t  modport (match-string 2)))
+		;; Ignore dotted LHS assignments: "assign foo.bar = z;"
+		((looking-at "\\s-*\\.")
+		 (goto-char (match-end 0))
+		 (when (not rvalue)
+		   (setq expect-signal nil)))
 		;; New signal, maybe?
 		((and expect-signal
 		      (not rvalue)
