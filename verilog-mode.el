@@ -7277,7 +7277,10 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 	 ((looking-at "\\s-*\\(\\[[^]]+\\]\\)")
 	  (goto-char (match-end 0))
 	  (cond (newsig	; Memory, not just width.  Patch last signal added's memory (nth 3)
-		 (setcar (cdr (cdr (cdr newsig))) (match-string 1)))
+		 (setcar (cdr (cdr (cdr newsig)))
+			 (if (verilog-sig-memory newsig)
+			     (concat (verilog-sig-memory newsig) (match-string 1))
+			   (match-string 1))))
 		(vec ;; Multidimensional
 		 (setq multidim (cons vec multidim))
 		 (setq vec (verilog-string-replace-matches
@@ -7415,7 +7418,9 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 		     (cons (verilog-sig-new
 			    sig
 			    (if dotname (verilog-sig-bits portdata) vec)
-			    (concat "To/From " comment) nil nil
+			    (concat "To/From " comment)
+			    (verilog-sig-memory portdata)
+			    nil
 			    (verilog-sig-signed portdata)
 			    (verilog-sig-type portdata)
 			    multidim nil)
@@ -7426,7 +7431,9 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 		     (cons (verilog-sig-new
 			    sig
 			    (if dotname (verilog-sig-bits portdata) vec)
-			    (concat "From " comment) nil nil
+			    (concat "From " comment)
+			    (verilog-sig-memory portdata)
+			    nil
 			    (verilog-sig-signed portdata)
 			    (verilog-sig-type portdata)
 			    multidim nil)
@@ -7437,7 +7444,9 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 		     (cons (verilog-sig-new
 			    sig
 			    (if dotname (verilog-sig-bits portdata) vec)
-			    (concat "To " comment) nil nil
+			    (concat "To " comment)
+			    (verilog-sig-memory portdata)
+			    nil
 			    (verilog-sig-signed portdata)
 			    (verilog-sig-type portdata)
 			    multidim nil)
@@ -7447,7 +7456,9 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 		     (cons (verilog-sig-new
 			    sig
 			    (if dotname (verilog-sig-bits portdata) vec)
-			    (concat "To/From " comment) nil nil
+			    (concat "To/From " comment)
+			    (verilog-sig-memory portdata)
+			    nil
 			    (verilog-sig-signed portdata)
 			    (verilog-sig-type portdata)
 			    multidim nil)
@@ -7459,7 +7470,9 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 		     (cons (verilog-sig-new
 			    sig
 			    (if dotname (verilog-sig-bits portdata) vec)
-			    (concat "To/From " comment) nil nil
+			    (concat "To/From " comment)
+			    (verilog-sig-memory portdata)
+			    nil
 			    (verilog-sig-signed portdata)
 			    (verilog-sig-type portdata)
 			    multidim nil)
@@ -8874,7 +8887,9 @@ with appropriate INDENT-PT indentation."
   (indent-to (max 24 (+ indent-pt 16)))
   (unless (= (char-syntax (preceding-char)) ?\  )
     (insert " "))  ; Need space between "]name" if indent-to did nothing
-  (insert (verilog-sig-name sig)))
+  (insert (verilog-sig-name sig))
+  (when (verilog-sig-memory sig)
+    (insert " " (verilog-sig-memory sig))))
 
 (defun verilog-insert-definition (sigs direction indent-pt v2k &optional dont-sort)
   "Print out a definition for a list of SIGS of the given DIRECTION,
