@@ -2919,7 +2919,7 @@ Use filename, if current buffer being edited shorten to just buffer name."
 	  (catch 'skip
 	    (if (eq nest 'yes)
 		(let ((depth 1)
-		      here )
+		      here)
 		  (while (verilog-re-search-forward reg nil 'move)
 		    (cond
 		     ((match-end md) ; a closer in regular expression, so we are climbing out
