@@ -4562,16 +4562,18 @@ FILENAME or defaults to `buffer-file-name`."
 				 default nil nil
 				 'verilog-preprocess-history default)))))
   (unless command (setq command (verilog-expand-command verilog-preprocessor)))
-  (let* ((dir (file-name-directory (or filename buffer-file-name)))
+  (let* ((fontlocked (and (boundp 'font-lock-mode) font-lock-mode))
+	 (dir (file-name-directory (or filename buffer-file-name)))
 	 (file (file-name-nondirectory (or filename buffer-file-name)))
 	 (cmd (concat "cd " dir "; " command " " file)))
     (with-output-to-temp-buffer "*Verilog-Preprocessed*"
-      (save-excursion
-	(set-buffer "*Verilog-Preprocessed*")
+      (with-current-buffer (get-buffer "*Verilog-Preprocessed*")
 	(insert (concat "// " cmd "\n"))
 	(shell-command cmd "*Verilog-Preprocessed*")
 	(verilog-mode)
-	(font-lock-mode)))))
+	;; Without this force, it takes a few idle seconds
+	;; to get the color, which is very jarring
+	(when fontlocked (font-lock-fontify-buffer))))))
 
 
 ;;
