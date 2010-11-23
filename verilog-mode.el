@@ -175,6 +175,18 @@
             (char-after (1- (point)))))
       (error nil))
     (condition-case nil
+        (if (fboundp 'when)
+            nil ;; fab
+          (defsubst point-at-bol (&optional N)
+            (save-excursion (beginning-of-line N) (point))))
+      (error nil))
+    (condition-case nil
+        (if (fboundp 'when)
+            nil ;; fab
+          (defsubst point-at-eol (&optional N)
+            (save-excursion (end-of-line N) (point))))
+      (error nil))
+    (condition-case nil
         (require 'custom)
       (error nil))
     (condition-case nil
