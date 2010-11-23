@@ -7228,7 +7228,7 @@ Optional NUM-PARAM and MAX-PARAM check for a specific number of parameters."
 Return a array of [outputs inouts inputs wire reg assign const]."
   (let ((end-mod-point (or (verilog-get-end-of-defun t) (point-max)))
 	(functask 0) (paren 0) (sig-paren 0) (v2kargs-ok t)
-	in-modport
+	in-modport ign-prop
 	sigs-in sigs-out sigs-inout sigs-wire sigs-reg sigs-assign sigs-const
 	sigs-gparam sigs-intf
 	vec expect-signal keywd newsig rvalue enum io signed typedefed multidim
@@ -7259,7 +7259,7 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 	      (error "%s: Unmatched quotes, at char %d" (verilog-point-text) (point))))
 	 ((eq ?\; (following-char))
 	  (setq vec nil  io nil  expect-signal nil  newsig nil  paren 0  rvalue nil
-		v2kargs-ok nil  in-modport nil)
+		v2kargs-ok nil  in-modport nil  ign-prop nil)
 	  (forward-char 1))
 	 ((eq ?= (following-char))
 	  (setq rvalue t  newsig nil)
@@ -7334,9 +7334,12 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 				  expect-signal 'sigs-const  modport nil)))
 		((member keywd '("signed" "unsigned"))
 		 (setq signed keywd))
+		((member keywd '("assert" "assume" "cover" "expect" "restrict"))
+		 (setq ign-prop t))
 		((member keywd '("class" "clocking" "covergroup" "function"
 				 "property" "randsequence" "sequence" "task"))
-		 (setq functask (1+ functask)))
+		 (unless ign-prop
+		   (setq functask (1+ functask))))
 		((member keywd '("endclass" "endclocking" "endgroup" "endfunction"
 				 "endproperty" "endsequence" "endtask"))
 		 (setq functask (1- functask)))
