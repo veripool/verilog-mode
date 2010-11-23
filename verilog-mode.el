@@ -7332,8 +7332,8 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 				 "localparam" "genvar"))
 		 (unless io (setq vec nil  enum nil  rvalue nil  signed nil  typedefed nil  multidim nil  sig-paren paren
 				  expect-signal 'sigs-const  modport nil)))
-		((equal keywd "signed")
-		 (setq signed "signed"))
+		((member keywd '("signed" "unsigned"))
+		 (setq signed keywd))
 		((member keywd '("class" "clocking" "covergroup" "function"
 				 "property" "randsequence" "sequence" "task"))
 		 (setq functask (1+ functask)))
