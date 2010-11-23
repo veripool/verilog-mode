@@ -9012,6 +9012,11 @@ This repairs those mis-inserted by a AUTOARG."
       (setq last-pass out)
       (while (string-match "(\\<\\([0-9A-Z-az_]+\\)\\>)" out)
 	(setq out (replace-match "\\1" nil nil out)))
+      (while (string-match "\\<\\([0-9]+\\)\\>\\s *\\*\\s *\\<\\([0-9]+\\)\\>" out)
+	(setq out (replace-match
+		   (int-to-string (* (string-to-number (match-string 1 out))
+				     (string-to-number (match-string 2 out))))
+		   nil nil out)))
       (while (string-match "\\<\\([0-9]+\\)\\>\\s *\\+\\s *\\<\\([0-9]+\\)\\>" out)
 	(setq out (replace-match
 		   (int-to-string (+ (string-to-number (match-string 1 out))
@@ -9025,6 +9030,7 @@ This repairs those mis-inserted by a AUTOARG."
     out))
 ;;(verilog-simplify-range-expression "1")
 ;;(verilog-simplify-range-expression "(((16)+1)-3)")
+;;(verilog-simplify-range-expression "(2*3+6*7)")
 
 (defun verilog-typedef-name-p (variable-name)
   "Return true if the VARIABLE-NAME is a type definition."
