@@ -9519,14 +9519,18 @@ If PAR-VALUES replace final strings with these parameter values."
 		       (concat "\\<" (nth 0 (car check-values)) "\\>")
 		       (concat "(" (nth 1 (car check-values)) ")")
 		       t t vl-bits)
+	      vl-mbits (verilog-string-replace-matches
+			(concat "\\<" (nth 0 (car check-values)) "\\>")
+			(concat "(" (nth 1 (car check-values)) ")")
+			t t vl-mbits)
 	      check-values (cdr check-values)))
-      (setq vl-bits (verilog-simplify-range-expression vl-bits))) ; Not in the loop for speed
+      (setq vl-bits (verilog-simplify-range-expression vl-bits)
+	    vl-mbits (verilog-simplify-range-expression vl-mbits))) ; Not in the loop for speed
     ;; Default net value if not found
     (setq tpl-net (concat port
 			  (if vl-modport (concat "." vl-modport) "")
 			  (if (verilog-sig-multidim port-st)
-			      (concat "/*" (verilog-sig-multidim-string port-st)
-				      vl-bits "*/")
+			      (concat "/*" vl-mbits vl-bits "*/")
 			    (concat vl-bits))))
     ;; Find template
     (cond (tpl-ass	    ; Template of exact port name
