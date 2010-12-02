@@ -1127,6 +1127,7 @@ If set will become buffer local.")
     (define-key map "\M-\r"    `electric-verilog-terminate-and-indent)
     (define-key map "\M-\t"    'verilog-complete-word)
     (define-key map "\M-?"     'verilog-show-completions)
+    ;; Note \C-c and letter are reserved for users
     (define-key map "\C-c\`"   'verilog-lint-off)
     (define-key map "\C-c\*"   'verilog-delete-auto-star-implicit)
     (define-key map "\C-c\C-r" 'verilog-label-be)
@@ -7051,6 +7052,7 @@ Duplicate signals are also removed.  For example A[2] and A[1] become A[2:1]."
 	      buswarn ""))
       ;; Extract bus details
       (setq bus (verilog-sig-bits sig))
+      (setq bus (and bus (verilog-simplify-range-expression bus)))
       (cond ((and bus
 		  (or (and (string-match "\\[\\([0-9]+\\):\\([0-9]+\\)\\]" bus)
 			   (setq highbit (string-to-number (match-string 1 bus))
@@ -9015,6 +9017,7 @@ This repairs those mis-inserted by a AUTOARG."
       (setq last-pass out)
       (while (string-match "(\\<\\([0-9A-Z-az_]+\\)\\>)" out)
 	(setq out (replace-match "\\1" nil nil out)))
+      ;; For precedence do * before +/-
       (while (string-match "\\<\\([0-9]+\\)\\>\\s *\\*\\s *\\<\\([0-9]+\\)\\>" out)
 	(setq out (replace-match
 		   (int-to-string (* (string-to-number (match-string 1 out))
@@ -11571,7 +11574,7 @@ Wilson Snyder (wsnyder@wsnyder.org)."
 ;; may want to consider moving the binding to another key in your .emacs
 ;; file.
 ;;
-;(define-key verilog-mode-map "\C-ct" verilog-template-map)
+;; Note \C-c and letter are reserved for users
 (define-key verilog-mode-map "\C-c\C-t" verilog-template-map)
 
 ;;; ---- statement skeletons ------------------------------------------
