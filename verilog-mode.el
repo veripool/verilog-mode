@@ -9009,34 +9009,59 @@ This repairs those mis-inserted by a AUTOARG."
 	       (t nil)))))
 ;;(verilog-make-width-expression "`A:`B")
 
-(defun verilog-simplify-range-expression (range-exp)
-  "Return a simplified range expression with constants eliminated from RANGE-EXP."
-  (let ((out range-exp)
-	(last-pass ""))
-    (while (not (equal last-pass out))
-      (setq last-pass out)
-      (while (string-match "(\\<\\([0-9A-Z-az_]+\\)\\>)" out)
-	(setq out (replace-match "\\1" nil nil out)))
-      ;; For precedence do * before +/-
-      (while (string-match "\\<\\([0-9]+\\)\\>\\s *\\*\\s *\\<\\([0-9]+\\)\\>" out)
-	(setq out (replace-match
-		   (int-to-string (* (string-to-number (match-string 1 out))
-				     (string-to-number (match-string 2 out))))
-		   nil nil out)))
-      (while (string-match "\\<\\([0-9]+\\)\\>\\s *\\+\\s *\\<\\([0-9]+\\)\\>" out)
-	(setq out (replace-match
-		   (int-to-string (+ (string-to-number (match-string 1 out))
-				     (string-to-number (match-string 2 out))))
-		   nil nil out)))
-      (while (string-match "\\<\\([0-9]+\\)\\>\\s *\\-\\s *\\<\\([0-9]+\\)\\>" out)
-	(setq out (replace-match
-		   (int-to-string (- (string-to-number (match-string 1 out))
-				     (string-to-number (match-string 2 out))))
-		   nil nil out))))
-    out))
-;;(verilog-simplify-range-expression "1")
-;;(verilog-simplify-range-expression "(((16)+1)-3)")
-;;(verilog-simplify-range-expression "(2*3+6*7)")
+(defun verilog-simplify-range-expression (expr)
+  "Return a simplified range expression with constants eliminated from EXPR."
+  ;; Note this is always called with brackets; ie [z] or [z:z]
+  (if (not (string-match "[---+*()]" expr))
+      expr ;; short-circuit
+    (let ((out expr)
+	  (last-pass ""))
+      (while (not (equal last-pass out))
+	(setq last-pass out)
+	;; Prefix regexp needs beginning of match, or some symbol of
+	;; lesser or equal precedence.  We assume the [:]'s exist in expr.
+	;; Ditto the end.
+	(while (string-match
+		(concat "\\([[({:*+-]\\)"  ; - must be last
+			"(\\<\\([0-9A-Z-az_]+\\))"
+			"\\([])}:*+-]\\)")
+		out)
+	  (setq out (replace-match "\\1\\2\\3" nil nil out)))
+	;; For precedence do * before +/-
+	(while (string-match
+		(concat "\\([[({:*+-]\\)"
+			"\\([0-9]+\\)\\s *\\([*]\\)\\s *\\([0-9]+\\)"
+			"\\([])}:*+-]\\)")
+		out)
+	  (setq out (replace-match
+		     (concat (match-string 1 out)
+			     (int-to-string (* (string-to-number (match-string 2 out))
+					       (string-to-number (match-string 4 out))))
+			     (match-string 5 out))
+		     nil nil out)))
+	(while (string-match
+		(concat "\\([[({:+-]\\)"  ; No * here as higher prec
+			"\\([0-9]+\\)\\s *\\([---+]\\)\\s *\\([0-9]+\\)"
+			"\\([])}:+-]\\)")
+		out)
+	  (setq out (replace-match
+		     (concat (match-string 1 out)
+			     (int-to-string
+			      (if (equal (match-string 3 out) "-")
+				  (- (string-to-number (match-string 2 out))
+				     (string-to-number (match-string 4 out)))
+				(+ (string-to-number (match-string 2 out))
+				   (string-to-number (match-string 4 out)))))
+			     (match-string 5 out))
+		     nil nil out))))
+      out)))
+;;(verilog-simplify-range-expression "[1:3]") ;; 1
+;;(verilog-simplify-range-expression "[(1):3]") ;; 1
+;;(verilog-simplify-range-expression "[(((16)+1)+1+(1+1))]")  ;;20
+;;(verilog-simplify-range-expression "[(2*3+6*7)]") ;; 48
+;;(verilog-simplify-range-expression "[(FOO*4-1*2)]") ;; FOO*4-2
+;;(verilog-simplify-range-expression "[(FOO*4+1-1)]") ;; FOO*4+0
+;;(verilog-simplify-range-expression "[(func(BAR))]") ;; func(BAR)
 
 (defun verilog-typedef-name-p (variable-name)
   "Return true if the VARIABLE-NAME is a type definition."

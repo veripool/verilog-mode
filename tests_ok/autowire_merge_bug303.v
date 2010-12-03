@@ -1,10 +1,11 @@
 module TOP (/*AUTOARG*/
             // Outputs
-            SIG_NAMEA
+            SIG_NAMEB, SIG_NAMEA
             )
   /*AUTOOUTPUT*/
   // Beginning of automatic outputs (from unused autoinst outputs)
-  output [223:0]            SIG_NAMEA;          // From A of A.v, ...
+  output [223:0]     SIG_NAMEA; // From A of A.v, ...
+   output [FOO*4-2:0] SIG_NAMEB;                // From C of C.v
    // End of automatics
    /*AUTOINPUT*/
    /*AUTOWIRE*/
@@ -15,6 +16,9 @@ module TOP (/*AUTOARG*/
    B B(/*AUTOINST*/
        // Outputs
        .SIG_NAMEA                       (SIG_NAMEA[127:0]));
+   C C(/*AUTOINST*/
+       // Outputs
+       .SIG_NAMEB                       (SIG_NAMEB[FOO*4-2*1:0]));
 endmodule
 
 module A(/*AUTOARG*/
@@ -31,6 +35,14 @@ module B(/*AUTOARG*/
          SIG_NAMEA
          );
    output [127:0] SIG_NAMEA;
+endmodule
+
+
+module C(/*AUTOARG*/
+         // Outputs
+         SIG_NAMEB
+         );
+   output [FOO*4-2*1:0] SIG_NAMEB;
 endmodule
 
 
