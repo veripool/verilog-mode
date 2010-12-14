@@ -290,6 +290,11 @@ STRING should be given if the last search was by `string-match' on STRING."
   (condition-case nil
       (unless (fboundp 'buffer-chars-modified-tick)  ;; Emacs 22 added
 	(defmacro buffer-chars-modified-tick () (buffer-modified-tick)))
+    (error nil))
+  ;; Added in Emacs 24.1
+  (condition-case nil
+      (unless (fboundp 'prog-mode)
+	(define-derived-mode prog-mode fundamental-mode "Prog"))
     (error nil)))
 
 (eval-when-compile
@@ -2986,7 +2991,7 @@ Use filename, if current buffer being edited shorten to just buffer name."
 ;;
 (defvar verilog-which-tool 1)
 ;;;###autoload
-(defun verilog-mode ()
+(define-derived-mode verilog-mode prog-mode "Verilog"
   "Major mode for editing Verilog code.
 \\<verilog-mode-map>
 See \\[describe-function] verilog-auto (\\[verilog-auto]) for details on how
@@ -3114,12 +3119,7 @@ All key bindings can be seen in a Verilog-buffer with \\[describe-bindings].
 Key bindings specific to `verilog-mode-map' are:
 
 \\{verilog-mode-map}"
-  (interactive)
-  (kill-all-local-variables)
-  (use-local-map verilog-mode-map)
-  (setq major-mode 'verilog-mode)
-  (setq mode-name "Verilog")
-  (setq local-abbrev-table verilog-mode-abbrev-table)
+  :abbrev-table verilog-mode-abbrev-table
   (set (make-local-variable 'beginning-of-defun-function)
        'verilog-beg-of-defun)
   (set (make-local-variable 'end-of-defun-function)
@@ -3186,8 +3186,9 @@ Key bindings specific to `verilog-mode-map' are:
 		  hs-special-modes-alist))))
 
   ;; Stuff for autos
-  (add-hook 'write-contents-hooks 'verilog-auto-save-check) ; already local
-  (run-hooks 'verilog-mode-hook))
+  (add-hook 'write-contents-hooks 'verilog-auto-save-check nil 'local)
+  ;; verilog-mode-hook call added by define-derived-mode
+  )
 
 
 ;;
