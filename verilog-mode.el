@@ -7166,9 +7166,10 @@ Ignore width if optional NO-WIDTH is set."
   "Return module name when after its ( or ;."
   (save-excursion
     (re-search-backward "[(;]")
-    (verilog-re-search-backward-quick "\\b[a-zA-Z0-9`_\$]" nil nil)
-    (skip-chars-backward "a-zA-Z0-9`_$")
-    (looking-at "[a-zA-Z0-9`_\$]+")
+    ;; Due to "module x import y (" we must search for declaration begin
+    (verilog-re-search-backward-quick verilog-defun-re nil nil)
+    (goto-char (match-end 0))
+    (verilog-re-search-forward-quick "\\b[a-zA-Z0-9`_\$]+" nil nil)
     ;; Important: don't use match string, this must work with Emacs 19 font-lock on
     (verilog-symbol-detick
      (buffer-substring-no-properties (match-beginning 0) (match-end 0)) t)))
