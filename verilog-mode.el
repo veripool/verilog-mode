@@ -1404,6 +1404,9 @@ FIXEDCASE and LITERAL as in `replace-match`.  STRING is what to replace.
 The case (verilog-string-replace-matches \"o\" \"oo\" nil nil \"foobar\")
 will break, as the o's continuously replace.  xa -> x works ok though."
   ;; Hopefully soon to a emacs built-in
+  ;; Also note \ in the replacement prevent multiple replacements; IE
+  ;;   (verilog-string-replace-matches "@" "\\\\([0-9]+\\\\)" nil nil "wire@_@")
+  ;;   Gives "wire\([0-9]+\)_@" not "wire\([0-9]+\)_\([0-9]+\)"
   (let ((start 0))
     (while (string-match from-string string start)
       (setq string (replace-match to-string fixedcase literal string)
@@ -2143,6 +2146,8 @@ find the errors."
   (eval-when-compile (verilog-regexp-words `("endmodule" "endclass" "endprogram" "endinterface" "endpackage" "endprimitive" "endconfig"))))
 (defconst verilog-zero-indent-re
   (concat verilog-defun-re "\\|" verilog-end-defun-re))
+(defconst verilog-inst-comment-re
+  (eval-when-compile (verilog-regexp-words `("Outputs" "Inouts" "Inputs" "Interfaces" "Interfaced"))))
 
 (defconst verilog-behavioral-block-beg-re
   (eval-when-compile (verilog-regexp-words `("initial" "final" "always" "always_comb" "always_latch" "always_ff"
@@ -9134,7 +9139,8 @@ Deletion stops at the matching end parenthesis."
   "Return if a .* AUTOINST is safe to delete or expand.
 It was created by the AUTOS themselves, or by the user."
   (and verilog-auto-star-expand
-       (looking-at "[ \t\n\f,]*\\([)]\\|// \\(Outputs\\|Inouts\\|Inputs\\|Interfaces\\)\\)")))
+       (looking-at
+	(concat "[ \t\n\f,]*\\([)]\\|// " verilog-inst-comment-re "\\)"))))
 
 (defun verilog-delete-auto-star-all ()
   "Delete a .* AUTOINST, if it is safe."
@@ -9166,7 +9172,7 @@ removed."
 	  (save-excursion
 	    (while (progn
 		     (forward-line -1)
-		     (looking-at "\\s *//\\s *\\(Outputs\\|Inouts\\|Inputs\\|Interfaces\\)\n"))
+		     (looking-at (concat "\\s *//\\s *" verilog-inst-comment-re "\n")))
 	      (delete-region (match-beginning 0) (match-end 0))))
 	  ;; If it is simple, we can put the ); on the same line as the last text
 	  (let ((rtn-pt (point)))
