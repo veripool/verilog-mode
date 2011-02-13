@@ -1336,6 +1336,8 @@ If set will become buffer local.")
      "----"
      ["Module"		verilog-sk-module
       :help		"Insert a module .. (/*AUTOARG*/);.. endmodule block"]
+     ["OVM Class"	verilog-sk-ovm-class
+      :help		"Insert an OVM class block"]
      ["Primitive"	verilog-sk-primitive
       :help		"Insert a primitive .. (.. );.. endprimitive block"]
      "----"
@@ -1390,6 +1392,31 @@ If set will become buffer local.")
   "Abbrev table in use in Verilog-mode buffers.")
 
 (define-abbrev-table 'verilog-mode-abbrev-table ())
+(define-abbrev verilog-mode-abbrev-table "class" "" 'verilog-sk-ovm-class)
+(define-abbrev verilog-mode-abbrev-table "always" "" 'verilog-sk-always)
+(define-abbrev verilog-mode-abbrev-table "begin" nil `verilog-sk-begin)
+(define-abbrev verilog-mode-abbrev-table "case" "" `verilog-sk-case)
+(define-abbrev verilog-mode-abbrev-table "for" "" `verilog-sk-for)
+(define-abbrev verilog-mode-abbrev-table "generate" "" `verilog-sk-generate)
+(define-abbrev verilog-mode-abbrev-table "initial" "" `verilog-sk-initial)
+(define-abbrev verilog-mode-abbrev-table "fork" "" `verilog-sk-fork)
+(define-abbrev verilog-mode-abbrev-table "module" "" `verilog-sk-module)
+(define-abbrev verilog-mode-abbrev-table "primitive" "" `verilog-sk-primitive)
+(define-abbrev verilog-mode-abbrev-table "repeat" "" `verilog-sk-repeat)
+(define-abbrev verilog-mode-abbrev-table "specify" "" `verilog-sk-specify)
+(define-abbrev verilog-mode-abbrev-table "task" "" `verilog-sk-task)
+(define-abbrev verilog-mode-abbrev-table "while" "" `verilog-sk-while)
+(define-abbrev verilog-mode-abbrev-table "casex" "" `verilog-sk-casex)
+(define-abbrev verilog-mode-abbrev-table "casez" "" `verilog-sk-casez)
+(define-abbrev verilog-mode-abbrev-table "if" "" `verilog-sk-if)
+(define-abbrev verilog-mode-abbrev-table "else if" "" `verilog-sk-else-if)
+(define-abbrev verilog-mode-abbrev-table "assign" "" `verilog-sk-assign)
+(define-abbrev verilog-mode-abbrev-table "function" "" `verilog-sk-function)
+(define-abbrev verilog-mode-abbrev-table "input" "" `verilog-sk-input)
+(define-abbrev verilog-mode-abbrev-table "output" "" `verilog-sk-output)
+(define-abbrev verilog-mode-abbrev-table "inout" "" `verilog-sk-inout)
+(define-abbrev verilog-mode-abbrev-table "wire" "" `verilog-sk-wire)
+(define-abbrev verilog-mode-abbrev-table "reg" "" `verilog-sk-reg)
 
 ;;
 ;;  Macros
@@ -3099,6 +3126,7 @@ Some other functions are:
     \\[verilog-sk-initial]  Insert an initial begin .. end block.
     \\[verilog-sk-fork]  Insert a fork begin .. end .. join block.
     \\[verilog-sk-module]  Insert a module .. (/*AUTOARG*/);.. endmodule block.
+    \\[verilog-sk-ovm-class]  Insert an OVM Class block.
     \\[verilog-sk-primitive]  Insert a primitive .. (.. );.. endprimitive block.
     \\[verilog-sk-repeat]  Insert a repeat (..) begin .. end block.
     \\[verilog-sk-specify]  Insert a specify .. endspecify block.
@@ -11568,6 +11596,7 @@ Wilson Snyder (wsnyder@wsnyder.org)."
     (define-key map "i" 'verilog-sk-initial)
     (define-key map "j" 'verilog-sk-fork)
     (define-key map "m" 'verilog-sk-module)
+    (define-key map "o" 'verilog-sk-ovm-class)
     (define-key map "p" 'verilog-sk-primitive)
     (define-key map "r" 'verilog-sk-repeat)
     (define-key map "s" 'verilog-sk-specify)
@@ -11681,6 +11710,24 @@ See also `verilog-header' for an alternative format."
   > "module " '(verilog-sk-prompt-name) " (/*AUTOARG*/ ) ;" \n
   > _ \n
   > (- verilog-indent-level-behavioral) "endmodule" (progn (electric-verilog-terminate-line) nil))
+
+;;; ------------------------------------------------------------------------
+;;; Define a default OVM class, with macros and new()
+;;; ------------------------------------------------------------------------
+ 
+(define-skeleton verilog-sk-ovm-class
+  "Insert a class definition"
+  ()
+  > "class " (setq name (skeleton-read "Name: ")) " extends " (skeleton-read "Extends: ") ";" \n
+  > _ \n
+  > "`ovm_object_utils_begin(" name ")" \n
+  > (- verilog-indent-level) " `ovm_object_utils_end" \n
+  > _ \n
+  > "function new(name=\"" name "\");" \n
+  > "super.new(name);" \n
+  > (- verilog-indent-level) "endfunction" \n
+  > _ \n
+  > "endclass" (progn (electric-verilog-terminate-line) nil))
 
 (define-skeleton verilog-sk-primitive
   "Insert a task definition."
