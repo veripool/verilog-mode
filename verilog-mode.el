@@ -4750,117 +4750,117 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
            ;; indent structs as if there were module level
            (if (verilog-in-struct-p)
                (throw 'nesting 'block))
-
-		   ;; unless we are in the newfangled coverpoint or constraint blocks
-		   ;; if we are in a parenthesized list, and the user likes to indent these, return.
-		   (if (and
+	   
+	   ;; if we are in a parenthesized list, and the user likes to indent these, return.
+	   ;; unless we are in the newfangled coverpoint or constraint blocks
+	   (if (and
                 verilog-indent-lists
                 (verilog-in-paren)
                 (not (verilog-in-coverage-p))
                 )
-		       (progn (setq par 1)
+	       (progn (setq par 1)
                       (throw 'nesting 'block)))
-
-		   ;; See if we are continuing a previous line
-		   (while t
-		     ;; trap out if we crawl off the top of the buffer
-		     (if (bobp) (throw 'nesting 'cpp))
-
-		     (if (verilog-continued-line-1 lim)
-			 (let ((sp (point)))
-			   (if (and
-				(not (looking-at verilog-complete-reg))
-				(verilog-continued-line-1 lim))
-			       (progn (goto-char sp)
-				      (throw 'nesting 'cexp))
-
-			     (goto-char sp))
-
-			   (if (and begin
-				    (not verilog-indent-begin-after-if)
-				    (looking-at verilog-no-indent-begin-re))
-			       (progn
-				 (beginning-of-line)
-				 (skip-chars-forward " \t")
-				 (throw 'nesting 'statement))
-			     (progn
-			       (throw 'nesting 'cexp))))
-		       ;; not a continued line
-		       (goto-char starting_position))
-
-		     (if (looking-at "\\<else\\>")
-			 ;; search back for governing if, striding across begin..end pairs
-			 ;; appropriately
-			 (let ((elsec 1))
-			   (while (verilog-re-search-backward verilog-ends-re nil 'move)
+	   
+	   ;; See if we are continuing a previous line
+	   (while t
+	     ;; trap out if we crawl off the top of the buffer
+	     (if (bobp) (throw 'nesting 'cpp))
+	     
+	     (if (verilog-continued-line-1 lim)
+		 (let ((sp (point)))
+		   (if (and
+			(not (looking-at verilog-complete-reg))
+			(verilog-continued-line-1 lim))
+		       (progn (goto-char sp)
+			      (throw 'nesting 'cexp))
+		     
+		     (goto-char sp))
+		   
+		   (if (and begin
+			    (not verilog-indent-begin-after-if)
+			    (looking-at verilog-no-indent-begin-re))
+		       (progn
+			 (beginning-of-line)
+			 (skip-chars-forward " \t")
+			 (throw 'nesting 'statement))
+		     (progn
+		       (throw 'nesting 'cexp))))
+	       ;; not a continued line
+	       (goto-char starting_position))
+	     
+	     (if (looking-at "\\<else\\>")
+		 ;; search back for governing if, striding across begin..end pairs
+		 ;; appropriately
+		 (let ((elsec 1))
+		   (while (verilog-re-search-backward verilog-ends-re nil 'move)
+		     (cond
+		      ((match-end 1) ; else, we're in deep
+		       (setq elsec (1+ elsec)))
+		      ((match-end 2) ; if
+		       (setq elsec (1- elsec))
+		       (if (= 0 elsec)
+			   (if verilog-align-ifelse
+			       (throw 'nesting 'statement)
+			     (progn ;; back up to first word on this line
+			       (beginning-of-line)
+			       (verilog-forward-syntactic-ws)
+			       (throw 'nesting 'statement)))))
+		      ((match-end 3) ; assert block
+		       (setq elsec (1- elsec))
+		       (verilog-beg-of-statement) ;; doesn't get to beginning
+		       (if (looking-at verilog-property-re)
+			   (throw 'nesting 'statement) ; We don't need an endproperty for these
+			 (throw 'nesting 'block)	;We still need a endproperty
+			 ))
+		      (t ; endblock
+					; try to leap back to matching outward block by striding across
+					; indent level changing tokens then immediately
+					; previous line governs indentation.
+		       (let (( reg) (nest 1))
+			 ;;	 verilog-ends =>  else|if|end|join(_any|_none|)|endcase|endclass|endtable|endspecify|endfunction|endtask|endgenerate|endgroup
+			 (cond
+			  ((match-end 4) ; end
+			   ;; Search back for matching begin
+			   (setq reg "\\(\\<begin\\>\\)\\|\\(\\<end\\>\\)" ))
+			  ((match-end 5) ; endcase
+			   ;; Search back for matching case
+			   (setq reg "\\(\\<randcase\\>\\|\\<case[xz]?\\>[^:]\\)\\|\\(\\<endcase\\>\\)" ))
+			  ((match-end 6) ; endfunction
+			   ;; Search back for matching function
+			   (setq reg "\\(\\<function\\>\\)\\|\\(\\<endfunction\\>\\)" ))
+			  ((match-end 7) ; endtask
+			   ;; Search back for matching task
+			   (setq reg "\\(\\<task\\>\\)\\|\\(\\<endtask\\>\\)" ))
+			  ((match-end 8) ; endspecify
+			   ;; Search back for matching specify
+			   (setq reg "\\(\\<specify\\>\\)\\|\\(\\<endspecify\\>\\)" ))
+			  ((match-end 9) ; endtable
+			   ;; Search back for matching table
+			   (setq reg "\\(\\<table\\>\\)\\|\\(\\<endtable\\>\\)" ))
+			  ((match-end 10) ; endgenerate
+			   ;; Search back for matching generate
+			   (setq reg "\\(\\<generate\\>\\)\\|\\(\\<endgenerate\\>\\)" ))
+			  ((match-end 11) ; joins
+			   ;; Search back for matching fork
+			   (setq reg "\\(\\<fork\\>\\)\\|\\(\\<join\\(_any\\|none\\)?\\>\\)" ))
+			  ((match-end 12) ; class
+			   ;; Search back for matching class
+			   (setq reg "\\(\\<class\\>\\)\\|\\(\\<endclass\\>\\)" ))
+			  ((match-end 13) ; covergroup
+			   ;; Search back for matching covergroup
+			   (setq reg "\\(\\<covergroup\\>\\)\\|\\(\\<endgroup\\>\\)" )))
+			 (catch 'skip
+			   (while (verilog-re-search-backward reg nil 'move)
 			     (cond
-			      ((match-end 1) ; else, we're in deep
-			       (setq elsec (1+ elsec)))
-			      ((match-end 2) ; if
-			       (setq elsec (1- elsec))
-			       (if (= 0 elsec)
-				   (if verilog-align-ifelse
-				       (throw 'nesting 'statement)
-				     (progn ;; back up to first word on this line
-				       (beginning-of-line)
-				       (verilog-forward-syntactic-ws)
-				       (throw 'nesting 'statement)))))
-			      ((match-end 3) ; assert block
-			       (setq elsec (1- elsec))
-			       (verilog-beg-of-statement) ;; doesn't get to beginning
-			       (if (looking-at verilog-property-re)
-				   (throw 'nesting 'statement) ; We don't need an endproperty for these
-				 (throw 'nesting 'block)	;We still need a endproperty
-				 ))
-			      (t ; endblock
-				; try to leap back to matching outward block by striding across
-				; indent level changing tokens then immediately
-				; previous line governs indentation.
-			       (let (( reg) (nest 1))
-;;	 verilog-ends =>  else|if|end|join(_any|_none|)|endcase|endclass|endtable|endspecify|endfunction|endtask|endgenerate|endgroup
-				 (cond
-				  ((match-end 4) ; end
-				   ;; Search back for matching begin
-				   (setq reg "\\(\\<begin\\>\\)\\|\\(\\<end\\>\\)" ))
-				  ((match-end 5) ; endcase
-				   ;; Search back for matching case
-				   (setq reg "\\(\\<randcase\\>\\|\\<case[xz]?\\>[^:]\\)\\|\\(\\<endcase\\>\\)" ))
-				  ((match-end 6) ; endfunction
-				   ;; Search back for matching function
-				   (setq reg "\\(\\<function\\>\\)\\|\\(\\<endfunction\\>\\)" ))
-				  ((match-end 7) ; endtask
-				   ;; Search back for matching task
-				   (setq reg "\\(\\<task\\>\\)\\|\\(\\<endtask\\>\\)" ))
-				  ((match-end 8) ; endspecify
-				   ;; Search back for matching specify
-				   (setq reg "\\(\\<specify\\>\\)\\|\\(\\<endspecify\\>\\)" ))
-				  ((match-end 9) ; endtable
-				   ;; Search back for matching table
-				   (setq reg "\\(\\<table\\>\\)\\|\\(\\<endtable\\>\\)" ))
-				  ((match-end 10) ; endgenerate
-				   ;; Search back for matching generate
-				   (setq reg "\\(\\<generate\\>\\)\\|\\(\\<endgenerate\\>\\)" ))
-				  ((match-end 11) ; joins
-				   ;; Search back for matching fork
-				   (setq reg "\\(\\<fork\\>\\)\\|\\(\\<join\\(_any\\|none\\)?\\>\\)" ))
-				  ((match-end 12) ; class
-				   ;; Search back for matching class
-				   (setq reg "\\(\\<class\\>\\)\\|\\(\\<endclass\\>\\)" ))
-				  ((match-end 13) ; covergroup
-				   ;; Search back for matching covergroup
-				   (setq reg "\\(\\<covergroup\\>\\)\\|\\(\\<endgroup\\>\\)" )))
-				 (catch 'skip
-				   (while (verilog-re-search-backward reg nil 'move)
-				     (cond
-				      ((match-end 1) ; begin
-				       (setq nest (1- nest))
-				       (if (= 0 nest)
-					   (throw 'skip 1)))
-				      ((match-end 2) ; end
-				       (setq nest (1+ nest)))))
-				   )))))))
-		     (throw 'nesting (verilog-calc-1)))
-		   );; catch nesting
+			      ((match-end 1) ; begin
+			       (setq nest (1- nest))
+			       (if (= 0 nest)
+				   (throw 'skip 1)))
+			      ((match-end 2) ; end
+			       (setq nest (1+ nest)))))
+			   )))))))
+	     (throw 'nesting (verilog-calc-1)))
+	   );; catch nesting
 		 );; type
 	   )
       ;; Return type of block and indent level.
@@ -5659,7 +5659,11 @@ Only look at a few lines to determine indent level."
 			 (goto-char fst)
 			 (+ (current-column) verilog-cexp-indent))))))
 	    (goto-char here)
-	    (indent-line-to val)))
+	    (indent-line-to val)
+	    (if (and (not verilog-indent-lists)
+		     (verilog-in-paren))
+		(verilog-pretty-declarations))
+	    ))
 	 ((= (preceding-char) ?\) )
 	  (goto-char here)
 	  (let ((val (eval (cdr (assoc type verilog-indent-alist)))))
