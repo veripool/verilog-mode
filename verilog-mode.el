@@ -7283,9 +7283,9 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 	  (or (search-forward "*/")
 	      (error "%s: Unmatched /* */, at char %d" (verilog-point-text) (point))))
 	 ((looking-at "(\\*")
-	  (forward-char 2)
-	  (or (looking-at "\\s-*)")   ; It's an "always @ (*)"
-	      (search-forward "*)")
+	  ;; To advance past either "(*)" or "(* ... *)" don't forward past first *
+	  (forward-char 1)
+	  (or (search-forward "*)")
 	      (error "%s: Unmatched (* *), at char %d" (verilog-point-text) (point))))
 	 ((eq ?\" (following-char))
 	  (or (re-search-forward "[^\\]\"" nil t)	;; don't forward-char first, since we look for a non backslash first
@@ -7634,8 +7634,9 @@ Inserts the list of signals found."
 	       (or (search-forward "*/")
 		   (error "%s: Unmatched /* */, at char %d" (verilog-point-text) (point))))
 	      ((looking-at "(\\*")
-	       (or (looking-at "(\\*\\s-*)")   ; It's a "always @ (*)"
-		   (search-forward "*)")
+	       ;; To advance past either "(*)" or "(* ... *)" don't forward past first *
+	       (forward-char 1)
+	       (or (search-forward "*)")
 		   (error "%s: Unmatched (* *), at char %d" (verilog-point-text) (point))))
 	      ;; On pins, parse and advance to next pin
 	      ;; Looking at pin, but *not* an // Output comment, or ) to end the inst
@@ -7825,8 +7826,9 @@ IGNORE-NEXT is true to ignore next token, fake from inside case statement."
 	(or (search-forward "*/")
 	    (error "%s: Unmatched /* */, at char %d" (verilog-point-text) (point))))
        ((looking-at "(\\*")
-	(or (looking-at "(\\*\\s-*)")   ; It's a "always @ (*)"
-	    (search-forward "*)")
+	;; To advance past either "(*)" or "(* ... *)" don't forward past first *
+	(forward-char 1)
+	(or (search-forward "*)")
 	    (error "%s: Unmatched (* *), at char %d" (verilog-point-text) (point))))
        (t (setq keywd (buffer-substring-no-properties
 		       (point)
