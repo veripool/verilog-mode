@@ -9819,6 +9819,22 @@ Templates:
 	    .NotInTemplate	(NotInTemplate),
 	    .ptl_bus		(ptl_busnew[3:0]),  // Templated
 	    ....
+
+
+Multiple Module Templates:
+
+  The same template lines can be applied to multiple modules with
+  the syntax as follows:
+
+	/* InstModuleA AUTO_TEMPLATE
+	   InstModuleB AUTO_TEMPLATE
+	   InstModuleC AUTO_TEMPLATE
+	   InstModuleD AUTO_TEMPLATE (
+		.ptl_bus	(ptl_busnew[]),
+		);
+	*/
+
+  Note there is only one AUTO_TEMPLATE opening parenthesis.
 
 @ Templates:
 
