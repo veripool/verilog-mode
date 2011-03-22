@@ -648,6 +648,15 @@ file referenced.  If false, this is not supported."
   :type 'boolean)
 (put 'verilog-highlight-includes 'safe-local-variable 'verilog-booleanp)
 
+(defcustom verilog-auto-declare-nettype nil
+  "*Non-nil specifies the data type to use with `verilog-auto-input' etc.
+Set this to \"wire\" if the Verilog code uses \"`default_nettype
+none\".  Note using `default_nettype none isn't recommended practice; this
+mode is experimental."
+  :group 'verilog-mode-actions
+  :type 'boolean)
+(put 'verilog-auto-declare-nettype 'safe-local-variable `stringp)
+
 (defcustom verilog-auto-endcomments t
   "*True means insert a comment /* ... */ after 'end's.
 The name of the function or case will be set between the braces."
@@ -8941,11 +8950,17 @@ When MODI is non-null, also add to modi-cache, for tracking."
 	  ((equal direction "wire")
 	   (verilog-modi-cache-add-wires modi sigs))
 	  ((equal direction "output")
-	   (verilog-modi-cache-add-outputs modi sigs))
+	   (verilog-modi-cache-add-outputs modi sigs)
+	   (when verilog-auto-declare-nettype
+	     (verilog-modi-cache-add-wires modi sigs)))
 	  ((equal direction "input")
-	   (verilog-modi-cache-add-inputs modi sigs))
+	   (verilog-modi-cache-add-inputs modi sigs)
+	   (when verilog-auto-declare-nettype
+	     (verilog-modi-cache-add-wires modi sigs)))
 	  ((equal direction "inout")
-	   (verilog-modi-cache-add-inouts modi sigs))
+	   (verilog-modi-cache-add-inouts modi sigs)
+	   (when verilog-auto-declare-nettype
+	     (verilog-modi-cache-add-wires modi sigs)))
 	  ((equal direction "interface"))
 	  (t
 	   (error "Unsupported verilog-insert-definition direction: %s" direction))))
@@ -8961,6 +8976,9 @@ When MODI is non-null, also add to modi-cache, for tracking."
 	       (if (not (member direction '("wire" "interface")))
 		   (concat direction " "))
 	       (verilog-sig-type sig)))
+	     ((and verilog-auto-declare-nettype
+		   (member direction '("input" "output" "inout")))
+	      (concat direction " " verilog-auto-declare-nettype))
 	     (t direction))
        indent-pt)
       (insert (if v2k "," ";"))
