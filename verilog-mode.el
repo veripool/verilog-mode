@@ -4510,7 +4510,6 @@ becomes:
                   next-error-last-buffer
                 compilation-last-buffer)))
     (when (buffer-live-p buff)
-      ;; FIXME with-current-buffer?
       (save-excursion
         (switch-to-buffer buff)
         (beginning-of-line)
@@ -8876,13 +8875,13 @@ if non-nil."
 
 ;; Combined
 (defun verilog-decls-get-signals (decls)
+  "Return all declared signals, excluding 'assign' statements."
   (append
    (verilog-decls-get-outputs decls)
    (verilog-decls-get-inouts decls)
    (verilog-decls-get-inputs decls)
    (verilog-decls-get-wires decls)
    (verilog-decls-get-regs decls)
-   (verilog-decls-get-assigns decls)
    (verilog-decls-get-consts decls)
    (verilog-decls-get-gparams decls)))
 
@@ -10321,7 +10320,8 @@ Typing \\[verilog-auto] will make this into:
 		      (verilog-signals-not-in
 		       (append (verilog-subdecls-get-inputs modsubdecls)
 			       (verilog-subdecls-get-inouts modsubdecls))
-		       (verilog-decls-get-signals moddecls)))))
+		       (append (verilog-decls-get-signals moddecls)
+			       (verilog-decls-get-assigns moddecls))))))
       (forward-line 1)
       (when sig-list
 	(verilog-insert-indent "// Beginning of automatic reg inputs (for undeclared instantiated-module inputs)\n")
