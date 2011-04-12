@@ -11710,7 +11710,7 @@ Wilson Snyder (wsnyder@wsnyder.org)."
   "output: " str)
 
 (define-skeleton verilog-sk-prompt-msb
-  "Prompt for least significant bit specification."
+  "Prompt for most significant bit specification."
   "msb:" str & ?: & '(verilog-sk-prompt-lsb) | -1 )
 
 (define-skeleton verilog-sk-prompt-lsb
