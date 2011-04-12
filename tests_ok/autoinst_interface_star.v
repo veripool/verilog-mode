@@ -8,7 +8,8 @@ module autoinst_interface
    input        reset,
    input        start,
    my_svi.master my_svi_port,
-   my_svi my_svi_noport
+   my_svi my_svi_noport,
+   my_svi my_svi_noport_upper_decl
    // End of automatics
    );
 endmodule
@@ -21,7 +22,8 @@ module autoinst_interface
    output      start,
    input [7:0] count,
    my_svi.master my_svi_port,
-   my_svi my_svi_noport
+   my_svi my_svi_noport,
+   my_svi my_svi_noport_upper_decl
    // End of automatics
    );
 endmodule

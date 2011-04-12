@@ -8955,8 +8955,7 @@ When MODI is non-null, also add to modi-cache, for tracking."
   (when modi
     (cond ((equal direction "wire")
 	   (verilog-modi-cache-add-wires modi sigs))
-	  ((or (member direction '("reg" "logic" "bit"))
-	       (equal direction verilog-auto-wire-type))
+	  ((equal direction "reg")
 	   (verilog-modi-cache-add-regs modi sigs))
 	  ((equal direction "output")
 	   (verilog-modi-cache-add-outputs modi sigs)
@@ -8982,13 +8981,16 @@ When MODI is non-null, also add to modi-cache, for tracking."
        ;; Want "type x" or "output type x", not "wire type x"
        (cond ((verilog-sig-type sig)
 	      (concat
-	       (if (not (member direction '("wire" "interface")))
+	       (if (not (member direction '("reg" "wire" "interface")))
 		   (concat direction " "))
 	       (verilog-sig-type sig)))
 	     ((and verilog-auto-declare-nettype
 		   (member direction '("input" "output" "inout")))
 	      (concat direction " " verilog-auto-declare-nettype))
-	     (t direction))
+	     (verilog-auto-wire-type
+	      verilog-auto-wire-type)
+	     (t
+	      direction))
        indent-pt)
       (insert (if v2k "," ";"))
       (if (or (not (verilog-sig-comment sig))
@@ -10282,9 +10284,7 @@ Typing \\[verilog-auto] will make this into:
       (forward-line 1)
       (when sig-list
 	(verilog-insert-indent "// Beginning of automatic regs (for this module's undeclared outputs)\n")
-	(verilog-insert-definition modi sig-list
-				   (or verilog-auto-wire-type "reg")
-				   indent-pt nil)
+	(verilog-insert-definition modi sig-list "reg" indent-pt nil)
 	(verilog-insert-indent "// End of automatics\n")))))
 
 (defun verilog-auto-reg-input ()
@@ -10339,9 +10339,7 @@ Typing \\[verilog-auto] will make this into:
       (forward-line 1)
       (when sig-list
 	(verilog-insert-indent "// Beginning of automatic reg inputs (for undeclared instantiated-module inputs)\n")
-	(verilog-insert-definition modi sig-list
-				   (or verilog-auto-wire-type "reg")
-				   indent-pt nil)
+	(verilog-insert-definition modi sig-list "reg" indent-pt nil)
 	(verilog-insert-indent "// End of automatics\n")))))
 
 (defun verilog-auto-logic ()
@@ -10425,9 +10423,7 @@ Typing \\[verilog-auto] will make this into:
       (forward-line 1)
       (when sig-list
 	(verilog-insert-indent "// Beginning of automatic wires (for undeclared instantiated-module outputs)\n")
-	(verilog-insert-definition modi sig-list
-				   (or verilog-auto-wire-type "wire")
-				   indent-pt nil)
+	(verilog-insert-definition modi sig-list "wire" indent-pt nil)
 	(verilog-insert-indent "// End of automatics\n")
 	(when nil	;; Too slow on huge modules, plus makes everyone's module change
 	  (beginning-of-line)
@@ -11230,9 +11226,7 @@ Typing \\[verilog-auto] will make this into:
 	(verilog-modi-cache-add-wires modi sig-list)  ; Before we trash list
 	(while sig-list
 	  (let ((sig (car sig-list)))
-	    (verilog-insert-one-definition sig
-					   (or verilog-auto-wire-type "wire")
-					   indent-pt)
+	    (verilog-insert-one-definition sig "wire" indent-pt)
 	    (indent-to (max 48 (+ indent-pt 40)))
 	    (insert "= " (verilog-sig-tieoff sig)
 		    ";\n")
@@ -11439,9 +11433,7 @@ Typing \\[verilog-auto] will make this into:
       (verilog-insert-indent "// Beginning of automatic ASCII enum decoding\n")
       (let ((decode-sig-list (list (list ascii-name (format "[%d:0]" (- (* ascii-chars 8) 1))
 					 (concat "Decode of " undecode-name) nil nil))))
-	(verilog-insert-definition modi decode-sig-list
-				   (or verilog-auto-wire-type "reg")
-				   indent-pt nil))
+	(verilog-insert-definition modi decode-sig-list "reg" indent-pt nil))
       ;;
       (verilog-insert-indent "always @(" undecode-name ") begin\n")
       (setq indent-pt (+ indent-pt verilog-indent-level))
