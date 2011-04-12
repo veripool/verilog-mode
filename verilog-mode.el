@@ -6984,18 +6984,18 @@ See also `verilog-sk-header' for an alternative format."
 
 ;; Signal reading for given module
 ;; Note these all take modi's - as returned from verilog-modi-current
-(defsubst verilog-decls-new (out inout in wires regs assigns consts gparams interfaces)
-  (vector out inout in wires regs assigns consts gparams interfaces))
+(defsubst verilog-decls-new (out inout in vars unuseds assigns consts gparams interfaces)
+  (vector out inout in vars unuseds assigns consts gparams interfaces))
 (defsubst verilog-decls-get-outputs (decls)
   (aref decls 0))
 (defsubst verilog-decls-get-inouts (decls)
   (aref decls 1))
 (defsubst verilog-decls-get-inputs (decls)
   (aref decls 2))
-(defsubst verilog-decls-get-wires (decls)
+(defsubst verilog-decls-get-vars (decls)
   (aref decls 3))
-(defsubst verilog-decls-get-regs (decls)
-  (aref decls 4))
+;;(defsubst verilog-decls-get-unused (decls)
+;;  (aref decls 4))
 (defsubst verilog-decls-get-assigns (decls)
   (aref decls 5))
 (defsubst verilog-decls-get-consts (decls)
@@ -7279,7 +7279,7 @@ Return a array of [outputs inouts inputs wire reg assign const]."
   (let ((end-mod-point (or (verilog-get-end-of-defun t) (point-max)))
 	(functask 0) (paren 0) (sig-paren 0) (v2kargs-ok t)
 	in-modport ign-prop
-	sigs-in sigs-out sigs-inout sigs-wire sigs-reg sigs-assign sigs-const
+	sigs-in sigs-out sigs-inout sigs-var sigs-assign sigs-const
 	sigs-gparam sigs-intf
 	vec expect-signal keywd newsig rvalue enum io signed typedefed multidim
 	modport)
@@ -7365,16 +7365,15 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 		((equal keywd "parameter")
 		 (setq vec nil  enum nil  rvalue nil  signed nil  typedefed nil  multidim nil  sig-paren paren
 		       expect-signal 'sigs-gparam  io t  modport nil))
-		((member keywd '("wire" "tri" "tri0" "tri1" "triand" "trior" "wand" "wor"))
-		 (unless io (setq vec nil  enum nil  rvalue nil  signed nil  typedefed nil  multidim nil  sig-paren paren
-				  expect-signal 'sigs-wire  modport nil)))
-		((member keywd '("reg" "trireg"
+		((member keywd '("wire"
+				 "tri" "tri0" "tri1" "triand" "trior" "wand" "wor"
+				 "reg" "trireg"
 				 "byte" "shortint" "int" "longint" "integer" "time"
 				 "bit" "logic"
 				 "shortreal" "real" "realtime"
 				 "string" "event" "chandle"))
 		 (unless io (setq vec nil  enum nil  rvalue nil  signed nil  typedefed nil  multidim nil  sig-paren paren
-				  expect-signal 'sigs-reg  modport nil)))
+				  expect-signal 'sigs-var  modport nil)))
 		((equal keywd "assign")
 		 (setq vec nil  enum nil  rvalue nil  signed nil  typedefed nil  multidim nil  sig-paren paren
 		       expect-signal 'sigs-assign  modport nil))
@@ -7432,8 +7431,8 @@ Return a array of [outputs inouts inputs wire reg assign const]."
       (verilog-decls-new (nreverse sigs-out)
 			 (nreverse sigs-inout)
 			 (nreverse sigs-in)
-			 (nreverse sigs-wire)
-			 (nreverse sigs-reg)
+			 (nreverse sigs-var)
+			 nil
 			 (nreverse sigs-assign)
 			 (nreverse sigs-const)
 			 (nreverse sigs-gparam)
@@ -7520,8 +7519,7 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 			    multidim nil)
 			   sigs-intf)))
 	      ((setq portdata (and verilog-read-sub-decls-in-interfaced
-				   (or (assoc port (verilog-decls-get-regs submoddecls))
-				       (assoc port (verilog-decls-get-wires submoddecls)))))
+				   (assoc port (verilog-decls-get-vars submoddecls))))
 	       (setq sigs-intfd
 		     (cons (verilog-sig-new
 			    sig
@@ -8889,8 +8887,7 @@ if non-nil."
    (verilog-decls-get-outputs decls)
    (verilog-decls-get-inouts decls)
    (verilog-decls-get-inputs decls)
-   (verilog-decls-get-wires decls)
-   (verilog-decls-get-regs decls)
+   (verilog-decls-get-vars decls)
    (verilog-decls-get-consts decls)
    (verilog-decls-get-gparams decls)))
 
@@ -8906,10 +8903,8 @@ if non-nil."
   (verilog-modi-cache-add modi 'verilog-read-decls 1 sig-list))
 (defsubst verilog-modi-cache-add-inputs (modi sig-list)
   (verilog-modi-cache-add modi 'verilog-read-decls 2 sig-list))
-(defsubst verilog-modi-cache-add-wires (modi sig-list)
+(defsubst verilog-modi-cache-add-vars (modi sig-list)
   (verilog-modi-cache-add modi 'verilog-read-decls 3 sig-list))
-(defsubst verilog-modi-cache-add-regs (modi sig-list)
-  (verilog-modi-cache-add modi 'verilog-read-decls 4 sig-list))
 
 (defun verilog-signals-from-signame (signame-list)
   "Return signals in standard form from SIGNAME-LIST, a simple list of signal names."
@@ -8954,21 +8949,21 @@ format.  Sort unless DONT-SORT.  DIRECTION is normally wire/reg/output.
 When MODI is non-null, also add to modi-cache, for tracking."
   (when modi
     (cond ((equal direction "wire")
-	   (verilog-modi-cache-add-wires modi sigs))
+	   (verilog-modi-cache-add-vars modi sigs))
 	  ((equal direction "reg")
-	   (verilog-modi-cache-add-regs modi sigs))
+	   (verilog-modi-cache-add-vars modi sigs))
 	  ((equal direction "output")
 	   (verilog-modi-cache-add-outputs modi sigs)
 	   (when verilog-auto-declare-nettype
-	     (verilog-modi-cache-add-wires modi sigs)))
+	     (verilog-modi-cache-add-vars modi sigs)))
 	  ((equal direction "input")
 	   (verilog-modi-cache-add-inputs modi sigs)
 	   (when verilog-auto-declare-nettype
-	     (verilog-modi-cache-add-wires modi sigs)))
+	     (verilog-modi-cache-add-vars modi sigs)))
 	  ((equal direction "inout")
 	   (verilog-modi-cache-add-inouts modi sigs)
 	   (when verilog-auto-declare-nettype
-	     (verilog-modi-cache-add-wires modi sigs)))
+	     (verilog-modi-cache-add-vars modi sigs)))
 	  ((equal direction "interface"))
 	  (t
 	   (error "Unsupported verilog-insert-definition direction: %s" direction))))
@@ -10060,8 +10055,7 @@ For more information see the \\[verilog-faq] and forums at URL
 	;; Find submodule's signals and dump
 	(let ((sig-list (and (equal (verilog-modi-get-type submodi) "interface")
 			     (verilog-signals-not-in
-			      (append (verilog-decls-get-wires submoddecls)
-				      (verilog-decls-get-regs submoddecls))
+			      (verilog-decls-get-vars submoddecls)
 			      skip-pins)))
 	      (vl-dir "interfaced"))
 	  (when sig-list
@@ -10273,8 +10267,7 @@ Typing \\[verilog-auto] will make this into:
 	   (modsubdecls (verilog-modi-get-sub-decls modi))
 	   (sig-list (verilog-signals-not-in
 		      (verilog-decls-get-outputs moddecls)
-		      (append (verilog-decls-get-wires moddecls)
-			      (verilog-decls-get-regs moddecls)
+		      (append (verilog-decls-get-vars moddecls)
 			      (verilog-decls-get-assigns moddecls)
 			      (verilog-decls-get-consts moddecls)
 			      (verilog-decls-get-gparams moddecls)
@@ -10620,8 +10613,7 @@ same expansion will result from only extracting inputs starting with i:
 		      (verilog-subdecls-get-inputs modsubdecls)
 		      (append (verilog-decls-get-inputs moddecls)
 			      (verilog-decls-get-inouts moddecls)
-			      (verilog-decls-get-wires moddecls)
-			      (verilog-decls-get-regs moddecls)
+			      (verilog-decls-get-vars moddecls)
 			      (verilog-decls-get-consts moddecls)
 			      (verilog-decls-get-gparams moddecls)
 			      (verilog-subdecls-get-interfaced modsubdecls)
@@ -11023,9 +11015,7 @@ operator.  (This was added to the language in part due to AUTOSENSE!)
 	   (modi (verilog-modi-current))
 	   (moddecls (verilog-modi-get-decls modi))
 	   (sig-memories (verilog-signals-memory
-			  (append
-			   (verilog-decls-get-regs moddecls)
-			   (verilog-decls-get-wires moddecls))))
+			  (verilog-decls-get-vars moddecls)))
 	   sig-list not-first presense-sigs)
       ;; Read signals in always, eliminate outputs from sense list
       (setq presense-sigs (verilog-signals-from-signame
@@ -11209,8 +11199,7 @@ Typing \\[verilog-auto] will make this into:
 	   (modsubdecls (verilog-modi-get-sub-decls modi))
 	   (sig-list (verilog-signals-not-in
 		      (verilog-decls-get-outputs moddecls)
-		      (append (verilog-decls-get-wires moddecls)
-			      (verilog-decls-get-regs moddecls)
+		      (append (verilog-decls-get-vars moddecls)
 			      (verilog-decls-get-assigns moddecls)
 			      (verilog-decls-get-consts moddecls)
 			      (verilog-decls-get-gparams moddecls)
@@ -11223,7 +11212,7 @@ Typing \\[verilog-auto] will make this into:
 	(forward-line 1)
 	(verilog-insert-indent "// Beginning of automatic tieoffs (for this module's unterminated outputs)\n")
 	(setq sig-list (sort (copy-alist sig-list) `verilog-signals-sort-compare))
-	(verilog-modi-cache-add-wires modi sig-list)  ; Before we trash list
+	(verilog-modi-cache-add-vars modi sig-list)  ; Before we trash list
 	(while sig-list
 	  (let ((sig (car sig-list)))
 	    (verilog-insert-one-definition sig "wire" indent-pt)
@@ -11394,11 +11383,10 @@ Typing \\[verilog-auto] will make this into:
 	   ;;
 	   (sig-list-consts (append (verilog-decls-get-consts moddecls)
 				    (verilog-decls-get-gparams moddecls)))
-	   (sig-list-all  (append (verilog-decls-get-regs moddecls)
+	   (sig-list-all  (append (verilog-decls-get-vars moddecls)
 				  (verilog-decls-get-outputs moddecls)
 				  (verilog-decls-get-inouts moddecls)
-				  (verilog-decls-get-inputs moddecls)
-				  (verilog-decls-get-wires moddecls)))
+				  (verilog-decls-get-inputs moddecls)))
 	   ;;
 	   (undecode-sig (or (assoc undecode-name sig-list-all)
 			     (error "%s: Signal %s not found in design" (verilog-point-text) undecode-name)))
