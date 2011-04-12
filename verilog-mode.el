@@ -9625,7 +9625,8 @@ If PAR-VALUES replace final strings with these parameter values."
 			t t vl-mbits)
 	      check-values (cdr check-values)))
       (setq vl-bits (verilog-simplify-range-expression vl-bits)
-	    vl-mbits (verilog-simplify-range-expression vl-mbits))) ; Not in the loop for speed
+	    vl-mbits (verilog-simplify-range-expression vl-mbits)
+	    vl-width (verilog-make-width-expression vl-bits))) ; Not in the loop for speed
     ;; Default net value if not found
     (setq tpl-net (concat port
 			  (if vl-modport (concat "." vl-modport) "")
