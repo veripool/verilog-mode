@@ -657,6 +657,13 @@ mode is experimental."
   :type 'boolean)
 (put 'verilog-auto-declare-nettype 'safe-local-variable `stringp)
 
+(defcustom verilog-auto-wire-type nil
+  "*Non-nil specifies the data type to use with `verilog-auto-wire' etc.
+Set this to \"logic\" for SystemVerilog code, or use `verilog-auto-logic'."
+  :group 'verilog-mode-actions
+  :type 'boolean)
+(put 'verilog-auto-wire-type 'safe-local-variable `stringp)
+
 (defcustom verilog-auto-endcomments t
   "*True means insert a comment /* ... */ after 'end's.
 The name of the function or case will be set between the braces."
@@ -1305,6 +1312,8 @@ If set will become buffer local.")
        :help		"Help on expanding Verilog-2001 .* pins"]
       ["AUTOINSTPARAM"			(describe-function 'verilog-auto-inst-param)
        :help		"Help on AUTOINSTPARAM - adding parameter pins to cells"]
+      ["AUTOLOGIC"			(describe-function 'verilog-auto-logic)
+       :help		"Help on AUTOLOGIC - declaring logic signals"]
       ["AUTOOUTPUT"			(describe-function 'verilog-auto-output)
        :help		"Help on AUTOOUTPUT - adding outputs from cells"]
       ["AUTOOUTPUTEVERY"		(describe-function 'verilog-auto-output-every)
@@ -8944,10 +8953,11 @@ with appropriate INDENT-PT indentation.  If V2K, use Verilog 2001 I/O
 format.  Sort unless DONT-SORT.  DIRECTION is normally wire/reg/output.
 When MODI is non-null, also add to modi-cache, for tracking."
   (when modi
-    (cond ((equal direction "reg")
-	   (verilog-modi-cache-add-regs modi sigs))
-	  ((equal direction "wire")
+    (cond ((equal direction "wire")
 	   (verilog-modi-cache-add-wires modi sigs))
+	  ((or (member direction '("reg" "logic" "bit"))
+	       (equal direction verilog-auto-wire-type))
+	   (verilog-modi-cache-add-regs modi sigs))
 	  ((equal direction "output")
 	   (verilog-modi-cache-add-outputs modi sigs)
 	   (when verilog-auto-declare-nettype
@@ -9276,7 +9286,8 @@ called before and after this function, respectively."
 		 (verilog-regexp-words
 		  `("AUTOASCIIENUM" "AUTOCONCATCOMMENT" "AUTODEFINEVALUE"
 		    "AUTOINOUT" "AUTOINOUTCOMP" "AUTOINOUTMODULE"
-		    "AUTOINPUT" "AUTOINSERTLISP" "AUTOOUTPUT" "AUTOOUTPUTEVERY"
+		    "AUTOINPUT" "AUTOINSERTLISP" "AUTOLOGIC"
+		    "AUTOOUTPUT" "AUTOOUTPUTEVERY"
 		    "AUTOREG" "AUTOREGINPUT" "AUTORESET" "AUTOTIEOFF"
 		    "AUTOUNUSED" "AUTOWIRE")))
 	       ;; Optional parens or quoted parameter or .* for (((...)))
@@ -10224,7 +10235,8 @@ Templates:
 (defun verilog-auto-reg ()
   "Expand AUTOREG statements, as part of \\[verilog-auto].
 Make reg statements for any output that isn't already declared,
-and isn't a wire output from a block.
+and isn't a wire output from a block.  `verilog-auto-wire-type'
+may be used to change the datatype of the declarations.
 
 Limitations:
   This ONLY detects outputs of AUTOINSTants (see `verilog-read-sub-decls').
@@ -10270,7 +10282,9 @@ Typing \\[verilog-auto] will make this into:
       (forward-line 1)
       (when sig-list
 	(verilog-insert-indent "// Beginning of automatic regs (for this module's undeclared outputs)\n")
-	(verilog-insert-definition modi sig-list "reg" indent-pt nil)
+	(verilog-insert-definition modi sig-list
+				   (or verilog-auto-wire-type "reg")
+				   indent-pt nil)
 	(verilog-insert-indent "// End of automatics\n")))))
 
 (defun verilog-auto-reg-input ()
@@ -10325,13 +10339,37 @@ Typing \\[verilog-auto] will make this into:
       (forward-line 1)
       (when sig-list
 	(verilog-insert-indent "// Beginning of automatic reg inputs (for undeclared instantiated-module inputs)\n")
-	(verilog-insert-definition modi sig-list "reg" indent-pt nil)
+	(verilog-insert-definition modi sig-list
+				   (or verilog-auto-wire-type "reg")
+				   indent-pt nil)
 	(verilog-insert-indent "// End of automatics\n")))))
+
+(defun verilog-auto-logic ()
+  "Expand AUTOLOGIC statements, as part of \\[verilog-auto].
+Make wire statements using the SystemVerilog logic keyword.
+This is currently equivelent to:
+
+    /*AUTOWIRE*/
+
+with the below at the bottom of the file
+
+    // Local Variables:
+    // verilog-auto-logic-type:\"logic\"
+    // End:
+
+In the future AUTOLOGIC may declare additional identifiers,
+while AUTOWIRE will not."
+  (save-excursion
+    (unless verilog-auto-wire-type
+      (set (make-local-variable 'verilog-auto-wire-type)
+	   "logic"))
+    (verilog-auto-wire)))
 
 (defun verilog-auto-wire ()
   "Expand AUTOWIRE statements, as part of \\[verilog-auto].
 Make wire statements for instantiations outputs that aren't
-already declared.
+already declared. `verilog-auto-wire-type' may be used to change
+the datatype of the declarations.
 
 Limitations:
   This ONLY detects outputs of AUTOINSTants (see `verilog-read-sub-decls'),
@@ -10387,7 +10425,9 @@ Typing \\[verilog-auto] will make this into:
       (forward-line 1)
       (when sig-list
 	(verilog-insert-indent "// Beginning of automatic wires (for undeclared instantiated-module outputs)\n")
-	(verilog-insert-definition modi sig-list "wire" indent-pt nil)
+	(verilog-insert-definition modi sig-list
+				   (or verilog-auto-wire-type "wire")
+				   indent-pt nil)
 	(verilog-insert-indent "// End of automatics\n")
 	(when nil	;; Too slow on huge modules, plus makes everyone's module change
 	  (beginning-of-line)
@@ -11135,6 +11175,9 @@ them to a one.
 You can add signals you do not want included in AUTOTIEOFF with
 `verilog-auto-tieoff-ignore-regexp'.
 
+`verilog-auto-wire-type' may be used to change the datatype of
+the declarations.
+
 An example of making a stub for another module:
 
     module ExampStub (/*AUTOINST*/);
@@ -11187,7 +11230,9 @@ Typing \\[verilog-auto] will make this into:
 	(verilog-modi-cache-add-wires modi sig-list)  ; Before we trash list
 	(while sig-list
 	  (let ((sig (car sig-list)))
-	    (verilog-insert-one-definition sig "wire" indent-pt)
+	    (verilog-insert-one-definition sig
+					   (or verilog-auto-wire-type "wire")
+					   indent-pt)
 	    (indent-to (max 48 (+ indent-pt 40)))
 	    (insert "= " (verilog-sig-tieoff sig)
 		    ";\n")
@@ -11309,6 +11354,9 @@ Finally, a AUTOASCIIENUM command is used.
   The final optional parameter is a string which will be removed from the
   state names.
 
+  `verilog-auto-wire-type' may be used to change the datatype of
+  the declarations.
+
 An example:
 
 	//== State enumeration
@@ -11391,7 +11439,9 @@ Typing \\[verilog-auto] will make this into:
       (verilog-insert-indent "// Beginning of automatic ASCII enum decoding\n")
       (let ((decode-sig-list (list (list ascii-name (format "[%d:0]" (- (* ascii-chars 8) 1))
 					 (concat "Decode of " undecode-name) nil nil))))
-	(verilog-insert-definition modi decode-sig-list "reg" indent-pt nil))
+	(verilog-insert-definition modi decode-sig-list
+				   (or verilog-auto-wire-type "reg")
+				   indent-pt nil))
       ;;
       (verilog-insert-indent "always @(" undecode-name ") begin\n")
       (setq indent-pt (+ indent-pt verilog-indent-level))
@@ -11498,6 +11548,7 @@ Using \\[describe-function], see also:
     `verilog-auto-inst'         for AUTOINST instantiation pins
     `verilog-auto-star'         for AUTOINST .* SystemVerilog pins
     `verilog-auto-inst-param'   for AUTOINSTPARAM instantiation params
+    `verilog-auto-logic'        for AUTOLOGIC declaring logic signals
     `verilog-auto-output'       for AUTOOUTPUT making hierarchy outputs
     `verilog-auto-output-every' for AUTOOUTPUTEVERY making all outputs
     `verilog-auto-reg'          for AUTOREG registers
@@ -11596,6 +11647,7 @@ Wilson Snyder (wsnyder@wsnyder.org)."
 	       ;; Then tie off those in/outs
 	       (verilog-auto-re-search-do "/\\*AUTOTIEOFF\\*/" 'verilog-auto-tieoff)
 	       ;; Wires/regs must be after inputs/outputs
+	       (verilog-auto-re-search-do "/\\*AUTOLOGIC\\*/" 'verilog-auto-logic)
 	       (verilog-auto-re-search-do "/\\*AUTOWIRE\\*/" 'verilog-auto-wire)
 	       (verilog-auto-re-search-do "/\\*AUTOREG\\*/" 'verilog-auto-reg)
 	       (verilog-auto-re-search-do "/\\*AUTOREGINPUT\\*/" 'verilog-auto-reg-input)
