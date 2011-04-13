@@ -16,6 +16,17 @@ module top
    // And-or (setq verilog-auto-sv t)
    // And-or (setq verilog-auto-wire-type 'logic')
 
+   /*AUTOOUTPUTEVERY*/
+   // Beginning of automatic outputs (every signal)
+   output logic		COLS;
+   output logic		in1a;			// To isub2 of sub2.v, ...
+   output logic		in1b;			// To isub1 of sub1.v
+   output logic		in2b;			// To isub2 of sub2.v
+   output logic		out1a;			// From isub1 of sub1.v
+   output logic [1:0]	out1b;			// From isub1 of sub1.v
+   output logic [1:0]	out2b;			// From isub2 of sub2.v
+   // End of automatics
+
    /*AUTOREG*/
    // Beginning of automatic regs (for this module's undeclared outputs)
    logic		reg_assigned;
@@ -77,3 +88,7 @@ module sub2
     output logic [1:0] out2b
     );
 endmodule
+
+// Local Variables:
+// verilog-auto-wire-type: "logic"
+// End:
