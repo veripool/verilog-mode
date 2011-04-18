@@ -1298,6 +1298,8 @@ If set will become buffer local.")
        :help		"Help on AUTOASCIIENUM - creating ASCII for enumerations"]
       ["AUTOINOUTCOMP"			(describe-function 'verilog-auto-inout-comp)
        :help		"Help on AUTOINOUTCOMP - copying complemented i/o from another file"]
+      ["AUTOINOUTIN"			(describe-function 'verilog-auto-inout-in)
+       :help		"Help on AUTOINOUTCOMP - copying i/o from another file as all inputs"]
       ["AUTOINOUTMODULE"		(describe-function 'verilog-auto-inout-module)
        :help		"Help on AUTOINOUTMODULE - copying i/o from another file"]
       ["AUTOINSERTLISP"			(describe-function 'verilog-auto-insert-lisp)
@@ -8465,7 +8467,7 @@ Allows version control to check out the file if need be."
 	     (while (and
 		     ;; It may be tempting to look for verilog-defun-re,
 		     ;; don't, it slows things down a lot!
-		     (verilog-re-search-forward-quick "\\<\\(module\\|interface\\)\\>" nil t)
+		     (verilog-re-search-forward-quick "\\<\\(module\\|interface\\|program\\)\\>" nil t)
 		     (setq type (match-string-no-properties 0))
 		     (verilog-re-search-forward-quick "[(;]" nil t))
 	       (if (equal module (verilog-read-module-name))
@@ -9282,7 +9284,7 @@ called before and after this function, respectively."
 	       (eval-when-compile
 		 (verilog-regexp-words
 		  `("AUTOASCIIENUM" "AUTOCONCATCOMMENT" "AUTODEFINEVALUE"
-		    "AUTOINOUT" "AUTOINOUTCOMP" "AUTOINOUTMODULE"
+		    "AUTOINOUT" "AUTOINOUTCOMP" "AUTOINOUTIN" "AUTOINOUTMODULE"
 		    "AUTOINPUT" "AUTOINSERTLISP" "AUTOLOGIC"
 		    "AUTOOUTPUT" "AUTOOUTPUTEVERY"
 		    "AUTOREG" "AUTOREGINPUT" "AUTORESET" "AUTOTIEOFF"
@@ -10710,13 +10712,14 @@ same expansion will result from only extracting inouts starting with i:
 	(verilog-insert-indent "// End of automatics\n"))
       (when v2k (verilog-repair-close-comma)))))
 
-(defun verilog-auto-inout-module (&optional complement)
+(defun verilog-auto-inout-module (&optional complement all-in)
   "Expand AUTOINOUTMODULE statements, as part of \\[verilog-auto].
 Take input/output/inout statements from the specified module and insert
 into the current module.  This is useful for making null templates and
 shell modules which need to have identical I/O with another module.
 Any I/O which are already defined in this module will not be redefined.
-For the complement of this function, see `verilog-auto-inout-comp'.
+For the complement of this function, see `verilog-auto-inout-comp',
+and to make monitors with all inputs, see `verilog-auto-inout-in'.
 
 Limitations:
   If placed inside the parenthesis of a module declaration, it creates
@@ -10786,17 +10789,24 @@ against the previous example's module:
 	       (moddecls (verilog-modi-get-decls modi))
 	       (submoddecls (verilog-modi-get-decls submodi))
 	       (sig-list-i  (verilog-signals-not-in
-			     (if complement
-				 (verilog-decls-get-outputs submoddecls)
-			       (verilog-decls-get-inputs submoddecls))
+			     (cond (all-in
+				    (append
+				     (verilog-decls-get-inputs submoddecls)
+				     (verilog-decls-get-inouts submoddecls)
+				     (verilog-decls-get-outputs submoddecls)))
+				   (complement
+				    (verilog-decls-get-outputs submoddecls))
+				   (t (verilog-decls-get-inputs submoddecls)))
 			     (append (verilog-decls-get-inputs moddecls))))
 	       (sig-list-o  (verilog-signals-not-in
-			     (if complement
-				 (verilog-decls-get-inputs submoddecls)
-			       (verilog-decls-get-outputs submoddecls))
+			     (cond (all-in nil)
+				   (complement
+				    (verilog-decls-get-inputs submoddecls))
+				   (t (verilog-decls-get-outputs submoddecls)))
 			     (append (verilog-decls-get-outputs moddecls))))
 	       (sig-list-io (verilog-signals-not-in
-			     (verilog-decls-get-inouts submoddecls)
+			     (cond (all-in nil)
+				   (t (verilog-decls-get-inouts submoddecls)))
 			     (append (verilog-decls-get-inouts moddecls))))
 	       (sig-list-if (verilog-signals-not-in
 			     (verilog-decls-get-interfaces submoddecls)
@@ -10875,7 +10885,58 @@ signals matching the regular expression will be included.  For example the
 same expansion will result from only extracting signals starting with i:
 
 	   /*AUTOINOUTCOMP(\"ExampMain\",\"^i\")*/"
-  (verilog-auto-inout-module t))
+  (verilog-auto-inout-module t nil))
+
+(defun verilog-auto-inout-in ()
+  "Expand AUTOINOUTIN statements, as part of \\[verilog-auto].
+Take input/output/inout statements from the specified module and
+insert them as all inputs into the current module.  This is
+useful for making monitor modules which need to see all signals
+as inputs based on another module.  Any I/O which are already
+defined in this module will not be redefined.  See also
+`verilog-auto-inout-module'.
+
+Limitations:
+  If placed inside the parenthesis of a module declaration, it creates
+  Verilog 2001 style, else uses Verilog 1995 style.
+
+  Concatenation and outputting partial busses is not supported.
+
+  Module names must be resolvable to filenames.  See `verilog-auto-inst'.
+
+  Signals are not inserted in the same order as in the original module,
+  though they will appear to be in the same order to a AUTOINST
+  instantiating either module.
+
+An example:
+
+	module ExampShell (/*AUTOARG*/);
+	   /*AUTOINOUTIN(\"ExampMain\")*/
+	endmodule
+
+	module ExampMain (i,o,io);
+          input i;
+          output o;
+          inout io;
+        endmodule
+
+Typing \\[verilog-auto] will make this into:
+
+	module ExampShell (/*AUTOARG*/i,o,io);
+	   /*AUTOINOUTIN(\"ExampMain\")*/
+           // Beginning of automatic in/out/inouts (from specific module)
+           input i;
+           input io;
+           input o;
+	   // End of automatics
+	endmodule
+
+You may also provide an optional regular expression, in which case only
+signals matching the regular expression will be included.  For example the
+same expansion will result from only extracting signals starting with i:
+
+	   /*AUTOINOUTCOMP(\"ExampMain\",\"^i\")*/"
+  (verilog-auto-inout-module nil t))
 
 (defun verilog-auto-insert-lisp ()
   "Expand AUTOINSERTLISP statements, as part of \\[verilog-auto].
@@ -11521,7 +11582,8 @@ Likewise, you can delete or inject AUTOs with:
 Using \\[describe-function], see also:
     `verilog-auto-arg'          for AUTOARG module instantiations
     `verilog-auto-ascii-enum'   for AUTOASCIIENUM enumeration decoding
-    `verilog-auto-inout-comp'  for AUTOINOUTCOMP copy complemented i/o
+    `verilog-auto-inout-comp'   for AUTOINOUTCOMP copy complemented i/o
+    `verilog-auto-inout-in'     for AUTOINOUTIN inputs for all i/o
     `verilog-auto-inout-module' for AUTOINOUTMODULE copying i/o from elsewhere
     `verilog-auto-inout'        for AUTOINOUT making hierarchy inouts
     `verilog-auto-input'        for AUTOINPUT making hierarchy inputs
@@ -11615,6 +11677,7 @@ Wilson Snyder (wsnyder@wsnyder.org)."
 	       ;; first in/outs from other files
 	       (verilog-auto-re-search-do "/\\*AUTOINOUTMODULE([^)]*)\\*/" 'verilog-auto-inout-module)
 	       (verilog-auto-re-search-do "/\\*AUTOINOUTCOMP([^)]*)\\*/" 'verilog-auto-inout-comp)
+	       (verilog-auto-re-search-do "/\\*AUTOINOUTIN([^)]*)\\*/" 'verilog-auto-inout-in)
 	       ;; next in/outs which need previous sucked inputs first
 	       (verilog-auto-re-search-do "/\\*AUTOOUTPUT\\((\"[^\"]*\")\\)\\*/"
 					  '(lambda () (verilog-auto-output t)))
