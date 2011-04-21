@@ -8,11 +8,25 @@ module foo();
    end
    task a (a);
       begin
-	 a = f;
+     a 	= f;
+a      = f;
+ d     <= 89;
+ sdf    = sdf;
+         adada  => asda;
+ d     ->> g;
+ aasd  <<<= 3;
+                   	 ccc   %= 6;
+d     *= b;
+g     -= c;
       end
    endtask // a
    
    
+   property p_3;
+      a      => ##3 !a;        
+      a     |=> ##1 !a;
+      a     |-> ##2 !a;
+   endproperty   
    property p_2;
       @(posedge clk) b |-> ##1 c;
    endproperty
@@ -24,10 +38,10 @@ module foo();
    
    //   ap_1 assert property (p_1);  FIXME
    //   ap_2 assert property (p_2);
-	 
+   
    property p_lane_output_change_on_input_change;
       @(negedge test_clk)
         disable iff (ana_byp == 0)
-	  !$stable(lane_inputs) |-> !$stable(lane_outputs);
+          !$stable(lane_inputs) |-> !$stable(lane_outputs);
    endproperty
 endmodule

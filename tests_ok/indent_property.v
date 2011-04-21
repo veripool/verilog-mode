@@ -8,11 +8,25 @@ module foo();
    end
    task a (a);
       begin
-         a  = f;
+         a      = f;
+         a      = f;
+         d     <= 89;
+         sdf    = sdf;
+         adada  = > asda;
+         d     ->> g;
+         aasd  <<<= 3;
+         ccc   %= 6;
+         d     *= b;
+         g     -= c;
       end
    endtask // a
    
    
+   property p_3;
+      a  = > ##3 !a;
+      a |=> ##1 !a;
+      a |-> ##2 !a;
+   endproperty
    property p_2;
       @(posedge clk) b |-> ##1 c;
    endproperty

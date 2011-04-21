@@ -50,7 +50,7 @@ module testmodule (/*AUTOARG*/
    reg [7:0]    outw3;
    // End of automatics
    
-   wire         outb8 =1'b1, outb9=|{in1[0],in2[0]}, outb10=1'b0;
+   wire         outb8=1'b1, outb9=|{in1[0],in2[0]}, outb10=1'b0;
    
    always @(/*AUTOSENSE*/in1 or in2 or in3 or in4) begin
       :ignore_label
@@ -59,17 +59,17 @@ module testmodule (/*AUTOARG*/
       out3  = ffs /*check*/ (in2);
       $display ("chk ", in1);
       show (in4);
-      if (|in3) out4  =1; else out4=0;
+      if (|in3) out4=1; else out4=0;
    end
    
    always @ (/*AUTOSENSE*/in1 or in2 or in3 or in5) begin
       casex ({in5[1:0], (3'b010==in2)})
-        3'bx_1_0: out5  =3'b000;
-        3'bx_1_1: out5  =3'b010;
-        3'bx_0_x: out5  =3'b100;
+        3'bx_1_0: out5=3'b000;
+        3'bx_1_1: out5=3'b010;
+        3'bx_0_x: out5=3'b100;
       endcase
       casex ({in3[in1]})
-        1'bx: out5  =3'b000;
+        1'bx: out5=3'b000;
       endcase
    end
    

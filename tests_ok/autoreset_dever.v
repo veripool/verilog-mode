@@ -34,18 +34,18 @@ module x;
         for (int j=0; j<10; j++) blob[j] <= 0;
         /*AUTORESET*/
         // Beginning of autoreset for uninitialized flops
-        zsv <= 1'h0;
-        zz  <= 1'h0;
+        zsv                              <= 1'h0;
+        zz                               <= 1'h0;
         // End of automatics
      end
      else begin
-        for (i=0; i<10; i++) blob[i] <= blob[i+1];
-        for (i=0; i<10; i++) zz <= 1;
+        for (i=0; i<10; i++) blob[i]       <= blob[i+1];
+        for (i=0; i<10; i++) zz            <= 1;
         for (int isv=0; isv<10; isv++) zsv <= 1;
      end
    
    always @(/*AS*/in) begin
-      for (i=0; i<10; i++) zz <= in;
+      for (i=0; i<10; i++) zz            <= in;
       for (int isv=0; isv<10; isv++) zsv <= in;
    end
    

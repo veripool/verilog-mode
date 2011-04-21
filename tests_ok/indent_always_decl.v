@@ -2,7 +2,7 @@ module foo ();
    // Before the always block,
    // indents to here: (which I like)
    //          V
-   wire [10:0] mux_output0 =
+   wire [10:0] mux_output0 = 
                select0[0] ? mux_input0 :
                select0[1] ? mux_input1 :
                select0[2] ? mux_input2 :
@@ -21,7 +21,7 @@ module foo ();
    // After the always block,
    // indents to here:
    //                       V
-   wire [10:0] mux_output1 =
+   wire [10:0] mux_output1 = 
                select1[0] ? mux_input8 :
                select1[1] ? mux_input9 :
                select1[2] ? mux_input10 :

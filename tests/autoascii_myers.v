@@ -12,9 +12,9 @@ module testit;
 
    //== State enumeration
    parameter [2:0] // synopsys enum state_info
-                SM_IDLE =  3'b000,
-                SM_SEND =  3'b001,
-                SM_WAIT1 = 3'b010;
+     SM_IDLE  = 3'b000,
+     SM_SEND  = 3'b001,
+     SM_WAIT1 = 3'b010;
    //== State variables
    reg [2:0] /* synopsys enum state_info */
              state_r;                /* synopsys state_vector state_r */

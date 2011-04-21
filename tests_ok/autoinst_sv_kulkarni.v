@@ -33,8 +33,8 @@ endmodule
 // Top-level module or Testbench
 // -----------------------------------------------------------------------------
 module top;
-   parameter M  =4;
-   parameter N  =2;
+   parameter M=4;
+   parameter N=2;
    
    wire [N-1:0]         a_o1;
    logic [N-1:0][M-1:0] a_i1;
@@ -65,7 +65,7 @@ module top;
       #5;
       for (int i=0; i<1; i++) begin
          for (int j=0; j<N; j++) begin
-            temp           = 1'b0;
+            temp  = 1'b0;
             for (int k=0; k<M; k++) begin
                a_i1[j][k]  = temp;
                temp        = ~temp;

@@ -11,7 +11,7 @@ endmodule
 
 module pdq;
    input         x; output y;
-   parameter int FOO =1;
+   parameter int FOO=1;
 endmodule
 
 module abc;

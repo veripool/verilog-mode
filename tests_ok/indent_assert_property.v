@@ -4,7 +4,7 @@ module myassert(input clk,
    
    property myproperty;
       @(posedge clk)
-        $rose(reset) |-> data  == 16'h0;
+        $rose(reset) |-> data == 16'h0;
    endproperty
    
    //Assert, cover, and assume property statements
