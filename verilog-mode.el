@@ -4680,16 +4680,16 @@ This lets programs calling batch mode to easily extract error messages."
 	       (verilog-mode))))
 	 (buffer-list))
    ;; Process the files
-   (mapcar '(lambda (buf)
-	      (when (buffer-file-name buf)
-		(save-excursion
-		  (if (not (file-exists-p (buffer-file-name buf)))
-		      (error
-		       (concat "File not found: " (buffer-file-name buf))))
-		  (message (concat "Processing " (buffer-file-name buf)))
-		  (set-buffer buf)
-		  (funcall funref)
-		  (save-buffer))))
+   (mapcar (lambda (buf)
+	     (when (buffer-file-name buf)
+	       (save-excursion
+		 (if (not (file-exists-p (buffer-file-name buf)))
+		     (error
+		      (concat "File not found: " (buffer-file-name buf))))
+		 (message (concat "Processing " (buffer-file-name buf)))
+		 (set-buffer buf)
+		 (funcall funref)
+		 (save-buffer))))
 	   (buffer-list))))
 
 (defun verilog-batch-auto ()
@@ -6486,11 +6486,11 @@ for matches of `str' and adding the occurrence tp `all' through point END."
 
 (defun verilog-keyword-completion (keyword-list)
   "Give list of all possible completions of keywords in KEYWORD-LIST."
-  (mapcar '(lambda (s)
-	     (if (string-match (concat "\\<" verilog-str) s)
-		 (if (or (null verilog-pred)
-			 (funcall verilog-pred s))
-		     (setq verilog-all (cons s verilog-all)))))
+  (mapcar (lambda (s)
+	    (if (string-match (concat "\\<" verilog-str) s)
+		(if (or (null verilog-pred)
+			(funcall verilog-pred s))
+		    (setq verilog-all (cons s verilog-all)))))
 	  keyword-list))
 
 
@@ -6606,7 +6606,7 @@ and `verilog-separator-keywords'.)"
 		    (all-completions verilog-str 'verilog-completion)))
 	 (match (if verilog-toggle-completions
 		    "" (try-completion
-			verilog-str (mapcar '(lambda (elm)
+			verilog-str (mapcar (lambda (elm)
 					      (cons elm 0)) allcomp)))))
     ;; Delete old string
     (delete-region b e)
@@ -11727,13 +11727,13 @@ Wilson Snyder (wsnyder@wsnyder.org)."
 	       (verilog-auto-re-search-do "/\\*AUTOINOUTIN([^)]*)\\*/" 'verilog-auto-inout-in)
 	       ;; next in/outs which need previous sucked inputs first
 	       (verilog-auto-re-search-do "/\\*AUTOOUTPUT\\((\"[^\"]*\")\\)\\*/"
-					  '(lambda () (verilog-auto-output t)))
+					  (lambda () (verilog-auto-output t)))
 	       (verilog-auto-re-search-do "/\\*AUTOOUTPUT\\*/" 'verilog-auto-output)
 	       (verilog-auto-re-search-do "/\\*AUTOINPUT\\((\"[^\"]*\")\\)\\*/"
-					  '(lambda () (verilog-auto-input t)))
+					  (lambda () (verilog-auto-input t)))
 	       (verilog-auto-re-search-do "/\\*AUTOINPUT\\*/"  'verilog-auto-input)
 	       (verilog-auto-re-search-do "/\\*AUTOINOUT\\((\"[^\"]*\")\\)\\*/"
-					  '(lambda () (verilog-auto-inout t)))
+					  (lambda () (verilog-auto-inout t)))
 	       (verilog-auto-re-search-do "/\\*AUTOINOUT\\*/" 'verilog-auto-inout)
 	       ;; Then tie off those in/outs
 	       (verilog-auto-re-search-do "/\\*AUTOTIEOFF\\*/" 'verilog-auto-tieoff)
