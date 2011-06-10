@@ -7837,6 +7837,7 @@ For example if declare A A (.B(SIG)) then B will be included in the list."
 (defun verilog-read-auto-lisp-present ()
   "Set `verilog-cache-has-lisp' if any AUTO_LISP in this buffer."
   (save-excursion
+    (goto-char (point-min))
     (setq verilog-cache-has-lisp (re-search-forward "\\<AUTO_LISP(" nil t))))
 
 (defun verilog-read-auto-lisp (start end)
