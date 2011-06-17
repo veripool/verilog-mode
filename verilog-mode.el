@@ -958,7 +958,9 @@ the MSB or LSB of a signal inside an AUTORESET."
 Declaration order is advantageous with order based instantiations
 and is the default for backward compatibility.  Sorted order
 reduces changes when declarations are moved around in a file, and
-it's bad practice to rely on order based instantiations anyhow."
+it's bad practice to rely on order based instantiations anyhow.
+
+See also `verilog-auto-inst-sort'."
   :group 'verilog-mode-auto
   :type 'boolean)
 (put 'verilog-auto-arg-sort 'safe-local-variable 'verilog-booleanp)
@@ -1015,7 +1017,9 @@ instead expand to:
 Also affects AUTOINSTPARAM.  Declaration order is the default for
 backward compatibility, and as some teams prefer signals that are
 declared together to remain together.  Sorted order reduces
-changes when declarations are moved around in a file."
+changes when declarations are moved around in a file.
+
+See also `verilog-auto-arg-sort'."
   :group 'verilog-mode-auto
   :type 'boolean)
 (put 'verilog-auto-inst-sort 'safe-local-variable 'verilog-booleanp)
