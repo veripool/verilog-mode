@@ -1022,12 +1022,20 @@ speed up some simulators, but is less general and harder to read, so avoid."
 
 (defcustom verilog-auto-inst-template-numbers nil
   "*If true, when creating templated ports with AUTOINST, add a comment.
-The comment will add the line number of the template that was used for that
-port declaration.  Setting this aids in debugging, but nil is suggested for
-regular use to prevent large numbers of merge conflicts."
+
+If t, the comment will add the line number of the template that
+was used for that port declaration.  This setting is suggested
+only for debugging use, as regular use may cause a large numbers
+of merge conflicts.
+
+If 'lhs', the comment will show the left hand side of the
+AUTO_TEMPLATE rule that is matched.  This is less precise than
+numbering (t) when multiple rules have the same pin name, but
+won't merge conflict."
   :group 'verilog-mode-auto
-  :type 'boolean)
-(put 'verilog-auto-inst-template-numbers 'safe-local-variable 'verilog-booleanp)
+  :type '(choice (const nil) (const t) (const lhs)))
+(put 'verilog-auto-inst-template-numbers 'safe-local-variable
+     '(lambda (x) (memq x '(nil t lhs))))
 
 (defcustom verilog-auto-inst-column 40
   "*Indent-to column number for net name part of AUTOINST created pin."
@@ -9364,7 +9372,7 @@ called before and after this function, respectively."
 				 'verilog-delete-auto-star-all)
       ;; Remove template comments ... anywhere in case was pasted after AUTOINST removed
       (goto-char (point-min))
-      (while (re-search-forward "\\s-*// \\(Templated\\|Implicit \\.\\*\\)[ \tLT0-9]*$" nil t)
+      (while (re-search-forward "\\s-*// \\(Templated\\|Implicit \\.\\*\\)\\([ \tLT0-9]*\\|LHS: .*\\)$" nil t)
 	(replace-match ""))
 
       ;; Final customize
@@ -9736,11 +9744,15 @@ If PAR-VALUES replace final strings with these parameter values."
     (cond (tpl-ass
 	   (indent-to (+ (if (< verilog-auto-inst-column 48) 24 16)
 			 verilog-auto-inst-column))
-	   (if verilog-auto-inst-template-numbers
-	       (verilog-insert " // Templated"
-			       " T" (int-to-string (nth 2 tpl-ass))
-			       " L" (int-to-string (nth 3 tpl-ass)))
-	     (verilog-insert " // Templated")))
+	   (cond ((equal verilog-auto-inst-template-numbers `lhs)
+		  (verilog-insert " // Templated"
+				  " LHS: " (nth 0 tpl-ass)))
+		 (verilog-auto-inst-template-numbers
+		  (verilog-insert " // Templated"
+				 " T" (int-to-string (nth 2 tpl-ass))
+				 " L" (int-to-string (nth 3 tpl-ass))))
+		 (t
+		  (verilog-insert " // Templated"))))
 	  (for-star
 	   (indent-to (+ (if (< verilog-auto-inst-column 48) 24 16)
 			 verilog-auto-inst-column))
