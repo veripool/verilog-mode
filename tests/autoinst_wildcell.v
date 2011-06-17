@@ -9,6 +9,15 @@ module autoinst_wildcard;
    sub sub_1_0 (/*AUTOINST*/);
    sub sub_1_1 (/*AUTOINST*/);
 
+   /* sub AUTO_TEMPLATE (
+    .a\(.\)\(.\)  (b_\1_\2),
+    ); */
+
+   sub sub_0_0 (/*AUTOINST*/);
+   sub sub_0_1 (/*AUTOINST*/);
+   sub sub_1_0 (/*AUTOINST*/);
+   sub sub_1_1 (/*AUTOINST*/);
+
 endmodule
 
 module sub;

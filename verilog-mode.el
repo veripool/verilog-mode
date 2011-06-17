@@ -8089,9 +8089,10 @@ list of ( (signal_name connection_name)... )."
 	     ;; Parse lines in the template
 	     (when verilog-auto-inst-template-numbers
 	       (save-excursion
-		 (goto-char (point-min))
-		 (while (search-forward "AUTO_TEMPLATE" nil t)
-		   (setq templateno (1+ templateno)))))
+		 (let ((pre-pt (point)))
+		   (goto-char (point-min))
+		   (while (search-forward "AUTO_TEMPLATE" pre-pt t)
+		     (setq templateno (1+ templateno))))))
 	     (setq tpl-end-pt (save-excursion
 				(backward-char 1)
 				(forward-sexp 1)   ;; Moves to paren that closes argdecl's

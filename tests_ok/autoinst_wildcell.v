@@ -29,6 +29,35 @@ module autoinst_wildcard;
                 .a44                    (1_1_a_4_4),             // Templated 4
                 .a43                    (1_1_a_4_3));            // Templated 4
    
+   /* sub AUTO_TEMPLATE (
+    .a\(.\)\(.\)  (b_\1_\2),
+    ); */
+   
+   sub sub_0_0 (/*AUTOINST*/
+                // Inputs
+                .a33                    (b_3_3),                 // Templated 33
+                .a34                    (b_3_4),                 // Templated 33
+                .a44                    (b_4_4),                 // Templated 33
+                .a43                    (b_4_3));                // Templated 33
+   sub sub_0_1 (/*AUTOINST*/
+                // Inputs
+                .a33                    (b_3_3),                 // Templated 33
+                .a34                    (b_3_4),                 // Templated 33
+                .a44                    (b_4_4),                 // Templated 33
+                .a43                    (b_4_3));                // Templated 33
+   sub sub_1_0 (/*AUTOINST*/
+                // Inputs
+                .a33                    (b_3_3),                 // Templated 33
+                .a34                    (b_3_4),                 // Templated 33
+                .a44                    (b_4_4),                 // Templated 33
+                .a43                    (b_4_3));                // Templated 33
+   sub sub_1_1 (/*AUTOINST*/
+                // Inputs
+                .a33                    (b_3_3),                 // Templated 33
+                .a34                    (b_3_4),                 // Templated 33
+                .a44                    (b_4_4),                 // Templated 33
+                .a43                    (b_4_3));                // Templated 33
+   
 endmodule
 
 module sub;
