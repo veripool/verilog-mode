@@ -7,7 +7,7 @@
 ;;   VERILOG_MODE_THREAD=#of#          # Multithreaded testing
 ;;   VERILOG_MODE_PROFILE=1            # Profile - see batch_prof.el
 
-(defvar diff-flags "-c")
+(defvar diff-flags "-u")
 (defvar vl-threading (and (not (getenv "VERILOG_MODE_TEST_FILE"))
 			  (getenv "VERILOG_MODE_THREAD")))
 
@@ -188,7 +188,7 @@
   (setq running-on-xemacs (string-match "XEmacs" emacs-version))
   (setq make-backup-files nil)
   (setq-default make-backup-files nil)
-  (setq diff-flags (if (getenv "VERILOG_MODE_NO_INDENTS") "-wBc" "-c"))
+  (setq diff-flags (if (getenv "VERILOG_MODE_NO_INDENTS") "-wBu" "-u"))
   ;;(setq verilog-auto-lineup 'all)
   (setq enable-local-variables t)
   (setq enable-local-eval t)

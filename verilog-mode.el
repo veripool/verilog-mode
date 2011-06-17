@@ -1010,6 +1010,16 @@ instead expand to:
   :type 'boolean)
 (put 'verilog-auto-inst-param-value 'safe-local-variable 'verilog-booleanp)
 
+(defcustom verilog-auto-inst-sort nil
+  "*If set, AUTOINST signal names will be sorted, not in delaration order.
+Also affects AUTOINSTPARAM.  Declaration order is the default for
+backward compatibility, and as some teams prefer signals that are
+declared together to remain together.  Sorted order reduces
+changes when declarations are moved around in a file."
+  :group 'verilog-mode-auto
+  :type 'boolean)
+(put 'verilog-auto-inst-sort 'safe-local-variable 'verilog-booleanp)
+
 (defcustom verilog-auto-inst-vector t
   "*If true, when creating default ports with AUTOINST, use bus subscripts.
 If nil, skip the subscript when it matches the entire bus as declared in
@@ -9762,6 +9772,15 @@ If PAR-VALUES replace final strings with these parameter values."
 ;;(x "incom[@\"(+ (* 8 @) 7)\":@\"(* 8 @)\"]")
 ;;(x ".out (outgo[@\"(concat (+ (* 8 @) 7) \\\":\\\" ( * 8 @))\"]));")
 
+(defun verilog-auto-inst-port-list (sig-list indent-pt tpl-list tpl-num for-star par-values)
+  "For `verilog-auto-inst' print a list of ports using `verilog-auto-inst-port'."
+  (when verilog-auto-inst-sort
+    (setq sig-list (sort (copy-alist sig-list) `verilog-signals-sort-compare)))
+  (mapc (lambda (port)
+	  (verilog-auto-inst-port port indent-pt
+				  tpl-list tpl-num for-star par-values))
+	sig-list))
+
 (defun verilog-auto-inst-first ()
   "Insert , etc before first ever port in this instant, as part of \\[verilog-auto-inst]."
   ;; Do we need a trailing comma?
@@ -9803,6 +9822,9 @@ interface header of the instantiated item.
 If `verilog-auto-star-expand' is set, also expand SystemVerilog .* ports,
 and delete them before saving unless `verilog-auto-star-save' is set.
 See `verilog-auto-star' for more information.
+
+The pins are printed in declaration order or alphabetically,
+based on the `verilog-auto-inst-sort' variable.
 
 Limitations:
   Module names must be resolvable to filenames by adding a
@@ -10134,10 +10156,8 @@ For more information see the \\[verilog-faq] and forums at URL
 	    (when (not did-first) (verilog-auto-inst-first) (setq did-first t))
             ;; Note these are searched for in verilog-read-sub-decls.
 	    (verilog-insert-indent "// Interfaced\n")
-	    (mapc (lambda (port)
-                    (verilog-auto-inst-port port indent-pt
-                                            tpl-list tpl-num for-star par-values))
-                  sig-list)))
+	    (verilog-auto-inst-port-list sig-list indent-pt
+					 tpl-list tpl-num for-star par-values)))
 	(let ((sig-list (verilog-signals-not-in
 			 (verilog-decls-get-interfaces submoddecls)
 			 skip-pins))
@@ -10146,10 +10166,8 @@ For more information see the \\[verilog-faq] and forums at URL
 	    (when (not did-first) (verilog-auto-inst-first) (setq did-first t))
             ;; Note these are searched for in verilog-read-sub-decls.
 	    (verilog-insert-indent "// Interfaces\n")
-	    (mapc (lambda (port)
-                    (verilog-auto-inst-port port indent-pt
-                                            tpl-list tpl-num for-star par-values))
-                  sig-list)))
+	    (verilog-auto-inst-port-list sig-list indent-pt
+					 tpl-list tpl-num for-star par-values)))
 	(let ((sig-list (verilog-signals-not-in
 			 (verilog-decls-get-outputs submoddecls)
 			 skip-pins))
@@ -10157,10 +10175,8 @@ For more information see the \\[verilog-faq] and forums at URL
 	  (when sig-list
 	    (when (not did-first) (verilog-auto-inst-first) (setq did-first t))
 	    (verilog-insert-indent "// Outputs\n")
-	    (mapc (lambda (port)
-                    (verilog-auto-inst-port port indent-pt
-                                            tpl-list tpl-num for-star par-values))
-                  sig-list)))
+	    (verilog-auto-inst-port-list sig-list indent-pt
+					 tpl-list tpl-num for-star par-values)))
 	(let ((sig-list (verilog-signals-not-in
 			 (verilog-decls-get-inouts submoddecls)
 			 skip-pins))
@@ -10168,10 +10184,8 @@ For more information see the \\[verilog-faq] and forums at URL
 	  (when sig-list
 	    (when (not did-first) (verilog-auto-inst-first) (setq did-first t))
 	    (verilog-insert-indent "// Inouts\n")
-	    (mapc (lambda (port)
-                    (verilog-auto-inst-port port indent-pt
-                                            tpl-list tpl-num for-star par-values))
-                  sig-list)))
+	    (verilog-auto-inst-port-list sig-list indent-pt
+					 tpl-list tpl-num for-star par-values)))
 	(let ((sig-list (verilog-signals-not-in
 			 (verilog-decls-get-inputs submoddecls)
 			 skip-pins))
@@ -10179,10 +10193,8 @@ For more information see the \\[verilog-faq] and forums at URL
 	  (when sig-list
 	    (when (not did-first) (verilog-auto-inst-first) (setq did-first t))
 	    (verilog-insert-indent "// Inputs\n")
-	    (mapc (lambda (port)
-                    (verilog-auto-inst-port port indent-pt
-                                            tpl-list tpl-num for-star par-values))
-                  sig-list)))
+	    (verilog-auto-inst-port-list sig-list indent-pt
+					 tpl-list tpl-num for-star par-values)))
 	;; Kill extra semi
 	(save-excursion
 	  (cond (did-first
@@ -10285,10 +10297,8 @@ Templates:
 	    (when (not did-first) (verilog-auto-inst-first) (setq did-first t))
             ;; Note these are searched for in verilog-read-sub-decls.
 	    (verilog-insert-indent "// Parameters\n")
-	    (mapc (lambda (port)
-                    (verilog-auto-inst-port port indent-pt
-                                            tpl-list tpl-num nil nil))
-                  sig-list)))
+	    (verilog-auto-inst-port-list sig-list indent-pt
+					 tpl-list tpl-num nil nil)))
 	;; Kill extra semi
 	(save-excursion
 	  (cond (did-first
