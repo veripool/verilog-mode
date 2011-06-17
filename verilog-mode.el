@@ -9372,7 +9372,7 @@ called before and after this function, respectively."
 				 'verilog-delete-auto-star-all)
       ;; Remove template comments ... anywhere in case was pasted after AUTOINST removed
       (goto-char (point-min))
-      (while (re-search-forward "\\s-*// \\(Templated\\|Implicit \\.\\*\\)\\([ \tLT0-9]*\\|LHS: .*\\)$" nil t)
+      (while (re-search-forward "\\s-*// \\(Templated\\|Implicit \\.\\*\\)\\([ \tLT0-9]*\\| LHS: .*\\)?$" nil t)
 	(replace-match ""))
 
       ;; Final customize
