@@ -8123,11 +8123,12 @@ list of ( (signal_name connection_name)... )."
 	     ;;
 	     (while (< (point) tpl-end-pt)
 	       (cond ((looking-at "\\s-*\\.\\([a-zA-Z0-9`_$]+\\)\\s-*(\\(.*\\))\\s-*\\(,\\|)\\s-*;\\)")
-		      (setq tpl-sig-list (cons (list
-						(match-string-no-properties 1)
-						(match-string-no-properties 2)
-						templateno lineno)
-					       tpl-sig-list))
+		      (setq tpl-sig-list
+			    (cons (list
+				   (match-string-no-properties 1)
+				   (match-string-no-properties 2)
+				   templateno lineno)
+				  tpl-sig-list))
 		      (goto-char (match-end 0)))
 		     ;; Regexp form??
 		     ((looking-at
@@ -8150,7 +8151,8 @@ list of ( (signal_name connection_name)... )."
 		      (setq lineno (1+ lineno))
 		      (goto-char (match-end 0)))
 		     ((looking-at "//")
-		      (search-forward "\n"))
+		      (search-forward "\n")
+		      (setq lineno (1+ lineno)))
 		     ((looking-at "/\\*")
 		      (forward-char 2)
 		      (or (search-forward "*/")
@@ -9763,8 +9765,8 @@ If PAR-VALUES replace final strings with these parameter values."
 				  " LHS: " (nth 0 tpl-ass)))
 		 (verilog-auto-inst-template-numbers
 		  (verilog-insert " // Templated"
-				 " T" (int-to-string (nth 2 tpl-ass))
-				 " L" (int-to-string (nth 3 tpl-ass))))
+				  " T" (int-to-string (nth 2 tpl-ass))
+				  " L" (int-to-string (nth 3 tpl-ass))))
 		 (t
 		  (verilog-insert " // Templated"))))
 	  (for-star
@@ -11570,8 +11572,7 @@ Typing \\[verilog-auto] will make this into:
       ;;
       (verilog-insert-indent "always @(" undecode-name ") begin\n")
       (setq indent-pt (+ indent-pt verilog-indent-level))
-      (indent-to indent-pt)
-      (insert "case ({" undecode-name "})\n")
+      (verilog-insert-indent "case ({" undecode-name "})\n")
       (setq indent-pt (+ indent-pt verilog-case-indent))
       ;;
       (let ((tmp-sigs enum-sigs)
