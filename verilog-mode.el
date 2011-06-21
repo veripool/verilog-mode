@@ -8079,7 +8079,7 @@ list of ( (signal_name connection_name)... )."
   (save-excursion
     ;; Find beginning
     (let ((tpl-regexp "\\([0-9]+\\)")
-	  (lineno 0)
+	  (lineno -1)  ; -1 to offset for the AUTO_TEMPLATE's newline
 	  (templateno 0)
 	  (pt (point))
 	  tpl-sig-list tpl-wild-list tpl-end-pt rep)
@@ -8114,7 +8114,10 @@ list of ( (signal_name connection_name)... )."
 		 (let ((pre-pt (point)))
 		   (goto-char (point-min))
 		   (while (search-forward "AUTO_TEMPLATE" pre-pt t)
-		     (setq templateno (1+ templateno))))))
+		     (setq templateno (1+ templateno)))
+		   (while (< (point) pre-pt)
+		     (forward-line 1)
+		     (setq lineno (1+ lineno))))))
 	     (setq tpl-end-pt (save-excursion
 				(backward-char 1)
 				(forward-sexp 1)   ;; Moves to paren that closes argdecl's

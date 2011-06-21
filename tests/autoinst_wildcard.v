@@ -4,7 +4,9 @@ module autoinst_wildcard;
    // Beginning of automatic outputs (from unused autoinst outputs)
    // End of automatics
 
-   /* autoinst_wildcard_sub AUTO_TEMPLATE (
+   // Newline between AUTO_TEMPLATE and ( gave a templated line number bug
+   /* autoinst_wildcard_sub AUTO_TEMPLATE
+    (
     .sd0_clk	(sd_clk),
     .sd0_dqm\(.*\)_l	(c@_sd_dqm_[\1]),
     .sd0_ba\([0-9]+\)	(c@_sd_ba[\1]),
