@@ -87,7 +87,7 @@
 ;; you may add the below lines (the values of the variables presented
 ;; here are the defaults). Note also that if you use an Emacs that
 ;; supports custom, it's probably better to use the custom menu to
-;; edit these. If working as a member of a large team these settings
+;; edit these.  If working as a member of a large team these settings
 ;; should be common across all users (in a site-start file), or set
 ;; in Local Variables in every file.  Otherwise, different people's
 ;; AUTO expansion may result different whitespace changes.
@@ -1914,15 +1914,15 @@ find the errors."
 	;; comparison
 	"==" "!=" "===" "!===" "<=" ">=" "==\?" "!=\?"
 	;; event_trigger
-	"->" "->>" 
+	"->" "->>"
 	;; property_expr
 	"|->" "|=>"
-	;; Is this a legal verilog operator?  
+	;; Is this a legal verilog operator?
 	":="
 	) 't
       )))
 (defconst verilog-assignment-operation-re
-  (concat 
+  (concat
 ;     "\\(^\\s-*[A-Za-z0-9_]+\\(\\[\\([A-Za-z0-9_]+\\)\\]\\)*\\s-*\\)"
 ;     "\\(^\\s-*[^=<>+-*/%&|^:\\s-]+[^=<>+-*/%&|^\n]*?\\)"
      "\\(^.*?\\)" "\\B" verilog-assignment-operator-re "\\B" ))
@@ -4822,7 +4822,7 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
            ;; indent structs as if there were module level
            (if (verilog-in-struct-p)
                (throw 'nesting 'block))
-	   
+
 	   ;; if we are in a parenthesized list, and the user likes to indent these, return.
 	   ;; unless we are in the newfangled coverpoint or constraint blocks
 	   (if (and
@@ -4832,12 +4832,12 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
                 )
 	       (progn (setq par 1)
                       (throw 'nesting 'block)))
-	   
+
 	   ;; See if we are continuing a previous line
 	   (while t
 	     ;; trap out if we crawl off the top of the buffer
 	     (if (bobp) (throw 'nesting 'cpp))
-	     
+
 	     (if (verilog-continued-line-1 lim)
 		 (let ((sp (point)))
 		   (if (and
@@ -4845,9 +4845,9 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 			(verilog-continued-line-1 lim))
 		       (progn (goto-char sp)
 			      (throw 'nesting 'cexp))
-		     
+
 		     (goto-char sp))
-		   
+
 		   (if (and begin
 			    (not verilog-indent-begin-after-if)
 			    (looking-at verilog-no-indent-begin-re))
@@ -4859,7 +4859,7 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 		       (throw 'nesting 'cexp))))
 	       ;; not a continued line
 	       (goto-char starting_position))
-	     
+
 	     (if (looking-at "\\<else\\>")
 		 ;; search back for governing if, striding across begin..end pairs
 		 ;; appropriately
@@ -5463,14 +5463,14 @@ Optional BOUND limits search."
 
 (defun verilog-in-attribute-p ()
  "Return true if point is in an attribute (* [] attribute *)."
- (save-match-data 
+ (save-match-data
    (save-excursion
      (verilog-re-search-backward "\\((\\*\\)\\|\\(\\*)\\)" nil 'move)
      (numberp (match-beginning 1)))))
 
 (defun verilog-in-parameter-p ()
  "Return true if point is in a parameter assignment #( p1=1, p2=5)."
- (save-match-data 
+ (save-match-data
    (save-excursion
      (verilog-re-search-backward "\\(#(\\)\\|\\()\\)" nil 'move)
      (numberp (match-beginning 1)))))
@@ -5491,7 +5491,7 @@ Optional BOUND limits search."
 
 (defun verilog-in-parenthesis-p ()
  "Return true if in a ( ) expression (but not { } or [ ])."
- (save-match-data 
+ (save-match-data
    (save-excursion
      (verilog-re-search-backward "\\((\\)\\|\\()\\)" nil 'move)
      (numberp (match-beginning 1)))))
@@ -6114,7 +6114,7 @@ Be verbose about progress unless optional QUIET set."
 		(if (and (not quiet)
 			 (> (- end start) 100))
 		    (message "Lining up expressions..(please stand by)"))
-		
+
 		;; Set indent to minimum throughout region
 		(while (< (point) (marker-position endpos))
 		  (beginning-of-line)
@@ -6124,10 +6124,10 @@ Be verbose about progress unless optional QUIET set."
 		  (end-of-line)
 		  (verilog-forward-syntactic-ws)
 		  )
-		
+
 		;; Now find biggest prefix
 		(setq ind (verilog-get-lineup-indent-2 verilog-assignment-operation-re start endpos))
-		
+
 		;; Now indent each line.
 		(goto-char start)
 		(while (progn (setq e (marker-position endpos))
@@ -10509,12 +10509,11 @@ Typing \\[verilog-auto] will make this into:
 	(verilog-insert-indent "// Beginning of automatic wires (for undeclared instantiated-module outputs)\n")
 	(verilog-insert-definition modi sig-list "wire" indent-pt nil)
 	(verilog-insert-indent "// End of automatics\n")
-	(when nil	;; Too slow on huge modules, plus makes everyone's module change
-	  (beginning-of-line)
-	  (setq pnt (point))
-	  (verilog-pretty-declarations quiet)
-	  (goto-char pnt)
-	  (verilog-pretty-expr t "//"))))))
+	;; We used to optionally call verilog-pretty-declarations and
+	;; verilog-pretty-expr here, but it's too slow on huge modules,
+	;; plus makes everyone's module change. Finally those call
+	;; syntax-ppss which is broken when change hooks are disabled.
+	))))
 
 (defun verilog-auto-output (&optional with-params)
   "Expand AUTOOUTPUT statements, as part of \\[verilog-auto].
@@ -11941,7 +11940,7 @@ See also `verilog-header' for an alternative format."
 ;;; ------------------------------------------------------------------------
 ;;; Define a default OVM class, with macros and new()
 ;;; ------------------------------------------------------------------------
- 
+
 (define-skeleton verilog-sk-ovm-class
   "Insert a class definition"
   ()
