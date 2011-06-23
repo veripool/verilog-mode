@@ -1537,7 +1537,7 @@ so there may be a large up front penalty for the first search."
   (let (pt)
     (while (and (not pt)
 		(re-search-forward regexp bound noerror))
-      (if (not (verilog-inside-comment-p))
+      (if (not (verilog-inside-comment-or-string-p))
 	  (setq pt (match-end 0))))
     pt))
 
@@ -1550,7 +1550,7 @@ so there may be a large up front penalty for the first search."
   (let (pt)
     (while (and (not pt)
 		(re-search-backward regexp bound noerror))
-      (if (not (verilog-inside-comment-p))
+      (if (not (verilog-inside-comment-or-string-p))
 	  (setq pt (match-end 0))))
     pt))
 
@@ -2756,7 +2756,7 @@ For insigificant changes, see instead `verilog-save-buffer-state'."
 
 (defvar verilog-scan-cache-preserving nil
   "If set, the specified buffer's comment properties are static.
-Buffer changes will be ignored.  See `verilog-inside-comment-p'
+Buffer changes will be ignored.  See `verilog-inside-comment-or-string-p'
 and `verilog-scan'.")
 
 (defvar verilog-scan-cache-tick nil
@@ -2783,8 +2783,8 @@ This requires that insertions must use `verilog-insert'."
        (progn ,@body))))
 
 (defun verilog-scan-region (beg end)
-  "Parse comments between BEG and END for `verilog-inside-comment-p'.
-This creates v-cmt properties where comments are in force."
+  "Parse between BEG and END for `verilog-inside-comment-or-string-p'.
+This creates v-cmts properties where comments are in force."
   ;; Why properties and not overlays?  Overlays have much slower non O(1)
   ;; lookup times.
   ;; This function is warm - called on every verilog-insert
@@ -2802,7 +2802,7 @@ This creates v-cmt properties where comments are in force."
 		  ;; being "inside" the comment, so that a (search-backward)
 		  ;; that lands at the start of the // won't mis-indicate
 		  ;; it's inside a comment
-		  (put-text-property (1+ pt) (point) 'v-cmt t))
+		  (put-text-property (1+ pt) (point) 'v-cmts t))
 		 ((looking-at "/\\*")
 		  (setq pt (point))
 		  (or (search-forward "*/" end t)
@@ -2811,11 +2811,17 @@ This creates v-cmt properties where comments are in force."
 		      ;;(error "%s: Unmatched /* */, at char %d"
 		      ;;       (verilog-point-text) (point))
 		      (goto-char end))
-		  (put-text-property (1+ pt) (point) 'v-cmt t))
+		  (put-text-property (1+ pt) (point) 'v-cmts t))
+		 ((looking-at "\"")
+		  (setq pt (point))
+		  (or (search-forward "\"" end t)
+		      ;; No error - let later code indicate it so we can
+		      (goto-char end))
+		  (put-text-property (1+ pt) (point) 'v-cmts t))
 		 (t
 		  (forward-char 1)
-		  (if (re-search-forward "/[/*]" end t)
-		      (backward-char 2)
+		  (if (re-search-forward "[/\"]" end t)
+		      (backward-char 1)
 		    (goto-char end))))))))))
 
 (defun verilog-scan ()
@@ -2829,21 +2835,21 @@ either is ok to parse as a non-comment, or `verilog-insert' was used."
 	  (message "Scanning %s cache=%s cachetick=%S tick=%S" (current-buffer)
 		   verilog-scan-cache-preserving verilog-scan-cache-tick
 		   (buffer-chars-modified-tick)))
-	(remove-text-properties (point-min) (point-max) '(v-cmt nil))
+	(remove-text-properties (point-min) (point-max) '(v-cmts nil))
 	(verilog-scan-region (point-min) (point-max))
 	(setq verilog-scan-cache-tick (buffer-chars-modified-tick))
 	(when verilog-debug (message "Scaning... done"))))))
 
-(defun verilog-inside-comment-p ()
+(defun verilog-inside-comment-or-string-p ()
   "Check if point inside a comment.
 This may require a slow pre-parse of the buffer with `verilog-scan'
 to establish comment properties on all text."
   ;; This function is very hot
   (verilog-scan)
-  (get-text-property (point) 'v-cmt))
+  (get-text-property (point) 'v-cmts))
 
 (defun verilog-insert (&rest stuff)
-  "Insert STUFF arguments, tracking comments for `verilog-inside-comment-p'.
+  "Insert STUFF arguments, tracking for `verilog-inside-comment-or-string-p'.
 Any insert that includes a comment must have the entire commente
 inserted using a single call to `verilog-insert'."
   (let ((pt (point)))
@@ -7763,7 +7769,7 @@ Outputs comments above subcell signals, for example:
       (while (verilog-re-search-forward "\\(/\\*AUTOINST\\*/\\|\\.\\*\\)" end-mod-point t)
 	(save-excursion
 	  (goto-char (match-beginning 0))
-	  (unless (verilog-inside-comment-p)
+	  (unless (verilog-inside-comment-or-string-p)
 	    ;; Attempt to snarf a comment
 	    (let* ((submod (verilog-read-inst-module))
 		   (inst (verilog-read-inst-name))
@@ -7824,7 +7830,7 @@ For example if declare A A (.B(SIG)) then B will be included in the list."
       (verilog-backward-open-paren)
       (while (re-search-forward "\\.\\([^(,) \t\n\f]*\\)\\s-*" end-mod-point t)
 	(setq pin (match-string 1))
-	(unless (verilog-inside-comment-p)
+	(unless (verilog-inside-comment-or-string-p)
 	  (setq pins (cons (list pin) pins))
 	  (when (looking-at "(")
 	    (forward-sexp 1))))
@@ -7838,7 +7844,7 @@ For example if declare A A (.B(SIG)) then B will be included in the list."
       (verilog-backward-open-paren)
       (while (re-search-forward "\\([a-zA-Z0-9$_.%`]+\\)" end-mod-point t)
 	(setq pin (match-string 1))
-	(unless (verilog-inside-comment-p)
+	(unless (verilog-inside-comment-or-string-p)
 	  (setq pins (cons (list pin) pins))))
       (vector pins))))
 
@@ -8241,7 +8247,7 @@ warning message, you need to add to your .emacs file:
 	(while (re-search-forward "^\\s-*`include\\s-+\\([^ \t\n\f]+\\)" nil t)
 	  (let ((inc (verilog-string-replace-matches
 		      "\"" "" nil nil (match-string-no-properties 1))))
-	    (unless (verilog-inside-comment-p)
+	    (unless (verilog-inside-comment-or-string-p)
 	      (verilog-read-defines inc recurse t)))))
       ;; Read `defines
       ;; note we don't use verilog-re... it's faster this way, and that
@@ -12260,7 +12266,7 @@ Clicking on the middle-mouse button loads them in a buffer (as in dired)."
 		  (while (verilog-re-search-forward "\\(/\\*AUTOINST\\*/\\|\\.\\*\\)" end-point t)
 		    (save-excursion
 		      (goto-char (match-beginning 0))
-		      (unless (verilog-inside-comment-p)
+		      (unless (verilog-inside-comment-or-string-p)
 			(verilog-read-inst-module-matcher)   ;; sets match 0
 			(let* ((ov (make-overlay (match-beginning 0) (match-end 0))))
 			  (overlay-put ov 'start-closed 't)
