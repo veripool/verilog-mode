@@ -360,9 +360,18 @@ This function may be removed when Emacs 21 is no longer supported."
 	    ;; And GNU Emacs 22 has obsoleted last-command-char
 	    last-command-event)))
 
-(defalias 'verilog-syntax-ppss
-  (if (fboundp 'syntax-ppss) 'syntax-ppss
-    (lambda (&optional pos) (parse-partial-sexp (point-min) (or pos (point))))))
+(defvar verilog-no-change-functions nil
+  "True if `after-change-functions' is disabled.
+Use of `syntax-ppss' may break, as ppss's cache may get corrupted.")
+
+(defun verilog-syntax-ppss (&optional pos)
+  (when verilog-no-change-functions
+    (backtrace)
+    (error "%s: Internal problem; use of syntax-ppss when cache may be corrupt"
+	   (verilog-point-text)))
+  (if (fboundp 'syntax-ppss)
+      (syntax-ppss pos)
+    (parse-partial-sexp (point-min) (or pos (point)))))
 
 (defgroup verilog-mode nil
   "Facilitates easy editing of Verilog source text."
@@ -1532,26 +1541,28 @@ will break, as the o's continuously replace.  xa -> x works ok though."
 (defsubst verilog-re-search-forward-quick (regexp bound noerror)
   "Like `verilog-re-search-forward', including use of REGEXP BOUND and NOERROR,
 but trashes match data and is faster for REGEXP that doesn't match often.
-This may at some point use text properties to ignore comments,
+This uses `verilog-scan' and text properties to ignore comments,
 so there may be a large up front penalty for the first search."
   (let (pt)
     (while (and (not pt)
 		(re-search-forward regexp bound noerror))
-      (if (not (verilog-inside-comment-or-string-p))
-	  (setq pt (match-end 0))))
+      (if (verilog-inside-comment-or-string-p)
+	  (re-search-forward "[/\"\n]" nil t) ;; Only way a comment or quote can end
+	(setq pt (match-end 0))))
     pt))
 
 (defsubst verilog-re-search-backward-quick (regexp bound noerror)
   ; checkdoc-params: (REGEXP BOUND NOERROR)
   "Like `verilog-re-search-backward', including use of REGEXP BOUND and NOERROR,
 but trashes match data and is faster for REGEXP that doesn't match often.
-This may at some point use text properties to ignore comments,
+This uses `verilog-scan' and text properties to ignore comments,
 so there may be a large up front penalty for the first search."
   (let (pt)
     (while (and (not pt)
 		(re-search-backward regexp bound noerror))
-      (if (not (verilog-inside-comment-or-string-p))
-	  (setq pt (match-end 0))))
+      (if (verilog-inside-comment-or-string-p)
+	  (re-search-backward "[/\"]" nil t) ;; Only way a comment or quote can begin
+	(setq pt (match-beginning 0))))
     pt))
 
 (defsubst verilog-re-search-forward-substr (substr regexp bound noerror)
@@ -2732,6 +2743,7 @@ user-visible changes to the buffer must not be within a
 	  (buffer-undo-list t)
 	  (inhibit-read-only t)
 	  (inhibit-point-motion-hooks t)
+	  (verilog-no-change-functions t)
 	  before-change-functions
 	  after-change-functions
 	  deactivate-mark
@@ -2747,6 +2759,7 @@ user-visible changes to the buffer must not be within a
   "Execute BODY forms, disabling all change hooks in BODY.
 For insigificant changes, see instead `verilog-save-buffer-state'."
   `(let* ((inhibit-point-motion-hooks t)
+	  (verilog-no-change-functions t)
 	  before-change-functions
 	  after-change-functions)
      (progn ,@body)))
@@ -3677,6 +3690,12 @@ area.  See also `verilog-comment-region'."
   "Move backward to the beginning of the current function or procedure."
   (interactive)
   (verilog-re-search-backward verilog-defun-re nil 'move))
+
+(defun verilog-beg-of-defun-quick ()
+  "Move backward to the beginning of the current function or procedure.
+Uses `verilog-scan' cache."
+  (interactive)
+  (verilog-re-search-backward-quick verilog-defun-re nil 'move))
 
 (defun verilog-end-of-defun ()
   "Move forward to the end of the current function or procedure."
@@ -5399,8 +5418,23 @@ Set point to where line starts."
 	  t))))))))
 
 (defun verilog-backward-syntactic-ws ()
+  "Move backwards putting point after first non-whitespace non-comment."
   (verilog-skip-backward-comments)
   (forward-comment (- (buffer-size))))
+
+(defun verilog-backward-syntactic-ws-quick ()
+  "As with `verilog-backward-syntactic-ws' but uses `verilog-scan' cache."
+  (while (cond ((bobp)
+		nil) ; Done
+	       ((> (skip-syntax-backward " ") 0)
+		t)
+	       ((eq (preceding-char) ?\n)  ;; \n's terminate // so aren't space syntax
+		(forward-char -1)
+		t)
+	       ((or (verilog-inside-comment-or-string-p (1- (point)))
+		    (verilog-inside-comment-or-string-p (point)))
+		(re-search-backward "[/\"]" nil t) ;; Only way a comment or quote can begin
+		t))))
 
 (defun verilog-forward-syntactic-ws ()
   (verilog-skip-forward-comment-p)
@@ -5531,8 +5565,17 @@ Optional BOUND limits search."
      (numberp (match-beginning 1)))))
 
 (defun verilog-in-paren ()
- "Return true if in a parenthetical expression."
+ "Return true if in a parenthetical expression.
+May cache result using `verilog-syntax-ppss'."
  (let ((state (save-excursion (verilog-syntax-ppss))))
+   (> (nth 0 state) 0 )))
+
+(defun verilog-in-paren-quick ()
+ "Return true if in a parenthetical expression.
+Always starts from point-min, to allow inserts with hooks disabled."
+ ;; The -quick refers to its use alongside the other -quick functions,
+ ;; not that it's likely to be faster than verilog-in-paren.
+ (let ((state (save-excursion (parse-partial-sexp (point-min) (point)))))
    (> (nth 0 state) 0 )))
 
 (defun verilog-in-struct-p ()
@@ -7388,7 +7431,7 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 	vec expect-signal keywd newsig rvalue enum io signed typedefed multidim
 	modport)
     (save-excursion
-      (verilog-beg-of-defun)
+      (verilog-beg-of-defun-quick)
       (setq sigs-const (verilog-read-auto-constants (point) end-mod-point))
       (while (< (point) end-mod-point)
 	;;(if dbg (setq dbg (concat dbg (format "Pt %s  Vec %s   C%c Kwd'%s'\n" (point) vec (following-char) keywd))))
@@ -7793,8 +7836,8 @@ Outputs comments above subcell signals, for example:
 	  st-point end-inst-point
 	  ;; below 3 modified by verilog-read-sub-decls-line
 	  sigs-out sigs-inout sigs-in sigs-intf sigs-intfd)
-      (verilog-beg-of-defun)
-      (while (verilog-re-search-forward "\\(/\\*AUTOINST\\*/\\|\\.\\*\\)" end-mod-point t)
+      (verilog-beg-of-defun-quick)
+      (while (verilog-re-search-forward-quick "\\(/\\*AUTOINST\\*/\\|\\.\\*\\)" end-mod-point t)
 	(save-excursion
 	  (goto-char (match-beginning 0))
 	  (unless (verilog-inside-comment-or-string-p)
@@ -8082,7 +8125,7 @@ IGNORE-NEXT is true to ignore next token, fake from inside case statement."
 
 (defun verilog-read-instants ()
   "Parse module at point and return list of ( ( file instance ) ... )."
-  (verilog-beg-of-defun)
+  (verilog-beg-of-defun-quick)
   (let* ((end-mod-point (verilog-get-end-of-defun t))
 	 (state nil)
 	 (instants-list nil))
@@ -9029,7 +9072,7 @@ if non-nil."
 (defun verilog-auto-re-search-do (search-for func)
   "Search for the given auto text regexp SEARCH-FOR, and perform FUNC where it occurs."
   (goto-char (point-min))
-  (while (verilog-re-search-forward search-for nil t)
+  (while (verilog-re-search-forward-quick search-for nil t)
     (funcall func)))
 
 (defun verilog-insert-one-definition (sig type indent-pt)
@@ -9127,7 +9170,7 @@ Presumes that any newlines end a list element."
   ;; We can't just search backward for ) as it might be inside another expression.
   ;; Also want "`ifdef X   input foo   `endif" to just leave things to the human to deal with
   (save-excursion
-    (verilog-backward-syntactic-ws)
+    (verilog-backward-syntactic-ws-quick)
     (when (and (not (save-excursion ;; Not beginning (, or existing ,
 		      (backward-char 1)
 		      (looking-at "[(,]")))
@@ -9144,7 +9187,7 @@ This repairs those mis-inserted by a AUTOARG."
   (save-excursion
     (verilog-forward-close-paren)
     (backward-char 1)
-    (verilog-backward-syntactic-ws)
+    (verilog-backward-syntactic-ws-quick)
     (backward-char 1)
     (when (looking-at ",")
       (delete-char 1))))
@@ -9265,15 +9308,17 @@ This repairs those mis-inserted by a AUTOARG."
 
 (defun verilog-delete-autos-lined ()
   "Delete autos that occupy multiple lines, between begin and end comments."
+  ;; The newline must not have a comment property, so we must
+  ;; delete the end auto's newline, not the first newline
+  (forward-line 1)
   (let ((pt (point)))
-    (forward-line 1)
     (when (and
 	   (looking-at "\\s-*// Beginning")
 	   (search-forward "// End of automatic" nil t))
       ;; End exists
       (end-of-line)
-      (delete-region pt (point))
-      (forward-line 1))))
+      (forward-line 1)
+      (delete-region pt (point)))))
 
 (defun verilog-delete-empty-auto-pair ()
   "Delete begin/end auto pair at point, if empty."
@@ -9491,7 +9536,7 @@ Typing \\[verilog-inject-auto] will make this into:
 	(when (not (re-search-forward "/\\*AUTOARG\\*/" endmodp t))
 	  (verilog-re-search-forward-quick ";" nil t)
 	  (backward-char 1)
-	  (verilog-backward-syntactic-ws)
+	  (verilog-backward-syntactic-ws-quick)
 	  (backward-char 1) ; Moves to paren that closes argdecl's
 	  (when (looking-at ")")
 	    (verilog-insert "/*AUTOARG*/")))))))
@@ -9509,7 +9554,7 @@ Typing \\[verilog-inject-auto] will make this into:
 	(backward-char 1)
 	(forward-sexp 1)
 	(backward-char 1) ;; End )
-	(when (not (verilog-re-search-backward "/\\*\\(AUTOSENSE\\|AS\\)\\*/" start-pt t))
+	(when (not (verilog-re-search-backward-quick "/\\*\\(AUTOSENSE\\|AS\\)\\*/" start-pt t))
 	  (setq pre-sigs (verilog-signals-from-signame
 			  (verilog-read-signals start-pt (point)))
 		got-sigs (verilog-auto-sense-sigs moddecls nil))
@@ -9533,12 +9578,12 @@ Typing \\[verilog-inject-auto] will make this into:
 	(forward-char 1)
 	(let ((indent-pt (+ (current-column)))
 	      (end-pt (save-excursion (verilog-forward-close-paren) (point))))
-	  (cond ((verilog-re-search-forward "\\(/\\*AUTOINST\\*/\\|\\.\\*\\)" end-pt t)
+	  (cond ((verilog-re-search-forward-quick "\\(/\\*AUTOINST\\*/\\|\\.\\*\\)" end-pt t)
 		 (goto-char end-pt)) ;; Already there, continue search with next instance
 		(t
 		 ;; Delete identical interconnect
 		 (let ((case-fold-search nil))  ;; So we don't convert upper-to-lower, etc
-		   (while (verilog-re-search-forward "\\.\\s *\\([a-zA-Z0-9`_\$]+\\)*\\s *(\\s *\\1\\s *)\\s *" end-pt t)
+		   (while (verilog-re-search-forward-quick "\\.\\s *\\([a-zA-Z0-9`_\$]+\\)*\\s *(\\s *\\1\\s *)\\s *" end-pt t)
 		     (delete-region (match-beginning 0) (match-end 0))
 		     (setq end-pt (- end-pt (- (match-end 0) (match-beginning 0)))) ;; Keep it correct
 		     (while (or (looking-at "[ \t\n\f,]+")
@@ -9797,20 +9842,24 @@ If PAR-VALUES replace final strings with these parameter values."
     (cond (tpl-ass
 	   (indent-to (+ (if (< verilog-auto-inst-column 48) 24 16)
 			 verilog-auto-inst-column))
+	   ;; verilog-insert requires the complete comment in one call - including the newline
 	   (cond ((equal verilog-auto-inst-template-numbers `lhs)
 		  (verilog-insert " // Templated"
-				  " LHS: " (nth 0 tpl-ass)))
+				  " LHS: " (nth 0 tpl-ass)
+				  "\n"))
 		 (verilog-auto-inst-template-numbers
 		  (verilog-insert " // Templated"
 				  " T" (int-to-string (nth 2 tpl-ass))
-				  " L" (int-to-string (nth 3 tpl-ass))))
+				  " L" (int-to-string (nth 3 tpl-ass))
+				  "\n"))
 		 (t
-		  (verilog-insert " // Templated"))))
+		  (verilog-insert " // Templated\n"))))
 	  (for-star
 	   (indent-to (+ (if (< verilog-auto-inst-column 48) 24 16)
 			 verilog-auto-inst-column))
-	   (verilog-insert " // Implicit .\*"))) ;For some reason the . or * must be escaped...
-    (insert "\n")))
+	   (verilog-insert " // Implicit .\*\n")) ;For some reason the . or * must be escaped...
+	  (t
+	   (insert "\n")))))
 ;;(verilog-auto-inst-port (list "foo" "[5:0]") 10 (list (list "foo" "a@\"(% (+ @ 1) 4)\"a")) "3")
 ;;(x "incom[@\"(+ (* 8 @) 7)\":@\"(* 8 @)\"]")
 ;;(x ".out (outgo[@\"(concat (+ (* 8 @) 7) \\\":\\\" ( * 8 @))\"]));")
@@ -9832,7 +9881,7 @@ If PAR-VALUES replace final strings with these parameter values."
   ;; Insert first port on new line
   (insert "\n")  ;; Must insert before search, so point will move forward if insert comma
   (save-excursion
-    (verilog-re-search-backward "[^ \t\n\f]" nil nil)
+    (verilog-re-search-backward-quick "[^ \t\n\f]" nil nil)
     (when (looking-at ")\\|\\*")  ;; Generally don't insert, unless we are fairly sure
       (forward-char 1)
       (insert ","))))
@@ -10603,7 +10652,7 @@ same expansion will result from only extracting outputs starting with ov:
     (let* ((indent-pt (current-indentation))
 	   (regexp (and with-params
 			(nth 0 (verilog-read-auto-params 1))))
-	   (v2k  (verilog-in-paren))
+	   (v2k  (verilog-in-paren-quick))
 	   (modi (verilog-modi-current))
 	   (moddecls (verilog-modi-get-decls modi))
 	   (modsubdecls (verilog-modi-get-sub-decls modi))
@@ -10661,7 +10710,7 @@ Typing \\[verilog-auto] will make this into:
   (save-excursion
     ;;Point must be at insertion point
     (let* ((indent-pt (current-indentation))
-	   (v2k  (verilog-in-paren))
+	   (v2k  (verilog-in-paren-quick))
 	   (modi (verilog-modi-current))
 	   (moddecls (verilog-modi-get-decls modi))
 	   (sig-list (verilog-signals-combine-bus
@@ -10729,7 +10778,7 @@ same expansion will result from only extracting inputs starting with i:
     (let* ((indent-pt (current-indentation))
 	   (regexp (and with-params
 			(nth 0 (verilog-read-auto-params 1))))
-	   (v2k  (verilog-in-paren))
+	   (v2k  (verilog-in-paren-quick))
 	   (modi (verilog-modi-current))
 	   (moddecls (verilog-modi-get-decls modi))
 	   (modsubdecls (verilog-modi-get-sub-decls modi))
@@ -10809,7 +10858,7 @@ same expansion will result from only extracting inouts starting with i:
     (let* ((indent-pt (current-indentation))
 	   (regexp (and with-params
 			(nth 0 (verilog-read-auto-params 1))))
-	   (v2k  (verilog-in-paren))
+	   (v2k  (verilog-in-paren-quick))
 	   (modi (verilog-modi-current))
 	   (moddecls (verilog-modi-get-decls modi))
 	   (modsubdecls (verilog-modi-get-sub-decls modi))
@@ -10905,7 +10954,7 @@ against the previous example's module:
       ;; Note this may raise an error
       (when (setq submodi (verilog-modi-lookup submod t))
 	(let* ((indent-pt (current-indentation))
-	       (v2k  (verilog-in-paren))
+	       (v2k  (verilog-in-paren-quick))
 	       (modi (verilog-modi-current))
 	       (moddecls (verilog-modi-get-decls modi))
 	       (submoddecls (verilog-modi-get-decls submodi))
@@ -11190,7 +11239,7 @@ operator.  (This was added to the language in part due to AUTOSENSE!)
   (save-excursion
     ;; Find beginning
     (let* ((start-pt (save-excursion
-		       (verilog-re-search-backward "(" nil t)
+		       (verilog-re-search-backward-quick "(" nil t)
 		       (point)))
 	   (indent-pt (save-excursion
 			(or (and (goto-char start-pt) (1+ (current-column)))
@@ -11211,11 +11260,11 @@ operator.  (This was added to the language in part due to AUTOSENSE!)
 	  (if (not (eq tlen (length sig-list))) (verilog-insert " /*memory or*/ "))))
       (if (and presense-sigs  ;; Add a "or" if not "(.... or /*AUTOSENSE*/"
 	       (save-excursion (goto-char (point))
-			       (verilog-re-search-backward "[a-zA-Z0-9$_.%`]+" start-pt t)
-			       (verilog-re-search-backward "\\s-" start-pt t)
+			       (verilog-re-search-backward-quick "[a-zA-Z0-9$_.%`]+" start-pt t)
+			       (verilog-re-search-backward-quick "\\s-" start-pt t)
 			       (while (looking-at "\\s-`endif")
-				 (verilog-re-search-backward "[a-zA-Z0-9$_.%`]+" start-pt t)
-				 (verilog-re-search-backward "\\s-" start-pt t))
+				 (verilog-re-search-backward-quick "[a-zA-Z0-9$_.%`]+" start-pt t)
+				 (verilog-re-search-backward-quick "\\s-" start-pt t))
 			       (not (looking-at "\\s-or\\b"))))
 	  (setq not-first t))
       (setq sig-list (sort sig-list `verilog-signals-sort-compare))
@@ -11298,11 +11347,11 @@ Typing \\[verilog-auto] will make this into:
 			   (save-excursion
 			     (verilog-read-signals
 			      (save-excursion
-				(verilog-re-search-backward "\\(@\\|\\<begin\\>\\|\\<if\\>\\|\\<case\\>\\)" nil t)
+				(verilog-re-search-backward-quick "\\(@\\|\\<begin\\>\\|\\<if\\>\\|\\<case\\>\\)" nil t)
 				(point))
 			      (point)))))
       (save-excursion
-	(verilog-re-search-backward "@" nil t)
+	(verilog-re-search-backward-quick "@" nil t)
         (setq sigss (verilog-read-always-signals)))
       (setq assignment-str (if (verilog-alw-get-uses-delayed sigss)
 			       (concat " <= " verilog-assignment-delay)
@@ -12291,7 +12340,7 @@ Clicking on the middle-mouse button loads them in a buffer (as in dired)."
 	    ;; This scanner is syntax-fragile, so don't get bent
 	    (when verilog-highlight-modules
 	      (condition-case nil
-		  (while (verilog-re-search-forward "\\(/\\*AUTOINST\\*/\\|\\.\\*\\)" end-point t)
+		  (while (verilog-re-search-forward-quick "\\(/\\*AUTOINST\\*/\\|\\.\\*\\)" end-point t)
 		    (save-excursion
 		      (goto-char (match-beginning 0))
 		      (unless (verilog-inside-comment-or-string-p)
