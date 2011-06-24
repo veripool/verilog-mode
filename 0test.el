@@ -130,11 +130,10 @@
 			      file))
       (cond ((equal "." file))
             ((equal ".." file))
-            ((string-match "^#" file))  ;; Backups
+            ((string-match "#" file))  ;; Backups
             ((string-match "~$" file))
             ((string-match "\.f$" file))
             ((string-match "\.dontrun$" file))
-            ((string-match "\.\#.*$" file))
             ((file-directory-p (concat "tests/" file)))
 	    ((progn (setq file-num (1+ file-num))
 		    (not (vl-do-on-thread file-num))))
