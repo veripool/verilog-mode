@@ -2814,7 +2814,7 @@ This creates v-cmts properties where comments are in force."
 		  (put-text-property (1+ pt) (point) 'v-cmts t))
 		 ((looking-at "\"")
 		  (setq pt (point))
-		  (or (search-forward "\"" end t)
+		  (or (re-search-forward "[^\\]\"" end t)	;; don't forward-char first, since we look for a non backslash first
 		      ;; No error - let later code indicate it so we can
 		      (goto-char end))
 		  (put-text-property (1+ pt) (point) 'v-cmts t))
@@ -2828,6 +2828,7 @@ This creates v-cmts properties where comments are in force."
   "Parse the buffer, marking all comments with properties.
 Also assumes any text inserted since `verilog-scan-cache-tick'
 either is ok to parse as a non-comment, or `verilog-insert' was used."
+  ;; See also `verilog-scan-debug-face' and `verilog-scan-and-debug'
   (unless (verilog-scan-cache-ok-p)
     (save-excursion
       (verilog-save-buffer-state
@@ -2840,13 +2841,32 @@ either is ok to parse as a non-comment, or `verilog-insert' was used."
 	(setq verilog-scan-cache-tick (buffer-chars-modified-tick))
 	(when verilog-debug (message "Scaning... done"))))))
 
-(defun verilog-inside-comment-or-string-p ()
-  "Check if point inside a comment.
+(defun verilog-scan-debug-face ()
+  "For debugging, show with display face results of `verilog-scan'."
+  (font-lock-mode 0)
+  (save-excursion
+    (goto-char (point-min))
+    (remove-text-properties (point-min) (point-max) '(face nil))
+    (while (not (eobp))
+      (when (get-text-property (point) 'v-cmts)
+	(put-text-property (point) (1+ (point)) `face 'underline))
+      (goto-char (or (next-property-change (point)) (point-max))))))
+
+(defun verilog-scan-and-debug ()
+  "For debugging, run `verilog-scan' and `verilog-scan-debug-face'."
+  (let (verilog-scan-cache-preserving
+	verilog-scan-cache-tick)
+    (goto-char (point-min))
+    (verilog-scan)
+    (verilog-scan-debug-face)))
+
+(defun verilog-inside-comment-or-string-p (&optional pos)
+  "Check if optional point POS is inside a comment.
 This may require a slow pre-parse of the buffer with `verilog-scan'
 to establish comment properties on all text."
   ;; This function is very hot
   (verilog-scan)
-  (get-text-property (point) 'v-cmts))
+  (get-text-property (or pos (point)) 'v-cmts))
 
 (defun verilog-insert (&rest stuff)
   "Insert STUFF arguments, tracking for `verilog-inside-comment-or-string-p'.
