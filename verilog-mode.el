@@ -287,6 +287,9 @@ STRING should be given if the last search was by `string-match' on STRING."
 (eval-and-compile
   ;; Both xemacs and emacs
   (condition-case nil
+      (require 'diff) ;; diff-command and diff-switches
+    (error nil))
+  (condition-case nil
       (unless (fboundp 'buffer-chars-modified-tick)  ;; Emacs 22 added
 	(defmacro buffer-chars-modified-tick () (buffer-modified-tick)))
     (error nil))
@@ -746,6 +749,12 @@ always be saved."
 (defvar verilog-auto-last-file-locals nil
   "Text from file-local-variables during last evaluation.")
 
+(defvar verilog-diff-function 'verilog-diff-report
+  "*Function to run when `verilog-diff-auto' detects differences.
+Function takes three arguments, the original buffer, the
+difference buffer, and the point in original buffer with the
+first difference.")
+
 ;;; Compile support
 (require 'compile)
 (defvar verilog-error-regexp-added nil)
@@ -1189,6 +1198,7 @@ If set will become buffer local.")
     ;; Note \C-c and letter are reserved for users
     (define-key map "\C-c\`"   'verilog-lint-off)
     (define-key map "\C-c\*"   'verilog-delete-auto-star-implicit)
+    (define-key map "\C-c\?"   'verilog-diff-auto)
     (define-key map "\C-c\C-r" 'verilog-label-be)
     (define-key map "\C-c\C-i" 'verilog-pretty-declarations)
     (define-key map "\C-c="    'verilog-pretty-expr)
@@ -1314,6 +1324,8 @@ If set will become buffer local.")
       :help		"Expand AUTO meta-comment statements"]
      ["Kill AUTOs"			verilog-delete-auto
       :help		"Remove AUTO expansions"]
+     ["Diff AUTOs"			verilog-diff-auto
+      :help		"Show differences in AUTO expansions"]
      ["Inject AUTOs"			verilog-inject-auto
       :help		"Inject AUTOs into legacy non-AUTO buffer"]
      ("AUTO Help..."
@@ -2911,7 +2923,7 @@ Use filename, if current buffer being edited shorten to just buffer name."
 		   (buffer-name))
 	      buffer-file-name
 	      (buffer-name))
-	  ":" (int-to-string (count-lines (point-min) (or pointnum (point))))))
+	  ":" (int-to-string (1+ (count-lines (point-min) (or pointnum (point)))))))
 
 (defun electric-verilog-backward-sexp ()
   "Move backward over one balanced expression."
@@ -4742,8 +4754,9 @@ This lets programs calling batch mode to easily extract error messages."
       (error "%%Error: %s%s" (error-message-string err)
 	     (if (featurep 'xemacs) "\n" "")))))  ;; XEmacs forgets to add a newline
 
-(defun verilog-batch-execute-func (funref)
-  "Internal processing of a batch command, running FUNREF on all command arguments."
+(defun verilog-batch-execute-func (funref &optional no-save)
+  "Internal processing of a batch command, running FUNREF on all command arguments.
+Save the result unless optional NO-SAVE is t."
   (verilog-batch-error-wrapper
    ;; Setting global variables like that is *VERY NASTY* !!!  --Stef
    ;; However, this function is called only when Emacs is being used as
@@ -4772,7 +4785,7 @@ This lets programs calling batch mode to easily extract error messages."
 		 (message (concat "Processing " (buffer-file-name buf)))
 		 (set-buffer buf)
 		 (funcall funref)
-		 (save-buffer))))
+		 (unless no-save (save-buffer)))))
 	   (buffer-list))))
 
 (defun verilog-batch-auto ()
@@ -4792,6 +4805,16 @@ with \\[verilog-delete-auto] on all command-line files, and saves the buffers."
   (unless noninteractive
     (error "Use verilog-batch-delete-auto only with --batch"))  ;; Otherwise we'd mess up buffer modes
   (verilog-batch-execute-func `verilog-delete-auto))
+
+(defun verilog-batch-diff-auto ()
+  "For use with --batch, perform automatic differences as a stand-alone tool.
+This sets up the appropriate Verilog mode environment, expand automatics
+with \\[verilog-diff-auto] on all command-line files, and reports an error
+if any differences are observed.  This is appropriate for adding to regressions
+to insure automatics are always properly maintained."
+  (unless noninteractive
+    (error "Use verilog-batch-diff-auto only with --batch"))  ;; Otherwise we'd mess up buffer modes
+  (verilog-batch-execute-func `verilog-diff-auto t))
 
 (defun verilog-batch-inject-auto ()
   "For use with --batch, perform automatic injection as a stand-alone tool.
@@ -9599,6 +9622,129 @@ Typing \\[verilog-inject-auto] will make this into:
 		 (verilog-insert-indent "/*AUTOINST*/")))))))))
 
 ;;
+;; Auto diff
+;;
+
+(defun verilog-diff-buffers-p (b1 b2 &optional whitespace)
+  "Return nil if buffers B1 and B2 have same contents.
+Else, return point in B1 that first mismatches.
+If optional WHITESPACE true, ignore whitespace."
+  (save-excursion
+    (let* ((case-fold-search nil)  ;; compare-buffer-substrings cares
+	   (p1 (with-current-buffer b1 (goto-char (point-min))))
+	   (p2 (with-current-buffer b2 (goto-char (point-min))))
+	   (maxp1 (with-current-buffer b1 (point-max)))
+	   (maxp2 (with-current-buffer b2 (point-max)))
+	   (op1 -1) (op2 -1) 
+	   progress size)
+      (while (not (and (eq p1 op1) (eq p2 op2)))
+	;; If both windows have whitespace optionally skip over it.
+	(when whitespace
+	  ;; skip-syntax-* doesn't count \n
+	  (with-current-buffer b1
+	    (goto-char p1)
+	    (skip-chars-forward " \t\n\r\f\v")
+	    (setq p1 (point)))
+	  (with-current-buffer b2
+	    (goto-char p2)
+	    (skip-chars-forward " \t\n\r\f\v")
+	    (setq p2 (point))))
+	(setq size (min (- maxp1 p1) (- maxp2 p2)))
+	(setq progress (compare-buffer-substrings b2 p2 (+ size p2)
+						  b1 p1 (+ size p1)))
+	(setq progress (if (zerop progress) size (1- (abs progress))))
+	(setq op1 p1  op2 p2
+	      p1 (+ p1 progress)
+	      p2 (+ p2 progress)))
+      ;; Return value
+      (if (and (eq p1 maxp1) (eq p2 maxp2))
+	  nil p1))))
+
+(defun verilog-diff-file-with-buffer (f1 b2 &optional whitespace show)
+  "View the differences between file F1 and buffer B2.
+This requires the external program `diff-command' to be in your `exec-path',
+and uses `diff-switches' in which you may want to have \"-u\" flag.
+Ignores WHITESPACE if t, and writes output to stdout if SHOW."
+  ;; Similar to `diff-buffer-with-file' but works on XEmacs, and doesn't
+  ;; call `diff' as `diff' has different calling semantics on different
+  ;; versions of Emacs.
+  (if (not (file-exists-p f1))
+      (message "Buffer %s has no associated file on disc" (buffer-name b2))
+    (with-temp-buffer "*Verilog-Diff*"
+      (let ((outbuf (current-buffer))
+	    (f2 (make-temp-file "vm-diff-auto-")))
+	(unwind-protect
+	    (progn
+	      (with-current-buffer b2
+		(save-restriction
+		  (widen)
+		  (write-region (point-min) (point-max) f2 nil 'nomessage)))
+	      (call-process diff-command nil outbuf t
+			    diff-switches ;; User may want -u in diff-switches
+			    (if whitespace "-b" "")
+			    f1 f2)
+	      ;; Print out results.  Alternatively we could have call-processed
+	      ;; ourself, but this way we can reuse diff switches
+	      (when show
+		(with-current-buffer outbuf (message "%s" (buffer-string))))))
+	(sit-for 0)
+	(when (file-exists-p f2)
+	  (delete-file f2))))))
+
+(defun verilog-diff-report (b1 b2 diffpt)
+  "Report differences detected with `verilog-diff-auto'.
+Differences are between buffers B1 and B2, starting at point
+DIFFPT.  This function is called via `verilog-diff-function'."
+  (let ((name1 (with-current-buffer b1 (buffer-file-name))))
+    (message "%%Warning: %s:%d: Difference in AUTO expansion found"
+	     name1 (with-current-buffer b1 (1+ (count-lines (point-min) (point)))))
+    (cond (noninteractive
+	   (verilog-diff-file-with-buffer name1 b2 t t))
+	  (t
+	   (ediff-buffers b1 b2)))))
+
+(defun verilog-diff-auto ()
+  "Expand AUTOs in a temporary buffer and indicate any changes.
+Whitespace differences are ignored to determine identicalness, but
+once a difference is detected, whitespace differences may be shown.
+
+To call this from the command line, see \\[verilog-batch-diff-auto].
+
+The action on differences is selected with
+`verilog-diff-function'.  The default is `verilog-diff-report'
+which will report an error and run `ediff' in interactive mode,
+or `diff' in batch mode."
+  (interactive)
+  (let ((b1 (current-buffer)) b2 diffpt
+	(name1 (buffer-file-name))
+	(newname "*Verilog-Diff*"))
+    (save-excursion
+      (when (get-buffer newname)
+	(kill-buffer newname))
+      (setq b2 (let (buffer-file-name)  ;; Else clone is upset
+		 (clone-buffer newname)))
+      (with-current-buffer b2
+	;; auto requires the filename, but can't have same filename in two
+	;; buffers; so override both b1 and b2's names
+	(let ((buffer-file-name name1))
+	  (unwind-protect
+	      (progn
+		(with-current-buffer b1 (setq buffer-file-name nil))
+		(verilog-auto))
+	    ;; Restore name if unwind
+	    (with-current-buffer b1 (setq buffer-file-name name1)))))
+      ;;
+      (setq diffpt (verilog-diff-buffers-p b1 b2 t))
+      (cond ((not diffpt)
+	     (unless noninteractive (message "AUTO expansion identical"))
+	     (kill-buffer newname)) ;; Nice to cleanup after oneself
+	    (t
+	     (funcall verilog-diff-function b1 b2 diffpt)))
+      ;; Return result of compare
+      diffpt)))
+
+
+;;
 ;; Auto save
 ;;
 
@@ -11725,6 +11871,8 @@ following the /*AUTO...*/ command.
 
 Use \\[verilog-delete-auto] to remove the AUTOs.
 
+Use \\[verilog-diff-auto] to see differences in AUTO expansion.
+
 Use \\[verilog-inject-auto] to insert AUTOs for the first time.
 
 Use \\[verilog-faq] for a pointer to frequently asked questions.
@@ -11747,6 +11895,8 @@ Or fix indentation with:
 Likewise, you can delete or inject AUTOs with:
 	emacs --batch  <filenames.v>  -f verilog-batch-delete-auto
 	emacs --batch  <filenames.v>  -f verilog-batch-inject-auto
+Or check if AUTOs have the same expansion
+	emacs --batch  <filenames.v>  -f verilog-batch-diff-auto
 
 Using \\[describe-function], see also:
     `verilog-auto-arg'          for AUTOARG module instantiations
