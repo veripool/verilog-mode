@@ -9465,16 +9465,10 @@ called before and after this function, respectively."
       (run-hooks 'verilog-before-delete-auto-hook)
 
       ;; Remove those that have multi-line insertions, possibly with parameters
+      ;; We allow anything beginning with AUTO, so that users can add their own
+      ;; patterns
       (verilog-auto-re-search-do
-       (concat "/\\*"
-	       (eval-when-compile
-		 (verilog-regexp-words
-		  `("AUTOASCIIENUM" "AUTOCONCATCOMMENT" "AUTODEFINEVALUE"
-		    "AUTOINOUT" "AUTOINOUTCOMP" "AUTOINOUTIN" "AUTOINOUTMODULE"
-		    "AUTOINPUT" "AUTOINSERTLISP" "AUTOLOGIC"
-		    "AUTOOUTPUT" "AUTOOUTPUTEVERY"
-		    "AUTOREG" "AUTOREGINPUT" "AUTORESET" "AUTOTIEOFF"
-		    "AUTOUNUSED" "AUTOWIRE")))
+       (concat "/\\*AUTO[A-Za-z0-9_]+"
 	       ;; Optional parens or quoted parameter or .* for (((...)))
 	       "\\(\\|([^)]*)\\|(\"[^\"]*\")\\).*?"
 	       "\\*/")
