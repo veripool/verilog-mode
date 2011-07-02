@@ -9271,7 +9271,7 @@ This repairs those mis-inserted by a AUTOARG."
 	;; Ditto the end.
 	(while (string-match
 		(concat "\\([[({:*+-]\\)"  ; - must be last
-			"(\\<\\([0-9A-Z-az_]+\\))"
+			"(\\<\\([0-9A-Za-z_]+\\))"
 			"\\([])}:*+-]\\)")
 		out)
 	  (setq out (replace-match "\\1\\2\\3" nil nil out)))
