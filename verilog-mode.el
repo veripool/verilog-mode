@@ -367,11 +367,24 @@ This function may be removed when Emacs 21 is no longer supported."
   "True if `after-change-functions' is disabled.
 Use of `syntax-ppss' may break, as ppss's cache may get corrupted.")
 
+(defvar verilog-in-hooks nil
+  "True when within a `verilog-run-hooks' block.")
+
+(defmacro verilog-run-hooks (&rest hooks)
+  "Run each hook in HOOKS using `run-hooks'.
+Set `verilog-in-hooks' during this time, to assist AUTO caches."
+  `(let ((verilog-in-hooks t))
+     (run-hooks ,@hooks)))
+
 (defun verilog-syntax-ppss (&optional pos)
   (when verilog-no-change-functions
-    (backtrace)
-    (error "%s: Internal problem; use of syntax-ppss when cache may be corrupt"
-	   (verilog-point-text)))
+    (if verilog-in-hooks
+	(verilog-scan-cache-flush)
+      ;; else don't let the AUTO code itself get away with flushing the cache,
+      ;; as that'll make things very slow
+      (backtrace)
+      (error "%s: Internal problem; use of syntax-ppss when cache may be corrupt"
+	     (verilog-point-text))))
   (if (fboundp 'syntax-ppss)
       (syntax-ppss pos)
     (parse-partial-sexp (point-min) (or pos (point)))))
@@ -2787,6 +2800,10 @@ and `verilog-scan'.")
 (defvar verilog-scan-cache-tick nil
   "Modification tick at which `verilog-scan' was last completed.")
 (make-variable-buffer-local 'verilog-scan-cache-tick)
+
+(defun verilog-scan-cache-flush ()
+  "Flush the `verilog-scan' cache."
+  (setq verilog-scan-cache-tick nil))
 
 (defun verilog-scan-cache-ok-p ()
   "Return t iff the scan cache is up to date."
@@ -8533,11 +8550,11 @@ Some macros and such are also found and included.  For dinotrace.el."
                                  verilog-library-files
                                  verilog-library-flags)))
   ;; Allow user to customize
-  (run-hooks 'verilog-before-getopt-flags-hook)
+  (verilog-run-hooks 'verilog-before-getopt-flags-hook)
   ;; Process arguments
   (verilog-getopt verilog-library-flags)
   ;; Allow user to customize
-  (run-hooks 'verilog-getopt-flags-hook))
+  (verilog-run-hooks 'verilog-getopt-flags-hook))
 
 (defun verilog-add-list-unique (varref object)
   "Append to VARREF list the given OBJECT,
@@ -9462,7 +9479,7 @@ called before and after this function, respectively."
     (verilog-save-no-change-functions
      (verilog-save-scan-cache
       ;; Allow user to customize
-      (run-hooks 'verilog-before-delete-auto-hook)
+      (verilog-run-hooks 'verilog-before-delete-auto-hook)
 
       ;; Remove those that have multi-line insertions, possibly with parameters
       ;; We allow anything beginning with AUTO, so that users can add their own
@@ -9491,7 +9508,7 @@ called before and after this function, respectively."
 	(replace-match ""))
 
       ;; Final customize
-      (run-hooks 'verilog-delete-auto-hook)))))
+      (verilog-run-hooks 'verilog-delete-auto-hook)))))
 
 ;;
 ;; Auto inject
@@ -11950,7 +11967,7 @@ Wilson Snyder (wsnyder@wsnyder.org)."
 	     ;; If we're not in verilog-mode, change syntax table so parsing works right
 	     (unless (eq major-mode `verilog-mode) (verilog-mode))
 	     ;; Allow user to customize
-	     (run-hooks 'verilog-before-auto-hook)
+	     (verilog-run-hooks 'verilog-before-auto-hook)
 	     ;; Try to save the user from needing to revert-file to reread file local-variables
 	     (verilog-auto-reeval-locals)
 	     (verilog-read-auto-lisp-present)
@@ -12018,7 +12035,7 @@ Wilson Snyder (wsnyder@wsnyder.org)."
 	       (when verilog-auto-inst-template-numbers
 		 (verilog-auto-templated-rel))))
 	     ;;
-	     (run-hooks 'verilog-auto-hook)
+	     (verilog-run-hooks 'verilog-auto-hook)
 	     ;;
 	     (set (make-local-variable 'verilog-auto-update-tick) (buffer-chars-modified-tick))
 	     ;;
