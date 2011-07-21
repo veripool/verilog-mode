@@ -290,6 +290,9 @@ STRING should be given if the last search was by `string-match' on STRING."
       (require 'diff) ;; diff-command and diff-switches
     (error nil))
   (condition-case nil
+      (require 'compile) ;; compilation-error-regexp-alist-alist
+    (error nil))
+  (condition-case nil
       (unless (fboundp 'buffer-chars-modified-tick)  ;; Emacs 22 added
 	(defmacro buffer-chars-modified-tick () (buffer-modified-tick)))
     (error nil))
@@ -703,6 +706,12 @@ The name of the function or case will be set between the braces."
   :group 'verilog-mode-actions
   :type 'boolean)
 (put 'verilog-auto-endcomments 'safe-local-variable 'verilog-booleanp)
+
+(defcustom verilog-auto-delete-trailing-whitespace nil
+  "*True means to `delete-trailing-whitespace' in `verilog-auto'."
+  :group 'verilog-mode-actions
+  :type 'boolean)
+(put 'verilog-auto-delete-trailing-whitespace 'safe-local-variable 'verilog-booleanp)
 
 (defcustom verilog-auto-ignore-concat nil
   "*True means ignore signals in {...} concatenations for AUTOWIRE etc.
@@ -12036,6 +12045,9 @@ Wilson Snyder (wsnyder@wsnyder.org)."
 		 (verilog-auto-templated-rel))))
 	     ;;
 	     (verilog-run-hooks 'verilog-auto-hook)
+	     ;;
+	     (when verilog-auto-delete-trailing-whitespace
+	       (delete-trailing-whitespace))
 	     ;;
 	     (set (make-local-variable 'verilog-auto-update-tick) (buffer-chars-modified-tick))
 	     ;;
