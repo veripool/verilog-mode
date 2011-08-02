@@ -1639,6 +1639,14 @@ This speeds up complicated regexp matches."
     done))
 ;;(verilog-re-search-backward-substr "-end" "get-end-of" nil t) ;;-end (test bait)
 
+(defun verilog-delete-trailing-whitespace ()
+  "Delete trailing spaces or tabs, but not newlines nor linefeeds."
+  ;; Similar to `delete-trailing-whitespace' but that's not present in XEmacs
+  (save-excursion
+    (goto-char (point-min))
+    (while (re-search-forward "[ \t]+$" nil t)  ;; Not syntatic WS as no formfeed
+      (replace-match "" nil nil))))
+
 (defvar compile-command)
 
 ;; compilation program
@@ -12047,7 +12055,7 @@ Wilson Snyder (wsnyder@wsnyder.org)."
 	     (verilog-run-hooks 'verilog-auto-hook)
 	     ;;
 	     (when verilog-auto-delete-trailing-whitespace
-	       (delete-trailing-whitespace))
+	       (verilog-delete-trailing-whitespace))
 	     ;;
 	     (set (make-local-variable 'verilog-auto-update-tick) (buffer-chars-modified-tick))
 	     ;;
