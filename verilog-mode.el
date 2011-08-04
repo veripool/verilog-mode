@@ -11730,18 +11730,20 @@ doesn't care.
 Finally, a AUTOASCIIENUM command is used.
 
   The first parameter is the name of the signal to be decoded.
-  If and only if the first parameter width is 2^(number of states
-  in enum) and does NOT match the width of the enum, the signal
-  is assumed to be a one hot decode.  Otherwise, it's a normal
-  encoded state vector.
 
   The second parameter is the name to store the ASCII code into.  For the
   signal foo, I suggest the name _foo__ascii, where the leading _ indicates
   a signal that is just for simulation, and the magic characters _ascii
   tell viewers like Dinotrace to display in ASCII format.
 
-  The final optional parameter is a string which will be removed from the
-  state names.
+  The third optional parameter is a string which will be removed
+  from the state names. It defaults to "" which removes nothing.
+
+  The fourth optional parameter is \"onehot\" to force one-hot
+  decoding. If unspecified, if and only if the first parameter
+  width is 2^(number of states in enum) and does NOT match the
+  width of the enum, the signal is assumed to be a one hot
+  decode.  Otherwise, it's a normal encoded state vector.
 
   `verilog-auto-wire-type' may be used to change the datatype of
   the declarations.
@@ -11778,10 +11780,13 @@ Typing \\[verilog-auto] will make this into:
 	end
 	// End of automatics"
   (save-excursion
-    (let* ((params (verilog-read-auto-params 2 3))
+    (let* ((params (verilog-read-auto-params 2 4))
 	   (undecode-name (nth 0 params))
 	   (ascii-name (nth 1 params))
-	   (elim-regexp (nth 2 params))
+	   (elim-regexp (and (nth 2 params)
+			     (not (equal (nth 2 params) ""))
+			     (nth 2 params)))
+	   (one-hot-flag (nth 3 params))
 	   ;;
 	   (indent-pt (current-indentation))
 	   (modi (verilog-modi-current))
@@ -11804,13 +11809,15 @@ Typing \\[verilog-auto] will make this into:
 			   (error "%s: No state definitions for %s" (verilog-point-text) undecode-enum))
 		       nil))
 	   ;;
-	   (one-hot (and ;; width(enum) != width(sig)
-		     (or (not (verilog-sig-bits (car enum-sigs)))
-			 (not (equal (verilog-sig-width (car enum-sigs))
-				     (verilog-sig-width undecode-sig))))
-		     ;; count(enums) == width(sig)
-		     (equal (number-to-string (length enum-sigs))
-			    (verilog-sig-width undecode-sig))))
+	   (one-hot (or
+		     (string-match "onehot" (or one-hot-flag ""))
+		     (and ;; width(enum) != width(sig)
+		      (or (not (verilog-sig-bits (car enum-sigs)))
+			  (not (equal (verilog-sig-width (car enum-sigs))
+				      (verilog-sig-width undecode-sig))))
+		      ;; count(enums) == width(sig)
+		      (equal (number-to-string (length enum-sigs))
+			     (verilog-sig-width undecode-sig)))))
   	   (enum-chars 0)
 	   (ascii-chars 0))
       ;;
