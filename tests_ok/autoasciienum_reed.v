@@ -20,14 +20,14 @@ module sm ();
    reg [87:0]       state_onehot,ascii_r;       // Decode of state_r
    always @(state_r) begin
       case ({state_r})
-        (STATES'b1<<IDLE):   state_onehot,ascii_r       = "idle       ";
-        (STATES'b1<<READ):   state_onehot,ascii_r       = "read       ";
-        (STATES'b1<<THINK):  state_onehot,ascii_r       = "think      ";
-        (STATES'b1<<SEND):   state_onehot,ascii_r       = "send       ";
-        (STATES'b1<<WAIT):   state_onehot,ascii_r       = "wait       ";
-        (STATES'b1<<GET_ACK): state_onehot,ascii_r      = "get_ack    ";
-        (STATES'b1<<WAIT_REGBUS): state_onehot,ascii_r  = "wait_regbus";
-        default:             state_onehot,ascii_r       = "%Error     ";
+        (7'b1<<IDLE):        state_onehot,ascii_r  = "idle       ";
+        (7'b1<<READ):        state_onehot,ascii_r  = "read       ";
+        (7'b1<<THINK):       state_onehot,ascii_r  = "think      ";
+        (7'b1<<SEND):        state_onehot,ascii_r  = "send       ";
+        (7'b1<<WAIT):        state_onehot,ascii_r  = "wait       ";
+        (7'b1<<GET_ACK):     state_onehot,ascii_r  = "get_ack    ";
+        (7'b1<<WAIT_REGBUS): state_onehot,ascii_r  = "wait_regbus";
+        default:             state_onehot,ascii_r  = "%Error     ";
       endcase
    end
    // End of automatics

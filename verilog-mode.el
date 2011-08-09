@@ -11851,7 +11851,9 @@ Typing \\[verilog-auto] will make this into:
 	   (concat
 	    (format chrfmt
 		    (concat (if one-hot "(")
-			    (if one-hot (verilog-sig-width undecode-sig))
+			    ;; Use enum-sigs length as that's numeric
+			    ;; verilog-sig-width undecode-sig might not be.
+			    (if one-hot (number-to-string (length enum-sigs)))
 			    ;; We use a shift instead of var[index]
 			    ;; so that a non-one hot value will show as error.
 			    (if one-hot "'b1<<")
