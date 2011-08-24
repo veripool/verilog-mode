@@ -3965,13 +3965,21 @@ More specifically, point @ in the line foo : @ begin"
 	       (t
 		(throw 'found (= nest 0)))))))
       nil)))
+
 (defun verilog-backward-up-list (arg)
-  "Like backward-up-list, but deal with comments."
-  (let (saved-psic parse-sexp-ignore-comments)
-    (setq parse-sexp-ignore-comments 1)
-    (backward-up-list arg)
-    (setq parse-sexp-ignore-comments saved-psic)
-    ))
+  "Like `backward-up-list', but deal with comments."
+  (let ((parse-sexp-ignore-comments t))
+    (backward-up-list arg)))
+
+(defun verilog-forward-sexp-cmt (arg)
+  "Call `forward-sexp', inside comments."
+  (let ((parse-sexp-ignore-comments nil))
+    (forward-sexp arg)))
+
+(defun verilog-forward-sexp-ign-cmt (arg)
+  "Call `forward-sexp', ignoring comments."
+  (let ((parse-sexp-ignore-comments t))
+    (forward-sexp arg)))
 
 (defun verilog-in-struct-region-p ()
   "Return true if in a struct region.
@@ -7836,7 +7844,8 @@ Inserts the list of signals found, using submodi to look up each port."
 		  submoddecls comment port
 		  (buffer-substring
 		   (point) (1- (progn (search-backward "(") ; start at (
-				      (forward-sexp 1) (point)))))))) ; expr
+				      (verilog-forward-sexp-ign-cmt 1)
+				      (point)))))))) ; expr
 	;;
 	(forward-line 1)))))
 
@@ -7910,7 +7919,8 @@ Outputs comments above subcell signals, for example:
 		      submoddecls (verilog-decls-new nil nil nil nil nil nil nil nil nil)
 		      comment (concat inst " of " submod))
 		(verilog-backward-open-paren)
-		(setq end-inst-point (save-excursion (forward-sexp 1) (point))
+		(setq end-inst-point (save-excursion (verilog-forward-sexp-ign-cmt 1)
+						     (point))
 		      st-point (point))
 		(forward-char 1)
 		(verilog-read-sub-decls-gate submoddecls comment submod end-inst-point))
@@ -7920,7 +7930,8 @@ Outputs comments above subcell signals, for example:
 		  (setq submoddecls (verilog-modi-get-decls submodi)
 			verilog-read-sub-decls-gate-ios nil)
 		  (verilog-backward-open-paren)
-		  (setq end-inst-point (save-excursion (forward-sexp 1) (point))
+		  (setq end-inst-point (save-excursion (verilog-forward-sexp-ign-cmt 1)
+						       (point))
 			st-point (point))
 		  ;; This could have used a list created by verilog-auto-inst
 		  ;; However I want it to be runnable even on user's manually added signals
@@ -7961,7 +7972,7 @@ For example if declare A A (.B(SIG)) then B will be included in the list."
 	(unless (verilog-inside-comment-or-string-p)
 	  (setq pins (cons (list pin) pins))
 	  (when (looking-at "(")
-	    (forward-sexp 1))))
+	    (verilog-forward-sexp-ign-cmt 1))))
       (vector pins))))
 
 (defun verilog-read-arg-pins ()
@@ -7988,7 +7999,7 @@ For example if declare A A (.B(SIG)) then B will be included in the list."
 	(search-forward "(" end-mod-point)
 	(setq tpl-end-pt (save-excursion
 			   (backward-char 1)
-			   (forward-sexp 1)   ;; Moves to paren that closes argdecl's
+			   (verilog-forward-sexp-cmt 1)   ;; Moves to paren that closes argdecl's
 			   (backward-char 1)
 			   (point)))
 	(while (re-search-forward "\\s-*\\([\"a-zA-Z0-9$_.%`]+\\)\\s-*,*" tpl-end-pt t)
@@ -8014,7 +8025,7 @@ Must call `verilog-read-auto-lisp-present' before this function."
       (while (re-search-forward "\\<AUTO_LISP(" end t)
 	(backward-char)
 	(let* ((beg-pt (prog1 (point)
-			 (forward-sexp 1)))	;; Closing paren
+			 (verilog-forward-sexp-cmt 1)))	;; Closing paren
 	       (end-pt (point)))
 	  (eval-region beg-pt end-pt nil))))))
 
@@ -8254,7 +8265,7 @@ list of ( (signal_name connection_name)... )."
 		     (setq lineno (1+ lineno))))))
 	     (setq tpl-end-pt (save-excursion
 				(backward-char 1)
-				(forward-sexp 1)   ;; Moves to paren that closes argdecl's
+				(verilog-forward-sexp-cmt 1)   ;; Moves to paren that closes argdecl's
 				(backward-char 1)
 				(point)))
 	     ;;
@@ -9422,11 +9433,11 @@ Ignore other open bracket with matching close bracket."
 
 (defun verilog-delete-to-paren ()
   "Delete the automatic inst/sense/arg created by autos.
-Deletion stops at the matching end parenthesis."
+Deletion stops at the matching end parenthesis, outside comments."
   (delete-region (point)
 		 (save-excursion
 		   (verilog-backward-open-paren)
-		   (forward-sexp 1)   ;; Moves to paren that closes argdecl's
+		   (verilog-forward-sexp-ign-cmt 1)   ;; Moves to paren that closes argdecl's
 		   (backward-char 1)
 		   (point))))
 
@@ -9603,7 +9614,7 @@ Typing \\[verilog-inject-auto] will make this into:
 	     pre-sigs
 	     got-sigs)
 	(backward-char 1)
-	(forward-sexp 1)
+	(verilog-forward-sexp-ign-cmt 1)
 	(backward-char 1) ;; End )
 	(when (not (verilog-re-search-backward-quick "/\\*\\(AUTOSENSE\\|AS\\)\\*/" start-pt t))
 	  (setq pre-sigs (verilog-signals-from-signame
@@ -11329,7 +11340,7 @@ text:
 				       (forward-char)
 				       (point)))	;; Closing paren
 	   (cmd-beg-pt (save-excursion (goto-char cmd-end-pt)
-				       (backward-sexp 1)
+				       (backward-sexp 1)  ;; Inside comment
 				       (point))) ;; Beginning paren
 	   (cmd (buffer-substring-no-properties cmd-beg-pt cmd-end-pt)))
       (forward-line 1)
