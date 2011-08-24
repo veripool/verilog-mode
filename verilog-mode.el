@@ -1118,6 +1118,14 @@ See the \\[verilog-faq] for examples on using this."
   :type 'string)
 (put 'verilog-auto-output-ignore-regexp 'safe-local-variable 'stringp)
 
+(defcustom verilog-auto-tieoff-declaration "wire"
+  "*Data type used for the declaration for AUTOTIEOFF.  If \"wire\" then
+create a wire, if \"assign\" create an assignment, else the data type for
+variable creation."
+  :group 'verilog-mode-auto
+  :type 'string)
+(put 'verilog-auto-tieoff-declaration 'safe-local-variable 'stringp)
+
 (defcustom verilog-auto-tieoff-ignore-regexp nil
   "*If set, when creating AUTOTIEOFF list, ignore signals matching this regexp.
 See the \\[verilog-faq] for examples on using this."
@@ -11632,7 +11640,11 @@ Typing \\[verilog-auto] will make this into:
 	(verilog-modi-cache-add-vars modi sig-list)  ; Before we trash list
 	(while sig-list
 	  (let ((sig (car sig-list)))
-	    (verilog-insert-one-definition sig "wire" indent-pt)
+	    (cond ((equal verilog-auto-tieoff-declaration "assign")
+		   (indent-to indent-pt)
+		   (insert "assign " (verilog-sig-name sig)))
+		  (t
+		   (verilog-insert-one-definition sig verilog-auto-tieoff-declaration indent-pt)))
 	    (indent-to (max 48 (+ indent-pt 40)))
 	    (insert "= " (verilog-sig-tieoff sig)
 		    ";\n")
