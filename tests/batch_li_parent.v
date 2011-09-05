@@ -1,9 +1,9 @@
-module batch_li_parent();
+module batch_li_parent (/*AUTOARG*/);
 
-   input clk;
    input rst;
+   input clk;
 
-   parameter WIDTH_0 = 8;   
+   parameter WIDTH_0 = 8;
    parameter WIDTH_1 = 16;
    
    batch_li_child
@@ -13,3 +13,7 @@ module batch_li_parent();
        (/*AUTOINST*/);
 
 endmodule
+
+// Local Variables:
+// verilog-auto-arg-sort: t
+// End:
