@@ -11747,8 +11747,7 @@ comment.  The comment must be between the keyword and the symbol.
 \(Annoying, but that's what Synopsys's dc_shell FSM reader requires.)
 
 Next, registers which that enum applies to are also tagged with the same
-enum.  Synopsys also suggests labeling state vectors, but `verilog-mode'
-doesn't care.
+enum.
 
 Finally, a AUTOASCIIENUM command is used.
 
