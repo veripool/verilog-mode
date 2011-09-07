@@ -34,7 +34,7 @@ class mydata extends uvm_object;
       `uvm_field_queue_int(queue, UVM_DEFAULT)
    `uvm_object_utils_end
    `uvm_object_param_utils_begin(mydata) //requires ctor with default args
-     `uvm_field_string(str, UVM_DEFAULT)
+      `uvm_field_string(str, UVM_DEFAULT)
       `uvm_field_object(subdata, UVM_DEFAULT)
       `uvm_field_int(field, UVM_DEC) //use decimal radix
       `uvm_field_enum(myenum, e1, UVM_DEFAULT)
