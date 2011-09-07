@@ -1439,6 +1439,8 @@ If set will become buffer local.")
       :help		"Insert a module .. (/*AUTOARG*/);.. endmodule block"]
      ["OVM Class"	verilog-sk-ovm-class
       :help		"Insert an OVM class block"]
+     ["UVM Class"	verilog-sk-uvm-class
+      :help		"Insert an UVM class block"]
      ["Primitive"	verilog-sk-primitive
       :help		"Insert a primitive .. (.. );.. endprimitive block"]
      "----"
@@ -1816,6 +1818,30 @@ find the errors."
        "`ovm_sequencer_utils_end"
        ) nil )))
 
+(defconst verilog-uvm-begin-re
+  (eval-when-compile
+    (verilog-regexp-opt
+     '(
+       "`uvm_component_utils_begin"
+       "`uvm_component_param_utils_begin"
+       "`uvm_field_utils_begin"
+       "`uvm_object_utils_begin"
+       "`uvm_object_param_utils_begin"
+       "`uvm_sequence_utils_begin"
+       "`uvm_sequencer_utils_begin"
+       ) nil )))
+
+(defconst verilog-uvm-end-re
+  (eval-when-compile
+    (verilog-regexp-opt
+     '(
+       "`uvm_component_utils_end"
+       "`uvm_field_utils_end"
+       "`uvm_object_utils_end"
+       "`uvm_sequence_utils_end"
+       "`uvm_sequencer_utils_end"
+       ) nil )))
+
 (defconst verilog-vmm-begin-re
   (eval-when-compile
     (verilog-regexp-opt
@@ -1953,6 +1979,95 @@ find the errors."
        "`static_dut_error"
        "`static_message") nil )))
 
+(defconst verilog-uvm-statement-re
+  (eval-when-compile
+    (verilog-regexp-opt
+     '(
+       ;; Statements
+       "`uvm_analysis_imp_decl"
+       "`uvm_blocking_get_imp_decl"
+       "`uvm_blocking_get_peek_imp_decl"
+       "`uvm_blocking_master_imp_decl"
+       "`uvm_blocking_peek_imp_decl"
+       "`uvm_blocking_put_imp_decl"
+       "`uvm_blocking_slave_imp_decl"
+       "`uvm_blocking_transport_imp_decl"
+       "`uvm_component_registry"
+       "`uvm_component_registry_param"
+       "`uvm_component_utils"
+       "`uvm_create"
+       "`uvm_create_seq"
+       "`uvm_declare_sequence_lib"
+       "`uvm_do"
+       "`uvm_do_seq"
+       "`uvm_do_seq_with"
+       "`uvm_do_with"
+       "`uvm_error"
+       "`uvm_fatal"
+       "`uvm_field_aa_int_byte"
+       "`uvm_field_aa_int_byte_unsigned"
+       "`uvm_field_aa_int_int"
+       "`uvm_field_aa_int_int_unsigned"
+       "`uvm_field_aa_int_integer"
+       "`uvm_field_aa_int_integer_unsigned"
+       "`uvm_field_aa_int_key"
+       "`uvm_field_aa_int_longint"
+       "`uvm_field_aa_int_longint_unsigned"
+       "`uvm_field_aa_int_shortint"
+       "`uvm_field_aa_int_shortint_unsigned"
+       "`uvm_field_aa_int_string"
+       "`uvm_field_aa_object_int"
+       "`uvm_field_aa_object_string"
+       "`uvm_field_aa_string_int"
+       "`uvm_field_aa_string_string"
+       "`uvm_field_array_int"
+       "`uvm_field_array_object"
+       "`uvm_field_array_string"
+       "`uvm_field_enum"
+       "`uvm_field_event"
+       "`uvm_field_int"
+       "`uvm_field_object"
+       "`uvm_field_queue_int"
+       "`uvm_field_queue_object"
+       "`uvm_field_queue_string"
+       "`uvm_field_sarray_int"
+       "`uvm_field_string"
+       "`uvm_field_utils"
+       "`uvm_file"
+       "`uvm_get_imp_decl"
+       "`uvm_get_peek_imp_decl"
+       "`uvm_info"
+       "`uvm_info1"
+       "`uvm_info2"
+       "`uvm_info3"
+       "`uvm_info4"
+       "`uvm_line"
+       "`uvm_master_imp_decl"
+       "`uvm_msg_detail"
+       "`uvm_non_blocking_transport_imp_decl"
+       "`uvm_nonblocking_get_imp_decl"
+       "`uvm_nonblocking_get_peek_imp_decl"
+       "`uvm_nonblocking_master_imp_decl"
+       "`uvm_nonblocking_peek_imp_decl"
+       "`uvm_nonblocking_put_imp_decl"
+       "`uvm_nonblocking_slave_imp_decl"
+       "`uvm_object_registry"
+       "`uvm_object_registry_param"
+       "`uvm_object_utils"
+       "`uvm_peek_imp_decl"
+       "`uvm_phase_func_decl"
+       "`uvm_phase_task_decl"
+       "`uvm_put_imp_decl"
+       "`uvm_rand_send"
+       "`uvm_rand_send_with"
+       "`uvm_send"
+       "`uvm_sequence_utils"
+       "`uvm_slave_imp_decl"
+       "`uvm_transport_imp_decl"
+       "`uvm_update_sequence_lib"
+       "`uvm_update_sequence_lib_and_item"
+       "`uvm_warning") nil )))
+
 
 ;;
 ;; Regular expressions used to calculate indent, etc.
@@ -2025,7 +2140,12 @@ find the errors."
    "\\(\\<`ovm_object_utils_end\\>\\)\\|"
    "\\(\\<`ovm_sequence_utils_end\\>\\)\\|"
    "\\(\\<`ovm_sequencer_utils_end\\>\\)"
-
+   ;; UVM
+   "\\(\\<`uvm_component_utils_end\\>\\)\\|"
+   "\\(\\<`uvm_field_utils_end\\>\\)\\|"
+   "\\(\\<`uvm_object_utils_end\\>\\)\\|"
+   "\\(\\<`uvm_sequence_utils_end\\>\\)\\|"
+   "\\(\\<`uvm_sequencer_utils_end\\>\\)"
    ))
 
 (defconst verilog-auto-end-comment-lines-re
@@ -2107,6 +2227,12 @@ find the errors."
        "`ovm_object_utils_end"
        "`ovm_sequence_utils_end"
        "`ovm_sequencer_utils_end"
+       ;; UVM
+       "`uvm_component_utils_end"
+       "`uvm_field_utils_end"
+       "`uvm_object_utils_end"
+       "`uvm_sequence_utils_end"
+       "`uvm_sequencer_utils_end"
        ;; VMM
        "`vmm_data_member_end"
        "`vmm_env_member_end"
@@ -2161,7 +2287,7 @@ find the errors."
        "specify"
        "table"
        "task"
-       ;;; OVM
+       ;; OVM
        "`ovm_component_utils_begin"
        "`ovm_component_param_utils_begin"
        "`ovm_field_utils_begin"
@@ -2169,6 +2295,14 @@ find the errors."
        "`ovm_object_param_utils_begin"
        "`ovm_sequence_utils_begin"
        "`ovm_sequencer_utils_begin"
+       ;; UVM
+       "`uvm_component_utils_begin"
+       "`uvm_component_param_utils_begin"
+       "`uvm_field_utils_begin"
+       "`uvm_object_utils_begin"
+       "`uvm_object_param_utils_begin"
+       "`uvm_sequence_utils_begin"
+       "`uvm_sequencer_utils_begin"
        ;; VMM
        "`vmm_data_member_begin"
        "`vmm_env_member_begin"
@@ -2195,7 +2329,7 @@ find the errors."
 	   "\\|\\(\\(\\(\\<cover\\>\\s-+\\)\\|\\(\\<assert\\>\\s-+\\)\\)*\\<property\\>\\)"	;17 21
 	   "\\|\\(\\<\\(rand\\)?sequence\\>\\)" ;21 25
 	   "\\|\\(\\<clocking\\>\\)"          ;22 27
-	   "\\|\\(\\<`ovm_[a-z_]+_begin\\>\\)" ;28
+	   "\\|\\(\\<`[ou]vm_[a-z_]+_begin\\>\\)" ;28
            "\\|\\(\\<`vmm_[a-z_]+_member_begin\\>\\)"
 	   ;;
 
@@ -2370,6 +2504,20 @@ find the errors."
        "`ovm_object_utils_end"
        "`ovm_sequence_utils_end"
        "`ovm_sequencer_utils_end"
+       ;; UVM Begin tokens
+       "`uvm_component_utils_begin"
+       "`uvm_component_param_utils_begin"
+       "`uvm_field_utils_begin"
+       "`uvm_object_utils_begin"
+       "`uvm_object_param_utils_begin"
+       "`uvm_sequence_utils_begin"
+       "`uvm_sequencer_utils_begin"
+       ;; UVM End tokens
+       "`uvm_component_utils_end"	;; Typo in spec, it's not uvm_component_end
+       "`uvm_field_utils_end"
+       "`uvm_object_utils_end"
+       "`uvm_sequence_utils_end"
+       "`uvm_sequencer_utils_end"
        ;; VMM Begin tokens
        "`vmm_data_member_begin"
        "`vmm_env_member_begin"
@@ -3301,6 +3449,7 @@ Some other functions are:
     \\[verilog-sk-fork]  Insert a fork begin .. end .. join block.
     \\[verilog-sk-module]  Insert a module .. (/*AUTOARG*/);.. endmodule block.
     \\[verilog-sk-ovm-class]  Insert an OVM Class block.
+    \\[verilog-sk-uvm-class]  Insert an UVM Class block.
     \\[verilog-sk-primitive]  Insert a primitive .. (.. );.. endprimitive block.
     \\[verilog-sk-repeat]  Insert a repeat (..) begin .. end block.
     \\[verilog-sk-specify]  Insert a specify .. endspecify block.
@@ -4942,7 +5091,7 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 		   ;; if we have a directive, done.
 		   (if (save-excursion (beginning-of-line)
 				       (and (looking-at verilog-directive-re-1)
-					    (not (or (looking-at "[ \t]*`ovm_")
+					    (not (or (looking-at "[ \t]*`[ou]vm_")
                                  (looking-at "[ \t]*`vmm_")))))
 		       (throw 'nesting 'directive))
            ;; indent structs as if there were module level
@@ -5300,6 +5449,9 @@ Jump from end to matching begin, from endcase to matching case, and so on."
      ((looking-at "\\<endproperty\\>")
       ;; 11: Search back for matching property
       (setq reg "\\(\\<property\\>\\)\\|\\(\\<endproperty\\>\\)" ))
+     ((looking-at verilog-uvm-end-re)
+      ;; 12: Search back for matching sequence
+      (setq reg (concat "\\(" verilog-uvm-begin-re "\\|" verilog-uvm-end-re "\\)")))
      ((looking-at verilog-ovm-end-re)
       ;; 12: Search back for matching sequence
       (setq reg (concat "\\(" verilog-ovm-begin-re "\\|" verilog-ovm-end-re "\\)")))
@@ -5427,6 +5579,12 @@ Set point to where line starts."
 	 ;;XX
 	 ((looking-at "\\<\\(always\\(_latch\\|_ff\\|_comb\\)?\\|case\\(\\|[xz]\\)\\|for\\(\\|each\\|ever\\)\\|i\\(f\\|nitial\\)\\|repeat\\|while\\)\\>")
 	  (not (looking-at "\\<randcase\\>\\|\\<case[xz]?\\>[^:]")))
+	 ((looking-at verilog-uvm-statement-re)
+	  nil)
+	 ((looking-at verilog-uvm-begin-re)
+	  t)
+	 ((looking-at verilog-uvm-end-re)
+	  t)
 	 ((looking-at verilog-ovm-statement-re)
 	  nil)
 	 ((looking-at verilog-ovm-begin-re)
@@ -12122,6 +12280,7 @@ Wilson Snyder (wsnyder@wsnyder.org)."
     (define-key map "r" 'verilog-sk-repeat)
     (define-key map "s" 'verilog-sk-specify)
     (define-key map "t" 'verilog-sk-task)
+    (define-key map "u" 'verilog-sk-uvm-class)
     (define-key map "w" 'verilog-sk-while)
     (define-key map "x" 'verilog-sk-casex)
     (define-key map "z" 'verilog-sk-casez)
@@ -12243,6 +12402,20 @@ See also `verilog-header' for an alternative format."
   > _ \n
   > "`ovm_object_utils_begin(" name ")" \n
   > (- verilog-indent-level) " `ovm_object_utils_end" \n
+  > _ \n
+  > "function new(name=\"" name "\");" \n
+  > "super.new(name);" \n
+  > (- verilog-indent-level) "endfunction" \n
+  > _ \n
+  > "endclass" (progn (electric-verilog-terminate-line) nil))
+
+(define-skeleton verilog-sk-uvm-class
+  "Insert a class definition"
+  ()
+  > "class " (setq name (skeleton-read "Name: ")) " extends " (skeleton-read "Extends: ") ";" \n
+  > _ \n
+  > "`uvm_object_utils_begin(" name ")" \n
+  > (- verilog-indent-level) " `uvm_object_utils_end" \n
   > _ \n
   > "function new(name=\"" name "\");" \n
   > "super.new(name);" \n
