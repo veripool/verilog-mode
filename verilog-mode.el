@@ -977,6 +977,19 @@ of each Verilog file that requires it, rather than being set globally."
   :type 'boolean)
 (put 'verilog-auto-sense-defines-constant 'safe-local-variable 'verilog-booleanp)
 
+(defcustom verilog-auto-reset-blocking-in-non t
+  "*If true, AUTORESET will reset those signals which were
+assigned with blocking assignments (=) even in a block with
+non-blocking assignments (<=).
+  
+If nil, all blocking assigned signals are ignored when any
+non-blocking assignment is in the AUTORESET block.  This allows
+blocking assignments to be used for temporary values and not have
+those temporaries reset.  See example in `verilog-auto-reset'."
+  :type 'boolean
+  :group 'verilog-mode-auto)
+(put 'verilog-auto-reset-blocking-in-non 'safe-local-variable 'verilog-booleanp)
+
 (defcustom verilog-auto-reset-widths t
   "*If true, AUTORESET should determine the width of signals.
 This is then used to set the width of the zero (32'h0 for example).  This
@@ -7384,16 +7397,18 @@ See also `verilog-sk-header' for an alternative format."
 (defsubst verilog-sig-width (sig)
   (verilog-make-width-expression (verilog-sig-bits sig)))
 
-(defsubst verilog-alw-new (outputs temps inputs delayed)
-  (list outputs temps inputs delayed))
-(defsubst verilog-alw-get-outputs (sigs)
+(defsubst verilog-alw-new (outputs-del outputs-imm temps inputs)
+  (list outputs-del outputs-imm temps inputs))
+(defsubst verilog-alw-get-outputs-delayed (sigs)
   (nth 0 sigs))
-(defsubst verilog-alw-get-temps (sigs)
+(defsubst verilog-alw-get-outputs-immediate (sigs)
   (nth 1 sigs))
-(defsubst verilog-alw-get-inputs (sigs)
+(defsubst verilog-alw-get-temps (sigs)
   (nth 2 sigs))
-(defsubst verilog-alw-get-uses-delayed (sigs)
+(defsubst verilog-alw-get-inputs (sigs)
   (nth 3 sigs))
+(defsubst verilog-alw-get-uses-delayed (sigs)
+  (nth 0 sigs))
 
 (defsubst verilog-modi-new (name fob pt type)
   (vector name fob pt type))
@@ -8250,9 +8265,10 @@ Must call `verilog-read-auto-lisp-present' before this function."
   ;; Do not remove the eval-when-compile
   ;; - we want a error when we are debugging this code if they are refed.
   (defvar sigs-in)
-  (defvar sigs-out)
+  (defvar sigs-out-d)
+  (defvar sigs-out-i)
+  (defvar sigs-out-unk)
   (defvar sigs-temp)
-  (defvar uses-delayed)
   (defvar vector-skip-list))
 
 (defun verilog-read-always-signals-recurse
@@ -8327,9 +8343,16 @@ IGNORE-NEXT is true to ignore next token, fake from inside case statement."
 		   (setq ignore-next t rvalue nil)))
 	    (forward-char 1))
 	   ((equal keywd "=")
-	    (if (and (eq (char-before) ?< )
-		     (not rvalue))
-		(setq uses-delayed 1))
+	    (when got-sig
+	      ;;(if dbg (setq dbg (concat dbg (format "\t\tequal got-sig=%S got-list=%s\n" got-sig got-list))))
+	      (set got-list (cons got-sig (symbol-value got-list)))
+	      (setq got-sig nil))
+	    (when (not rvalue)
+	      (if (eq (char-before) ?< )
+		  (setq sigs-out-d (append sigs-out-d sigs-out-unk)
+			sigs-out-unk nil)
+		(setq sigs-out-i (append sigs-out-i sigs-out-unk)
+		      sigs-out-unk nil)))
 	    (setq ignore-next nil rvalue t)
 	    (forward-char 1))
 	   ((equal keywd "?")
@@ -8375,7 +8398,7 @@ IGNORE-NEXT is true to ignore next token, fake from inside case statement."
 		     )
 		   (setq got-list (cond (temp-next 'sigs-temp)
 					(rvalue 'sigs-in)
-					(t 'sigs-out))
+					(t 'sigs-out-unk))
 			 got-sig (if (or (not keywd)
 					 (assoc keywd (symbol-value got-list)))
 				     nil (list keywd nil nil))
@@ -8399,13 +8422,14 @@ IGNORE-NEXT is true to ignore next token, fake from inside case statement."
   "Parse always block at point and return list of (outputs inout inputs)."
   (save-excursion
     (let* (;;(dbg "")
-	   sigs-out sigs-temp sigs-in
-	   uses-delayed)	;; Found signal/rvalue; push if not function
+	   sigs-out-d sigs-out-i sigs-out-unk sigs-temp sigs-in)
       (search-forward ")")
       (verilog-read-always-signals-recurse nil nil nil)
+      (setq sigs-out-i (append sigs-out-i sigs-out-unk)
+	    sigs-out-unk nil)
       ;;(if dbg (with-current-buffer (get-buffer-create "*vl-dbg*")) (delete-region (point-min) (point-max)) (insert dbg) (setq dbg ""))
       ;; Return what was found
-      (verilog-alw-new sigs-out sigs-temp sigs-in uses-delayed))))
+      (verilog-alw-new sigs-out-d sigs-out-i sigs-temp sigs-in))))
 
 (defun verilog-read-instants ()
   "Parse module at point and return list of ( ( file instance ) ... )."
@@ -11576,7 +11600,9 @@ text:
 	 (sig-list (verilog-signals-not-params
 		    (verilog-signals-not-in (verilog-alw-get-inputs sigss)
 					    (append (and (not verilog-auto-sense-include-inputs)
-							 (verilog-alw-get-outputs sigss))
+							 (verilog-alw-get-outputs-delayed sigss))
+						    (and (not verilog-auto-sense-include-inputs)
+							 (verilog-alw-get-outputs-immediate sigss))
 						    (verilog-alw-get-temps sigss)
 						    (verilog-decls-get-consts moddecls)
 						    (verilog-decls-get-gparams moddecls)
@@ -11687,8 +11713,12 @@ registers set elsewhere in the always block.
 Limitations:
   AUTORESET will not clear memories.
 
-  AUTORESET uses <= if there are any <= assignments in the block,
+  AUTORESET uses <= if the signal has a <= assignment in the block,
   else it uses =.
+
+  If <= is used, all = assigned variables are ignored if
+  `verilog-auto-reset-blocking-in-non' is nil; they are presumed
+  to be temporaries.
 
 /*AUTORESET*/ presumes that any signals mentioned between the previous
 begin/case/if statement and the AUTORESET comment are being reset manually
@@ -11725,12 +11755,12 @@ Typing \\[verilog-auto] will make this into:
             /*AUTORESET*/
             // Beginning of autoreset for uninitialized flops
             a <= 0;
-            b <= 0;
+            b = 0;   // if `verilog-auto-reset-blocking-in-non' true
             // End of automatics
         end
         else begin
             a <= in_a;
-            b <= in_b;
+            b  = in_b;
             c <= in_c;
         end
     end"
@@ -11742,7 +11772,7 @@ Typing \\[verilog-auto] will make this into:
 	   (modi (verilog-modi-current))
 	   (moddecls (verilog-modi-get-decls modi))
 	   (all-list (verilog-decls-get-signals moddecls))
-	   sigss sig-list prereset-sigs assignment-str)
+	   sigss sig-list dly-list prereset-sigs)
       ;; Read signals in always, eliminate outputs from reset list
       (setq prereset-sigs (verilog-signals-from-signame
 			   (save-excursion
@@ -11754,10 +11784,12 @@ Typing \\[verilog-auto] will make this into:
       (save-excursion
 	(verilog-re-search-backward-quick "@" nil t)
         (setq sigss (verilog-read-always-signals)))
-      (setq assignment-str (if (verilog-alw-get-uses-delayed sigss)
-			       (concat " <= " verilog-assignment-delay)
-			     " = "))
-      (setq sig-list (verilog-signals-not-in (verilog-alw-get-outputs sigss)
+      (setq dly-list (verilog-alw-get-outputs-delayed sigss))
+      (setq sig-list (verilog-signals-not-in (append
+					      (verilog-alw-get-outputs-delayed sigss)
+					      (when (or (not (verilog-alw-get-uses-delayed sigss))
+							verilog-auto-reset-blocking-in-non)
+						(verilog-alw-get-outputs-immediate sigss)))
 					     (append
 					      (verilog-alw-get-temps sigss)
 					      prereset-sigs)))
@@ -11765,17 +11797,18 @@ Typing \\[verilog-auto] will make this into:
       (when sig-list
 	(insert "\n");
 	(verilog-insert-indent "// Beginning of autoreset for uninitialized flops\n");
-	(indent-to indent-pt)
 	(while sig-list
 	  (let ((sig (or (assoc (verilog-sig-name (car sig-list)) all-list) ;; As sig-list has no widths
 			 (car sig-list))))
+	    (indent-to indent-pt)
 	    (insert (verilog-sig-name sig)
-		    assignment-str
+		    (if (assoc (verilog-sig-name sig) dly-list)
+			(concat " <= " verilog-assignment-delay)
+		      " = ")
 		    (verilog-sig-tieoff sig (not verilog-auto-reset-widths))
 		    ";\n")
-	    (indent-to indent-pt)
 	    (setq sig-list (cdr sig-list))))
-	(verilog-insert "// End of automatics")))))
+	(verilog-insert-indent "// End of automatics")))))
 
 (defun verilog-auto-tieoff ()
   "Expand AUTOTIEOFF statements, as part of \\[verilog-auto].
