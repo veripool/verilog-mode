@@ -31,6 +31,12 @@ run("emacs --batch --no-site-file -l $tmpdir/verilog-mode.elc"
 
 run("emacs --batch --no-site-file -l $tmpdir/verilog-mode.elc"
     ." -l ./batch_test.el"
+    ." e/b/autoinst_star.v"
+    ." -f verilog-batch-diff-auto"
+    );
+
+run("emacs --batch --no-site-file -l $tmpdir/verilog-mode.elc"
+    ." -l ./batch_test.el"
     ." ".join(' ',@tests_args)
     ." -f verilog-batch-indent"
     );

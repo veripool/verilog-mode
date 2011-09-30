@@ -10009,7 +10009,9 @@ or `diff' in batch mode."
 	  (unwind-protect
 	      (progn
 		(with-current-buffer b1 (setq buffer-file-name nil))
-		(verilog-auto))
+		(verilog-auto)
+		(when (not verilog-auto-star-save)
+		  (verilog-delete-auto-star-implicit)))
 	    ;; Restore name if unwind
 	    (with-current-buffer b1 (setq buffer-file-name name1)))))
       ;;
