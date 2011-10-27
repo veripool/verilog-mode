@@ -8,6 +8,9 @@ module fork_join_any;
             join_any
             a  = b;
             disable fork;
+            blah;
+            wait fork;
+            blah;
          end
       join_any
       foo  = bar;
@@ -17,7 +20,7 @@ endmodule // fork_join_any
 class x;
    task y;
       a  = b;
-      fork wait;
+      wait fork;
       $display("I'm indented too far");
    endtask // y
 endclass // x
