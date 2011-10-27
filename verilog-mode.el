@@ -12255,6 +12255,9 @@ Wilson Snyder (wsnyder@wsnyder.org)."
 	 (verilog-save-no-change-functions
 	  (verilog-save-scan-cache
 	   (save-excursion
+	     ;; Wipe cache; otherwise if we AUTOed a block above this one,
+	     ;; we'll misremember we have generated IOs, confusing AUTOOUTPUT
+	     (setq verilog-modi-cache-list nil)
 	     ;; If we're not in verilog-mode, change syntax table so parsing works right
 	     (unless (eq major-mode `verilog-mode) (verilog-mode))
 	     ;; Allow user to customize
