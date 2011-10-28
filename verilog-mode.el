@@ -8632,14 +8632,15 @@ warning message, you need to add to your .emacs file:
       ;; Hack: Read parameters
       (goto-char (point-min))
       (while (re-search-forward
-	      "^\\s-*\\(parameter\\|localparam\\)\\(\\s-*\\[[^]]*\\]\\)?\\s-+" nil t)
+	      "^\\s-*\\(parameter\\|localparam\\)\\(\\s-*\\[[^]]*\\]\\)?\\s-*" nil t)
 	(let (enumname)
 	  ;; The primary way of getting defines is verilog-read-decls
 	  ;; However, that isn't called yet for included files, so we'll add another scheme
 	  (if (looking-at "[^\n]*synopsys\\s +enum\\s +\\([a-zA-Z0-9_]+\\)")
 	      (setq enumname (match-string-no-properties 1)))
 	  (forward-comment 999)
-	  (while (looking-at "\\s-*,?\\s-*\\([a-zA-Z0-9_$]+\\)\\s-*=\\s-*\\([^;,]*\\),?\\s-*")
+	  (while (looking-at (concat "\\s-*,?\\s-*\\(?:/[/*].*?$\\)?\\s-*\\([a-zA-Z0-9_$]+\\)"
+				     "\\s-*=\\s-*\\([^;,]*\\),?\\s-*\\(/[/*].*?$\\)?\\s-*"))
 	    (verilog-set-define (match-string-no-properties 1)
 				(match-string-no-properties 2) origbuf enumname)
 	    (goto-char (match-end 0))
