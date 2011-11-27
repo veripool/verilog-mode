@@ -1007,7 +1007,7 @@ the MSB or LSB of a signal inside an AUTORESET."
 (put 'verilog-assignment-delay 'safe-local-variable 'stringp)
 
 (defcustom verilog-auto-arg-sort nil
-  "*If set, AUTOARG signal names will be sorted, not in delaration order.
+  "*If set, AUTOARG signal names will be sorted, not in declaration order.
 Declaration order is advantageous with order based instantiations
 and is the default for backward compatibility.  Sorted order
 reduces changes when declarations are moved around in a file, and
@@ -1066,7 +1066,7 @@ instead expand to:
 (put 'verilog-auto-inst-param-value 'safe-local-variable 'verilog-booleanp)
 
 (defcustom verilog-auto-inst-sort nil
-  "*If set, AUTOINST signal names will be sorted, not in delaration order.
+  "*If set, AUTOINST signal names will be sorted, not in declaration order.
 Also affects AUTOINSTPARAM.  Declaration order is the default for
 backward compatibility, and as some teams prefer signals that are
 declared together to remain together.  Sorted order reduces
@@ -2532,7 +2532,7 @@ find the errors."
        "interface" "endinterface"
        "module" "macromodule" "endmodule"
        "package" "endpackage"
-       "primitive" "endprimative"
+       "primitive" "endprimitive"
        "program" "endprogram"
        "property" "endproperty"
        "sequence" "randsequence" "endsequence"
@@ -4016,7 +4016,7 @@ With ARG, first kill any existing labels."
   "Move backward to beginning of statement."
   (interactive)
   ;; Move back token by token until we see the end
-  ;; of some ealier line.
+  ;; of some earlier line.
   (let (h)
     (while
 	;; If the current point does not begin a new
