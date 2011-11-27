@@ -3017,7 +3017,7 @@ user-visible changes to the buffer must not be within a
 
 (defmacro verilog-save-no-change-functions (&rest body)
   "Execute BODY forms, disabling all change hooks in BODY.
-For insigificant changes, see instead `verilog-save-buffer-state'."
+For insignificant changes, see instead `verilog-save-buffer-state'."
   `(let* ((inhibit-point-motion-hooks t)
 	  (verilog-no-change-functions t)
 	  before-change-functions
@@ -4033,7 +4033,7 @@ With ARG, first kill any existing labels."
 	      (looking-at "\\w+\\W*:\\W*\\(coverpoint\\|cross\\|constraint\\)")
           ;; keep going if we are in the middle of a word
 	      (not (or (looking-at "\\<") (forward-word -1)))
-          ;; stop if we see an assertion (perhaps labled)
+          ;; stop if we see an assertion (perhaps labeled)
 	      (and
 	       (looking-at "\\(\\<\\(assert\\|assume\\|cover\\)\\>\\s-+\\<property\\>\\)\\|\\(\\<assert\\>\\)")
 	       (progn
@@ -7482,7 +7482,7 @@ Signals must be in standard (base vector) form."
 ;;(verilog-signals-not-in '(("A" "") ("B" "") ("DEL" "[2:3]")) '(("DEL" "") ("EXT" "")))
 
 (defun verilog-signals-memory (in-list)
-  "Return list of signals in IN-LIST that are memoried (multidimensional)."
+  "Return list of signals in IN-LIST that are memorized (multidimensional)."
   (let (out-list)
     (while in-list
       (if (nth 3 (car in-list))
