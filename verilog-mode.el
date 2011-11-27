@@ -315,7 +315,7 @@ STRING should be given if the last search was by `string-match' on STRING."
   "Filter `easy-menu-define' MENU to support new features."
   (cond ((not (featurep 'xemacs))
 	 menu) ;; GNU Emacs - passthru
-	;; Xemacs doesn't support :help.  Strip it.
+	;; XEmacs doesn't support :help.  Strip it.
 	;; Recursively filter the a submenu
 	((listp menu)
 	 (mapcar 'verilog-easy-menu-filter menu))
@@ -818,7 +818,7 @@ See `compilation-error-regexp-alist' for the formatting.  For Emacs 22+.")
 (defvar verilog-error-regexp-xemacs-alist
   ;; Emacs form is '((v-tool "re" 1 2) ...)
   ;; XEmacs form is '(verilog ("re" 1 2) ...)
-  ;; So we can just map from Emacs to Xemacs
+  ;; So we can just map from Emacs to XEmacs
   (cons 'verilog (mapcar 'cdr verilog-error-regexp-emacs-alist))
   "List of regexps for Verilog compilers.
 See `compilation-error-regexp-alist-alist' for the formatting.  For XEmacs.")
@@ -2212,7 +2212,7 @@ find the errors."
    ))
 
 (defconst verilog-auto-end-comment-lines-re
-  ;; Matches to names in this list cause auto-end-commentation
+  ;; Matches to names in this list cause auto-end-commenting
   (concat "\\("
 	  verilog-directive-re "\\)\\|\\("
 	  (eval-when-compile
@@ -3117,7 +3117,7 @@ either is ok to parse as a non-comment, or `verilog-insert' was used."
 	(remove-text-properties (point-min) (point-max) '(v-cmts nil))
 	(verilog-scan-region (point-min) (point-max))
 	(setq verilog-scan-cache-tick (buffer-chars-modified-tick))
-	(when verilog-debug (message "Scaning... done"))))))
+	(when verilog-debug (message "Scanning... done"))))))
 
 (defun verilog-scan-debug ()
   "For debugging, show with display face results of `verilog-scan'."
@@ -5585,7 +5585,7 @@ Set point to where line starts."
     continued))
 
 (defun verilog-backward-token ()
-  "Step backward token, returing true if this is a continued line."
+  "Step backward token, returning true if this is a continued line."
   (interactive)
   (verilog-backward-syntactic-ws)
   (cond
@@ -12846,7 +12846,7 @@ Files are checked based on `verilog-library-flags'."
     (mouse-set-point event)
     (verilog-load-file-at-point t)))
 
-;; ffap isn't useable for Verilog mode. It uses library paths.
+;; ffap isn't usable for Verilog mode. It uses library paths.
 ;; so define this function to do more or less the same as ffap
 ;; but first resolve filename...
 (defun verilog-load-file-at-point (&optional warn)
