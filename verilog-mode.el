@@ -981,7 +981,7 @@ of each Verilog file that requires it, rather than being set globally."
   "*If true, AUTORESET will reset those signals which were
 assigned with blocking assignments (=) even in a block with
 non-blocking assignments (<=).
-  
+
 If nil, all blocking assigned signals are ignored when any
 non-blocking assignment is in the AUTORESET block.  This allows
 blocking assignments to be used for temporary values and not have
@@ -2011,7 +2011,7 @@ find the errors."
        "`uvm_component_utils"
        "`uvm_create"
        "`uvm_create_on"
-       "`uvm_create_seq"		;; Undocumented in 1.1 
+       "`uvm_create_seq"		;; Undocumented in 1.1
        "`uvm_declare_p_sequencer"
        "`uvm_declare_sequence_lib"	;; Deprecated in 1.1
        "`uvm_do"
@@ -8249,7 +8249,8 @@ Must call `verilog-read-auto-lisp-present' before this function."
 	(backward-char)
 	(let* ((beg-pt (prog1 (point)
 			 (verilog-forward-sexp-cmt 1)))	;; Closing paren
-	       (end-pt (point)))
+	       (end-pt (point))
+	       (verilog-in-hooks t))
 	  (eval-region beg-pt end-pt nil))))))
 
 (eval-when-compile
@@ -9907,7 +9908,7 @@ If optional WHITESPACE true, ignore whitespace."
 	   (p2 (with-current-buffer b2 (goto-char (point-min))))
 	   (maxp1 (with-current-buffer b1 (point-max)))
 	   (maxp2 (with-current-buffer b2 (point-max)))
-	   (op1 -1) (op2 -1) 
+	   (op1 -1) (op2 -1)
 	   progress size)
       (while (not (and (eq p1 op1) (eq p2 op2)))
 	;; If both windows have whitespace optionally skip over it.
