@@ -10930,6 +10930,12 @@ Typing \\[verilog-auto] will make this into:
 	(verilog-insert-definition modi sig-list "reg" indent-pt nil)
 	(verilog-insert-indent "// End of automatics\n")))))
 
+(defun verilog-auto-logic-setup ()
+  "Prepare variables due to AUTOLOGIC."
+  (unless verilog-auto-wire-type
+    (set (make-local-variable 'verilog-auto-wire-type)
+	 "logic")))
+
 (defun verilog-auto-logic ()
   "Expand AUTOLOGIC statements, as part of \\[verilog-auto].
 Make wire statements using the SystemVerilog logic keyword.
@@ -10946,9 +10952,7 @@ with the below at the bottom of the file
 In the future AUTOLOGIC may declare additional identifiers,
 while AUTOWIRE will not."
   (save-excursion
-    (unless verilog-auto-wire-type
-      (set (make-local-variable 'verilog-auto-wire-type)
-	   "logic"))
+    (verilog-auto-logic-setup)
     (verilog-auto-wire)))
 
 (defun verilog-auto-wire ()
@@ -12267,6 +12271,8 @@ Wilson Snyder (wsnyder@wsnyder.org)."
 	      (when verilog-auto-read-includes
 		(verilog-read-includes)
 		(verilog-read-defines nil nil t))
+	      ;; Setup variables due to SystemVerilog expansion
+	      (verilog-auto-re-search-do "/\\*AUTOLOGIC\\*/" 'verilog-auto-logic-setup)
 	      ;; This particular ordering is important
 	      ;; INST: Lower modules correct, no internal dependencies, FIRST
 	      (verilog-preserve-modi-cache
