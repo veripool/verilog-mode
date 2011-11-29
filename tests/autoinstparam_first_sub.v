@@ -9,9 +9,13 @@ module autoinstparam_first_sub (/*AUTOARG*/
 
    localparam IGNORED;
    parameter BITSA;
-   parameter BITSB;
+   parameter type BITSB_t = bit;   // See bug340
 
    inout [BITSA:0] a;
-   inout [BITSB:0] b;
+   inout BITSB_t b;
 
 endmodule
+
+// Local Variables:
+// verilog-typedef-regexp: "_t$"
+// End:

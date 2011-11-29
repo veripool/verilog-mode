@@ -7713,7 +7713,7 @@ Optional NUM-PARAM and MAX-PARAM check for a specific number of parameters."
 Return a array of [outputs inouts inputs wire reg assign const]."
   (let ((end-mod-point (or (verilog-get-end-of-defun t) (point-max)))
 	(functask 0) (paren 0) (sig-paren 0) (v2kargs-ok t)
-	in-modport ign-prop
+	in-modport ptype ign-prop
 	sigs-in sigs-out sigs-inout sigs-var sigs-assign sigs-const
 	sigs-gparam sigs-intf
 	vec expect-signal keywd newsig rvalue enum io signed typedefed multidim
@@ -7789,17 +7789,21 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 	    (when (string-match "^\\\\" (match-string 1))
 	      (setq keywd (concat keywd " "))))  ;; Escaped ID needs space at end
 	  (cond ((equal keywd "input")
-		 (setq vec nil enum nil  rvalue nil  newsig nil  signed nil  typedefed nil  multidim nil  sig-paren paren
-		       expect-signal 'sigs-in  io t  modport nil))
+		 (setq vec nil        enum nil      rvalue nil  newsig nil  signed nil
+		       typedefed nil  multidim nil  ptype nil   modport nil
+		       expect-signal 'sigs-in       io t        sig-paren paren))
 		((equal keywd "output")
-		 (setq vec nil enum nil  rvalue nil  newsig nil  signed nil  typedefed nil  multidim nil  sig-paren paren
-		       expect-signal 'sigs-out  io t  modport nil))
+		 (setq vec nil        enum nil      rvalue nil  newsig nil  signed nil
+		       typedefed nil  multidim nil  ptype nil   modport nil
+		       expect-signal 'sigs-out      io t        sig-paren paren))
 		((equal keywd "inout")
-		 (setq vec nil enum nil  rvalue nil  newsig nil  signed nil  typedefed nil  multidim nil  sig-paren paren
-		       expect-signal 'sigs-inout  io t  modport nil))
+		 (setq vec nil        enum nil      rvalue nil  newsig nil  signed nil
+		       typedefed nil  multidim nil  ptype nil   modport nil
+		       expect-signal 'sigs-inout    io t        sig-paren paren))
 		((equal keywd "parameter")
-		 (setq vec nil  enum nil  rvalue nil  signed nil  typedefed nil  multidim nil  sig-paren paren
-		       expect-signal 'sigs-gparam  io t  modport nil))
+		 (setq vec nil        enum nil      rvalue nil  signed nil
+		       typedefed nil  multidim nil  ptype nil   modport nil
+		       expect-signal 'sigs-gparam   io t        sig-paren paren))
 		((member keywd '("wire"
 				 "tri" "tri0" "tri1" "triand" "trior" "wand" "wor"
 				 "reg" "trireg"
@@ -7810,12 +7814,15 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 		 (unless io (setq vec nil  enum nil  rvalue nil  signed nil  typedefed nil  multidim nil  sig-paren paren
 				  expect-signal 'sigs-var  modport nil)))
 		((equal keywd "assign")
-		 (setq vec nil  enum nil  rvalue nil  signed nil  typedefed nil  multidim nil  sig-paren paren
-		       expect-signal 'sigs-assign  modport nil))
+		 (setq vec nil        enum nil        rvalue nil  signed nil
+		       typedefed nil  multidim nil    ptype nil   modport nil 
+		       expect-signal 'sigs-assign     sig-paren paren))
 		((member keywd '("supply0" "supply1" "supply"
 				 "localparam" "genvar"))
-		 (unless io (setq vec nil  enum nil  rvalue nil  signed nil  typedefed nil  multidim nil  sig-paren paren
-				  expect-signal 'sigs-const  modport nil)))
+		 (unless io
+		   (setq vec nil        enum nil      rvalue nil  signed nil
+			 typedefed nil  multidim nil  ptype nil   modport nil
+			 expect-signal 'sigs-const    sig-paren paren)))
 		((member keywd '("signed" "unsigned"))
 		 (setq signed keywd))
 		((member keywd '("assert" "assume" "cover" "expect" "restrict"))
@@ -7829,11 +7836,14 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 		 (setq functask (1- functask)))
 		((equal keywd "modport")
 		 (setq in-modport t))
+		((equal keywd "type")
+		 (setq ptype t))
 		;; Ifdef?  Ignore name of define
 		((member keywd '("`ifdef" "`ifndef" "`elsif"))
 		 (setq rvalue t))
 		;; Type?
-		((verilog-typedef-name-p keywd)
+		((unless ptype
+		   (verilog-typedef-name-p keywd))
 		 (setq typedefed keywd))
 		;; Interface with optional modport in v2k arglist?
 		;; Skip over parsing modport, and take the interface name as the type
@@ -7842,8 +7852,10 @@ Return a array of [outputs inouts inputs wire reg assign const]."
 		      (not rvalue)
 		      (looking-at "\\s-*\\(\\.\\(\\s-*[a-zA-Z`_$][a-zA-Z0-9`_$]*\\)\\|\\)\\s-*[a-zA-Z`_$][a-zA-Z0-9`_$]*"))
 		 (when (match-end 2) (goto-char (match-end 2)))
-		 (setq vec nil enum nil  rvalue nil  newsig nil  signed nil  typedefed keywd  multidim nil  sig-paren paren
-		       expect-signal 'sigs-intf  io t  modport (match-string 2)))
+		 (setq vec nil          enum nil       rvalue nil  signed nil
+		       typedefed keywd  multidim nil   ptype nil   modport (match-string 2)
+		       newsig nil    sig-paren paren
+		       expect-signal 'sigs-intf  io t  ))
 		;; Ignore dotted LHS assignments: "assign foo.bar = z;"
 		((looking-at "\\s-*\\.")
 		 (goto-char (match-end 0))
