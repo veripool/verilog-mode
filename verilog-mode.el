@@ -6111,7 +6111,7 @@ Only look at a few lines to determine indent level."
 	    (indent-line-to val)
 	    (if (and (not verilog-indent-lists)
 		     (verilog-in-paren))
-		(verilog-pretty-declarations))
+		(verilog-pretty-declarations-auto))
 	    ))
 	 ((= (preceding-char) ?\) )
 	  (goto-char here)
@@ -6147,7 +6147,7 @@ Only look at a few lines to determine indent level."
 		      (looking-at verilog-declaration-re))))
         (indent-line-to val)
         (if decl
-            (verilog-pretty-declarations))))
+            (verilog-pretty-declarations-auto))))
 
      (;-- Handle the ends
       (or
@@ -6277,6 +6277,12 @@ ARG is ignored, for `comment-indent-function' compatibility."
       (current-column)))))
 
 ;;
+
+(defun verilog-pretty-declarations-auto (&optional quiet)
+  "Call `verilog-pretty-declarations' based on `verilog-auto-lineup' setting."
+  (when (or (eq 'all verilog-auto-lineup)
+	    (eq 'declarations verilog-auto-lineup))
+    (verilog-pretty-declarations quiet)))
 
 (defun verilog-pretty-declarations (&optional quiet)
   "Line up declarations around point.
@@ -12662,7 +12668,7 @@ and the case items."
 (define-skeleton verilog-sk-def-reg
   "Insert a reg definition."
   ()
-  > "reg    [" '(verilog-sk-prompt-width) | -1 verilog-sk-signal ";" \n (verilog-pretty-declarations) )
+  > "reg    [" '(verilog-sk-prompt-width) | -1 verilog-sk-signal ";" \n (verilog-pretty-declarations-auto) )
 
 (defun verilog-sk-define-signal ()
   "Insert a definition of signal under point at top of module."
