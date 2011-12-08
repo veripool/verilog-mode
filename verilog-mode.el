@@ -1196,6 +1196,16 @@ For example, \"_t$\" matches typedefs named with _t, as in the C language."
   :group 'verilog-mode-auto
   :type 'hook)
 
+(defcustom verilog-before-save-font-hook nil
+  "*Hook run before `verilog-save-font-mods' removes highlighting."
+  :group 'verilog-mode-auto
+  :type 'hook)
+
+(defcustom verilog-after-save-font-hook nil
+  "*Hook run after `verilog-save-font-mods' restores highlighting."
+  :group 'verilog-mode-auto
+  :type 'hook)
+
 (defvar verilog-imenu-generic-expression
   '((nil "^\\s-*\\(\\(m\\(odule\\|acromodule\\)\\)\\|primitive\\)\\s-+\\([a-zA-Z0-9_.:]+\\)" 4)
     ("*Vars*" "^\\s-*\\(reg\\|wire\\)\\s-+\\(\\|\\[[^]]+\\]\\s-+\\)\\([A-Za-z0-9_]+\\)" 3))
@@ -3023,6 +3033,31 @@ For insignificant changes, see instead `verilog-save-buffer-state'."
 	  before-change-functions
 	  after-change-functions)
      (progn ,@body)))
+
+(defvar verilog-save-font-mod-hooked nil
+  "Local variable when inside a `verilog-save-font-mods' block.")
+(make-variable-buffer-local 'verilog-save-font-mod-hooked)
+
+(defmacro verilog-save-font-mods (&rest body)
+  "Execute BODY forms, disabling text modifications to allow performing BODY.
+Includes temporary disabling of `font-lock' to restore the buffer
+to full text form for parsing. Additional actions may be specified with
+`verilog-before-save-font-hook' and `verilog-after-save-font-hook'."
+  ;; Before version 20, match-string with font-lock returns a
+  ;; vector that is not equal to the string.  IE if on "input"
+  ;; nil==(equal "input" (progn (looking-at "input") (match-string 0)))
+  `(let* ((hooked (unless verilog-save-font-mod-hooked
+		    (verilog-run-hooks 'verilog-before-save-font-hook)
+		    t))
+	  (verilog-save-font-mod-hooked t)
+	  (fontlocked (when (and (boundp 'font-lock-mode) font-lock-mode)
+			(font-lock-mode 0)
+			t)))
+     (unwind-protect
+	   (progn ,@body)
+	 ;; Unwind forms
+	 (when fontlocked (font-lock-mode t))
+	 (when hooked (verilog-run-hooks 'verilog-after-save-font-hook)))))
 
 ;;
 ;; Comment detection and caching
@@ -9259,13 +9294,9 @@ Cache the output of function so next call may have faster access."
 	    (t
 	     ;; Read from file
 	     ;; Clear then restore any highlighting to make emacs19 happy
-	     (let ((fontlocked (when (and (boundp 'font-lock-mode)
-					  font-lock-mode)
-				 (font-lock-mode 0)
-				 t))
-		   func-returns)
-	       (setq func-returns (funcall function))
-	       (when fontlocked (font-lock-mode t))
+	     (let (func-returns)
+	       (verilog-save-font-mods
+		(setq func-returns (funcall function)))
 	       ;; Cache for next time
 	       (setq verilog-modi-cache-list
 		     (cons (list (list modi function)
@@ -12250,21 +12281,15 @@ Wilson Snyder (wsnyder@wsnyder.org)."
   (unless noninteractive (message "Updating AUTOs..."))
   (if (fboundp 'dinotrace-unannotate-all)
       (dinotrace-unannotate-all))
-  (let ((oldbuf (if (not (buffer-modified-p))
-		    (buffer-string)))
-	;; Before version 20, match-string with font-lock returns a
-	;; vector that is not equal to the string.  IE if on "input"
-	;; nil==(equal "input" (progn (looking-at "input") (match-string 0)))
-	(fontlocked (when (and (boundp 'font-lock-mode)
-			       font-lock-mode)
-		      (font-lock-mode 0)
-		      t))
-	;; Cache directories; we don't write new files, so can't change
-	(verilog-dir-cache-preserving t)
-	;; Cache current module
-	(verilog-modi-cache-current-enable t)
-	(verilog-modi-cache-current-max (point-min)) ; IE it's invalid
-	verilog-modi-cache-current)
+  (verilog-save-font-mods
+   (let ((oldbuf (if (not (buffer-modified-p))
+		     (buffer-string)))
+	 ;; Cache directories; we don't write new files, so can't change
+	 (verilog-dir-cache-preserving t)
+	 ;; Cache current module
+	 (verilog-modi-cache-current-enable t)
+	 (verilog-modi-cache-current-max (point-min)) ; IE it's invalid
+	 verilog-modi-cache-current)
      (unwind-protect
 	 ;; Disable change hooks for speed
 	 ;; This let can't be part of above let; must restore
@@ -12363,9 +12388,8 @@ Wilson Snyder (wsnyder@wsnyder.org)."
 	     ;; End of after-change protection
 	     )))
        ;; Unwind forms
-       (progn
-	 ;; Restore font-lock
-	 (when fontlocked (font-lock-mode t))))))
+       ;; Currently handled in verilog-save-font-mods
+       ))))
 
 
 ;;
