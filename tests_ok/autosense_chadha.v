@@ -30,7 +30,7 @@ module test (/*AUTOARG*/
    // OK
    always @ (/*AS*/in1 or in2 or sel)
      if (sel == 2'b00)
-       out1   = in1;
+       out1  = in1;
      else
        out1  = in2;
    
