@@ -11,7 +11,7 @@ module x;
       end
       else begin
          if ( a <= b ) begin
-            c    = a;
+            c  = a;
          end
          else begin
             c  = b;
@@ -27,7 +27,7 @@ module x;
          // End of automatics
       end
       else if ( a <= b ) begin
-         c        <= a;
+         c <= a;
       end
    end
    
