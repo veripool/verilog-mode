@@ -3,4 +3,4 @@
 module x;
    ////
    reg y;
-endmodule
+endmodule // x
