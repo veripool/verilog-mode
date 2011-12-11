@@ -152,8 +152,8 @@ module  xxx_xxxxxx  (input wire clk, input wire reset);
               lll_start     <= 1'b1;
               
               if (jjjj_left <= 4) begin
-                 lll_wcnt   <= jjjj_left[2:0];
-                 qwerty     <= 1'b1;
+                 lll_wcnt <= jjjj_left[2:0];
+                 qwerty   <= 1'b1;
               end
               else begin
                  lll_wcnt <= FOUR[2:0];
@@ -200,8 +200,8 @@ module  xxx_xxxxxx  (input wire clk, input wire reset);
               jjjj_left_oooo <= tgbyhn;
               
               if (tgbyhn <= oooo_cur) begin
-                 last_oooo   <= 1'b1;
-                 jjjj_left   <= tgbyhn;
+                 last_oooo <= 1'b1;
+                 jjjj_left <= tgbyhn;
               end
               else begin
                  jjjj_left <= oooo_cur;
@@ -225,8 +225,8 @@ module  xxx_xxxxxx  (input wire clk, input wire reset);
                  
                  
                  if (jjjj_left_oooo <= oooo_cur) begin
-                    last_oooo       <= 1'b1;
-                    jjjj_left       <= jjjj_left_oooo;
+                    last_oooo <= 1'b1;
+                    jjjj_left <= jjjj_left_oooo;
                  end
                  else begin
                     jjjj_left <= oooo_cur;
@@ -253,7 +253,7 @@ module  xxx_xxxxxx  (input wire clk, input wire reset);
               uuuuu         <= 1'b1;
               
               if (jjjj_left <= 4) begin
-                 qwerty     <= 1'b1;
+                 qwerty <= 1'b1;
               end
               
               current_state <= DD_CMRD_WAIT;
