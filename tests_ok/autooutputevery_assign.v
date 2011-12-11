@@ -14,5 +14,5 @@ module ex_output_every (o,i,tempa,tempb)
    
    assign tempa  = i;
    assign tempb  = tempa;
-   assign o      = tempb;
+   assign o  = tempb;
 endmodule
