@@ -18,8 +18,8 @@ module v2k_typedef_yee_sub1
       pixel_ff <= sub1_in_pixel;
    end
    
-   assign sub1_out_pixel        = pixel_ff;
-   assign sub1_to_sub2          = '1;
+   assign sub1_out_pixel  = pixel_ff;
+   assign sub1_to_sub2  = '1;
    assign sub1_to_sub2_and_top  = '1;
    
 endmodule
