@@ -5,9 +5,9 @@ module x;
    
    parameter    CYCLEA  = 1;
    parameter    CYCLEC  = 2;
-   parameter    MSTRA   = 3;
-   parameter    MSTRB   = 4;
-   parameter    MSTRC   = 5;
+   parameter    MSTRA  = 3;
+   parameter    MSTRB  = 4;
+   parameter    MSTRC  = 5;
    
    // make sure 'state' is listed
    always @ (/*AUTOSENSE*/done or nREQA or nREQB or nREQC or state) begin
@@ -15,12 +15,12 @@ module x;
       case (1'b1)
         state[CYCLEC] : begin
            if (!nREQA && done)                         next[MSTRA]  = 1'b1;
-           else if (!nREQB && nREQA && done)next[MSTRB]             = 1'b1;
-           else if (!nREQC && nREQA && nREQB && done) next[MSTRC]   = 1'b1;
-           else next[CYCLEC]                                        = 1'b1;
+           else if (!nREQB && nREQA && done)next[MSTRB]  = 1'b1;
+           else if (!nREQC && nREQA && nREQB && done) next[MSTRC]  = 1'b1;
+           else next[CYCLEC]  = 1'b1;
         end
         state[MSTRA] : begin
-           if (!nREQB || !nREQC) next[CYCLEA]          = 1'b1;
+           if (!nREQB || !nREQC) next[CYCLEA]  = 1'b1;
            else                           next[MSTRA]  = 1'b1;
         end
       endcase
