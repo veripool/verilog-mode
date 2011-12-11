@@ -16,7 +16,7 @@ module sm (/*AUTOARG*/
    
    parameter [2:0]      /* synopsys enum state_info */ UPDATE2  = 3'b101;
    
-   parameter [2:0]      NOT_A_STATE_ELEMENT                     = 3'b101;
+   parameter [2:0]      NOT_A_STATE_ELEMENT  = 3'b101;
    
    parameter [2:0]      /* synopsys enum other */
      A_OTHER_STATE_ELEMENT  = 3'b101;
