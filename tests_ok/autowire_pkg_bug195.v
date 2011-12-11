@@ -47,7 +47,7 @@ module testcase_sub1
    );
    import testcase_pkg::*;
    assign sub_enum  = top_enum;
-   assign sub_in    = '1;
+   assign sub_in  = '1;
 endmodule
 
 module testcase_sub2
