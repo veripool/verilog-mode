@@ -631,7 +631,6 @@ Otherwise, line them up."
   :type 'boolean)
 (put 'verilog-indent-begin-after-if 'safe-local-variable 'verilog-booleanp)
 
-
 (defcustom verilog-align-ifelse nil
   "*If true, align `else' under matching `if'.
 Otherwise else is lined up with first character on line holding matching if."
