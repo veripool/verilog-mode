@@ -6517,7 +6517,7 @@ Be verbose about progress unless optional QUIET set."
                 (if (and (not quiet)
                          (> (- end start) 100))
                     (message "Lining up expressions..(please stand by)"))
-                
+
                 ;; Set indent to minimum throughout region
                 (while (< (point) (marker-position endpos))
                   (beginning-of-line)
@@ -6527,10 +6527,10 @@ Be verbose about progress unless optional QUIET set."
                   (end-of-line)
                   (verilog-forward-syntactic-ws)
                   )
-                
+
                 ;; Now find biggest prefix
                 (setq ind (verilog-get-lineup-indent-2 verilog-assignment-operation-re start endpos))
-                
+
                 ;; Now indent each line.
                 (goto-char start)
                 (while (progn (setq e (marker-position endpos))
