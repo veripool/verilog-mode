@@ -1,4 +1,4 @@
-;; Verilog-mode.el --- major mode for editing verilog source in Emacs
+;; verilog-mode.el --- major mode for editing verilog source in Emacs
 
 ;; Copyright (C) 1996-2011  Free Software Foundation, Inc.
 

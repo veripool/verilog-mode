@@ -139,14 +139,14 @@ gnutrunk:
 .PHONY: gnu-update gnu-update-trunk
 gnu-update: gnu-update-trunk
 gnu-update-trunk: gnutrunk
-	cd gnutrunk && bzr update
+	echo "NOT DOING: cd gnutrunk && bzr update"
 
 .PHONY: gnu-diff-trunk gnu-diff
 gnu-diff: gnu-diff-trunk
 gnu-diff-trunk: gnu-update-trunk verilog-mode-tognu.el
-	diff -c gnutrunk/lisp/progmodes/verilog-mode.el verilog-mode-tognu.el 
+	diff -u gnutrunk/lisp/progmodes/verilog-mode.el verilog-mode-tognu.el 
 gnu.patch: gnu-update verilog-mode-tognu.el
-	diff -c gnutrunk/lisp/progmodes/verilog-mode.el verilog-mode-tognu.el > $@
+	diff -u gnutrunk/lisp/progmodes/verilog-mode.el verilog-mode-tognu.el > $@
 
 verilog-mode-tognu.el: verilog-mode.el Makefile
 	cat verilog-mode.el \
