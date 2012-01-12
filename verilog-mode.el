@@ -1110,6 +1110,12 @@ won't merge conflict."
   :type 'integer)
 (put 'verilog-auto-inst-column 'safe-local-variable 'integerp)
 
+(defcustom verilog-auto-inst-interfaced-ports t
+  "*Non-nil includes interfaced ports in AUTOINST expansions."
+  :group 'verilog-mode-auto
+  :type 'boolean)
+(put 'verilog-auto-inst-interfaced-ports 'safe-local-variable 'verilog-booleanp)
+
 (defcustom verilog-auto-input-ignore-regexp nil
   "*If set, when creating AUTOINPUT list, ignore signals matching this regexp.
 See the \\[verilog-faq] for examples on using this."
@@ -10713,7 +10719,8 @@ For more information see the \\[verilog-faq] and forums at URL
 			      (verilog-decls-get-vars submoddecls)
 			      skip-pins)))
 	      (vl-dir "interfaced"))
-	  (when sig-list
+	  (when (and sig-list
+		     verilog-auto-inst-interfaced-ports)
 	    (when (not did-first) (verilog-auto-inst-first) (setq did-first t))
             ;; Note these are searched for in verilog-read-sub-decls.
 	    (verilog-insert-indent "// Interfaced\n")
@@ -12967,6 +12974,7 @@ Files are checked based on `verilog-library-flags'."
        verilog-auto-input-ignore-regexp
        verilog-auto-inst-column
        verilog-auto-inst-dot-name
+       verilog-auto-inst-interfaced-ports
        verilog-auto-inst-param-value
        verilog-auto-inst-template-numbers
        verilog-auto-inst-vector
