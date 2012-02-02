@@ -2849,8 +2849,8 @@ See also `verilog-font-lock-extra-types'.")
        (verilog-pragma-keywords
 	(eval-when-compile
 	  (verilog-regexp-opt
-	   '("surefire" "synopsys" "rtl_synthesis" "verilint" "leda" "0in") nil
-	    )))
+	   '("surefire" "snps" "synopsys" "rtl_synthesis" "verilint" "leda" "0in"
+	     ) nil  )))
 
        (verilog-1800-2005-keywords
 	(eval-when-compile
@@ -7771,13 +7771,13 @@ Return an array of [outputs inouts inputs wire reg assign const]."
 	;;(if dbg (setq dbg (concat dbg (format "Pt %s  Vec %s   C%c Kwd'%s'\n" (point) vec (following-char) keywd))))
 	(cond
 	 ((looking-at "//")
-	  (if (looking-at "[^\n]*synopsys\\s +enum\\s +\\([a-zA-Z0-9_]+\\)")
-	      (setq enum (match-string 1)))
+	  (if (looking-at "[^\n]*\\(snps\\|synopsys\\)\\s +enum\\s +\\([a-zA-Z0-9_]+\\)")
+	      (setq enum (match-string 2)))
 	  (search-forward "\n"))
 	 ((looking-at "/\\*")
 	  (forward-char 2)
-	  (if (looking-at "[^\n]*synopsys\\s +enum\\s +\\([a-zA-Z0-9_]+\\)")
-	      (setq enum (match-string 1)))
+	  (if (looking-at "[^\n]*\\(snps\\|synopsys\\)\\s +enum\\s +\\([a-zA-Z0-9_]+\\)")
+	      (setq enum (match-string 2)))
 	  (or (search-forward "*/")
 	      (error "%s: Unmatched /* */, at char %d" (verilog-point-text) (point))))
 	 ((looking-at "(\\*")
@@ -8695,8 +8695,8 @@ warning message, you need to add to your .emacs file:
 	(let (enumname)
 	  ;; The primary way of getting defines is verilog-read-decls
 	  ;; However, that isn't called yet for included files, so we'll add another scheme
-	  (if (looking-at "[^\n]*synopsys\\s +enum\\s +\\([a-zA-Z0-9_]+\\)")
-	      (setq enumname (match-string-no-properties 1)))
+	  (if (looking-at "[^\n]*\\(snps\\|synopsys\\)\\s +enum\\s +\\([a-zA-Z0-9_]+\\)")
+	      (setq enumname (match-string-no-properties 2)))
 	  (forward-comment 99999)
 	  (while (looking-at (concat "\\s-*,?\\s-*\\(?:/[/*].*?$\\)?\\s-*\\([a-zA-Z0-9_$]+\\)"
 				     "\\s-*=\\s-*\\([^;,]*\\),?\\s-*\\(/[/*].*?$\\)?\\s-*"))
