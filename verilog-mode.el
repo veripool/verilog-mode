@@ -3194,7 +3194,7 @@ to establish comment properties on all text."
 
 (defun verilog-insert (&rest stuff)
   "Insert STUFF arguments, tracking for `verilog-inside-comment-or-string-p'.
-Any insert that includes a comment must have the entire commente
+Any insert that includes a comment must have the entire comment
 inserted using a single call to `verilog-insert'."
   (let ((pt (point)))
     (while stuff
@@ -4233,18 +4233,6 @@ More specifically, point @ in the line foo : @ begin"
   "Call `forward-sexp' ARG, ignoring comments."
   (let ((parse-sexp-ignore-comments t))
     (forward-sexp arg)))
-
-(defun verilog-in-struct-region-p ()
-  "Return true if in a struct region.
-More specifically, in a list after a struct|union keyword."
-  (interactive)
-  (save-excursion
-    (let* ((state (verilog-syntax-ppss))
-	   (depth (nth 0 state)))
-      (if depth
-	  (progn (verilog-backward-up-list depth)
-		 (verilog-beg-of-statement)
-		 (looking-at "\\<typedef\\>?\\s-*\\<struct\\|union\\>"))))))
 
 (defun verilog-in-generate-region-p ()
   "Return true if in a generate region.
