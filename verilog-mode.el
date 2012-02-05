@@ -2771,6 +2771,7 @@ See also `verilog-font-lock-extra-types'.")
 (defvar verilog-font-lock-keywords-3 nil
   "Gaudy level highlighting for Verilog mode.
 See also `verilog-font-lock-extra-types'.")
+
 (defvar  verilog-font-lock-translate-off-face
   'verilog-font-lock-translate-off-face
   "Font to use for translated off regions.")
@@ -3597,9 +3598,10 @@ Key bindings specific to `verilog-mode-map' are:
 
   ;; Stuff for GNU Emacs
   (set (make-local-variable 'font-lock-defaults)
-       `((verilog-font-lock-keywords verilog-font-lock-keywords-1
-                                     verilog-font-lock-keywords-2
-                                     verilog-font-lock-keywords-3)
+       `((verilog-font-lock-keywords
+	  verilog-font-lock-keywords-1
+	  verilog-font-lock-keywords-2
+	  verilog-font-lock-keywords-3)
          nil nil nil
 	 ,(if (functionp 'syntax-ppss)
 	      ;; verilog-beg-of-defun uses syntax-ppss, and syntax-ppss uses
@@ -7857,7 +7859,8 @@ Return an array of [outputs inouts inputs wire reg assign const]."
 				 "bit" "logic"
 				 "shortreal" "real" "realtime"
 				 "string" "event" "chandle"))
-		 (unless io (setq vec nil  enum nil  rvalue nil  signed nil  typedefed nil  multidim nil  sig-paren paren
+		 (unless io (setq vec nil  enum nil  rvalue nil  signed nil
+				  typedefed nil  multidim nil  sig-paren paren
 				  expect-signal 'sigs-var  modport nil)))
 		((equal keywd "assign")
 		 (setq vec nil        enum nil        rvalue nil  signed nil
