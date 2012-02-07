@@ -7796,7 +7796,7 @@ Return an array of [outputs inouts inputs wire reg assign const]."
 	  (setq paren (1- paren))
 	  (forward-char 1)
 	  (when (< paren sig-paren)
-	    (setq expect-signal nil)))   ; ) that ends variables inside v2k arg list
+	    (setq expect-signal nil  io nil)))   ; ) that ends variables inside v2k arg list
 	 ((looking-at "\\s-*\\(\\[[^]]+\\]\\)")
 	  (goto-char (match-end 0))
 	  (cond (newsig	; Memory, not just width.  Patch last signal added's memory (nth 3)
@@ -7824,21 +7824,21 @@ Return an array of [outputs inouts inputs wire reg assign const]."
 	    (when (string-match "^\\\\" (match-string 1))
 	      (setq keywd (concat keywd " "))))  ;; Escaped ID needs space at end
 	  (cond ((equal keywd "input")
-		 (setq vec nil        enum nil      rvalue nil  newsig nil  signed nil
-		       typedefed nil  multidim nil  ptype nil   modport nil
-		       expect-signal 'sigs-in       io t        sig-paren paren))
+		 (setq vec nil        enum nil      rvalue nil      newsig nil  signed nil
+		       typedefed nil  multidim nil  ptype nil       modport nil
+		       expect-signal nil            io `sigs-in     sig-paren paren))
 		((equal keywd "output")
-		 (setq vec nil        enum nil      rvalue nil  newsig nil  signed nil
-		       typedefed nil  multidim nil  ptype nil   modport nil
-		       expect-signal 'sigs-out      io t        sig-paren paren))
+		 (setq vec nil        enum nil      rvalue nil      newsig nil  signed nil
+		       typedefed nil  multidim nil  ptype nil       modport nil
+		       expect-signal nil            io `sigs-out    sig-paren paren))
 		((equal keywd "inout")
-		 (setq vec nil        enum nil      rvalue nil  newsig nil  signed nil
-		       typedefed nil  multidim nil  ptype nil   modport nil
-		       expect-signal 'sigs-inout    io t        sig-paren paren))
+		 (setq vec nil        enum nil      rvalue nil      newsig nil  signed nil
+		       typedefed nil  multidim nil  ptype nil       modport nil
+		       expect-signal nil            io `sigs-inout  sig-paren paren))
 		((equal keywd "parameter")
-		 (setq vec nil        enum nil      rvalue nil  signed nil
-		       typedefed nil  multidim nil  ptype nil   modport nil
-		       expect-signal 'sigs-gparam   io t        sig-paren paren))
+		 (setq vec nil        enum nil      rvalue nil      signed nil
+		       typedefed nil  multidim nil  ptype nil       modport nil
+		       expect-signal nil            io `sigs-gparam sig-paren paren))
 		((member keywd '("wire"
 				 "tri" "tri0" "tri1" "triand" "trior" "wand" "wor"
 				 "reg" "trireg"
@@ -7890,23 +7890,25 @@ Return an array of [outputs inouts inputs wire reg assign const]."
 		 (when (match-end 2) (goto-char (match-end 2)))
 		 (setq vec nil          enum nil       rvalue nil  signed nil
 		       typedefed keywd  multidim nil   ptype nil   modport (match-string 2)
-		       newsig nil    sig-paren paren
-		       expect-signal 'sigs-intf  io t  ))
+		       newsig nil       sig-paren paren
+		       expect-signal nil   io `sigs-intf))
 		;; Ignore dotted LHS assignments: "assign foo.bar = z;"
 		((looking-at "\\s-*\\.")
 		 (goto-char (match-end 0))
 		 (when (not rvalue)
-		   (setq expect-signal nil)))
+		   (setq expect-signal nil  io nil)))
 		;; New signal, maybe?
-		((and expect-signal
+		((and (or expect-signal io)
 		      (not rvalue)
 		      (eq functask 0)
 		      (not in-modport)
 		      (not (member keywd verilog-keywords)))
 		 ;; Add new signal to expect-signal's variable
 		 (setq newsig (verilog-sig-new keywd vec nil nil enum signed typedefed multidim modport))
-		 (set expect-signal (cons newsig
-					  (symbol-value expect-signal))))))
+		 (when expect-signal
+		   (set expect-signal
+			(cons newsig (symbol-value expect-signal))))
+		 (when io (set io (cons newsig (symbol-value io)))))))
 	 (t
 	  (forward-char 1)))
 	(skip-syntax-forward " "))
