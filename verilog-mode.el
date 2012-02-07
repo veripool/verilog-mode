@@ -5001,23 +5001,22 @@ becomes:
 (defun verilog-preprocess (&optional command filename)
   "Preprocess the buffer, similar to `compile', but put output in Verilog-Mode.
 Takes optional COMMAND or defaults to `verilog-preprocessor', and
-FILENAME or defaults to `buffer-file-name`."
+FILENAME to find directory to run in, or defaults to `buffer-file-name`."
   (interactive
    (list
     (let ((default (verilog-expand-command verilog-preprocessor)))
       (set (make-local-variable `verilog-preprocessor)
-	   (read-from-minibuffer "Run Preprocessor (like this): "
-				 default nil nil
-				 'verilog-preprocess-history default)))))
+	      (read-from-minibuffer "Run Preprocessor (like this): "
+				     default nil nil
+				      'verilog-preprocess-history default)))))
   (unless command (setq command (verilog-expand-command verilog-preprocessor)))
   (let* ((fontlocked (and (boundp 'font-lock-mode) font-lock-mode))
-	 (dir (file-name-directory (or filename buffer-file-name)))
-	 (file (file-name-nondirectory (or filename buffer-file-name)))
-	 (cmd (concat "cd " dir "; " command " " file)))
+	  (dir (file-name-directory (or filename buffer-file-name)))
+	   (cmd (concat "cd " dir "; " command)))
     (with-output-to-temp-buffer "*Verilog-Preprocessed*"
       (with-current-buffer (get-buffer "*Verilog-Preprocessed*")
 	(insert (concat "// " cmd "\n"))
-	(shell-command cmd "*Verilog-Preprocessed*")
+	(call-process shell-file-name nil t nil shell-command-switch cmd)
 	(verilog-mode)
 	;; Without this force, it takes a few idle seconds
 	;; to get the color, which is very jarring
