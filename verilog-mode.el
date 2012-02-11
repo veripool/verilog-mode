@@ -7394,6 +7394,7 @@ See also `verilog-sk-header' for an alternative format."
 ;;
 
 ;; Elements of a signal list
+;; Unfortunately we use 'assoc' on this, so can't be a vector
 (defsubst verilog-sig-new (name bits comment mem enum signed type multidim modport)
   (list name bits comment mem enum signed type multidim modport))
 (defsubst verilog-sig-name (sig)
@@ -7425,17 +7426,17 @@ See also `verilog-sk-header' for an alternative format."
   (verilog-make-width-expression (verilog-sig-bits sig)))
 
 (defsubst verilog-alw-new (outputs-del outputs-imm temps inputs)
-  (list outputs-del outputs-imm temps inputs))
+  (vector outputs-del outputs-imm temps inputs))
 (defsubst verilog-alw-get-outputs-delayed (sigs)
-  (nth 0 sigs))
+  (aref sigs 0))
 (defsubst verilog-alw-get-outputs-immediate (sigs)
-  (nth 1 sigs))
+  (aref sigs 1))
 (defsubst verilog-alw-get-temps (sigs)
-  (nth 2 sigs))
+  (aref sigs 2))
 (defsubst verilog-alw-get-inputs (sigs)
-  (nth 3 sigs))
+  (aref sigs 3))
 (defsubst verilog-alw-get-uses-delayed (sigs)
-  (nth 0 sigs))
+  (aref sigs 0))
 
 (defsubst verilog-modi-new (name fob pt type)
   (vector name fob pt type))
@@ -7488,6 +7489,11 @@ See also `verilog-sk-header' for an alternative format."
 (defsubst verilog-subdecls-get-interfaced (subdecls)
   (aref subdecls 4))
 
+(defun verilog-signals-from-signame (signame-list)
+  "Return signals in standard form from SIGNAME-LIST, a simple list of names."
+  (mapcar (lambda (name) (verilog-sig-new name nil nil nil nil nil nil nil nil))
+	  signame-list))
+
 (defun verilog-signals-not-in (in-list not-list)
   "Return list of signals in IN-LIST that aren't also in NOT-LIST.
 Also remove any duplicates in IN-LIST.
@@ -7500,17 +7506,17 @@ Signals must be in standard (base vector) form."
 	     (puthash (car (car not-list)) t ht)
 	     (setq not-list (cdr not-list)))
 	   (while in-list
-	     (when (not (gethash (car (car in-list)) ht))
+	     (when (not (gethash (verilog-sig-name (car in-list)) ht))
 	       (setq out-list (cons (car in-list) out-list))
-	       (puthash (car (car in-list)) t ht))
+	       (puthash (verilog-sig-name (car in-list)) t ht))
 	     (setq in-list (cdr in-list)))
 	   (nreverse out-list)))
 	;; Slower Fallback if no hash tables (pre Emacs 21.1/XEmacs 21.4)
 	(t
 	 (let (out-list)
 	   (while in-list
-	     (if (not (or (assoc (car (car in-list)) not-list)
-			  (assoc (car (car in-list)) out-list)))
+	     (if (not (or (assoc (verilog-sig-name (car in-list)) not-list)
+			  (assoc (verilog-sig-name (car in-list)) out-list)))
 		 (setq out-list (cons (car in-list) out-list)))
 	     (setq in-list (cdr in-list)))
 	   (nreverse out-list)))))
@@ -7528,13 +7534,13 @@ Signals must be in standard (base vector) form."
 
 (defun verilog-signals-sort-compare (a b)
   "Compare signal A and B for sorting."
-  (string< (car a) (car b)))
+  (string< (verilog-sig-name a) (verilog-sig-name b)))
 
 (defun verilog-signals-not-params (in-list)
   "Return list of signals in IN-LIST that aren't parameters or numeric constants."
   (let (out-list)
     (while in-list
-      (unless (boundp (intern (concat "vh-" (car (car in-list)))))
+      (unless (boundp (intern (concat "vh-" (verilog-sig-name (car in-list)))))
 	(setq out-list (cons (car in-list) out-list)))
       (setq in-list (cdr in-list)))
     (nreverse out-list)))
@@ -9406,10 +9412,6 @@ if non-nil."
 (defsubst verilog-modi-cache-add-vars (modi sig-list)
   (verilog-modi-cache-add modi 'verilog-read-decls 3 sig-list))
 
-(defun verilog-signals-from-signame (signame-list)
-  "Return signals in standard form from SIGNAME-LIST, a simple list of signal names."
-  (mapcar (function (lambda (name) (list name nil nil)))
-	  signame-list))
 
 ;;
 ;; Auto creation utilities
