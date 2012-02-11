@@ -11,7 +11,9 @@ module foo
    /*AUTOWIRE*/
    /*AUTOREG*/
    // Beginning of automatic regs (for this module's undeclared outputs)
-   reg sig3;
+   reg [PARAM2_P-1:0] s4;
+   reg                sig3;
+   reg [PARAM2_P-1:0] sig5;
    // End of automatics
    
 endmodule
