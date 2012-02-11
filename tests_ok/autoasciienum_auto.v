@@ -1,16 +1,16 @@
 // Code ok to distribute
 
-module autoasciienum_snps();
+module autoasciienum_auto();
    
-   reg [2:0] /* snps enum sm_psm */ sm_psm;
-   reg [2:0] /* snps enum sm_ps2 */ sm_ps2;
+   reg [2:0] /* auto enum sm_psm */ sm_psm;
+   reg [2:0] /* auto enum sm_ps2 */ sm_ps2;
    
-   localparam [2:0] // snps enum sm_psm
+   localparam [2:0] // auto enum sm_psm
      PSM_IDL  = 0,
      PSM_RST  = 6,
      PSM_ZOT  = 7;
    
-   localparam [2:0] // snps enum sm_ps2
+   localparam [2:0] // auto enum sm_ps2
      PS2_IDL  = 0,
      PS2_FOO  = 1;
    
@@ -38,6 +38,6 @@ module autoasciienum_snps();
    end
    // End of automatics
    
-endmodule : autoasciienum_snps
+endmodule : autoasciienum_auto
 
 
