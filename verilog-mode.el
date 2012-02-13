@@ -7662,6 +7662,49 @@ Ignore width if optional NO-WIDTH is set."
 	    (concat "{" width "{1'b0}}"))))))
 
 ;;
+;; Dumping
+;;
+
+(defun verilog-decls-princ (decls)
+  "For debug, dump the `verilog-read-decls' structure DECLS."
+  (verilog-signals-princ (verilog-decls-get-outputs decls)
+			 "Outputs:\n" "  ")
+  (verilog-signals-princ (verilog-decls-get-inouts decls)
+			 "Inout:\n" "  ")
+  (verilog-signals-princ (verilog-decls-get-inputs decls)
+			 "Inputs:\n" "  ")
+  (verilog-signals-princ (verilog-decls-get-vars decls)
+			 "Vars:\n" "  ")
+  (verilog-signals-princ (verilog-decls-get-assigns decls)
+			 "Assigns:\n" "  ")
+  (verilog-signals-princ (verilog-decls-get-consts decls)
+			 "Consts:\n" "  ")
+  (verilog-signals-princ (verilog-decls-get-gparams decls)
+			 "Gparams:\n" "  ")
+  (verilog-signals-princ (verilog-decls-get-interfaces decls)
+			 "Interfaces:\n" "  ")
+  (princ "\n"))
+
+(defun verilog-signals-princ (signals &optional header prefix)
+  "For debug, dump internal SIGNALS structures, with HEADER and PREFIX."
+  (when signals
+    (princ header)
+    (while signals
+      (let ((sig (car signals)))
+	(setq signals (cdr signals))
+	(princ prefix)
+	(princ "\"") (princ (verilog-sig-name sig)) (princ "\"")
+	(princ "  bits=") (princ (verilog-sig-bits sig))
+	(princ "  cmt=") (princ (verilog-sig-comment sig))
+	(princ "  mem=") (princ (verilog-sig-memory sig))
+	(princ "  enum=") (princ (verilog-sig-enum sig))
+	(princ "  sign=") (princ (verilog-sig-signed sig))
+	(princ "  type=") (princ (verilog-sig-type sig))
+	(princ "  dim=") (princ (verilog-sig-multidim sig))
+	(princ "  modp=") (princ (verilog-sig-modport sig))
+	(princ "\n")))))
+
+;;
 ;; Port/Wire/Etc Reading
 ;;
 
@@ -7866,8 +7909,9 @@ Return an array of [outputs inouts inputs wire reg assign const]."
 				 ;; net_type
 				 "tri" "tri0" "tri1" "triand" "trior" "trireg"
 				 "uwire" "wand" "wor"
-				 ;; integer_atom_type but no "supply0", "supply1"
+				 ;; integer_atom_type
 				 "byte" "shortint" "int" "longint" "integer" "time"
+				 "supply0" "supply1"
 				 ;; integer_vector_type - "reg" above
 				 "bit" "logic"
 				 ;; non_integer_type
@@ -7884,8 +7928,7 @@ Return an array of [outputs inouts inputs wire reg assign const]."
 		 (setq vec nil        enum nil        rvalue nil  signed nil
 		       typedefed nil  multidim nil    ptype nil   modport nil
 		       expect-signal 'sigs-assign     sig-paren paren))
-		((member keywd '("supply0" "supply1" "supply"
-				 "localparam" "genvar"))
+		((member keywd '("localparam" "genvar"))
 		 (unless io
 		   (setq vec nil        enum nil      rvalue nil  signed nil
 			 typedefed nil  multidim nil  ptype nil   modport nil
