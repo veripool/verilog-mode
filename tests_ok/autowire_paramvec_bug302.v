@@ -2,7 +2,7 @@ module Abc_TEST ();
    
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire [5:0] [31:0] abc;                       // From u_Def of Def.v
+   logic [5:0] [31:0] abc;                      // From u_Def of Def.v
    // End of automatics
    
    Abc #(

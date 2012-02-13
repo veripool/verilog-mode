@@ -7417,6 +7417,8 @@ See also `verilog-sk-header' for an alternative format."
   (nth 5 sig))
 (defsubst verilog-sig-type (sig)
   (nth 6 sig))
+(defsubst verilog-sig-type-set (sig type)
+  (setcar (nthcdr 6 sig) type))
 (defsubst verilog-sig-multidim (sig)
   (nth 7 sig))
 (defsubst verilog-sig-multidim-string (sig)
@@ -7547,6 +7549,15 @@ Signals must be in standard (base vector) form."
   (let (out-list)
     (while in-list
       (unless (boundp (intern (concat "vh-" (verilog-sig-name (car in-list)))))
+	(setq out-list (cons (car in-list) out-list)))
+      (setq in-list (cdr in-list)))
+    (nreverse out-list)))
+
+(defun verilog-signals-with (func in-list)
+  "Return IN-LIST with only signals where FUNC passed each signal is true."
+  (let (out-list)
+    (while in-list
+      (when (funcall func (car in-list))
 	(setq out-list (cons (car in-list) out-list)))
       (setq in-list (cdr in-list)))
     (nreverse out-list)))
@@ -7851,16 +7862,24 @@ Return an array of [outputs inouts inputs wire reg assign const]."
 		 (setq vec nil        enum nil      rvalue nil  signed nil
 		       typedefed nil  multidim nil  ptype nil   modport nil
 		       expect-signal 'sigs-gparam   io t        sig-paren paren))
-		((member keywd '("wire"
-				 "tri" "tri0" "tri1" "triand" "trior" "wand" "wor"
-				 "reg" "trireg"
+		((member keywd '("wire" "reg"  ; Fast
+				 ;; net_type
+				 "tri" "tri0" "tri1" "triand" "trior" "trireg"
+				 "uwire" "wand" "wor"
+				 ;; integer_atom_type but no "supply0", "supply1"
 				 "byte" "shortint" "int" "longint" "integer" "time"
+				 ;; integer_vector_type - "reg" above
 				 "bit" "logic"
+				 ;; non_integer_type
 				 "shortreal" "real" "realtime"
+				 ;; data_type
 				 "string" "event" "chandle"))
-		 (unless io (setq vec nil  enum nil  rvalue nil  signed nil
-				  typedefed nil  multidim nil  sig-paren paren
-				  expect-signal 'sigs-var  modport nil)))
+		 (cond (io
+			(setq typedefed
+			      (if typedefed (concat typedefed " " keywd) keywd)))
+		       (t (setq vec nil  enum nil  rvalue nil  signed nil
+				typedefed nil  multidim nil  sig-paren paren
+				expect-signal 'sigs-var  modport nil))))
 		((equal keywd "assign")
 		 (setq vec nil        enum nil        rvalue nil  signed nil
 		       typedefed nil  multidim nil    ptype nil   modport nil
@@ -7972,7 +7991,8 @@ Return an array of [outputs inouts inputs wire reg assign const]."
 			    (verilog-sig-memory portdata)
 			    nil
 			    (verilog-sig-signed portdata)
-			    (verilog-sig-type portdata)
+			    (unless (member (verilog-sig-type portdata) '("wire" "reg"))
+			      (verilog-sig-type portdata))
 			    multidim nil)
 			   sigs-inout)))
 	      ((or (setq portdata (assoc port (verilog-decls-get-outputs submoddecls)))
@@ -7985,7 +8005,13 @@ Return an array of [outputs inouts inputs wire reg assign const]."
 			    (verilog-sig-memory portdata)
 			    nil
 			    (verilog-sig-signed portdata)
-			    (verilog-sig-type portdata)
+			    ;; Though ok in SV, in V2K code, propagating the
+			    ;;  "reg" in "output reg" upwards isn't legal.
+			    ;; Also for backwards compatibility we don't propagate
+			    ;;  "input wire" upwards.
+			    ;; See also `verilog-signals-edit-wire-reg'.
+			    (unless (member (verilog-sig-type portdata) '("wire" "reg"))
+			      (verilog-sig-type portdata))
 			    multidim nil)
 			   sigs-out)))
 	      ((or (setq portdata (assoc port (verilog-decls-get-inputs submoddecls)))
@@ -7998,7 +8024,8 @@ Return an array of [outputs inouts inputs wire reg assign const]."
 			    (verilog-sig-memory portdata)
 			    nil
 			    (verilog-sig-signed portdata)
-			    (verilog-sig-type portdata)
+			    (unless (member (verilog-sig-type portdata) '("wire" "reg"))
+			      (verilog-sig-type portdata))
 			    multidim nil)
 			   sigs-in)))
 	      ((setq portdata (assoc port (verilog-decls-get-interfaces submoddecls)))
@@ -9391,6 +9418,13 @@ if non-nil."
 	    (setq out-list (cons (car in-list) out-list)))
 	(setq in-list (cdr in-list)))
       (nreverse out-list))))
+
+(defun verilog-signals-edit-wire-reg (in-list)
+  "Return all signals in IN-LIST with wire/reg data types made blank."
+  (mapcar (lambda (sig)
+	    (when (member (verilog-sig-type sig) '("wire" "reg"))
+	      (verilog-sig-type-set sig nil))
+	    sig) in-list))
 
 ;; Combined
 (defun verilog-decls-get-signals (decls)
@@ -10915,7 +10949,10 @@ Typing \\[verilog-auto] will make this into:
 	   (modsubdecls (verilog-modi-get-sub-decls modi))
 	   (sig-list (verilog-signals-not-in
 		      (verilog-decls-get-outputs moddecls)
-		      (append (verilog-decls-get-vars moddecls)
+		      (append (verilog-signals-with ;; ignore typed signals
+			       'verilog-sig-type
+			       (verilog-decls-get-outputs moddecls))
+			      (verilog-decls-get-vars moddecls)
 			      (verilog-decls-get-assigns moddecls)
 			      (verilog-decls-get-consts moddecls)
 			      (verilog-decls-get-gparams moddecls)
@@ -11381,6 +11418,11 @@ Limitations:
   though they will appear to be in the same order to an AUTOINST
   instantiating either module.
 
+  Signals declared as \"output reg\" or \"output wire\" etc will
+  lose the wire/reg declaration so that shell modules may
+  generate those outputs differently.  However, \"output logic\"
+  is propagated.
+
 An example:
 
 	module ExampShell (/*AUTOARG*/);
@@ -11460,15 +11502,18 @@ against the previous example's module:
 			     (verilog-decls-get-interfaces submoddecls)
 			     (append (verilog-decls-get-interfaces moddecls)))))
 	  (forward-line 1)
-	  (setq sig-list-i  (verilog-signals-matching-dir-re
-			     (verilog-signals-matching-regexp sig-list-i regexp)
-			     "input" direction-re)
-		sig-list-o  (verilog-signals-matching-dir-re
-			     (verilog-signals-matching-regexp sig-list-o regexp)
-			     "output" direction-re)
-		sig-list-io (verilog-signals-matching-dir-re
-			     (verilog-signals-matching-regexp sig-list-io regexp)
-			     "inout" direction-re)
+	  (setq sig-list-i  (verilog-signals-edit-wire-reg
+			     (verilog-signals-matching-dir-re
+			      (verilog-signals-matching-regexp sig-list-i regexp)
+			      "input" direction-re))
+		sig-list-o  (verilog-signals-edit-wire-reg
+			     (verilog-signals-matching-dir-re
+			      (verilog-signals-matching-regexp sig-list-o regexp)
+			      "output" direction-re))
+		sig-list-io (verilog-signals-edit-wire-reg
+			     (verilog-signals-matching-dir-re
+			      (verilog-signals-matching-regexp sig-list-io regexp)
+			      "inout" direction-re))
 		sig-list-if (verilog-signals-matching-dir-re
 			     (verilog-signals-matching-regexp sig-list-if regexp)
 			     "interface" direction-re))

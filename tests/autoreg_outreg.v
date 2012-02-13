@@ -9,6 +9,11 @@ module foo
  );
 
    /*AUTOWIRE*/
+
+   // AUTOREG here is somewhat illegal, as outputs when a type is declared
+   // in a V2K decl list are automatically "reg'ed".
+   // However some simulators take it, so be sane and only do undeclared ones...
+
    /*AUTOREG*/
 
 endmodule

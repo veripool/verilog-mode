@@ -2,8 +2,8 @@ module autoinst_sv_shaw
   (
    /*AUTOINOUTMODULE("Example_mod")*/
    // Beginning of automatic in/out/inouts (from specific module)
-   input clk,
-   input reset_b
+   input logic clk,
+   input logic reset_b
    // End of automatics
    );
    

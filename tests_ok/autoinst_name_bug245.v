@@ -4,7 +4,7 @@ module autoinst_name_bug245 (
    /*AUTOINPUT*/
    // Beginning of automatic inputs (from unused autoinst inputs)
    input        \escaped*dot*named ; // To sub of Sub.v
-   input        clk; // To sub of Sub.v
+   input logic  clk; // To sub of Sub.v
    // End of automatics
    
    /*AUTOOUTPUT*/
@@ -67,7 +67,7 @@ module autoinst_name_bug245 (
    /*AUTOINPUT*/
    // Beginning of automatic inputs (from unused autoinst inputs)
    input        \escaped*dot*named ; // To sub of Sub.v
-   input        clk; // To sub of Sub.v
+   input logic  clk; // To sub of Sub.v
    // End of automatics
    
    /*AUTOOUTPUT*/
@@ -130,7 +130,7 @@ module autoinst_name_bug245 (
    /*AUTOINPUT*/
    // Beginning of automatic inputs (from unused autoinst inputs)
    input        \escaped*dot*named ; // To sub of Sub.v
-   input        clk; // To sub of Sub.v
+   input logic  clk; // To sub of Sub.v
    // End of automatics
    
    /*AUTOOUTPUT*/

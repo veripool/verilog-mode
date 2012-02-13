@@ -28,9 +28,6 @@ module top
    // End of automatics
    
    /*AUTOREG*/
-   // Beginning of automatic regs (for this module's undeclared outputs)
-   logic              reg_assigned;
-   // End of automatics
    
    /*AUTOREGINPUT*/
    // Beginning of automatic reg inputs (for undeclared instantiated-module inputs)
