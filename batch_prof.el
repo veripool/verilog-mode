@@ -72,6 +72,6 @@ module EX_TIME_CONSUME (/*AUTOARG*/);
   (setq order (1+ (/ (log slope)
 		     (log 10))))
   (message "Slope: %f  Complexity: O(n^%f)" slope order)
-  (if (> slope 1.2)
+  (if (> slope 1.3)
       (error "Test failed, large modules are too slow compared to small modules"))
 )

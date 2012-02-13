@@ -1142,6 +1142,13 @@ See the \\[verilog-faq] for examples on using this."
   :type 'string)
 (put 'verilog-auto-output-ignore-regexp 'safe-local-variable 'stringp)
 
+(defcustom verilog-auto-template-warn-unused nil
+  "*Non-nil means report warning if an AUTO_TEMPLATE line is not used.
+This feature is not supported before Emacs 21.1 or XEmacs 21.4."
+  :group 'verilog-mode-auto
+  :type 'booleanp)
+(put 'verilog-auto-template-warn-unused 'safe-local-variable 'verilog-booleanp)
+
 (defcustom verilog-auto-tieoff-declaration "wire"
   "*Data type used for the declaration for AUTOTIEOFF.
 If \"wire\" then create a wire, if \"assign\" create an
@@ -8580,17 +8587,89 @@ IGNORE-NEXT is true to ignore next token, fake from inside case statement."
     instants-list))
 
 
-(defun verilog-read-auto-template (module)
-  "Look for an auto_template for the instantiation of the given MODULE.
-If found returns the signal name connections.  Return REGEXP and
-list of ( (signal_name connection_name)... )."
+(defun verilog-read-auto-template-middle ()
+  "With point in middle of an AUTO_TEMPLATE, parse it.
+Returns REGEXP and list of ( (signal_name connection_name)... )."
   (save-excursion
     ;; Find beginning
     (let ((tpl-regexp "\\([0-9]+\\)")
 	  (lineno -1)  ; -1 to offset for the AUTO_TEMPLATE's newline
 	  (templateno 0)
-	  (pt (point))
 	  tpl-sig-list tpl-wild-list tpl-end-pt rep)
+      ;; Parse "REGEXP"
+      ;; We reserve @"..." for future lisp expressions that evaluate
+      ;; once-per-AUTOINST
+      (when (looking-at "\\s-*\"\\([^\"]*\\)\"")
+	(setq tpl-regexp (match-string 1))
+	(goto-char (match-end 0)))
+      (search-forward "(")
+      ;; Parse lines in the template
+      (when (or verilog-auto-inst-template-numbers
+		verilog-auto-template-warn-unused)
+	(save-excursion
+	  (let ((pre-pt (point)))
+	    (goto-char (point-min))
+	    (while (search-forward "AUTO_TEMPLATE" pre-pt t)
+	      (setq templateno (1+ templateno)))
+	    (while (< (point) pre-pt)
+	      (forward-line 1)
+	      (setq lineno (1+ lineno))))))
+      (setq tpl-end-pt (save-excursion
+			 (backward-char 1)
+			 (verilog-forward-sexp-cmt 1)   ;; Moves to paren that closes argdecl's
+			 (backward-char 1)
+			 (point)))
+      ;;
+      (while (< (point) tpl-end-pt)
+	(cond ((looking-at "\\s-*\\.\\([a-zA-Z0-9`_$]+\\)\\s-*(\\(.*\\))\\s-*\\(,\\|)\\s-*;\\)")
+	       (setq tpl-sig-list
+		     (cons (list
+			    (match-string-no-properties 1)
+			    (match-string-no-properties 2)
+			    templateno lineno)
+			   tpl-sig-list))
+	       (goto-char (match-end 0)))
+	      ;; Regexp form??
+	      ((looking-at
+		;; Regexp bug in XEmacs disallows ][ inside [], and wants + last
+		"\\s-*\\.\\(\\([a-zA-Z0-9`_$+@^.*?|---]+\\|[][]\\|\\\\[()|]\\)+\\)\\s-*(\\(.*\\))\\s-*\\(,\\|)\\s-*;\\)")
+	       (setq rep (match-string-no-properties 3))
+	       (goto-char (match-end 0))
+	       (setq tpl-wild-list
+		     (cons (list
+			    (concat "^"
+				    (verilog-string-replace-matches "@" "\\\\([0-9]+\\\\)" nil nil
+								    (match-string 1))
+				    "$")
+			    rep
+			    templateno lineno)
+			   tpl-wild-list)))
+	      ((looking-at "[ \t\f]+")
+	       (goto-char (match-end 0)))
+	      ((looking-at "\n")
+	       (setq lineno (1+ lineno))
+	       (goto-char (match-end 0)))
+	      ((looking-at "//")
+	       (search-forward "\n")
+	       (setq lineno (1+ lineno)))
+	      ((looking-at "/\\*")
+	       (forward-char 2)
+	       (or (search-forward "*/")
+		   (error "%s: Unmatched /* */, at char %d" (verilog-point-text) (point))))
+	      (t
+	       (error "%s: AUTO_TEMPLATE parsing error: %s"
+		      (verilog-point-text)
+		      (progn (looking-at ".*$") (match-string 0))))))
+      ;; Return
+      (vector tpl-regexp
+	      (list tpl-sig-list tpl-wild-list)))))
+
+(defun verilog-read-auto-template (module)
+  "Look for an auto_template for the instantiation of the given MODULE.
+If found returns `verilog-read-auto-template-inside' structure."
+  (save-excursion
+    ;; Find beginning
+    (let ((pt (point)))
       ;; Note this search is expensive, as we hunt from mod-begin to point
       ;; for every instantiation.  Likewise in verilog-read-auto-lisp.
       ;; So, we look first for an exact string rather than a slow regexp.
@@ -8598,6 +8677,7 @@ list of ( (signal_name connection_name)... )."
       ;; need to record the relative position of each AUTOINST, as multiple
       ;; templates exist for each module, and we're inserting lines.
       (cond ((or
+	      ;; See also regexp in `verilog-auto-template-lint'
 	      (verilog-re-search-backward-substr
 	       "AUTO_TEMPLATE"
 	       (concat "^\\s-*/?\\*?\\s-*" module "\\s-+AUTO_TEMPLATE") nil t)
@@ -8609,75 +8689,23 @@ list of ( (signal_name connection_name)... )."
 		 "AUTO_TEMPLATE"
 		 (concat "^\\s-*/?\\*?\\s-*" module "\\s-+AUTO_TEMPLATE") nil t)))
 	     (goto-char (match-end 0))
-	     ;; Parse "REGEXP"
-	     ;; We reserve @"..." for future lisp expressions that evaluate
-	     ;; once-per-AUTOINST
-	     (when (looking-at "\\s-*\"\\([^\"]*\\)\"")
-	       (setq tpl-regexp (match-string 1))
-	       (goto-char (match-end 0)))
-	     (search-forward "(")
-	     ;; Parse lines in the template
-	     (when verilog-auto-inst-template-numbers
-	       (save-excursion
-		 (let ((pre-pt (point)))
-		   (goto-char (point-min))
-		   (while (search-forward "AUTO_TEMPLATE" pre-pt t)
-		     (setq templateno (1+ templateno)))
-		   (while (< (point) pre-pt)
-		     (forward-line 1)
-		     (setq lineno (1+ lineno))))))
-	     (setq tpl-end-pt (save-excursion
-				(backward-char 1)
-				(verilog-forward-sexp-cmt 1)   ;; Moves to paren that closes argdecl's
-				(backward-char 1)
-				(point)))
-	     ;;
-	     (while (< (point) tpl-end-pt)
-	       (cond ((looking-at "\\s-*\\.\\([a-zA-Z0-9`_$]+\\)\\s-*(\\(.*\\))\\s-*\\(,\\|)\\s-*;\\)")
-		      (setq tpl-sig-list
-			    (cons (list
-				   (match-string-no-properties 1)
-				   (match-string-no-properties 2)
-				   templateno lineno)
-				  tpl-sig-list))
-		      (goto-char (match-end 0)))
-		     ;; Regexp form??
-		     ((looking-at
-		       ;; Regexp bug in XEmacs disallows ][ inside [], and wants + last
-		       "\\s-*\\.\\(\\([a-zA-Z0-9`_$+@^.*?|---]+\\|[][]\\|\\\\[()|]\\)+\\)\\s-*(\\(.*\\))\\s-*\\(,\\|)\\s-*;\\)")
-		      (setq rep (match-string-no-properties 3))
-		      (goto-char (match-end 0))
-		      (setq tpl-wild-list
-			    (cons (list
-				   (concat "^"
-					   (verilog-string-replace-matches "@" "\\\\([0-9]+\\\\)" nil nil
-									   (match-string 1))
-					   "$")
-				   rep
-				   templateno lineno)
-				  tpl-wild-list)))
-		     ((looking-at "[ \t\f]+")
-		      (goto-char (match-end 0)))
-		     ((looking-at "\n")
-		      (setq lineno (1+ lineno))
-		      (goto-char (match-end 0)))
-		     ((looking-at "//")
-		      (search-forward "\n")
-		      (setq lineno (1+ lineno)))
-		     ((looking-at "/\\*")
-		      (forward-char 2)
-		      (or (search-forward "*/")
-			  (error "%s: Unmatched /* */, at char %d" (verilog-point-text) (point))))
-		     (t
-		      (error "%s: AUTO_TEMPLATE parsing error: %s"
-			     (verilog-point-text)
-			     (progn (looking-at ".*$") (match-string 0))))))
-	     ;; Return
-	     (vector tpl-regexp
-		     (list tpl-sig-list tpl-wild-list)))
+	     (verilog-read-auto-template-middle))
 	    ;; If no template found
-	    (t (vector tpl-regexp nil))))))
+	    (t (vector "" nil))))))
 ;;(progn (find-file "auto-template.v") (verilog-read-auto-template "ptl_entry"))
+
+(defvar verilog-auto-template-hits nil "Successful lookups with `verilog-read-auto-template-hit'.")
+(make-variable-buffer-local 'verilog-auto-template-hits)
+
+(defun verilog-read-auto-template-hit (tpl-ass)
+  "Record that TPL-ASS template from `verilog-read-auto-template' was used."
+  (when (eval-when-compile (fboundp 'make-hash-table)) ;; else feature not allowed
+    (when verilog-auto-template-warn-unused
+      (unless verilog-auto-template-hits
+	(setq verilog-auto-template-hits
+	      (make-hash-table :test 'equal :rehash-size 4.0)))
+      (puthash (vector (nth 2 tpl-ass) (nth 3 tpl-ass)) t
+	       verilog-auto-template-hits))))
 
 (defun verilog-set-define (defname defvalue &optional buffer enumname)
   "Set the definition DEFNAME to the DEFVALUE in the given BUFFER.
@@ -9216,7 +9244,7 @@ variables to build the path."
 ;; A modi is:  [module-name-string file-name begin-point]
 
 (defvar verilog-cache-enabled t
-  "If true, enable caching of signals, etc.  Set to nil for debugging to make things SLOW!")
+  "Non-nil enables caching of signals, etc.  Set to nil for debugging to make things SLOW!")
 
 (defvar verilog-modi-cache-list nil
   "Cache of ((Module Function) Buf-Tick Buf-Modtime Func-Returns)...
@@ -9231,7 +9259,7 @@ Use `verilog-preserve-modi-cache' to set it.")
   "Modification tick after which the cache is still considered valid.
 Use `verilog-preserve-modi-cache' to set it.")
 (defvar verilog-modi-cache-current-enable nil
-  "If true, allow caching `verilog-modi-current', set by let().")
+  "Non-nil means allow caching `verilog-modi-current', set by let().")
 (defvar verilog-modi-cache-current nil
   "Currently active `verilog-modi-current', if any, set by let().")
 (defvar verilog-modi-cache-current-max nil
@@ -10390,6 +10418,7 @@ If PAR-VALUES replace final strings with these parameter values."
       (insert "(" tpl-net ")"))
     (insert ",")
     (cond (tpl-ass
+	   (verilog-read-auto-template-hit tpl-ass)
 	   (indent-to (+ (if (< verilog-auto-inst-column 48) 24 16)
 			 verilog-auto-inst-column))
 	   ;; verilog-insert requires the complete comment in one call - including the newline
@@ -10579,6 +10608,9 @@ Templates:
   to see which regexps are matching.  Don't leave that mode set after
   debugging is completed though, it will result in lots of extra differences
   and merge conflicts.
+
+  Setting `verilog-auto-template-warn-unused' will report errors
+  if any template lines are unused.
 
   For example:
 
@@ -12301,6 +12333,32 @@ being different from the final output's line numbering."
 				 (string-to-number (match-string 2)))))
        t t))))
 
+(defun verilog-auto-template-lint ()
+  "Check AUTO_TEMPLATEs for unused lines.
+Enable with `verilog-auto-template-warn-unused'."
+  (let ((name1 (or (buffer-file-name) (buffer-name))))
+    (save-excursion
+      (goto-char (point-min))
+      (while (re-search-forward
+	      "^\\s-*/?\\*?\\s-*[a-zA-Z0-9`_$]+\\s-+AUTO_TEMPLATE" nil t)
+	(let* ((tpl-info (verilog-read-auto-template-middle))
+	       (tpl-list (aref tpl-info 1))
+	       (tlines (append (nth 0 tpl-list) (nth 1 tpl-list)))
+	       tpl-ass)
+	  (while tlines
+	    (setq tpl-ass (car tlines)
+		  tlines (cdr tlines))
+	    ;;; 
+	    (unless (or (not (eval-when-compile (fboundp 'make-hash-table))) ;; Not supported, no warning
+			(gethash (vector (nth 2 tpl-ass) (nth 3 tpl-ass))
+				 verilog-auto-template-hits))
+	      (error "%s:%d: AUTO_TEMPLATE line unused: \".%s (%s)\""
+		     name1
+		     (+ (elt tpl-ass 3)  ;; Template line number
+			(count-lines (point-min) (point)))
+		     (elt tpl-ass 0) (elt tpl-ass 1))
+	      )))))))
+
 
 ;;
 ;; Auto top level
@@ -12393,6 +12451,8 @@ Wilson Snyder (wsnyder@wsnyder.org)."
 	     ;; Wipe cache; otherwise if we AUTOed a block above this one,
 	     ;; we'll misremember we have generated IOs, confusing AUTOOUTPUT
 	     (setq verilog-modi-cache-list nil)
+	     ;; Local state
+	     (setq verilog-auto-template-hits nil)
 	     ;; If we're not in verilog-mode, change syntax table so parsing works right
 	     (unless (eq major-mode `verilog-mode) (verilog-mode))
 	     ;; Allow user to customize
@@ -12464,7 +12524,9 @@ Wilson Snyder (wsnyder@wsnyder.org)."
 	       (verilog-auto-re-search-do "/\\*AUTOARG\\*/" 'verilog-auto-arg)
 	       ;; Fix line numbers (comments only)
 	       (when verilog-auto-inst-template-numbers
-		 (verilog-auto-templated-rel))))
+		 (verilog-auto-templated-rel))
+	       (when verilog-auto-template-warn-unused
+		 (verilog-auto-template-lint))))
 	     ;;
 	     (verilog-run-hooks 'verilog-auto-hook)
 	     ;;
@@ -13076,6 +13138,7 @@ Files are checked based on `verilog-library-flags'."
        verilog-auto-sense-include-inputs
        verilog-auto-star-expand
        verilog-auto-star-save
+       verilog-auto-template-warn-unused
        verilog-auto-unused-ignore-regexp
        verilog-before-auto-hook
        verilog-before-delete-auto-hook
