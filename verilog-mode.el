@@ -415,7 +415,10 @@ Set `verilog-in-hooks' during this time, to assist AUTO caches."
   :group 'verilog-mode)
 
 (defvar verilog-debug nil
-  "If set, enable debug messages for `verilog-mode' internals.")
+  "Non-nil means enable debug messages for `verilog-mode' internals.")
+
+(defvar verilog-warn-fatal nil
+  "Non-nil means `verilog-warn-error' warnings are fatal `error's.")
 
 (defcustom verilog-linter
   "echo 'No verilog-linter set, see \"M-x describe-variable verilog-linter\"'"
@@ -1146,7 +1149,7 @@ See the \\[verilog-faq] for examples on using this."
   "*Non-nil means report warning if an AUTO_TEMPLATE line is not used.
 This feature is not supported before Emacs 21.1 or XEmacs 21.4."
   :group 'verilog-mode-auto
-  :type 'booleanp)
+  :type 'boolean)
 (put 'verilog-auto-template-warn-unused 'safe-local-variable 'verilog-booleanp)
 
 (defcustom verilog-auto-tieoff-declaration "wire"
@@ -5040,14 +5043,26 @@ FILENAME to find directory to run in, or defaults to `buffer-file-name`."
 ;; Batch
 ;;
 
+(defun verilog-warn (string &rest args)
+  "Print a warning with `format' using STRING and optional ARGS."
+  (apply 'message (concat "%%Warning: " string) args))
+
+(defun verilog-warn-error (string &rest args)
+  "Call `error' using STRING and optional ARGS.
+If `verilog-warn-fatal' is non-nil, call `verilog-warn' instead."
+  (if verilog-warn-fatal
+      (apply 'error string args)
+    (apply 'verilog-warn string args)))
+
 (defmacro verilog-batch-error-wrapper (&rest body)
   "Execute BODY and add error prefix to any errors found.
 This lets programs calling batch mode to easily extract error messages."
-  `(condition-case err
-       (progn ,@body)
-     (error
-      (error "%%Error: %s%s" (error-message-string err)
-	     (if (featurep 'xemacs) "\n" "")))))  ;; XEmacs forgets to add a newline
+  `(let ((verilog-warn-fatal nil))
+     (condition-case err
+	 (progn ,@body)
+       (error
+	(error "%%Error: %s%s" (error-message-string err)
+	       (if (featurep 'xemacs) "\n" ""))))))  ;; XEmacs forgets to add a newline
 
 (defun verilog-batch-execute-func (funref &optional no-save)
   "Internal processing of a batch command.
@@ -10126,8 +10141,9 @@ Ignores WHITESPACE if t, and writes output to stdout if SHOW."
 Differences are between buffers B1 and B2, starting at point
 DIFFPT.  This function is called via `verilog-diff-function'."
   (let ((name1 (with-current-buffer b1 (buffer-file-name))))
-    (message "%%Warning: %s:%d: Difference in AUTO expansion found"
-	     name1 (with-current-buffer b1 (1+ (count-lines (point-min) (point)))))
+    (verilog-warn "%s:%d: Difference in AUTO expansion found"
+		  name1 (with-current-buffer b1
+			  (1+ (count-lines (point-min) (point)))))
     (cond (noninteractive
 	   (verilog-diff-file-with-buffer name1 b2 t t))
 	  (t
@@ -12350,13 +12366,14 @@ Enable with `verilog-auto-template-warn-unused'."
 		  tlines (cdr tlines))
 	    ;;; 
 	    (unless (or (not (eval-when-compile (fboundp 'make-hash-table))) ;; Not supported, no warning
+			(not verilog-auto-template-hits)
 			(gethash (vector (nth 2 tpl-ass) (nth 3 tpl-ass))
 				 verilog-auto-template-hits))
-	      (error "%s:%d: AUTO_TEMPLATE line unused: \".%s (%s)\""
-		     name1
-		     (+ (elt tpl-ass 3)  ;; Template line number
-			(count-lines (point-min) (point)))
-		     (elt tpl-ass 0) (elt tpl-ass 1))
+	      (verilog-warn-error "%s:%d: AUTO_TEMPLATE line unused: \".%s (%s)\""
+				  name1
+				  (+ (elt tpl-ass 3)  ;; Template line number
+				     (count-lines (point-min) (point)))
+				  (elt tpl-ass 0) (elt tpl-ass 1))
 	      )))))))
 
 
