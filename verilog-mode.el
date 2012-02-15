@@ -7818,7 +7818,7 @@ Optional NUM-PARAM and MAX-PARAM check for a specific number of parameters."
   (let ((olist))
     (save-excursion
       ;; /*AUTOPUNT("parameter", "parameter")*/
-      (search-backward "(")
+      (backward-sexp 1)
       (while (looking-at "(?\\s *\"\\([^\"]*\\)\"\\s *,?")
 	(setq olist (cons (match-string 1) olist))
 	(goto-char (match-end 0))))
