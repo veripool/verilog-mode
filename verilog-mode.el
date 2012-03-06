@@ -527,6 +527,8 @@ are lineup only when \\[verilog-pretty-declarations] is typed."
 		(const :tag "Line up Declarations" declarations)
 		(function :tag "Other"))
   :group 'verilog-mode-indent )
+(put 'verilog-auto-lineup 'safe-local-variable
+     '(lambda (x) (memq x '(nil all assignments declarations))))
 
 (defcustom verilog-indent-level 3
   "*Indentation of Verilog statements with respect to containing block."
@@ -10607,6 +10609,8 @@ Templates:
   expanded `verilog-mode' simply searches up for the closest template.
   Thus you can have multiple templates for the same module, just alternate
   between the template for an instantiation and the instantiation itself.
+  (For backward compatibility if no template is found above, it
+  will also look below, but do not use this behavior in new designs.)
 
   The module name must be the same as the name of the module in the
   instantiation name, and the code \"AUTO_TEMPLATE\" must be in these exact

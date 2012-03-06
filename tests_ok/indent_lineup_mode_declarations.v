@@ -7,6 +7,13 @@ module test (pci_ack, reg_wr, reg_sel, clk,  rst);
    initial begin
       foo;
       bar;
+      x       <= y;
+      longish <= alsolongish;
    end
    
-endmodule // test
+endmodule
+
+// Local Variables:
+// verilog-auto-lineup: declarations
+// End:
+
