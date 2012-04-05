@@ -2790,7 +2790,7 @@ See also `verilog-font-lock-extra-types'.")
   "Gaudy level highlighting for Verilog mode.
 See also `verilog-font-lock-extra-types'.")
 
-(defvar  verilog-font-lock-translate-off-face
+(defvar verilog-font-lock-translate-off-face
   'verilog-font-lock-translate-off-face
   "Font to use for translated off regions.")
 (defface verilog-font-lock-translate-off-face
@@ -13134,9 +13134,12 @@ Files are checked based on `verilog-library-flags'."
      (concat "verilog-mode v" verilog-mode-version)
      '(
        verilog-active-low-regexp
+       verilog-after-save-font-hook
        verilog-align-ifelse
        verilog-assignment-delay
        verilog-auto-arg-sort
+       verilog-auto-declare-nettype
+       verilog-auto-delete-trailing-whitespace
        verilog-auto-endcomments
        verilog-auto-hook
        verilog-auto-ignore-concat
@@ -13147,12 +13150,14 @@ Files are checked based on `verilog-library-flags'."
        verilog-auto-inst-dot-name
        verilog-auto-inst-interfaced-ports
        verilog-auto-inst-param-value
+       verilog-auto-inst-sort
        verilog-auto-inst-template-numbers
        verilog-auto-inst-vector
        verilog-auto-lineup
        verilog-auto-newline
        verilog-auto-output-ignore-regexp
        verilog-auto-read-includes
+       verilog-auto-reset-blocking-in-non
        verilog-auto-reset-widths
        verilog-auto-save-policy
        verilog-auto-sense-defines-constant
@@ -13160,10 +13165,15 @@ Files are checked based on `verilog-library-flags'."
        verilog-auto-star-expand
        verilog-auto-star-save
        verilog-auto-template-warn-unused
+       verilog-auto-tieoff-declaration
+       verilog-auto-tieoff-ignore-regexp
        verilog-auto-unused-ignore-regexp
+       verilog-auto-wire-type
        verilog-before-auto-hook
        verilog-before-delete-auto-hook
        verilog-before-getopt-flags-hook
+       verilog-before-save-font-hook
+       verilog-cache-enabled
        verilog-case-indent
        verilog-cexp-indent
        verilog-compiler
@@ -13171,6 +13181,8 @@ Files are checked based on `verilog-library-flags'."
        verilog-delete-auto-hook
        verilog-getopt-flags-hook
        verilog-highlight-grouping-keywords
+       verilog-highlight-includes
+       verilog-highlight-modules
        verilog-highlight-p1800-keywords
        verilog-highlight-translate-off
        verilog-indent-begin-after-if
@@ -13188,11 +13200,15 @@ Files are checked based on `verilog-library-flags'."
        verilog-linter
        verilog-minimum-comment-distance
        verilog-mode-hook
+       verilog-mode-release-date
+       verilog-mode-release-emacs
+       verilog-mode-version
        verilog-preprocessor
        verilog-simulator
        verilog-tab-always-indent
        verilog-tab-to-comment
        verilog-typedef-regexp
+       verilog-warn-fatal
        )
      nil nil
      (concat "Hi Mac,
