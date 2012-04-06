@@ -1465,6 +1465,8 @@ If set will become buffer local.")
        :help		"Help on AUTOSENSE - sensitivity lists for always blocks"]
       ["AUTOTIEOFF"			(describe-function 'verilog-auto-tieoff)
        :help		"Help on AUTOTIEOFF - tying off unused outputs"]
+      ["AUTOUNDEF"			(describe-function 'verilog-auto-undef)
+       :help		"Help on AUTOUNDEF - undefine all local defines"]
       ["AUTOUNUSED"			(describe-function 'verilog-auto-unused)
        :help		"Help on AUTOUNUSED - terminating unused inputs"]
       ["AUTOWIRE"			(describe-function 'verilog-auto-wire)
@@ -12099,6 +12101,72 @@ Typing \\[verilog-auto] will make this into:
 	    (setq sig-list (cdr sig-list))))
 	(verilog-insert-indent "// End of automatics\n")))))
 
+(defun verilog-auto-undef ()
+  "Expand AUTOUNDEF statements, as part of \\[verilog-auto].
+Take any `defines since the last AUTOUNDEF in the current file
+and create `undefs for them.  This is used to insure that
+file-local defines do not polute the global `define name space.
+
+Limitations:
+  AUTOUNDEF presumes any identifier following `define is the
+  name of a define.  Any `ifdefs are ignored.
+
+  AUTOUNDEF suppresses creating an `undef for any define that was
+  `undefed before the AUTOUNDEF.  This may be used to work around
+  the ignoring of `ifdefs as shown below.
+
+An example:
+
+	`define XX_FOO
+	`define M_BAR(x)
+	`define M_BAZ
+	...
+	`ifdef NEVER
+	  `undef M_BAZ	// Emacs will see this and not `undef M_BAZ
+	`endif
+	...
+	/*AUTOUNDEF*/
+
+Typing \\[verilog-auto] will make this into:
+
+	...
+	/*AUTOUNDEF*/
+	// Beginning of automatic undefs
+	`undef XX_FOO
+	`undef M_BAR
+	// End of automatics
+
+You may also provide an optional regular expression, in which case only
+defines the regular expression will be undefed."
+  (save-excursion
+    (let* ((params (verilog-read-auto-params 0 1))
+	   (regexp (nth 0 params))
+	   (indent-pt (current-indentation))
+	   (end-pt (point))
+	   defs def)
+      (save-excursion
+	;; Scan from beginnng of file, or last AUTOUNDEF
+	(or (verilog-re-search-backward-quick "/\\*AUTOUNDEF\\>" end-pt t)
+	    (goto-char (point-min)))
+	(while (verilog-re-search-forward-quick
+		"`\\(define\\|undef\\)\\s-*\\([a-zA-Z_][a-zA-Z_0-9]*\\)" end-pt t)
+	  (cond ((equal (match-string-no-properties 1) "define")
+		 (setq def (match-string-no-properties 2))
+		 (when (or (not regexp)
+			   (string-match regexp def))
+		   (setq defs (cons def defs))))
+		(t
+		 (setq defs (delete (match-string-no-properties 2) defs))))))
+      ;; Insert
+      (setq defs (sort (delete-dups defs) 'string<))
+      (when defs
+	(forward-line 1)
+	(verilog-insert-indent "// Beginning of automatic undefs\n")
+	(while defs
+	  (verilog-insert-indent "`undef " (car defs) "\n")
+	  (setq defs (cdr defs)))
+	(verilog-insert-indent "// End of automatics\n")))))
+
 (defun verilog-auto-unused ()
   "Expand AUTOUNUSED statements, as part of \\[verilog-auto].
 Replace the /*AUTOUNUSED*/ comment with a comma separated list of all unused
@@ -12382,7 +12450,7 @@ Enable with `verilog-auto-template-warn-unused'."
 	  (while tlines
 	    (setq tpl-ass (car tlines)
 		  tlines (cdr tlines))
-	    ;;; 
+	    ;;;
 	    (unless (or (not (eval-when-compile (fboundp 'make-hash-table))) ;; Not supported, no warning
 			(not verilog-auto-template-hits)
 			(gethash (vector (nth 2 tpl-ass) (nth 3 tpl-ass))
@@ -12454,6 +12522,7 @@ Using \\[describe-function], see also:
     `verilog-auto-reset'        for AUTORESET flop resets
     `verilog-auto-sense'        for AUTOSENSE always sensitivity lists
     `verilog-auto-tieoff'       for AUTOTIEOFF output tieoffs
+    `verilog-auto-undef'        for AUTOUNDEF `undef of local `defines
     `verilog-auto-unused'       for AUTOUNUSED unused inputs/inouts
     `verilog-auto-wire'         for AUTOWIRE instantiation wires
 
@@ -12546,6 +12615,8 @@ Wilson Snyder (wsnyder@wsnyder.org)."
 	       (verilog-auto-re-search-do "/\\*AUTOINOUT\\*/" 'verilog-auto-inout)
 	       ;; Then tie off those in/outs
 	       (verilog-auto-re-search-do "/\\*AUTOTIEOFF\\*/" 'verilog-auto-tieoff)
+	       ;; These can be anywhere after AUTOINSERTLISP
+	       (verilog-auto-re-search-do "/\\*AUTOUNDEF\\((\"[^\"]*\")\\)?\\*/" 'verilog-auto-undef)
 	       ;; Wires/regs must be after inputs/outputs
 	       (verilog-auto-re-search-do "/\\*AUTOLOGIC\\*/" 'verilog-auto-logic)
 	       (verilog-auto-re-search-do "/\\*AUTOWIRE\\*/" 'verilog-auto-wire)

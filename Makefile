@@ -40,10 +40,12 @@ $(1): e/verilog-mode.elc
 endef
 
 $(eval $(call test_emacs_sub,test_emacs_1,1of5))
+ifeq ($(VERILOG_MODE_TEST_FILE),)
 $(eval $(call test_emacs_sub,test_emacs_2,2of5))
 $(eval $(call test_emacs_sub,test_emacs_3,3of5))
 $(eval $(call test_emacs_sub,test_emacs_4,4of5))
 $(eval $(call test_emacs_sub,test_emacs_5,5of5))
+endif
 
 #Usage: $(call test_xemacs_sub,label,threading)
 define test_xemacs_sub
@@ -55,10 +57,12 @@ $(1): x/verilog-mode.elc
 endef
 
 $(eval $(call test_xemacs_sub,test_xemacs_1,1of5))
+ifeq ($(VERILOG_MODE_TEST_FILE),)
 $(eval $(call test_xemacs_sub,test_xemacs_2,2of5))
 $(eval $(call test_xemacs_sub,test_xemacs_3,3of5))
 $(eval $(call test_xemacs_sub,test_xemacs_4,4of5))
 $(eval $(call test_xemacs_sub,test_xemacs_5,5of5))
+endif
 
 test_errors:
 	@echo
