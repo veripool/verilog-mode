@@ -1000,14 +1000,21 @@ those temporaries reset.  See example in `verilog-auto-reset'."
 (put 'verilog-auto-reset-blocking-in-non 'safe-local-variable 'verilog-booleanp)
 
 (defcustom verilog-auto-reset-widths t
-  "*Non-nil means AUTORESET should determine the width of signals.
+  "*True means AUTORESET should determine the width of signals.
 This is then used to set the width of the zero (32'h0 for example).  This
 is required by some lint tools that aren't smart enough to ignore widths of
-the constant zero.  This may result in ugly code when parameters determine
-the MSB or LSB of a signal inside an AUTORESET."
+the constant zero. This may result in ugly code when parameters determine
+the MSB or LSB of a signal inside an AUTORESET.
+
+If nil, AUTORESET uses \"0\" as the constant.
+
+If 'unbased', AUTORESET used the unbased unsized literal \"'0\"
+as the constant. This setting is strongly recommended for
+SystemVerilog designs."
   :type 'boolean
   :group 'verilog-mode-auto)
-(put 'verilog-auto-reset-widths 'safe-local-variable 'verilog-booleanp)
+(put 'verilog-auto-reset-widths 'safe-local-variable
+     '(lambda (x) (memq x '(nil t unbased))))
 
 (defcustom verilog-assignment-delay ""
   "*Text used for delays in delayed assignments.  Add a trailing space if set."
@@ -7670,20 +7677,24 @@ Duplicate signals are also removed.  For example A[2] and A[1] become A[2:1]."
     ;;
     out-list))
 
-(defun verilog-sig-tieoff (sig &optional no-width)
+(defun verilog-sig-tieoff (sig)
   "Return tieoff expression for given SIG, with appropriate width.
-Ignore width if optional NO-WIDTH is set."
-  (let* ((width (if no-width nil (verilog-sig-width sig))))
-    (concat
-     (if (and verilog-active-low-regexp
-	      (string-match verilog-active-low-regexp (verilog-sig-name sig)))
-	 "~" "")
-     (cond ((not width)
-	    "0")
-	   ((string-match "^[0-9]+$" width)
-	    (concat width (if (verilog-sig-signed sig) "'sh0" "'h0")))
-	   (t
-	    (concat "{" width "{1'b0}}"))))))
+Tieoff value uses `verilog-active-low-regexp' and
+`verilog-auto-reset-widths'."
+  (concat
+   (if (and verilog-active-low-regexp
+	    (string-match verilog-active-low-regexp (verilog-sig-name sig)))
+       "~" "")
+   (cond ((not verilog-auto-reset-widths)
+	  "0")
+	 ((equal verilog-auto-reset-widths 'unbased)
+	  "'0")
+	 ;; Else presume verilog-auto-reset-widths is true
+	 (t
+	  (let* ((width (verilog-sig-width sig)))
+	    (if (string-match "^[0-9]+$" width)
+		(concat width (if (verilog-sig-signed sig) "'sh0" "'h0"))
+	      (concat "{" width "{1'b0}}")))))))
 
 ;;
 ;; Dumping
@@ -11918,9 +11929,9 @@ begin/case/if statement and the AUTORESET comment are being reset manually
 and should not be automatically reset.  This includes omitting any signals
 used on the right hand side of assignments.
 
-By default, AUTORESET will include the width of the signal in the autos,
-this is a recent change.  To control this behavior, see
-`verilog-auto-reset-widths'.
+By default, AUTORESET will include the width of the signal in the
+autos, SystemVerilog designs may want to change this.  To control
+this behavior, see `verilog-auto-reset-widths'.
 
 AUTORESET ties signals to deasserted, which is presumed to be zero.
 Signals that match `verilog-active-low-regexp' will be deasserted by tying
@@ -11998,7 +12009,7 @@ Typing \\[verilog-auto] will make this into:
 		    (if (assoc (verilog-sig-name sig) dly-list)
 			(concat " <= " verilog-assignment-delay)
 		      " = ")
-		    (verilog-sig-tieoff sig (not verilog-auto-reset-widths))
+		    (verilog-sig-tieoff sig)
 		    ";\n")
 	    (setq sig-list (cdr sig-list))))
 	(verilog-insert-indent "// End of automatics")))))
@@ -12022,6 +12033,9 @@ You can add signals you do not want included in AUTOTIEOFF with
 
 `verilog-auto-wire-type' may be used to change the datatype of
 the declarations.
+
+`verilog-auto-reset-widths' may be used to change how the tieoff
+value's width is generated.
 
 An example of making a stub for another module:
 
