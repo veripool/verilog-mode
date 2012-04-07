@@ -12152,13 +12152,14 @@ defines the regular expression will be undefed."
 		"`\\(define\\|undef\\)\\s-*\\([a-zA-Z_][a-zA-Z_0-9]*\\)" end-pt t)
 	  (cond ((equal (match-string-no-properties 1) "define")
 		 (setq def (match-string-no-properties 2))
-		 (when (or (not regexp)
-			   (string-match regexp def))
+		 (when (and (or (not regexp)
+				(string-match regexp def))
+			    (not (member def defs))) ;; delete-dups not in 21.1
 		   (setq defs (cons def defs))))
 		(t
 		 (setq defs (delete (match-string-no-properties 2) defs))))))
       ;; Insert
-      (setq defs (sort (delete-dups defs) 'string<))
+      (setq defs (sort defs 'string<))
       (when defs
 	(forward-line 1)
 	(verilog-insert-indent "// Beginning of automatic undefs\n")
