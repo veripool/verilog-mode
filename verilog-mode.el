@@ -3003,7 +3003,7 @@ See also `verilog-font-lock-extra-types'.")
 	(append verilog-font-lock-keywords-1
 		(list
 		 ;; Fontify pragmas
-		 (concat "\\(//\\s-*" verilog-pragma-keywords "\\s-.*\\)")
+		 (concat "\\(//\\s-*\\(" verilog-pragma-keywords "\\)\\s-.*\\)")
 		 ;; Fontify escaped names
 		 '("\\(\\\\\\S-*\\s-\\)"  0 font-lock-function-name-face)
 		 ;; Fontify macro definitions/ uses
