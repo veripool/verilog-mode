@@ -6,6 +6,7 @@
 ;;   VERILOG_MODE_START_FILE=filename.v  # Start at specified test
 ;;   VERILOG_MODE_THREAD=#of#          # Multithreaded testing
 ;;   VERILOG_MODE_PROFILE=1            # Profile - see batch_prof.el
+;;   HARNESS_UPDATE_GOLDEN=1	       # Update golden reference files
 
 (defvar diff-flags "-u")
 (defvar vl-threading (and (not (getenv "VERILOG_MODE_TEST_FILE"))
@@ -75,14 +76,17 @@
   (with-temp-buffer
     (let* ((status
 	    (call-process "diff" nil t t diff-flags "--label" "GOLDEN_REFERENCE" golden-file "--label" "CURRENT_BEHAVIOR" temp-file )))
-      (cond ((not (equal status 0))
+      (cond ((and (not (equal status 0))
+		  (getenv "HARNESS_UPDATE_GOLDEN"))
+	     (message "***HARNESS_UPDATE_GOLDEN set - updating Golden Reference File")
+	     (call-process "cp" nil t t temp-file golden-file))
+	    ((not (equal status 0))
 	     (message (concat "diff -c " golden-file " " temp-file))
 	     (message "***Golden Reference File\n---Generated Test File")
 	     (message "%s" (buffer-string))
 	     (message "To promote current to golden, in shell buffer hit newline anywhere in next line (^P RETURN):")
 	     (message (concat "cp " temp-file " " golden-file "; VERILOG_MODE_START_FILE=" golden-file " " again ))
 	     (error ""))
-	    
 	    (t
 	     (message "Verified %s" golden-file))))))
 
