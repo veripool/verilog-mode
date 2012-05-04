@@ -1706,12 +1706,15 @@ This speeds up complicated regexp matches."
 ;;(verilog-re-search-backward-substr "-end" "get-end-of" nil t) ;;-end (test bait)
 
 (defun verilog-delete-trailing-whitespace ()
-  "Delete trailing spaces or tabs, but not newlines nor linefeeds."
+  "Delete trailing spaces or tabs, but not newlines nor linefeeds.
+Also add missing final newline."
   ;; Similar to `delete-trailing-whitespace' but that's not present in XEmacs
   (save-excursion
     (goto-char (point-min))
     (while (re-search-forward "[ \t]+$" nil t)  ;; Not syntactic WS as no formfeed
-      (replace-match "" nil nil))))
+      (replace-match "" nil nil))
+    (goto-char (point-max))
+    (unless (bolp) (insert "\n"))))
 
 (defvar compile-command)
 
@@ -9654,6 +9657,11 @@ Presumes that any newlines end a list element."
 	    stuff (cdr stuff)))))
 ;;(let ((indent-pt 10)) (verilog-insert-indent "hello\n" "addon" "there\n"))
 
+(defun verilog-forward-or-insert-line ()
+  "Move forward a line, unless at EOB, then insert a newline."
+  (if (eobp) (insert "\n")
+    (forward-line)))
+
 (defun verilog-repair-open-comma ()
   "Insert comma if previous argument is other than an open parenthesis or endif."
   ;; We can't just search backward for ) as it might be inside another expression.
@@ -11067,8 +11075,8 @@ Typing \\[verilog-auto] will make this into:
 			      (verilog-subdecls-get-interfaced modsubdecls)
 			      (verilog-subdecls-get-outputs modsubdecls)
 			      (verilog-subdecls-get-inouts modsubdecls)))))
-      (forward-line 1)
       (when sig-list
+	(verilog-forward-or-insert-line)
 	(verilog-insert-indent "// Beginning of automatic regs (for this module's undeclared outputs)\n")
 	(verilog-insert-definition modi sig-list "reg" indent-pt nil)
 	(verilog-insert-indent "// End of automatics\n")))))
@@ -11122,8 +11130,8 @@ Typing \\[verilog-auto] will make this into:
 			       (verilog-subdecls-get-inouts modsubdecls))
 		       (append (verilog-decls-get-signals moddecls)
 			       (verilog-decls-get-assigns moddecls))))))
-      (forward-line 1)
       (when sig-list
+	(verilog-forward-or-insert-line)
 	(verilog-insert-indent "// Beginning of automatic reg inputs (for undeclared instantiated-module inputs)\n")
 	(verilog-insert-definition modi sig-list "reg" indent-pt nil)
 	(verilog-insert-indent "// End of automatics\n")))))
@@ -11210,8 +11218,8 @@ Typing \\[verilog-auto] will make this into:
 		       (append (verilog-subdecls-get-outputs modsubdecls)
 			       (verilog-subdecls-get-inouts modsubdecls))
 		       (verilog-decls-get-signals moddecls)))))
-      (forward-line 1)
       (when sig-list
+	(verilog-forward-or-insert-line)
 	(verilog-insert-indent "// Beginning of automatic wires (for undeclared instantiated-module outputs)\n")
 	(verilog-insert-definition modi sig-list "wire" indent-pt nil)
 	(verilog-insert-indent "// End of automatics\n")
@@ -11290,7 +11298,7 @@ same expansion will result from only extracting outputs starting with ov:
 			sig-list regexp)))
       (setq sig-list (verilog-signals-not-matching-regexp
 		      sig-list verilog-auto-output-ignore-regexp))
-      (forward-line 1)
+      (verilog-forward-or-insert-line)
       (when v2k (verilog-repair-open-comma))
       (when sig-list
 	(verilog-insert-indent "// Beginning of automatic outputs (from unused autoinst outputs)\n")
@@ -11340,7 +11348,7 @@ Typing \\[verilog-auto] will make this into:
 		      (verilog-signals-not-in
 		       (verilog-decls-get-signals moddecls)
 		       (verilog-decls-get-ports moddecls)))))
-      (forward-line 1)
+      (verilog-forward-or-insert-line)
       (when v2k (verilog-repair-open-comma))
       (when sig-list
 	(verilog-insert-indent "// Beginning of automatic outputs (every signal)\n")
@@ -11420,7 +11428,7 @@ same expansion will result from only extracting inputs starting with i:
 			sig-list regexp)))
       (setq sig-list (verilog-signals-not-matching-regexp
 		      sig-list verilog-auto-input-ignore-regexp))
-      (forward-line 1)
+      (verilog-forward-or-insert-line)
       (when v2k (verilog-repair-open-comma))
       (when sig-list
 	(verilog-insert-indent "// Beginning of automatic inputs (from unused autoinst inputs)\n")
@@ -11497,7 +11505,7 @@ same expansion will result from only extracting inouts starting with i:
 			sig-list regexp)))
       (setq sig-list (verilog-signals-not-matching-regexp
 		      sig-list verilog-auto-inout-ignore-regexp))
-      (forward-line 1)
+      (verilog-forward-or-insert-line)
       (when v2k (verilog-repair-open-comma))
       (when sig-list
 	(verilog-insert-indent "// Beginning of automatic inouts (from unused autoinst inouts)\n")
@@ -11789,7 +11797,7 @@ text:
 				       (backward-sexp 1)  ;; Inside comment
 				       (point))) ;; Beginning paren
 	   (cmd (buffer-substring-no-properties cmd-beg-pt cmd-end-pt)))
-      (forward-line 1)
+      (verilog-forward-or-insert-line)
       ;; Some commands don't move point (like insert-file) so we always
       ;; add the begin/end comments, then delete it if not needed
       (verilog-insert-indent "// Beginning of automatic insert lisp\n")
@@ -12084,7 +12092,7 @@ Typing \\[verilog-auto] will make this into:
       (setq sig-list (verilog-signals-not-matching-regexp
 		      sig-list verilog-auto-tieoff-ignore-regexp))
       (when sig-list
-	(forward-line 1)
+	(verilog-forward-or-insert-line)
 	(verilog-insert-indent "// Beginning of automatic tieoffs (for this module's unterminated outputs)\n")
 	(setq sig-list (sort (copy-alist sig-list) `verilog-signals-sort-compare))
 	(verilog-modi-cache-add-vars modi sig-list)  ; Before we trash list
@@ -12161,7 +12169,7 @@ defines the regular expression will be undefed."
       ;; Insert
       (setq defs (sort defs 'string<))
       (when defs
-	(forward-line 1)
+	(verilog-forward-or-insert-line)
 	(verilog-insert-indent "// Beginning of automatic undefs\n")
 	(while defs
 	  (verilog-insert-indent "`undef " (car defs) "\n")
@@ -12236,7 +12244,7 @@ Typing \\[verilog-auto] will make this into:
       (setq sig-list (verilog-signals-not-matching-regexp
 		      sig-list verilog-auto-unused-ignore-regexp))
       (when sig-list
-	(forward-line 1)
+	(verilog-forward-or-insert-line)
 	(verilog-insert-indent "// Beginning of automatic unused inputs\n")
 	(setq sig-list (sort (copy-alist sig-list) `verilog-signals-sort-compare))
 	(while sig-list
@@ -12371,7 +12379,7 @@ Typing \\[verilog-auto] will make this into:
 						      elim-regexp)))
 		tmp-sigs (cdr tmp-sigs))))
       ;;
-      (forward-line 1)
+      (verilog-forward-or-insert-line)
       (verilog-insert-indent "// Beginning of automatic ASCII enum decoding\n")
       (let ((decode-sig-list (list (list ascii-name (format "[%d:0]" (- (* ascii-chars 8) 1))
 					 (concat "Decode of " undecode-name) nil nil))))

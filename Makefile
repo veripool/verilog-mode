@@ -149,7 +149,7 @@ gnu-update-trunk: gnutrunk
 gnu-diff: gnu-diff-trunk
 gnu-diff-trunk: gnu-update-trunk verilog-mode-tognu.el
 	diff -u gnutrunk/lisp/progmodes/verilog-mode.el verilog-mode-tognu.el 
-gnu.patch: gnu-update verilog-mode-tognu.el
+verilog-mode.patch: gnu-update verilog-mode-tognu.el
 	diff -u gnutrunk/lisp/progmodes/verilog-mode.el verilog-mode-tognu.el > $@
 
 verilog-mode-tognu.el: verilog-mode.el Makefile
@@ -164,4 +164,4 @@ verilog-mode-tognu.el: verilog-mode.el Makefile
 # Clean
 
 clean::
-	/bin/rm -rf .timestamps e x test_dir gnu.patch verilog-mode-tognu.el mmencoded_verilog-mode
+	/bin/rm -rf .timestamps e x test_dir verilog-mode.patch verilog-mode-tognu.el mmencoded_verilog-mode

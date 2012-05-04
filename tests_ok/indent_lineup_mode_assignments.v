@@ -7,7 +7,7 @@ module test (pci_ack, reg_wr, reg_sel, clk,  rst);
    initial begin
       foo;
       bar;
-      x <= y;
+      x       <= y;
       longish <= alsolongish;
    end
    
