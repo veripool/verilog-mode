@@ -9749,6 +9749,17 @@ This repairs those mis-inserted by an AUTOARG."
 			"\\([])}:*+-]\\)")
 		out)
 	  (setq out (replace-match "\\1\\2\\3" nil nil out)))
+	(while (string-match
+		(concat "\\([[({:*+-]\\)"  ; - must be last
+			"\\$clog2\\s *(\\<\\([0-9]+\\))"
+			"\\([])}:*+-]\\)")
+		out)
+	  (setq out (replace-match
+		     (concat
+		      (match-string 1 out)
+		      (int-to-string (verilog-clog2 (string-to-number (match-string 2 out))))
+		      (match-string 3 out))
+		     nil nil out)))
 	;; For precedence do * before +/-
 	(while (string-match
 		(concat "\\([[({:*+-]\\)"
@@ -9785,6 +9796,7 @@ This repairs those mis-inserted by an AUTOARG."
 			       post)
 		       nil nil out)) )))
       out)))
+
 ;;(verilog-simplify-range-expression "[1:3]") ;; 1
 ;;(verilog-simplify-range-expression "[(1):3]") ;; 1
 ;;(verilog-simplify-range-expression "[(((16)+1)+1+(1+1))]")  ;;20
@@ -9793,6 +9805,14 @@ This repairs those mis-inserted by an AUTOARG."
 ;;(verilog-simplify-range-expression "[(FOO*4+1-1)]") ;; FOO*4+0
 ;;(verilog-simplify-range-expression "[(func(BAR))]") ;; func(BAR)
 ;;(verilog-simplify-range-expression "[FOO-1+1-1+1]") ;; FOO-0
+;;(verilog-simplify-range-expression "[$clog2(2)]") ;; 1
+;;(verilog-simplify-range-expression "[$clog2(7)]") ;; 3
+
+(defun verilog-clog2 (value)
+  "Compute $clog2 - ceiling log2 of VALUE."
+  (if (< value 1)
+      0
+    (ceiling (/ (log value) (log 2)))))
 
 (defun verilog-typedef-name-p (variable-name)
   "Return true if the VARIABLE-NAME is a type definition."

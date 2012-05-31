@@ -8,7 +8,7 @@ module mod;
    submod
      (/*AUTOINST*/
       // Outputs
-      .idx                              (idx[($clog2(8))-1:0]),
+      .idx                              (idx[2:0]),
       // Inputs
       .vec                              (vec[7:0]));
 endmodule
