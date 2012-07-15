@@ -1707,7 +1707,11 @@ This speeds up complicated regexp matches."
 
 (defun verilog-delete-trailing-whitespace ()
   "Delete trailing spaces or tabs, but not newlines nor linefeeds.
-Also add missing final newline."
+Also add missing final newline.
+
+To call this from the command line, see \\[verilog-batch-diff-auto].
+
+To call on \\[verilog-auto], set `verilog-auto-delete-trailing-whitespace'."
   ;; Similar to `delete-trailing-whitespace' but that's not present in XEmacs
   (save-excursion
     (goto-char (point-min))
@@ -5130,6 +5134,15 @@ with \\[verilog-delete-auto] on all command-line files, and saves the buffers."
   (unless noninteractive
     (error "Use verilog-batch-delete-auto only with --batch"))  ;; Otherwise we'd mess up buffer modes
   (verilog-batch-execute-func `verilog-delete-auto))
+
+(defun verilog-batch-delete-trailing-whitespace ()
+  "For use with --batch, perform whitespace deletion as a stand-alone tool.
+This sets up the appropriate Verilog mode environment, removes
+whitespace with \\[verilog-delete-trailing-whitespace] on all
+command-line files, and saves the buffers."
+  (unless noninteractive
+    (error "Use verilog-batch-delete-trailing-whitepace only with --batch"))  ;; Otherwise we'd mess up buffer modes
+  (verilog-batch-execute-func `verilog-delete-trailing-whitespace))
 
 (defun verilog-batch-diff-auto ()
   "For use with --batch, perform automatic differences as a stand-alone tool.

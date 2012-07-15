@@ -11,6 +11,9 @@ foreach my $test (@tests) {
     push @tests_args, "e/b/$test";
 }
 
+run("emacs --version"
+    );
+
 run("emacs --batch --no-site-file -l $tmpdir/verilog-mode.elc"
     ." -l ./batch_test.el"
     ." ".join(' ',@tests_args)
@@ -44,6 +47,12 @@ run("emacs --batch --no-site-file -l $tmpdir/verilog-mode.elc"
 foreach my $test (@tests) {
     run("diff tests_batch_ok/$test e/b/$test");
 }
+
+run("emacs --batch --no-site-file -l $tmpdir/verilog-mode.elc"
+    ." -l ./batch_test.el"
+    ." ".join(' ',@tests_args)
+    ." -f verilog-batch-delete-trailing-whitespace"
+    );
 
 run("emacs --batch --no-site-file -l $tmpdir/verilog-mode.elc"
     ." -l ./batch_prof.el"
