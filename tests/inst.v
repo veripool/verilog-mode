@@ -5,6 +5,9 @@ module inst (/*AUTOARG*/
    lower_inb, lower_ina
    );
 
+   parameter param1;
+   parameter param2;
+
    input lower_inb;
    input lower_ina;
    output lower_out;

@@ -1434,9 +1434,11 @@ If set will become buffer local.")
       ["AUTOINOUTCOMP"			(describe-function 'verilog-auto-inout-comp)
        :help		"Help on AUTOINOUTCOMP - copying complemented i/o from another file"]
       ["AUTOINOUTIN"			(describe-function 'verilog-auto-inout-in)
-       :help		"Help on AUTOINOUTCOMP - copying i/o from another file as all inputs"]
+       :help		"Help on AUTOINOUTIN - copying i/o from another file as all inputs"]
       ["AUTOINOUTMODULE"		(describe-function 'verilog-auto-inout-module)
        :help		"Help on AUTOINOUTMODULE - copying i/o from another file"]
+      ["AUTOINOUTPARAM"			(describe-function 'verilog-auto-inout-param)
+       :help		"Help on AUTOINOUTPARAM - copying parameters from another file"]
       ["AUTOINSERTLISP"			(describe-function 'verilog-auto-insert-lisp)
        :help		"Help on AUTOINSERTLISP - insert text from a lisp function"]
       ["AUTOINOUT"			(describe-function 'verilog-auto-inout)
@@ -9568,6 +9570,8 @@ if non-nil."
   (verilog-modi-cache-add modi 'verilog-read-decls 2 sig-list))
 (defsubst verilog-modi-cache-add-vars (modi sig-list)
   (verilog-modi-cache-add modi 'verilog-read-decls 3 sig-list))
+(defsubst verilog-modi-cache-add-gparams (modi sig-list)
+  (verilog-modi-cache-add modi 'verilog-read-decls 7 sig-list))
 
 
 ;;
@@ -9624,6 +9628,8 @@ When MODI is non-null, also add to modi-cache, for tracking."
 	   (when verilog-auto-declare-nettype
 	     (verilog-modi-cache-add-vars modi sigs)))
 	  ((equal direction "interface"))
+	  ((equal direction "parameter")
+	   (verilog-modi-cache-add-gparams modi sigs))
 	  (t
 	   (error "Unsupported verilog-insert-definition direction: %s" direction))))
   (or dont-sort
@@ -11780,6 +11786,106 @@ same expansion will result from only extracting signals starting with i:
 	   /*AUTOINOUTCOMP(\"ExampMain\",\"^i\")*/"
   (verilog-auto-inout-module nil t))
 
+(defun verilog-auto-inout-param ()
+  "Expand AUTOINOUTPARAM statements, as part of \\[verilog-auto].
+Take input/output/inout statements from the specified module and insert
+into the current module.  This is useful for making null templates and
+shell modules which need to have identical I/O with another module.
+Any I/O which are already defined in this module will not be redefined.
+For the complement of this function, see `verilog-auto-inout-comp',
+and to make monitors with all inputs, see `verilog-auto-inout-in'.
+
+Limitations:
+  If placed inside the parenthesis of a module declaration, it creates
+  Verilog 2001 style, else uses Verilog 1995 style.
+
+  Concatenation and outputting partial buses is not supported.
+
+  Module names must be resolvable to filenames.  See `verilog-auto-inst'.
+
+  Signals are not inserted in the same order as in the original module,
+  though they will appear to be in the same order to an AUTOINST
+  instantiating either module.
+
+  Signals declared as \"output reg\" or \"output wire\" etc will
+  lose the wire/reg declaration so that shell modules may
+  generate those outputs differently.  However, \"output logic\"
+  is propagated.
+
+An example:
+
+	module ExampShell (/*AUTOARG*/);
+	   /*AUTOINOUTMODULE(\"ExampMain\")*/
+	endmodule
+
+	module ExampMain (i,o,io);
+          input i;
+          output o;
+          inout io;
+        endmodule
+
+Typing \\[verilog-auto] will make this into:
+
+	module ExampShell (/*AUTOARG*/i,o,io);
+	   /*AUTOINOUTMODULE(\"ExampMain\")*/
+           // Beginning of automatic in/out/inouts (from specific module)
+           output o;
+           inout io;
+           input i;
+	   // End of automatics
+	endmodule
+
+You may also provide an optional regular expression, in which case only
+signals matching the regular expression will be included.  For example the
+same expansion will result from only extracting signals starting with i:
+
+	   /*AUTOINOUTMODULE(\"ExampMain\",\"^i\")*/
+
+You may also provide an optional second regular expression, in
+which case only signals which have that pin direction and data
+type will be included.  This matches against everything before
+the signal name in the declaration, for example against
+\"input\" (single bit), \"output logic\" (direction and type) or
+\"output [1:0]\" (direction and implicit type).  You also
+probably want to skip spaces in your regexp.
+
+For example, the below will result in matching the output \"o\"
+against the previous example's module:
+
+	   /*AUTOINOUTMODULE(\"ExampMain\",\"\",\"^output.*\")*/
+
+You may also provide an optional third regular expression, in
+which case any parameter names that match the given regexp will
+be included.  Including parameters is off by default.  To include
+all signals and parameters, use:
+
+	   /*AUTOINOUTMODULE(\"ExampMain\",\".*\",\".*\",\".*\")*/"
+  (save-excursion
+    (let* ((params (verilog-read-auto-params 1 2))
+	   (submod (nth 0 params))
+	   (regexp (nth 1 params))
+	   submodi)
+      ;; Lookup position, etc of co-module
+      ;; Note this may raise an error
+      (when (setq submodi (verilog-modi-lookup submod t))
+	(let* ((indent-pt (current-indentation))
+	       (v2k  (verilog-in-paren-quick))
+	       (modi (verilog-modi-current))
+	       (moddecls (verilog-modi-get-decls modi))
+	       (submoddecls (verilog-modi-get-decls submodi))
+	       (sig-list-p  (verilog-signals-not-in
+			     (verilog-decls-get-gparams submoddecls)
+			     (append (verilog-decls-get-gparams moddecls)))))
+	  (forward-line 1)
+	  (setq sig-list-p  (verilog-signals-matching-regexp sig-list-p regexp))
+	  (when v2k (verilog-repair-open-comma))
+	  (when sig-list-p
+	    (verilog-insert-indent "// Beginning of automatic parameters (from specific module)\n")
+	    ;; Don't sort them so an upper AUTOINST will match the main module
+	    (verilog-insert-definition modi sig-list-p  "parameter" indent-pt v2k t)
+	    (verilog-insert-indent "// End of automatics\n"))
+	  (when v2k (verilog-repair-close-comma)))))))
+
 (defun verilog-auto-insert-lisp ()
   "Expand AUTOINSERTLISP statements, as part of \\[verilog-auto].
 The Lisp code provided is called, and the Lisp code calls
@@ -12083,6 +12189,7 @@ value's width is generated.
 An example of making a stub for another module:
 
     module ExampStub (/*AUTOINST*/);
+	/*AUTOINOUTPARAM(\"Foo\")*/
 	/*AUTOINOUTMODULE(\"Foo\")*/
         /*AUTOTIEOFF*/
         // verilator lint_off UNUSED
@@ -12095,6 +12202,7 @@ An example of making a stub for another module:
 Typing \\[verilog-auto] will make this into:
 
     module ExampStub (/*AUTOINST*/...);
+	/*AUTOINOUTPARAM(\"Foo\")*/
 	/*AUTOINOUTMODULE(\"Foo\")*/
         // Beginning of autotieoff
         output [2:0] foo;
@@ -12239,6 +12347,7 @@ You can add signals you do not want included in AUTOUNUSED with
 An example of making a stub for another module:
 
     module ExampStub (/*AUTOINST*/);
+	/*AUTOINOUTPARAM(\"Examp\")*/
 	/*AUTOINOUTMODULE(\"Examp\")*/
         /*AUTOTIEOFF*/
         // verilator lint_off UNUSED
@@ -12550,6 +12659,7 @@ Using \\[describe-function], see also:
     `verilog-auto-inout-comp'   for AUTOINOUTCOMP copy complemented i/o
     `verilog-auto-inout-in'     for AUTOINOUTIN inputs for all i/o
     `verilog-auto-inout-module' for AUTOINOUTMODULE copying i/o from elsewhere
+    `verilog-auto-inout-param'  for AUTOINOUTPARAM copying params from elsewhere
     `verilog-auto-inout'        for AUTOINOUT making hierarchy inouts
     `verilog-auto-input'        for AUTOINPUT making hierarchy inputs
     `verilog-auto-insert-lisp'  for AUTOINSERTLISP insert code from lisp function
@@ -12645,6 +12755,7 @@ Wilson Snyder (wsnyder@wsnyder.org)."
 	       (verilog-auto-re-search-do "/\\*AUTOINOUTMODULE([^)]*)\\*/" 'verilog-auto-inout-module)
 	       (verilog-auto-re-search-do "/\\*AUTOINOUTCOMP([^)]*)\\*/" 'verilog-auto-inout-comp)
 	       (verilog-auto-re-search-do "/\\*AUTOINOUTIN([^)]*)\\*/" 'verilog-auto-inout-in)
+	       (verilog-auto-re-search-do "/\\*AUTOINOUTPARAM([^)]*)\\*/" 'verilog-auto-inout-param)
 	       ;; next in/outs which need previous sucked inputs first
 	       (verilog-auto-re-search-do "/\\*AUTOOUTPUT\\((\"[^\"]*\")\\)\\*/"
 					  (lambda () (verilog-auto-output t)))
