@@ -10574,6 +10574,8 @@ See the example in `verilog-auto-inout-modport'."
 			     (verilog-signals-matching-dir-re
 			      (verilog-signals-matching-regexp sig-list-o regexp)
 			      "output" direction-re)))
+	  (setq sig-list-i (sort (copy-alist sig-list-i) `verilog-signals-sort-compare))
+	  (setq sig-list-o (sort (copy-alist sig-list-o) `verilog-signals-sort-compare))
 	  (when (or sig-list-i sig-list-o)
 	    (verilog-insert-indent "// Beginning of automatic assignments from modport\n")
 	    ;; Don't sort them so an upper AUTOINST will match the main module

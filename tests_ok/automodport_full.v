@@ -51,8 +51,8 @@ module auto_module
    
    /*AUTOASSIGNMODPORT("automodport_if" "rsp_drv_mp" "auto_i" )*/
    // Beginning of automatic assignments from modport
-   assign rsp_data  = auto_i.rsp_data;
    assign rsp_cmd  = auto_i.rsp_cmd;
+   assign rsp_data  = auto_i.rsp_data;
    assign auto_i.rsp_credit  = rsp_credit;
    // End of automatics
    //ex: assign rsp_cmd                   = auto_i.rsp_cmd;
