@@ -1,5 +1,7 @@
 interface ExampIf
   ( input logic clk );
+   logic       req_val;
+   logic [7:0] req_dat;
    clocking mon_clkblk @(posedge clk);
       input req_val;
       input req_dat;
@@ -11,8 +13,8 @@ module ExampMain
   ( input clk,
     /*AUTOINOUTMODPORT("ExampIf" "mp")*/
     // Beginning of automatic in/out/inouts (from modport)
-    input req_dat,
-    input req_val
+    input       req_val,
+    input [7:0] req_dat
     // End of automatics
     );
    

@@ -13,14 +13,19 @@ interface automodport_if
    logic [63:0] 	rsp_data;
    logic 		rsp_credit;
    
-   //----------------------------------------------------------------------------------------
+   logic 		in_pure;
+   logic 		out_pure;
+   logic		manually_listed;
+
+  //----------------------------------------------------------------------------------------
    // Group: Clocking blocks
    clocking req_mon_cb @(posedge clk);
       input 		rst_n;
       input 		req_val;
       input 		req_dat;
       input 		req_credit;
-   endclocking : req_mon_cb
+      input		manually_listed;
+  endclocking : req_mon_cb
 
    clocking rsp_drv_cb @(posedge clk);
       input 		rst_n;

@@ -1,8 +1,10 @@
 
 module auto_module
 ( input my_clk,
-  input my_rst_n,
+  input 	my_rst_n,
 
+
+  output 	manually_listed,
 
   /*AUTOINOUTMODPORT("automodport_if" "pure_mp")*/
   //ex: input	in_pure;
@@ -33,6 +35,9 @@ module auto_module
    //ex: assign rsp_cmd                   = auto_i.rsp_cmd;
    //ex: assign rsp_data                  = auto_i.rsp_data;
    //ex: assign auto_i.rsp_credit         = rsp_credit;
+
+   /*AUTOASSIGNMODPORT("automodport_if" "r.*" "auto_i" )*/
+
 
    initial begin
       `cn_set_intf(virtual auto_intf.req_mon_mp, "auto_pkg::auto_intf", "req_mon_vi", auto_i.req_mon_mp );

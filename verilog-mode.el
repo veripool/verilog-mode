@@ -7534,11 +7534,12 @@ See also `verilog-sk-header' for an alternative format."
 (defsubst verilog-decls-new (out inout in vars modports assigns consts gparams interfaces)
   (vector out inout in vars modports assigns consts gparams interfaces))
 (defsubst verilog-decls-append (a b)
-  (vector (append (aref a 0) (aref b 0))   (append (aref a 1) (aref b 1))
-	  (append (aref a 2) (aref b 2))   (append (aref a 3) (aref b 3))
-	  (append (aref a 4) (aref b 4))   (append (aref a 5) (aref b 5))
-	  (append (aref a 6) (aref b 6))   (append (aref a 7) (aref b 7))
-	  (append (aref a 8) (aref b 8))))
+  (cond ((not a) b) ((not b) a)
+	(t (vector (append (aref a 0) (aref b 0))   (append (aref a 1) (aref b 1))
+		   (append (aref a 2) (aref b 2))   (append (aref a 3) (aref b 3))
+		   (append (aref a 4) (aref b 4))   (append (aref a 5) (aref b 5))
+		   (append (aref a 6) (aref b 6))   (append (aref a 7) (aref b 7))
+		   (append (aref a 8) (aref b 8))))))
 (defsubst verilog-decls-get-outputs (decls)
   (aref decls 0))
 (defsubst verilog-decls-get-inouts (decls)
@@ -7577,6 +7578,36 @@ See also `verilog-sk-header' for an alternative format."
   (mapcar (lambda (name) (verilog-sig-new name nil nil nil nil nil nil nil nil))
 	  signame-list))
 
+(defun verilog-signals-in (in-list not-list)
+  "Return list of signals in IN-LIST that are also in NOT-LIST.
+Also remove any duplicates in IN-LIST.
+Signals must be in standard (base vector) form."
+  ;; This function is hot, so implemented as O(1)
+  (cond ((eval-when-compile (fboundp 'make-hash-table))
+	 (let ((ht (make-hash-table :test 'equal :rehash-size 4.0))
+	       (ht-not (make-hash-table :test 'equal :rehash-size 4.0))
+	       out-list)
+	   (while not-list
+	     (puthash (car (car not-list)) t ht-not)
+	     (setq not-list (cdr not-list)))
+	   (while in-list
+	     (when (and (gethash (verilog-sig-name (car in-list)) ht-not)
+			(not (gethash (verilog-sig-name (car in-list)) ht)))
+	       (setq out-list (cons (car in-list) out-list))
+	       (puthash (verilog-sig-name (car in-list)) t ht))
+	     (setq in-list (cdr in-list)))
+	   (nreverse out-list)))
+	;; Slower Fallback if no hash tables (pre Emacs 21.1/XEmacs 21.4)
+	(t
+	 (let (out-list)
+	   (while in-list
+	     (if (and (assoc (verilog-sig-name (car in-list)) not-list)
+		      (not (assoc (verilog-sig-name (car in-list)) out-list)))
+		 (setq out-list (cons (car in-list) out-list)))
+	     (setq in-list (cdr in-list)))
+	   (nreverse out-list)))))
+;;(verilog-signals-in '(("A" "") ("B" "") ("DEL" "[2:3]")) '(("DEL" "") ("C" "")))
+
 (defun verilog-signals-not-in (in-list not-list)
   "Return list of signals in IN-LIST that aren't also in NOT-LIST.
 Also remove any duplicates in IN-LIST.
@@ -7598,8 +7629,8 @@ Signals must be in standard (base vector) form."
 	(t
 	 (let (out-list)
 	   (while in-list
-	     (if (not (or (assoc (verilog-sig-name (car in-list)) not-list)
-			  (assoc (verilog-sig-name (car in-list)) out-list)))
+	     (if (and (not (assoc (verilog-sig-name (car in-list)) not-list))
+		      (not (assoc (verilog-sig-name (car in-list)) out-list)))
 		 (setq out-list (cons (car in-list) out-list)))
 	     (setq in-list (cdr in-list)))
 	   (nreverse out-list)))))
@@ -9579,28 +9610,43 @@ and invalidating the cache."
      (progn ,@body)))
 
 
-(defun verilog-modi-modport-lookup (modi name &optional ignore-error)
-  "Given a MODI, return the declarations related to the given MODPORT-NAME.
-If the modport points to any clocking blocks, expand the signals to include
-those clocking block's signals."
+(defun verilog-modi-modport-lookup-one (modi name &optional ignore-error)
+  "Given a MODI, return the declarations related to the given modport NAME."
   ;; Recursive routine - see below
   (let* ((realname (verilog-symbol-detick name t))
-	 (modport (assoc name (verilog-decls-get-modports (verilog-modi-get-decls modi))))
-	 decls)
+	 (modport (assoc name (verilog-decls-get-modports (verilog-modi-get-decls modi)))))
     (or modport ignore-error
 	(error (concat (verilog-point-text)
 		       ": Can't locate " name " modport definition"
 		       (if (not (equal name realname))
 			   (concat " (Expanded macro to " realname ")")
 			 ""))))
-    (setq decls (verilog-modport-decls modport))
-    ;; Now expand any clocking's
-    (let ((clks (verilog-modport-clockings modport)))
+    (let* ((decls (verilog-modport-decls modport))
+	   (clks (verilog-modport-clockings modport)))
+      ;; Now expand any clocking's
       (while clks
 	(setq decls (verilog-decls-append
 		     decls
-		     (verilog-modi-modport-lookup modi (car clks) ignore-error)))
-	(setq clks (cdr clks))))
+		     (verilog-modi-modport-lookup-one modi (car clks) ignore-error)))
+	(setq clks (cdr clks)))
+      decls)))
+
+(defun verilog-modi-modport-lookup (modi name-re &optional ignore-error)
+  "Given a MODI, return the declarations related to the given modport NAME-RE.
+If the modport points to any clocking blocks, expand the signals to include
+those clocking block's signals."
+  ;; Recursive routine - see below
+  (let* ((mod-decls (verilog-modi-get-decls modi))
+	 (clks (verilog-decls-get-modports mod-decls))
+	 (name-re (concat "^" name-re "$"))
+	 (decls (verilog-decls-new nil nil nil nil nil nil nil nil nil)))
+    ;; Pull in all modports
+    (while clks
+      (when (string-match name-re (verilog-modport-name (car clks)))
+	(setq decls (verilog-decls-append
+		     decls
+		     (verilog-modi-modport-lookup-one modi (verilog-modport-name (car clks)) ignore-error))))
+      (setq clks (cdr clks)))
     decls))
 
 (defun verilog-signals-matching-enum (in-list enum)
@@ -9678,6 +9724,13 @@ if non-nil."
 
 (defun verilog-decls-get-ports (decls)
   (append
+   (verilog-decls-get-outputs decls)
+   (verilog-decls-get-inouts decls)
+   (verilog-decls-get-inputs decls)))
+
+(defun verilog-decls-get-iovars (decls)
+  (append
+   (verilog-decls-get-vars decls)
    (verilog-decls-get-outputs decls)
    (verilog-decls-get-inouts decls)
    (verilog-decls-get-inputs decls)))
@@ -10523,8 +10576,8 @@ making verification modules that connect to UVM interfaces.
 
   The first parameter is the name of an interface.
 
-  The second parameter is the name of a modport or clocking block
-  in that interface.
+  The second parameter is a regexp of modports to read from in
+  that interface.
 
   The third parameter is the instance name to use to dot reference into.
 
@@ -10546,7 +10599,7 @@ See the example in `verilog-auto-inout-modport'."
   (save-excursion
     (let* ((params (verilog-read-auto-params 3 4))
 	   (submod (nth 0 params))
-	   (modport-name (nth 1 params))
+	   (modport-re (nth 1 params))
 	   (inst-name (nth 2 params))
 	   (regexp (nth 3 params))
 	   direction-re) ;; direction argument not supported until requested
@@ -10558,13 +10611,17 @@ See the example in `verilog-auto-inout-modport'."
 	       (modi (verilog-modi-current))
 	       (moddecls (verilog-modi-get-decls modi))
 	       (submoddecls (verilog-modi-get-decls submodi))
-	       (submodportdecls (verilog-modi-modport-lookup submodi modport-name))
-	       (sig-list-i (verilog-signals-not-in
-			    (verilog-decls-get-inputs submodportdecls)
-			    (verilog-decls-get-inputs submoddecls)))
-	       (sig-list-o (verilog-signals-not-in
-			    (verilog-decls-get-outputs submodportdecls)
-			    (verilog-decls-get-outputs submoddecls))))
+	       (submodportdecls (verilog-modi-modport-lookup submodi modport-re))
+	       (sig-list-i (verilog-signals-in ;; Decls doesn't have data types, must resolve
+			    (verilog-decls-get-vars submoddecls)
+			    (verilog-signals-not-in
+			     (verilog-decls-get-inputs submodportdecls)
+			     (verilog-decls-get-ports submoddecls))))
+	       (sig-list-o (verilog-signals-in ;; Decls doesn't have data types, must resolve
+			    (verilog-decls-get-vars submoddecls)
+			    (verilog-signals-not-in
+			     (verilog-decls-get-outputs submodportdecls)
+			     (verilog-decls-get-ports submoddecls)))))
 	  (forward-line 1)
 	  (setq sig-list-i  (verilog-signals-edit-wire-reg
 			     (verilog-signals-matching-dir-re
@@ -12092,8 +12149,8 @@ for making verification modules that connect to UVM interfaces.
 
   The first parameter is the name of an interface.
 
-  The second parameter is the name of a modport or clocking block
-  in that interface.
+  The second parameter is a regexp of modports to read from in
+  that interface.
 
   The optional third parameter is a regular expression, and only
   signals matching the regular expression will be included.
@@ -12112,9 +12169,11 @@ An example:
 
 	interface ExampIf
 	  ( input logic clk );
+	   logic        req_val;
+	   logic [7:0]  req_dat;
 	   clocking mon_clkblk @(posedge clk);
-	      input 		req_val;
-	      input 		req_dat;
+	      input     req_val;
+	      input     req_dat;
 	   endclocking
 	   modport mp(clocking mon_clkblk);
 	endinterface
@@ -12123,8 +12182,8 @@ An example:
 	( input clk,
 	  /*AUTOINOUTMODPORT(\"ExampIf\" \"mp\")*/
 	  // Beginning of automatic in/out/inouts (from modport)
-	  input			req_dat,
-	  input			req_val
+	  input	[7:0] req_dat,
+	  input       req_val
 	  // End of automatics
 	);
 	/*AUTOASSIGNMODPORT(\"ExampIf\" \"mp\")*/
@@ -12148,7 +12207,7 @@ driver/monitor using AUTOINST in the testbench."
   (save-excursion
     (let* ((params (verilog-read-auto-params 2 3))
 	   (submod (nth 0 params))
-	   (modport-name (nth 1 params))
+	   (modport-re (nth 1 params))
 	   (regexp (nth 2 params))
 	   direction-re) ;; direction argument not supported until requested
       ;; Lookup position, etc of co-module
@@ -12158,16 +12217,26 @@ driver/monitor using AUTOINST in the testbench."
 	       (v2k  (verilog-in-paren-quick))
 	       (modi (verilog-modi-current))
 	       (moddecls (verilog-modi-get-decls modi))
-	       (submodportdecls (verilog-modi-modport-lookup submodi modport-name))
-	       (sig-list-i  (verilog-signals-not-in
+	       (submoddecls (verilog-modi-get-decls submodi))
+	       (submodportdecls (verilog-modi-modport-lookup submodi modport-re))
+	       (sig-list-i (verilog-signals-in ;; Decls doesn't have data types, must resolve
+			    (verilog-decls-get-vars submoddecls)
+			    (verilog-signals-not-in
 			     (verilog-decls-get-inputs submodportdecls)
-			     (append (verilog-decls-get-inputs moddecls))))
-	       (sig-list-o  (verilog-signals-not-in
+			     (append (verilog-decls-get-ports submoddecls)
+				     (verilog-decls-get-ports moddecls)))))
+	       (sig-list-o (verilog-signals-in ;; Decls doesn't have data types, must resolve
+			    (verilog-decls-get-vars submoddecls)
+			    (verilog-signals-not-in
 			     (verilog-decls-get-outputs submodportdecls)
-			     (append (verilog-decls-get-outputs moddecls))))
-	       (sig-list-io (verilog-signals-not-in
-			     (verilog-decls-get-inouts submodportdecls)
-			     (append (verilog-decls-get-inouts moddecls)))))
+			     (append (verilog-decls-get-ports submoddecls)
+				     (verilog-decls-get-ports moddecls)))))
+	       (sig-list-io (verilog-signals-in ;; Decls doesn't have data types, must resolve
+			     (verilog-decls-get-vars submoddecls)
+			     (verilog-signals-not-in
+			      (verilog-decls-get-inouts submodportdecls)
+			      (append (verilog-decls-get-ports submoddecls)
+				      (verilog-decls-get-ports moddecls))))))
 	  (forward-line 1)
 	  (setq sig-list-i  (verilog-signals-edit-wire-reg
 			     (verilog-signals-matching-dir-re
@@ -12790,10 +12859,7 @@ Typing \\[verilog-auto] will make this into:
 	   ;;
 	   (sig-list-consts (append (verilog-decls-get-consts moddecls)
 				    (verilog-decls-get-gparams moddecls)))
-	   (sig-list-all  (append (verilog-decls-get-vars moddecls)
-				  (verilog-decls-get-outputs moddecls)
-				  (verilog-decls-get-inouts moddecls)
-				  (verilog-decls-get-inputs moddecls)))
+	   (sig-list-all  (verilog-decls-get-iovars moddecls))
 	   ;;
 	   (undecode-sig (or (assoc undecode-name sig-list-all)
 			     (error "%s: Signal %s not found in design" (verilog-point-text) undecode-name)))
