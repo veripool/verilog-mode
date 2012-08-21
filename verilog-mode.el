@@ -1127,7 +1127,7 @@ won't merge conflict."
   :type 'integer)
 (put 'verilog-auto-inst-column 'safe-local-variable 'integerp)
 
-(defcustom verilog-auto-inst-interfaced-ports t
+(defcustom verilog-auto-inst-interfaced-ports nil
   "Non-nil means include interfaced ports in AUTOINST expansions."
   :group 'verilog-mode-auto
   :type 'boolean)
