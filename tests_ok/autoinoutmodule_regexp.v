@@ -5,7 +5,7 @@ module autoinoutmodule (/*AUTOARG*/
                         lower_ina
                         );
    
-   /*AUTOINOUTMODULE("inst","ina\|out")*/
+   /*AUTOINOUTMODULE("inst","\(ina\|out\)")*/
    // Beginning of automatic in/out/inouts (from specific module)
    output lower_out;
    input  lower_ina;

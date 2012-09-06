@@ -10602,14 +10602,12 @@ See the example in `verilog-auto-inout-modport'."
 	   (modport-re (nth 1 params))
 	   (inst-name (nth 2 params))
 	   (regexp (nth 3 params))
-	   direction-re) ;; direction argument not supported until requested
+	   direction-re submodi) ;; direction argument not supported until requested
       ;; Lookup position, etc of co-module
       ;; Note this may raise an error
       (when (setq submodi (verilog-modi-lookup submod t))
 	(let* ((indent-pt (current-indentation))
-	       (v2k  (verilog-in-paren-quick))
 	       (modi (verilog-modi-current))
-	       (moddecls (verilog-modi-get-decls modi))
 	       (submoddecls (verilog-modi-get-decls submodi))
 	       (submodportdecls (verilog-modi-modport-lookup submodi modport-re))
 	       (sig-list-i (verilog-signals-in ;; Decls doesn't have data types, must resolve
@@ -10649,7 +10647,7 @@ See the example in `verilog-auto-inout-modport'."
 				       " = " (verilog-sig-name (car sigs)) ";\n")
 		(setq sigs (cdr sigs))))
 	    (verilog-insert-indent "// End of automatics\n")))))))
-  
+
 (defun verilog-auto-inst-port-map (port-st)
   nil)
 
@@ -11523,7 +11521,7 @@ Typing \\[verilog-auto] will make this into:
 	;; syntax-ppss which is broken when change hooks are disabled.
 	))))
 
-(defun verilog-auto-output (&optional with-params)
+(defun verilog-auto-output ()
   "Expand AUTOOUTPUT statements, as part of \\[verilog-auto].
 Make output statements for any output signal from an /*AUTOINST*/ that
 isn't an input to another AUTOINST.  This is useful for modules which
@@ -11575,8 +11573,8 @@ same expansion will result from only extracting outputs starting with ov:
   (save-excursion
     ;; Point must be at insertion point.
     (let* ((indent-pt (current-indentation))
-	   (regexp (and with-params
-			(nth 0 (verilog-read-auto-params 1))))
+	   (params (verilog-read-auto-params 0 1))
+	   (regexp (nth 0 params))
 	   (v2k  (verilog-in-paren-quick))
 	   (modi (verilog-modi-current))
 	   (moddecls (verilog-modi-get-decls modi))
@@ -11650,7 +11648,7 @@ Typing \\[verilog-auto] will make this into:
 	(verilog-insert-indent "// End of automatics\n"))
       (when v2k (verilog-repair-close-comma)))))
 
-(defun verilog-auto-input (&optional with-params)
+(defun verilog-auto-input ()
   "Expand AUTOINPUT statements, as part of \\[verilog-auto].
 Make input statements for any input signal into an /*AUTOINST*/ that
 isn't declared elsewhere inside the module.  This is useful for modules which
@@ -11701,8 +11699,8 @@ same expansion will result from only extracting inputs starting with i:
 	   /*AUTOINPUT(\"^i\")*/"
   (save-excursion
     (let* ((indent-pt (current-indentation))
-	   (regexp (and with-params
-			(nth 0 (verilog-read-auto-params 1))))
+	   (params (verilog-read-auto-params 0 1))
+	   (regexp (nth 0 params))
 	   (v2k  (verilog-in-paren-quick))
 	   (modi (verilog-modi-current))
 	   (moddecls (verilog-modi-get-decls modi))
@@ -11730,7 +11728,7 @@ same expansion will result from only extracting inputs starting with i:
 	(verilog-insert-indent "// End of automatics\n"))
       (when v2k (verilog-repair-close-comma)))))
 
-(defun verilog-auto-inout (&optional with-params)
+(defun verilog-auto-inout ()
   "Expand AUTOINOUT statements, as part of \\[verilog-auto].
 Make inout statements for any inout signal in an /*AUTOINST*/ that
 isn't declared elsewhere inside the module.
@@ -11781,8 +11779,8 @@ same expansion will result from only extracting inouts starting with i:
   (save-excursion
     ;; Point must be at insertion point.
     (let* ((indent-pt (current-indentation))
-	   (regexp (and with-params
-			(nth 0 (verilog-read-auto-params 1))))
+	   (params (verilog-read-auto-params 0 1))
+	   (regexp (nth 0 params))
 	   (v2k  (verilog-in-paren-quick))
 	   (modi (verilog-modi-current))
 	   (moddecls (verilog-modi-get-decls modi))
@@ -12177,7 +12175,7 @@ An example:
 	   endclocking
 	   modport mp(clocking mon_clkblk);
 	endinterface
-	
+
 	module ExampMain
 	( input clk,
 	  /*AUTOINOUTMODPORT(\"ExampIf\" \"mp\")*/
@@ -12209,7 +12207,7 @@ driver/monitor using AUTOINST in the testbench."
 	   (submod (nth 0 params))
 	   (modport-re (nth 1 params))
 	   (regexp (nth 2 params))
-	   direction-re) ;; direction argument not supported until requested
+	   direction-re submodi) ;; direction argument not supported until requested
       ;; Lookup position, etc of co-module
       ;; Note this may raise an error
       (when (setq submodi (verilog-modi-lookup submod t))
@@ -13122,30 +13120,24 @@ Wilson Snyder (wsnyder@wsnyder.org)."
 	       (verilog-auto-re-search-do "/\\*\\(AUTOSENSE\\|AS\\)\\*/" 'verilog-auto-sense)
 	       (verilog-auto-re-search-do "/\\*AUTORESET\\*/" 'verilog-auto-reset)
 	       ;; Must be done before autoin/out as creates a reg
-	       (verilog-auto-re-search-do "/\\*AUTOASCIIENUM([^)]*)\\*/" 'verilog-auto-ascii-enum)
+	       (verilog-auto-re-search-do "/\\*AUTOASCIIENUM(.*?)\\*/" 'verilog-auto-ascii-enum)
 	       ;;
 	       ;; first in/outs from other files
-	       (verilog-auto-re-search-do "/\\*AUTOINOUTMODPORT([^)]*)\\*/" 'verilog-auto-inout-modport)
-	       (verilog-auto-re-search-do "/\\*AUTOINOUTMODULE([^)]*)\\*/" 'verilog-auto-inout-module)
-	       (verilog-auto-re-search-do "/\\*AUTOINOUTCOMP([^)]*)\\*/" 'verilog-auto-inout-comp)
-	       (verilog-auto-re-search-do "/\\*AUTOINOUTIN([^)]*)\\*/" 'verilog-auto-inout-in)
-	       (verilog-auto-re-search-do "/\\*AUTOINOUTPARAM([^)]*)\\*/" 'verilog-auto-inout-param)
+	       (verilog-auto-re-search-do "/\\*AUTOINOUTMODPORT(.*?)\\*/" 'verilog-auto-inout-modport)
+	       (verilog-auto-re-search-do "/\\*AUTOINOUTMODULE(.*?)\\*/" 'verilog-auto-inout-module)
+	       (verilog-auto-re-search-do "/\\*AUTOINOUTCOMP(.*?)\\*/" 'verilog-auto-inout-comp)
+	       (verilog-auto-re-search-do "/\\*AUTOINOUTIN(.*?)\\*/" 'verilog-auto-inout-in)
+	       (verilog-auto-re-search-do "/\\*AUTOINOUTPARAM(.*?)\\*/" 'verilog-auto-inout-param)
 	       ;; next in/outs which need previous sucked inputs first
-	       (verilog-auto-re-search-do "/\\*AUTOOUTPUT\\((\"[^\"]*\")\\)\\*/"
-					  (lambda () (verilog-auto-output t)))
-	       (verilog-auto-re-search-do "/\\*AUTOOUTPUT\\*/" 'verilog-auto-output)
-	       (verilog-auto-re-search-do "/\\*AUTOINPUT\\((\"[^\"]*\")\\)\\*/"
-					  (lambda () (verilog-auto-input t)))
-	       (verilog-auto-re-search-do "/\\*AUTOINPUT\\*/"  'verilog-auto-input)
-	       (verilog-auto-re-search-do "/\\*AUTOINOUT\\((\"[^\"]*\")\\)\\*/"
-					  (lambda () (verilog-auto-inout t)))
-	       (verilog-auto-re-search-do "/\\*AUTOINOUT\\*/" 'verilog-auto-inout)
+	       (verilog-auto-re-search-do "/\\*AUTOOUTPUT\\((.*?)\\)?\\*/" 'verilog-auto-output)
+	       (verilog-auto-re-search-do "/\\*AUTOINPUT\\((.*?)\\)?\\*/" 'verilog-auto-input)
+	       (verilog-auto-re-search-do "/\\*AUTOINOUT\\((.*?)\\)?\\*/" 'verilog-auto-inout)
 	       ;; Then tie off those in/outs
 	       (verilog-auto-re-search-do "/\\*AUTOTIEOFF\\*/" 'verilog-auto-tieoff)
 	       ;; These can be anywhere after AUTOINSERTLISP
-	       (verilog-auto-re-search-do "/\\*AUTOUNDEF\\((\"[^\"]*\")\\)?\\*/" 'verilog-auto-undef)
+	       (verilog-auto-re-search-do "/\\*AUTOUNDEF\\((.*?)\\)?\\*/" 'verilog-auto-undef)
 	       ;; Wires/regs must be after inputs/outputs
-	       (verilog-auto-re-search-do "/\\*AUTOASSIGNMODPORT([^)]*)\\*/" 'verilog-auto-assign-modport)
+	       (verilog-auto-re-search-do "/\\*AUTOASSIGNMODPORT(.*?)\\*/" 'verilog-auto-assign-modport)
 	       (verilog-auto-re-search-do "/\\*AUTOLOGIC\\*/" 'verilog-auto-logic)
 	       (verilog-auto-re-search-do "/\\*AUTOWIRE\\*/" 'verilog-auto-wire)
 	       (verilog-auto-re-search-do "/\\*AUTOREG\\*/" 'verilog-auto-reg)
