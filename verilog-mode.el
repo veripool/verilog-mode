@@ -8935,7 +8935,7 @@ Note these are only read when the file is first visited, you must use
 \\[find-alternate-file] RET  to have these take effect after editing them!
 
 If you want to disable the \"Process `eval' or hook local variables\"
-warning message, you need to add to your .emacs file:
+warning message, you need to add to your init file:
 
     (setq enable-local-eval t)"
   (let ((origbuf (current-buffer)))
@@ -12275,7 +12275,7 @@ An example:
 
 	// For this example we declare the function in the
 	// module's file itself.  Often you'd define it instead
-	// in a site-start.el or .emacs file.
+	// in a site-start.el or init file.
 	/*
 	 Local Variables:
 	 eval:
@@ -13215,7 +13215,7 @@ Wilson Snyder (wsnyder@wsnyder.org)."
 ;;
 ;; Place the templates into Verilog Mode.  They may be inserted under any key.
 ;; C-c C-t will be the default.  If you use templates a lot, you
-;; may want to consider moving the binding to another key in your .emacs
+;; may want to consider moving the binding to another key in your init
 ;; file.
 ;;
 ;; Note \C-c and letter are reserved for users
