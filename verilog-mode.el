@@ -1158,6 +1158,7 @@ See the \\[verilog-faq] for examples on using this."
 (defcustom verilog-auto-template-warn-unused nil
   "Non-nil means report warning if an AUTO_TEMPLATE line is not used.
 This feature is not supported before Emacs 21.1 or XEmacs 21.4."
+  :version "24.3"  ;;rev787
   :group 'verilog-mode-auto
   :type 'boolean)
 (put 'verilog-auto-template-warn-unused 'safe-local-variable 'verilog-booleanp)
@@ -1229,11 +1230,13 @@ For example, \"_t$\" matches typedefs named with _t, as in the C language."
 
 (defcustom verilog-before-save-font-hook nil
   "Hook run before `verilog-save-font-mods' removes highlighting."
+  :version "24.3"  ;;rev735
   :group 'verilog-mode-auto
   :type 'hook)
 
 (defcustom verilog-after-save-font-hook nil
   "Hook run after `verilog-save-font-mods' restores highlighting."
+  :version "24.3"  ;;rev735
   :group 'verilog-mode-auto
   :type 'hook)
 
