@@ -7954,6 +7954,7 @@ Return an array of [outputs inouts inputs wire reg assign const]."
 	vec expect-signal keywd newsig rvalue enum io signed typedefed multidim
 	modport
 	varstack tmp)
+    ;;(if dbg (setq dbg (concat dbg (format "\n\nverilog-read-decls START PT %s END %s\n" (point) end-mod-point))))
     (save-excursion
       (verilog-beg-of-defun-quick)
       (setq sigs-const (verilog-read-auto-constants (point) end-mod-point))
@@ -8008,7 +8009,7 @@ Return an array of [outputs inouts inputs wire reg assign const]."
 	  (setq paren (1- paren))
 	  (forward-char 1)
 	  (when (< paren sig-paren)
-	    (setq expect-signal nil)))   ; ) that ends variables inside v2k arg list
+	    (setq expect-signal nil rvalue nil)))   ; ) that ends variables inside v2k arg list
 	 ((looking-at "\\s-*\\(\\[[^]]+\\]\\)")
 	  (goto-char (match-end 0))
 	  (cond (newsig	; Memory, not just width.  Patch last signal added's memory (nth 3)
