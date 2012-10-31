@@ -501,7 +501,7 @@ entry \"Fontify Buffer\").  XEmacs: turn off and on font locking."
   "Type of statements to lineup across multiple lines.
 If 'all' is selected, then all line ups described below are done.
 
-If 'declaration', then just declarations are lined up with any
+If 'declarations', then just declarations are lined up with any
 preceding declarations, taking into account widths and the like,
 so or example the code:
  	reg [31:0] a;
