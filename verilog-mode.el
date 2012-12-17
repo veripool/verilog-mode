@@ -12463,6 +12463,12 @@ AUTORESET ties signals to deasserted, which is presumed to be zero.
 Signals that match `verilog-active-low-regexp' will be deasserted by tying
 them to a one.
 
+AUTORESET may try to reset arrays or structures that cannot be
+reset by a simple assignment, resulting in compile errors.  This
+is a feature to be taken as a hint that you need to reset these
+signals manually (or put them into a \"`ifdef NEVER signal<=`0;
+`endif\" so Verilog-Mode ignores them.)
+
 An example:
 
     always @(posedge clk or negedge reset_l) begin
