@@ -7771,9 +7771,12 @@ Tieoff value uses `verilog-active-low-regexp' and
 	 ;; Else presume verilog-auto-reset-widths is true
 	 (t
 	  (let* ((width (verilog-sig-width sig)))
-	    (if (string-match "^[0-9]+$" width)
-		(concat width (if (verilog-sig-signed sig) "'sh0" "'h0"))
-	      (concat "{" width "{1'b0}}")))))))
+	    (cond ((not width)
+		   "`0/*NOWIDTH*/")
+		  ((string-match "^[0-9]+$" width)
+		   (concat width (if (verilog-sig-signed sig) "'sh0" "'h0")))
+		  (t
+		   (concat "{" width "{1'b0}}"))))))))
 
 ;;
 ;; Dumping
@@ -12457,7 +12460,9 @@ used on the right hand side of assignments.
 
 By default, AUTORESET will include the width of the signal in the
 autos, SystemVerilog designs may want to change this.  To control
-this behavior, see `verilog-auto-reset-widths'.
+this behavior, see `verilog-auto-reset-widths'.  In some cases
+AUTORESET must use a '0 assignment and it will print NOWIDTH; use
+`verilog-auto-reset-widths' unbased to prevent this.
 
 AUTORESET ties signals to deasserted, which is presumed to be zero.
 Signals that match `verilog-active-low-regexp' will be deasserted by tying
