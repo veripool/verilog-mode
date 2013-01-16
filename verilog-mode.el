@@ -1186,9 +1186,17 @@ See the \\[verilog-faq] for examples on using this."
   :type 'string)
 (put 'verilog-auto-unused-ignore-regexp 'safe-local-variable 'stringp)
 
+(defcustom verilog-case-fold t
+  "Non-nil means `verilog-mode' regexps should ignore case.
+This variable is t for backward compatibility; nil is suggested."
+  :group 'verilog-mode
+  :type 'boolean)
+(put 'verilog-case-fold 'safe-local-variable 'verilog-booleanp)
+
 (defcustom verilog-typedef-regexp nil
   "If non-nil, regular expression that matches Verilog-2001 typedef names.
-For example, \"_t$\" matches typedefs named with _t, as in the C language."
+For example, \"_t$\" matches typedefs named with _t, as in the C language.
+See also `verilog-case-fold'."
   :group 'verilog-mode-auto
   :type 'string)
 (put 'verilog-typedef-regexp 'safe-local-variable 'stringp)
@@ -1593,6 +1601,14 @@ If set will become buffer local.")
 
 (defsubst verilog-within-string ()
   (nth 3 (parse-partial-sexp (point-at-bol) (point))))
+
+(defsubst verilog-string-match-fold (regexp string &optional start)
+  "Like `string-match', but uses `verilog-case-fold'.
+Return index of start of first match for REGEXP in STRING, or nil.
+Matching ignores case if `verilog-case-fold' is non-nil.
+If third arg START is non-nil, start search at that index in STRING."
+  (let ((case-fold-search verilog-case-fold))
+    (string-match regexp string start)))
 
 (defsubst verilog-string-replace-matches (from-string to-string fixedcase literal string)
   "Replace occurrences of FROM-STRING with TO-STRING.
@@ -7762,7 +7778,7 @@ Tieoff value uses `verilog-active-low-regexp' and
 `verilog-auto-reset-widths'."
   (concat
    (if (and verilog-active-low-regexp
-	    (string-match verilog-active-low-regexp (verilog-sig-name sig)))
+	    (verilog-string-match-fold verilog-active-low-regexp (verilog-sig-name sig)))
        "~" "")
    (cond ((not verilog-auto-reset-widths)
 	  "0")
@@ -8197,9 +8213,16 @@ Return an array of [outputs inouts inputs wire reg assign const]."
   ;; - we want an error when we are debugging this code if they are refed.
   (defvar sigs-in)
   (defvar sigs-inout)
-  (defvar sigs-out)
   (defvar sigs-intf)
-  (defvar sigs-intfd))
+  (defvar sigs-intfd)
+  (defvar sigs-out)
+  (defvar sigs-out-d)
+  (defvar sigs-out-i)
+  (defvar sigs-out-unk)
+  (defvar sigs-temp)
+  ;; These are known to be from other packages and may not be defined
+  (defvar diff-command nil)
+  (defvar vector-skip-list))
 
 (defun verilog-read-sub-decls-sig (submoddecls comment port sig vec multidim)
   "For `verilog-read-sub-decls-line', add a signal."
@@ -8572,17 +8595,6 @@ Must call `verilog-read-auto-lisp-present' before this function."
 	       (end-pt (point))
 	       (verilog-in-hooks t))
 	  (eval-region beg-pt end-pt nil))))))
-
-(eval-when-compile
-  ;; Prevent compile warnings; these are let's, not globals
-  ;; Do not remove the eval-when-compile
-  ;; - we want an error when we are debugging this code if they are refed.
-  (defvar sigs-in)
-  (defvar sigs-out-d)
-  (defvar sigs-out-i)
-  (defvar sigs-out-unk)
-  (defvar sigs-temp)
-  (defvar vector-skip-list))
 
 (defun verilog-read-always-signals-recurse
   (exit-keywd rvalue temp-next)
@@ -9676,7 +9688,8 @@ those clocking block's signals."
   "Return all signals in IN-LIST matching the given REGEXP, if non-nil."
   (if (or (not regexp) (equal regexp ""))
       in-list
-    (let (out-list)
+    (let ((case-fold-search verilog-case-fold)
+	  out-list)
       (while in-list
 	(if (string-match regexp (verilog-sig-name (car in-list)))
 	    (setq out-list (cons (car in-list) out-list)))
@@ -9687,7 +9700,8 @@ those clocking block's signals."
   "Return all signals in IN-LIST not matching the given REGEXP, if non-nil."
   (if (or (not regexp) (equal regexp ""))
       in-list
-    (let (out-list)
+    (let ((case-fold-search verilog-case-fold)
+	  out-list)
       (while in-list
 	(if (not (string-match regexp (verilog-sig-name (car in-list))))
 	    (setq out-list (cons (car in-list) out-list)))
@@ -10017,7 +10031,7 @@ This repairs those mis-inserted by an AUTOARG."
 (defun verilog-typedef-name-p (variable-name)
   "Return true if the VARIABLE-NAME is a type definition."
   (when verilog-typedef-regexp
-    (string-match verilog-typedef-regexp variable-name)))
+    (verilog-string-match-fold verilog-typedef-regexp variable-name)))
 
 ;;
 ;; Auto deletion
@@ -10615,7 +10629,6 @@ See the example in `verilog-auto-inout-modport'."
       ;; Note this may raise an error
       (when (setq submodi (verilog-modi-lookup submod t))
 	(let* ((indent-pt (current-indentation))
-	       (modi (verilog-modi-current))
 	       (submoddecls (verilog-modi-get-decls submodi))
 	       (submodportdecls (verilog-modi-modport-lookup submodi modport-re))
 	       (sig-list-i (verilog-signals-in ;; Decls doesn't have data types, must resolve
@@ -11157,7 +11170,7 @@ For more information see the \\[verilog-faq] and forums at URL
 	;; automatic variable instantiation program.
 	(let* ((tpl-info (verilog-read-auto-template submod))
 	       (tpl-regexp (aref tpl-info 0)))
-	  (setq tpl-num (if (string-match tpl-regexp inst)
+	  (setq tpl-num (if (verilog-string-match-fold tpl-regexp inst)
 			    (match-string 1 inst)
 			  "")
 		tpl-list (aref tpl-info 1)))
@@ -11300,7 +11313,7 @@ Templates:
 	;; automatic variable instantiation program.
 	(let* ((tpl-info (verilog-read-auto-template submod))
 	       (tpl-regexp (aref tpl-info 0)))
-	  (setq tpl-num (if (string-match tpl-regexp inst)
+	  (setq tpl-num (if (verilog-string-match-fold tpl-regexp inst)
 			    (match-string 1 inst)
 			  "")
 		tpl-list (aref tpl-info 1)))
@@ -13017,6 +13030,9 @@ Use \\[verilog-inject-auto] to insert AUTOs for the first time.
 
 Use \\[verilog-faq] for a pointer to frequently asked questions.
 
+For new users, we recommend setting `verilog-case-fold' to nil
+and `verilog-auto-arg-sort' to t.
+
 The hooks `verilog-before-auto-hook' and `verilog-auto-hook' are
 called before and after this function, respectively.
 
@@ -13078,6 +13094,7 @@ Wilson Snyder (wsnyder@wsnyder.org)."
   (verilog-save-font-mods
    (let ((oldbuf (if (not (buffer-modified-p))
 		     (buffer-string)))
+	 (case-fold-search verilog-case-fold)
 	 ;; Cache directories; we don't write new files, so can't change
 	 (verilog-dir-cache-preserving t)
 	 ;; Cache current module
@@ -13795,6 +13812,7 @@ Files are checked based on `verilog-library-flags'."
        verilog-before-getopt-flags-hook
        verilog-before-save-font-hook
        verilog-cache-enabled
+       verilog-case-fold
        verilog-case-indent
        verilog-cexp-indent
        verilog-compiler
