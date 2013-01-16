@@ -10400,7 +10400,7 @@ DIFFPT.  This function is called via `verilog-diff-function'."
   (let ((name1 (with-current-buffer b1 (buffer-file-name))))
     (verilog-warn "%s:%d: Difference in AUTO expansion found"
 		  name1 (with-current-buffer b1
-			  (1+ (count-lines (point-min) (point)))))
+			  (count-lines (point-min) diffpt)))
     (cond (noninteractive
 	   (verilog-diff-file-with-buffer name1 b2 t t))
 	  (t
