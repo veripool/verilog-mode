@@ -5122,6 +5122,7 @@ Save the result unless optional NO-SAVE is t."
    (setq-default make-backup-files nil)
    (setq enable-local-variables t)
    (setq enable-local-eval t)
+   (setq create-lockfiles nil)
    ;; Make sure any sub-files we read get proper mode
    (setq-default major-mode 'verilog-mode)
    ;; Ditto files already read in
@@ -8222,7 +8223,9 @@ Return an array of [outputs inouts inputs wire reg assign const]."
   (defvar sigs-temp)
   ;; These are known to be from other packages and may not be defined
   (defvar diff-command nil)
-  (defvar vector-skip-list))
+  (defvar vector-skip-list)
+  ;; There are known to be from newer versions of Emacs
+  (defvar create-lockfiles))
 
 (defun verilog-read-sub-decls-sig (submoddecls comment port sig vec multidim)
   "For `verilog-read-sub-decls-line', add a signal."
