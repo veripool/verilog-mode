@@ -12076,67 +12076,36 @@ Limitations:
   If placed inside the parenthesis of a module declaration, it creates
   Verilog 2001 style, else uses Verilog 1995 style.
 
-  Concatenation and outputting partial buses is not supported.
-
   Module names must be resolvable to filenames.  See `verilog-auto-inst'.
 
-  Signals are not inserted in the same order as in the original module,
-  though they will appear to be in the same order to an AUTOINST
-  instantiating either module.
+  Parameters are inserted in the same order as in the original module.
 
-  Signals declared as \"output reg\" or \"output wire\" etc will
-  lose the wire/reg declaration so that shell modules may
-  generate those outputs differently.  However, \"output logic\"
-  is propagated.
+  Parameters do not have values, which is SystemVerilog 2009 syntax.
 
 An example:
 
-	module ExampShell (/*AUTOARG*/);
-	   /*AUTOINOUTMODULE(\"ExampMain\")*/
+	module ExampShell ();
+	   /*AUTOINOUTPARAM(\"ExampMain\")*/
 	endmodule
 
-	module ExampMain (i,o,io);
-          input i;
-          output o;
-          inout io;
+	module ExampMain ();
+          parameter PARAM = 22;
         endmodule
 
 Typing \\[verilog-auto] will make this into:
 
 	module ExampShell (/*AUTOARG*/i,o,io);
-	   /*AUTOINOUTMODULE(\"ExampMain\")*/
-           // Beginning of automatic in/out/inouts (from specific module)
-           output o;
-           inout io;
-           input i;
+	   /*AUTOINOUTPARAM(\"ExampMain\")*/
+           // Beginning of automatic parameters (from specific module)
+           parameter PARAM;
 	   // End of automatics
 	endmodule
 
 You may also provide an optional regular expression, in which case only
-signals matching the regular expression will be included.  For example the
-same expansion will result from only extracting signals starting with i:
+parameters matching the regular expression will be included.  For example the
+same expansion will result from only extracting parameters starting with i:
 
-	   /*AUTOINOUTMODULE(\"ExampMain\",\"^i\")*/
-
-You may also provide an optional second regular expression, in
-which case only signals which have that pin direction and data
-type will be included.  This matches against everything before
-the signal name in the declaration, for example against
-\"input\" (single bit), \"output logic\" (direction and type) or
-\"output [1:0]\" (direction and implicit type).  You also
-probably want to skip spaces in your regexp.
-
-For example, the below will result in matching the output \"o\"
-against the previous example's module:
-
-	   /*AUTOINOUTMODULE(\"ExampMain\",\"\",\"^output.*\")*/
-
-You may also provide an optional third regular expression, in
-which case any parameter names that match the given regexp will
-be included.  Including parameters is off by default.  To include
-all signals and parameters, use:
-
-	   /*AUTOINOUTMODULE(\"ExampMain\",\".*\",\".*\",\".*\")*/"
+	   /*AUTOINOUTPARAM(\"ExampMain\",\"^i\")*/"
   (save-excursion
     (let* ((params (verilog-read-auto-params 1 2))
 	   (submod (nth 0 params))
