@@ -1,40 +1,8 @@
-General News:
+This is the source distribution for verilog-mode.
 
-Now that I have converted completely to using subversion for change
-management, the user visible bit is that version numbers are no longer
-monotonically increasing per file (instead increase by leaps and
-bounds as each change I make to any file in the verilog-mode build
-hierarchy (tests, Makefiles, et cetera) increments the number) hence
-version 206 might be just a little better than version 183.
+Please see http://www.veripool.org/verilog-mode
+for more information.
 
-Now back to the verilog-mode:
-
-Major changes: 
-
-1) More System Verilog support. Many improvements to
-indentation. Improvements to some v2k features. Many smaller
-contributed fixes and ideas from users (Thanks!)
-
-2) The AUTO mode gained some new enhancements, many as suggested (and
-contributed) by users.  As always, more is forthcoming.
-
-3) Users of the AUTOs in Verilog that are also using SystemC may be
-interested in Wilson Snyder's publicly licensed SystemPerl package,
-which brings AUTOs and several other features to SystemC.  See
-http://www.veripool.org
-
-4) I now send this file as a mime encoded attachement.  If
-you have problems decoding the file, search for the program mmencode.
-I include a link to mmencode for various operating systems on the page 
-<http://www.verilog.com/emacs_install.html>
-
-To learn more on installing this file, go to
-
-<http://www.verilog.com/emacs_install.html>
-
-and read the directions.
-
-If you have any problems with the file, feel free to send mail to mac
-at verilog dot com and I will take a look.
-
--------------------------------------------------------------------
+  make
+  make test
+  cp e/verilog-mode.el <your emacs site lisp path>

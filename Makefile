@@ -1,3 +1,17 @@
+# DESCRIPTION: Run verilog-mode tests, as part of "make test"
+#
+# Copyright 2008-2013 by Michael McNamara and Wilson Snyder.  This package
+# is free software; you can redistribute it and/or modify it under the
+# terms of either the GNU Lesser General Public License or the Perl
+# Artistic License.
+# 
+######################################################################
+# Common targets:
+#	make		# Compile source for GNU and Xemacs
+#	make test	# Run self tests
+#	# See x/verilog-mode.el for version to install
+######################################################################
+
 S=/home/mac/development/www.verilog.com/src/
 D=$(S)data
 F=/home/mac/external_webpage/src/verilog.com/ftp
@@ -9,7 +23,7 @@ EMACS_DEST = /usr/share/emacs/site-lisp/
 ELC	= -batch -q -f batch-byte-compile
 MAKECHANGELOG = perl makechangelog
 
-release : .timestamps install
+release : .timestamps
 install : .timestamps ChangeLog test $(D)/mmencoded_verilog-mode $(D)/emacs-version.h\
 	$(S)ChangeLog.txt email $(S)bits/verilog-mode.el local \
 #	ftp  
@@ -101,7 +115,7 @@ ifneq ($(VERILOGMODE_SKIP_MAKELOG),1)
 endif
 
 ChangeLog : verilog-mode.el makechangelog
-	$(MAKECHANGELOG) --svn verilog-mode.el > $@
+	$(MAKECHANGELOG) --git verilog-mode.el > $@
 
 email:	.timestamps/email
 .timestamps/email: mmencoded_verilog-mode
@@ -118,16 +132,16 @@ $(S)ChangeLog.txt : ChangeLog.txt
 $(S)bits/verilog-mode.el : verilog-mode.el
 	cp $? $@
 
-x/verilog-mode.elc : verilog-mode.el
+x/verilog-mode.elc : verilog-mode.el ./config_rev.pl
 	rm -rf x
 	mkdir x
-	cp verilog-mode.el x/verilog-mode.el
+	./config_rev.pl . <verilog-mode.el >x/verilog-mode.el
 	$(XEMACS) $(ELC) x/verilog-mode.el
 
-e/verilog-mode.elc : verilog-mode.el
+e/verilog-mode.elc : verilog-mode.el ./config_rev.pl
 	-rm -rf e
 	-mkdir e
-	cp verilog-mode.el e/verilog-mode.el
+	./config_rev.pl . <verilog-mode.el >e/verilog-mode.el
 	$(EMACS) $(ELC) e/verilog-mode.el
 
 verilog.info : verilog.texinfo
@@ -164,4 +178,4 @@ verilog-mode-tognu.el: verilog-mode.el Makefile
 # Clean
 
 clean::
-	/bin/rm -rf .timestamps e x test_dir verilog-mode.patch verilog-mode-tognu.el mmencoded_verilog-mode
+	/bin/rm -rf .timestamps e x test_dir verilog-mode.patch verilog-mode-tognu.el mmencoded_verilog-mode *.info

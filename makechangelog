@@ -1,5 +1,4 @@
 #!/usr/bin/perl -w # -*- Perl -*-
-# $Id$
 # See copyright, etc in below POD section.
 ######################################################################
 
@@ -17,6 +16,7 @@ use vars qw ($Debug);
 
 our $Opt_FileA;
 our $Opt_FileB;
+our $Opt_Git;
 our $Opt_Svn;
 
 autoflush STDOUT 1;
@@ -26,6 +26,7 @@ if (! GetOptions (
 		  "help"	=> \&usage,
 		  "debug"	=> sub { $Debug = 1; },
 		  "<>"		=> \&parameter,
+		  "git!"	=> \$Opt_Git,
 	  	  "svn!"	=> \$Opt_Svn,
 		  )) {
     die "%Error: Bad usage, try 'makechangelog --help'\n";
@@ -35,9 +36,17 @@ if ($Opt_Svn) {
     my $now = $Opt_FileA;
     $Opt_FileA = ".svn/text-base/${now}.svn-base";
     $Opt_FileB = $now;
+} elsif ($Opt_Git) {
+    my $now = $Opt_FileA;
+    $Opt_FileA = "/tmp/mcl.$$";
+    $Opt_FileB = $now;
+    system("git show HEAD:${now} > $Opt_FileA");
 }
-
 read_file($Opt_FileA, $Opt_FileB);
+
+if ($Opt_Git) {
+    unlink($Opt_FileA);
+}
 
 #----------------------------------------------------------------------
 
@@ -183,7 +192,7 @@ This is part of the L<http://www.veripool.org/> free Verilog EDA software
 tool suite.  The latest version is available from CPAN and from
 L<http://www.veripool.org/>.
 
-Copyright 2008-2008 by Wilson Snyder.  This package is free software; you
+Copyright 2008-2013 by Wilson Snyder.  This package is free software; you
 can redistribute it and/or modify it under the terms of either the GNU
 Lesser General Public License or the Perl Artistic License.
 

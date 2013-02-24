@@ -125,8 +125,6 @@
 ;; This variable will always hold the version number of the mode
 (defconst verilog-mode-version "__VMVERSION__"
   "Version of this Verilog mode.")
-(defconst verilog-mode-release-date "__VMVERSION__"
-  "Release date of this Verilog mode.")
 (defconst verilog-mode-release-emacs nil
   "If non-nil, this version of Verilog mode was released with Emacs itself.")
 
@@ -13811,7 +13809,6 @@ Files are checked based on `verilog-library-flags'."
        verilog-linter
        verilog-minimum-comment-distance
        verilog-mode-hook
-       verilog-mode-release-date
        verilog-mode-release-emacs
        verilog-mode-version
        verilog-preprocessor

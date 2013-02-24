@@ -1,5 +1,9 @@
-;; $Id: batch_test.el 240 2006-05-05 21:46:14Z wsnyder $
-;; DESCRIPTION: Profile driven test
+;; DESCRIPTION: Profile driven test as part of "make test"
+;;
+;; Copyright 2008-2013 by Michael McNamara and Wilson Snyder.  This package
+;; is free software; you can redistribute it and/or modify it under the
+;; terms of either the GNU Lesser General Public License or the Perl
+;; Artistic License.
 
 (require 'elp)
 

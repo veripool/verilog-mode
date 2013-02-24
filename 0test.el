@@ -1,4 +1,9 @@
-;; $Id$
+;; DESCRIPTION: Run verilog-mode tests, as part of "make test"
+;;
+;; Copyright 2008-2013 by Michael McNamara and Wilson Snyder.  This package
+;; is free software; you can redistribute it and/or modify it under the
+;; terms of either the GNU Lesser General Public License or the Perl
+;; Artistic License.
 ;;
 ;;   VERILOG_MODE_DEBUG=1	       # Enable verilog-debug
 ;;   VERILOG_MODE_NO_INDENTS=1         # Disable indent checks
