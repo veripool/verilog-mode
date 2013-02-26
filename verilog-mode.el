@@ -2780,6 +2780,8 @@ find the errors."
      "let" "nexttime" "reject_on" "restrict" "s_always" "s_eventually"
      "s_nexttime" "s_until" "s_until_with" "strong" "sync_accept_on"
      "sync_reject_on" "unique0" "until" "until_with" "untyped" "weak"
+     ;; 1800-2012
+     "implements" "interconnect" "nettype" "soft"
  )
  "List of Verilog keywords.")
 
@@ -2944,6 +2946,11 @@ See also `verilog-font-lock-extra-types'.")
 	     "sync_accept_on" "sync_reject_on" "unique0" "until"
 	     "until_with" "untyped" "weak" ) nil )))
 
+       (verilog-1800-2012-keywords
+	(eval-when-compile
+	  (verilog-regexp-opt
+	   '("implements" "interconnect" "nettype" "soft" ) nil )))
+
        (verilog-ams-keywords
 	(eval-when-compile
 	  (verilog-regexp-opt
@@ -3006,6 +3013,12 @@ See also `verilog-font-lock-extra-types'.")
 	     (cons (concat "\\<\\(" verilog-1800-2009-keywords "\\)\\>")
 		   'verilog-font-lock-p1800-face)
 	   (cons (concat "\\<\\(" verilog-1800-2009-keywords "\\)\\>")
+		 'font-lock-type-face))
+	 ;; Fontify IEEE-1800-2012 keywords appropriately
+	 (if verilog-highlight-p1800-keywords
+	     (cons (concat "\\<\\(" verilog-1800-2012-keywords "\\)\\>")
+		   'verilog-font-lock-p1800-face)
+	   (cons (concat "\\<\\(" verilog-1800-2012-keywords "\\)\\>")
 		 'font-lock-type-face))
 	 ;; Fontify Verilog-AMS keywords
 	 (cons (concat "\\<\\(" verilog-ams-keywords "\\)\\>")

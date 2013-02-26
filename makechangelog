@@ -109,19 +109,10 @@ sub read_file {
     }
     $fh->close;
 
-    my $who = '?';
-    if ($ENV{USER} eq 'wsnyder') {
-	$who = 'Wilson Snyder  <wsnyder@wsnyder.org>';
-    } elsif ($ENV{USER} eq 'mac') {
-	$who = 'Michael McNamara  <mac@verilog.com>';
-    } else {
-	$who = "**Unknown user**  <$ENV{USER}>";
-    }
-
     print "-*- Change-Log -*-\n\n";
 
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime();
-    printf "%04d-%02d-%02d  %s\n\n", $year+1900,$mon+1,$mday,$who;
+    printf "<Put one line comment with trailing period here.  This must be first line of commit message.>\n\n";
 
     print "\t* verilog-mode.el";
     my $f="";
