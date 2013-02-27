@@ -132,16 +132,23 @@ $(S)ChangeLog.txt : ChangeLog.txt
 $(S)bits/verilog-mode.el : verilog-mode.el
 	cp $? $@
 
-x/verilog-mode.elc : verilog-mode.el ./config_rev.pl
+x/verilog-mode.el : verilog-mode.el ./config_rev.pl
 	rm -rf x
 	mkdir x
-	./config_rev.pl . <verilog-mode.el >x/verilog-mode.el
-	$(XEMACS) $(ELC) x/verilog-mode.el
+	./config_rev.pl . verilog-mode.el <verilog-mode.el >x/verilog-mode.el
 
-e/verilog-mode.elc : verilog-mode.el ./config_rev.pl
+e/verilog-mode.el : verilog-mode.el ./config_rev.pl
 	-rm -rf e
 	-mkdir e
-	./config_rev.pl . <verilog-mode.el >e/verilog-mode.el
+	./config_rev.pl . verilog-mode.el <verilog-mode.el >e/verilog-mode.el
+
+e/verilog-mode.el.gz : e/verilog-mode.el
+	gzip --best $< --stdout > $@
+
+x/verilog-mode.elc : x/verilog-mode.el
+	$(XEMACS) $(ELC) x/verilog-mode.el
+
+e/verilog-mode.elc : e/verilog-mode.el
 	$(EMACS) $(ELC) e/verilog-mode.el
 
 verilog.info : verilog.texinfo
@@ -166,11 +173,9 @@ gnu-diff-trunk: gnu-update-trunk verilog-mode-tognu.el
 verilog-mode.patch: gnu-update verilog-mode-tognu.el
 	diff -u gnutrunk/lisp/progmodes/verilog-mode.el verilog-mode-tognu.el > $@
 
-verilog-mode-tognu.el: verilog-mode.el Makefile
-	cat verilog-mode.el \
-	 | sed 's/ *\$$Id:.*//g' \
-	 | sed 's/(substring.*\$$\$$Revision: \([0-9]*\).*$$/"\1"/g' \
-	 | sed 's/(substring.*\$$\$$Date: \(....-..-..\).*).*$$/"\1-GNU"/g' \
+verilog-mode-tognu.el: e/verilog-mode.el Makefile
+	cat e/verilog-mode.el \
+	 | sed 's/verilog-mode-version "\(.*\)"/verilog-mode-version "\1-GNU"/g' \
 	 | sed 's/verilog-mode-release-emacs nil/verilog-mode-release-emacs t/g' \
 	 > verilog-mode-tognu.el
 

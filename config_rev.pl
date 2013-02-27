@@ -11,17 +11,18 @@
 
 my $dir = $ARGV[0]; defined $dir or die "%Error: No directory argument,";
 chdir $dir;
+my $file = $ARGV[1]; defined $file or die "%Error: No file argument,";
 
 my $rev = 'UNKNOWN_REV';
-my $data = `git log --pretty=format:'%ad %h' --date=short -1`;
+my $data = `git log --pretty=format:'%ad-%h' --date=short -1 $file`;
 if ($data =~ /(^20.*)/i) {
     $rev = $1;
 }
 
-$data = `git status`;
+$data = `git status $file`;
 if ($data =~ /Changed but not updated/i
     || $data =~ /Changes to be committed/i) {
-    $rev .= " (mod)";
+    $rev .= "-mod";
 }
 
 # Filter the code
