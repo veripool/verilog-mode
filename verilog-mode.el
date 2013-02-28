@@ -8134,7 +8134,12 @@ Return an array of [outputs inouts inputs wire reg assign const]."
 		;; Type?
 		((unless ptype
 		   (verilog-typedef-name-p keywd))
-		 (setq typedefed keywd))
+		 (cond (io
+			(setq typedefed
+			      (if typedefed (concat typedefed " " keywd) keywd)))
+		       (t (setq vec nil  enum nil  rvalue nil  signed nil
+				typedefed nil  multidim nil  sig-paren paren
+				expect-signal 'sigs-var  modport nil))))
 		;; Interface with optional modport in v2k arglist?
 		;; Skip over parsing modport, and take the interface name as the type
 		((and v2kargs-ok
