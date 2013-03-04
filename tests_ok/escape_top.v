@@ -1,6 +1,6 @@
 module escape_top (/*AUTOARG*/
                    // Outputs
-                   \o[2] , \o[10] ,
+                   \oren10 , \o[2] ,
                    // Inputs
                    \i&e; 
                    );
@@ -11,13 +11,17 @@ module escape_top (/*AUTOARG*/
    // End of automatics
    /*AUTOOUTPUT*/
    // Beginning of automatic outputs (from unused autoinst outputs)
-   output \o[10] ; // From a of escape_a.v
-   output \o[2] ;                       // From a of escape_a.v
+   output \o[2] ; // From a of escape_a.v
+   output \oren10 ;             // From a of escape_a.v
    // End of automatics
+   
+   /* escape_a AUTO_TEMPLATE(
+    .\(.*o.*10.*\)              (\\oren10 ),
+    ); */
    
    escape_a a (/*AUTOINST*/
                // Outputs
-               .\o[10]                  (\o[10] ),
+               .\o[10]                  (\oren10 ),              // Templated
                .\o[2]                   (\o[2] ),
                // Inputs
                .\i&e;                   (\i&e; ));
