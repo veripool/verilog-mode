@@ -1511,8 +1511,10 @@ If set will become buffer local.")
       :help		"Insert a module .. (/*AUTOARG*/);.. endmodule block"]
      ["OVM Class"	verilog-sk-ovm-class
       :help		"Insert an OVM class block"]
-     ["UVM Class"	verilog-sk-uvm-class
-      :help		"Insert an UVM class block"]
+     ["UVM Object"	verilog-sk-uvm-object
+      :help		"Insert an UVM object block"]
+     ["UVM Component"	verilog-sk-uvm-component
+      :help		"Insert an UVM component block"]
      ["Primitive"	verilog-sk-primitive
       :help		"Insert a primitive .. (.. );.. endprimitive block"]
      "----"
@@ -3615,7 +3617,8 @@ Some other functions are:
     \\[verilog-sk-fork]  Insert a fork begin .. end .. join block.
     \\[verilog-sk-module]  Insert a module .. (/*AUTOARG*/);.. endmodule block.
     \\[verilog-sk-ovm-class]  Insert an OVM Class block.
-    \\[verilog-sk-uvm-class]  Insert an UVM Class block.
+    \\[verilog-sk-uvm-object]  Insert an UVM Object block.
+    \\[verilog-sk-uvm-component]  Insert an UVM Component block.
     \\[verilog-sk-primitive]  Insert a primitive .. (.. );.. endprimitive block.
     \\[verilog-sk-repeat]  Insert a repeat (..) begin .. end block.
     \\[verilog-sk-specify]  Insert a specify .. endspecify block.
@@ -13213,7 +13216,7 @@ Wilson Snyder (wsnyder@wsnyder.org)."
     (define-key map "r" 'verilog-sk-repeat)
     (define-key map "s" 'verilog-sk-specify)
     (define-key map "t" 'verilog-sk-task)
-    (define-key map "u" 'verilog-sk-uvm-class)
+    (define-key map "u" 'verilog-sk-uvm-object)
     (define-key map "w" 'verilog-sk-while)
     (define-key map "x" 'verilog-sk-casex)
     (define-key map "z" 'verilog-sk-casez)
@@ -13226,6 +13229,7 @@ Wilson Snyder (wsnyder@wsnyder.org)."
     (define-key map "O" 'verilog-sk-output)
     (define-key map "S" 'verilog-sk-state-machine)
     (define-key map "=" 'verilog-sk-inout)
+    (define-key map "U" 'verilog-sk-uvm-component)
     (define-key map "W" 'verilog-sk-wire)
     (define-key map "R" 'verilog-sk-reg)
     (define-key map "D" 'verilog-sk-define-signal)
@@ -13342,16 +13346,30 @@ See also `verilog-header' for an alternative format."
   > _ \n
   > "endclass" (progn (electric-verilog-terminate-line) nil))
 
-(define-skeleton verilog-sk-uvm-class
+(define-skeleton verilog-sk-uvm-object
   "Insert a class definition"
   ()
   > "class " (setq name (skeleton-read "Name: ")) " extends " (skeleton-read "Extends: ") ";" \n
   > _ \n
   > "`uvm_object_utils_begin(" name ")" \n
-  > (- verilog-indent-level) " `uvm_object_utils_end" \n
+  > (- verilog-indent-level) "`uvm_object_utils_end" \n
   > _ \n
   > "function new(name=\"" name "\");" \n
   > "super.new(name);" \n
+  > (- verilog-indent-level) "endfunction" \n
+  > _ \n
+  > "endclass" (progn (electric-verilog-terminate-line) nil))
+
+(define-skeleton verilog-sk-uvm-component
+  "Insert a class definition"
+  ()
+  > "class " (setq name (skeleton-read "Name: ")) " extends " (skeleton-read "Extends: ") ";" \n
+  > _ \n
+  > "`uvm_component_utils_begin(" name ")" \n
+  > (- verilog-indent-level) "`uvm_component_utils_end" \n
+  > _ \n
+  > "function new(name=\"\", uvm_component parent);" \n
+  > "super.new(name, parent);" \n
   > (- verilog-indent-level) "endfunction" \n
   > _ \n
   > "endclass" (progn (electric-verilog-terminate-line) nil))
