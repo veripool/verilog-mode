@@ -2454,7 +2454,7 @@ find the errors."
 ;; verilog-forward-sexp and verilog-calc-indent
 (defconst verilog-beg-block-re-ordered
   ( concat "\\(\\<begin\\>\\)"		;1
-	   "\\|\\(\\<randcase\\>\\|\\(\\<unique\\s-+\\|priority\\s-+\\)?case[xz]?\\>\\)" ; 2,3
+	   "\\|\\(\\<randcase\\>\\|\\(\\<unique0?\\s-+\\|priority\\s-+\\)?case[xz]?\\>\\)" ; 2,3
 	   "\\|\\(\\(\\<disable\\>\\s-+\\|\\<wait\\>\\s-+\\)?fork\\>\\)" ;4,5
 	   "\\|\\(\\<class\\>\\)"		;6
 	   "\\|\\(\\<table\\>\\)"		;7
@@ -2698,7 +2698,7 @@ find the errors."
        "endmodule" "endprimitive" "endinterface" "endpackage" "endprogram" "endclass"
        ))))
 (defconst verilog-disable-fork-re "\\(disable\\|wait\\)\\s-+fork\\>")
-(defconst verilog-extended-case-re "\\(\\(unique\\s-+\\|priority\\s-+\\)?case[xz]?\\)")
+(defconst verilog-extended-case-re "\\(\\(unique0?\\s-+\\|priority\\s-+\\)?case[xz]?\\)")
 (defconst verilog-extended-complete-re
   (concat "\\(\\(\\<extern\\s-+\\|\\<\\(\\<pure\\>\\s-+\\)?virtual\\s-+\\|\\<protected\\s-+\\)*\\(\\<function\\>\\|\\<task\\>\\)\\)"
 	  "\\|\\(\\(\\<typedef\\>\\s-+\\)*\\(\\<struct\\>\\|\\<union\\>\\|\\<class\\>\\)\\)"
@@ -3377,7 +3377,7 @@ Use filename, if current buffer being edited shorten to just buffer name."
 	(setq reg "\\(\\<begin\\>\\)\\|\\(\\<end\\>\\)" ))
        ((match-end 2)
 	;; Search forward for matching endcase
-	(setq reg "\\(\\<randcase\\>\\|\\(\\<unique\\>\\s-+\\|\\<priority\\>\\s-+\\)?\\<case[xz]?\\>[^:]\\)\\|\\(\\<endcase\\>\\)" )
+	(setq reg "\\(\\<randcase\\>\\|\\(\\<unique0?\\>\\s-+\\|\\<priority\\>\\s-+\\)?\\<case[xz]?\\>[^:]\\)\\|\\(\\<endcase\\>\\)" )
 	(setq md 3) ;; ender is third item in regexp
 	)
        ((match-end 4)
@@ -4518,7 +4518,7 @@ primitive or interface named NAME."
 		     ((looking-at "\\<randcase\\>")
 		      (setq str "randcase")
 		      (setq err nil))
-		     ((looking-at "\\(\\(unique\\s-+\\|priority\\s-+\\)?case[xz]?\\)")
+		     ((looking-at "\\(\\(unique0?\\s-+\\|priority\\s-+\\)?case[xz]?\\)")
 		      (goto-char (match-end 0))
 		      (setq str (concat (match-string 0) " " (verilog-get-expr)))
 		      (setq err nil))
@@ -5564,7 +5564,7 @@ of the appropriate enclosing block."
     (while (/= 0 nest)
       (verilog-re-search-backward
        (concat
-	"\\(\\<randcase\\>\\|\\(\\<unique\\s-+\\|priority\\s-+\\)?\\<case[xz]?\\>\\)"
+	"\\(\\<randcase\\>\\|\\(\\<unique0?\\s-+\\|priority\\s-+\\)?\\<case[xz]?\\>\\)"
 	"\\|\\(\\<endcase\\>\\)" )
        nil 'move)
       (cond

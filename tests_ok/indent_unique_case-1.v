@@ -66,13 +66,13 @@ module  xxx_xxxxxx  (input wire clk, input wire reset);
                  current_state <= zxcvzxcv;
               end
               else begin
-                 unique case (opm_cur)
+                 unique0 case (opm_cur)
                    
                    `XXXCP : current_state  <= AA_OP;
                    `XXXZR : current_state  <= BB_OP;
                    
                    default : current_state <= zxcvzxcv;
-                 endcase // unique  case
+                 endcase // unique0 case
                  
               end // else: !if(err_iiii)
            end // case: IIII
