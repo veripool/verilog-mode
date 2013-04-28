@@ -61,9 +61,9 @@ module tt;
    initial begin
       while (1) begin
          `ovm_do_with(aa, {bb == 0;})
-      `ovm_do(cc)
-      `ovm_do(cc)
-   end // while (1)
+         `ovm_do(cc)
+         `ovm_do(cc)
+      end // while (1)
    end // initial begin
    
 endmodule // tt

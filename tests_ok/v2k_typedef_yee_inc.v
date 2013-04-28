@@ -19,10 +19,10 @@ typedef reg   lat_t; // Default latch type
 typedef union packed {
    logic_t [23:0] bits;
    struct packed {
-   logic_t [7:0] red;
-   logic_t [7:0] grn;
-   logic_t [7:0] blu;
-} color;
+      logic_t [7:0] red;
+      logic_t [7:0] grn;
+      logic_t [7:0] blu;
+   } color;
 } pixel24_t;
 
 `endif

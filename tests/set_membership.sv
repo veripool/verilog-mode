@@ -17,7 +17,7 @@ module top;
 	     {  
 		A inside {0,8'hFF}; 
 		B inside {0,8'hFF}; 
-		});
+		};
 $sformat (msg,"ALU Request: %s", req.convert2string());
 avm_report_message("TOP",msg);
 $display;

@@ -61,9 +61,9 @@ module tt;
    initial begin
       while (1) begin
          `uvm_do_with(aa, {bb == 0;})
-      `uvm_do(cc)
-      `uvm_do(cc)
-   end // while (1)
+         `uvm_do(cc)
+         `uvm_do(cc)
+      end // while (1)
    end // initial begin
    
 endmodule // tt

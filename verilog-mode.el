@@ -2586,6 +2586,9 @@ find the errors."
   (eval-when-compile (verilog-regexp-words `("initial" "final" "always" "always_comb" "always_latch" "always_ff"
 					     "function" "task"))))
 (defconst verilog-coverpoint-re "\\w+\\s*:\\s*\\(coverpoint\\|cross\\constraint\\)"  )
+(defconst verilog-in-constraint-re ;; keywords legal in constraint blocks starting a statement/block
+  (eval-when-compile (verilog-regexp-words `("if" "else" "solve" "foreach"))))
+
 (defconst verilog-indent-re
   (eval-when-compile
     (verilog-regexp-words
@@ -5257,6 +5260,7 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 	   (par 0)
 	   (begin (looking-at "[ \t]*begin\\>"))
 	   (lim (save-excursion (verilog-re-search-backward "\\(\\<begin\\>\\)\\|\\(\\<module\\>\\)" nil t)))
+           (structres nil)
 	   (type (catch 'nesting
 		   ;; Keep working backwards until we can figure out
 		   ;; what type of statement this is.
@@ -5275,8 +5279,12 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
                                  (looking-at "[ \t]*`vmm_")))))
 		       (throw 'nesting 'directive))
            ;; indent structs as if there were module level
-           (if (verilog-in-struct-p)
-               (throw 'nesting 'block))
+           (setq structres (verilog-in-struct-nested-p))
+           (cond ((not structres) nil)
+                 ;;((and structres (equal (char-after) ?\})) (throw 'nesting 'struct-close))
+                 ((> structres 0) (throw 'nesting 'nested-struct))
+                 ((= structres 0) (throw 'nesting 'block))
+                 (t nil))
 
 	   ;; if we are in a parenthesized list, and the user likes to indent these, return.
 	   ;; unless we are in the newfangled coverpoint or constraint blocks
@@ -5293,7 +5301,9 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 	     ;; trap out if we crawl off the top of the buffer
 	     (if (bobp) (throw 'nesting 'cpp))
 
-	     (if (verilog-continued-line-1 lim)
+	     (if (and (verilog-continued-line-1 lim)
+                      (or (not (verilog-in-coverage-p))
+                          (looking-at verilog-in-constraint-re) ))  ;; may still get hosed if concat in constraint
 		 (let ((sp (point)))
 		   (if (and
 			(not (looking-at verilog-complete-reg))
@@ -5302,10 +5312,15 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 			      (throw 'nesting 'cexp))
 
 		     (goto-char sp))
-
+                   (if (and (verilog-in-coverage-p)
+                            (looking-at verilog-in-constraint-re))
+                       (progn
+			 (beginning-of-line)
+			 (skip-chars-forward " \t")
+			 (throw 'nesting 'constraint)))
 		   (if (and begin
-			    (not verilog-indent-begin-after-if)
-			    (looking-at verilog-no-indent-begin-re))
+                            (not verilog-indent-begin-after-if)
+                            (looking-at verilog-no-indent-begin-re))
 		       (progn
 			 (beginning-of-line)
 			 (skip-chars-forward " \t")
@@ -5402,6 +5417,10 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 	   (list type (current-column)))
 	  ((eq type 'defun)
 	   (list type 0))
+	  ((eq type 'constraint)
+	   (list 'block (current-column)))
+	  ((eq type 'nested-struct)
+	   (list 'block structres))
 	  (t
 	   (list type (verilog-current-indent-level))))))))
 
@@ -5432,21 +5451,29 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
       (message "You are at nesting %s depth %d" type depth))))
 (defun verilog-calc-1 ()
   (catch 'nesting
-    (let ((re (concat "\\({\\|}\\|" verilog-indent-re "\\)")))
+    (let ((re (concat "\\({\\|}\\|" verilog-indent-re "\\)"))
+          (inconstraint (verilog-in-coverage-p)))
       (while (verilog-re-search-backward re nil 'move)
 	(catch 'continue
 	  (cond
 	   ((equal (char-after) ?\{)
+            ;; block type returned based on outer contraint { or inner
 	    (if (verilog-at-constraint-p)
-		(throw 'nesting 'block)))
-
+                (cond (inconstraint (throw 'nesting 'constraint))
+                      (t            (throw 'nesting 'statement)))))
 	   ((equal (char-after) ?\})
-	    (let ((there (verilog-at-close-constraint-p)))
+	    (let (par-pos
+                  (there (verilog-at-close-constraint-p)))
 	      (if there ;; we are at the } that closes a constraint.  Find the { that opens it
 		  (progn
-		    (forward-char 1)
-		    (backward-list 1)
-		    (verilog-beg-of-statement)))))
+		    (if (> (verilog-in-paren-count) 0)
+                        (forward-char 1))
+                    (setq par-pos (verilog-parenthesis-depth))
+                    (cond (par-pos
+			   (goto-char par-pos)
+			   (forward-char 1))
+			  (t
+			   (backward-char 1)))))))
 
 	   ((looking-at verilog-beg-block-re-ordered)
 	    (cond
@@ -5980,6 +6007,14 @@ May cache result using `verilog-syntax-ppss'."
  (let ((state (save-excursion (verilog-syntax-ppss))))
    (> (nth 0 state) 0 )))
 
+(defun verilog-in-paren-count ()
+ "Return paren depth, floor to 0.
+May cache result using `verilog-syntax-ppss'."
+ (let ((state (save-excursion (verilog-syntax-ppss))))
+   (if (> (nth 0 state) 0)
+       (nth 0 state)
+     0 )))
+
 (defun verilog-in-paren-quick ()
  "Return true if in a parenthetical expression.
 Always starts from `point-min', to allow inserts with hooks disabled."
@@ -5999,6 +6034,21 @@ Always starts from `point-min', to allow inserts with hooks disabled."
 	 )
      nil)))
 
+(defun verilog-in-struct-nested-p ()
+ "Return nil for not in struct.
+Return 0 for in non-nested struct.
+Return >0 for nested struct."
+ (interactive)
+ (let (col)
+   (save-excursion
+     (if (verilog-in-paren)
+         (progn
+           (verilog-backward-up-list 1)
+           (setq col (verilog-at-struct-mv-p))
+           (if col
+               (if (verilog-in-struct-p) (current-column) 0)))
+       nil))))
+
 (defun verilog-in-coverage-p ()
  "Return true if in a constraint or coverpoint expression."
  (interactive)
@@ -6013,11 +6063,13 @@ Always starts from `point-min', to allow inserts with hooks disabled."
   "If at the } that closes a constraint or covergroup, return true."
   (if (and
        (equal (char-after) ?\})
-       (verilog-in-paren))
+       (verilog-in-coverage-p))
 
       (save-excursion
 	(verilog-backward-ws&directives)
-	(if (equal (char-before) ?\;)
+	(if (or (equal (char-before) ?\;)
+                (equal (char-before) ?\}) ;; can end with inner constraint { } block or ;
+                (equal (char-before) ?\{)) ;; empty constraint block
 	    (point)
 	  nil))))
 
@@ -6029,19 +6081,63 @@ Always starts from `point-min', to allow inserts with hooks disabled."
 	 (forward-list)
 	 (progn (backward-char 1)
 		(verilog-backward-ws&directives)
-		(equal (char-before) ?\;))))
-      ;; maybe
-      (verilog-re-search-backward "\\<constraint\\|coverpoint\\|cross\\>" nil 'move)
+		(or (equal (char-before) ?\{) ;; empty case
+                    (equal (char-before) ?\;)
+                    (equal (char-before) ?\})))))
+      (progn
+        (let ( (pt (point)) (pass 0))
+          (verilog-backward-ws&directives)
+          (verilog-backward-token)
+          (if (looking-at (concat "\\<constraint\\|coverpoint\\|cross\\|with\\>\\|" verilog-in-constraint-re))
+              (progn (setq pass 1)
+                     (if (looking-at "\\<with\\>")
+                         (progn (verilog-backward-ws&directives)
+                                (beginning-of-line) ;; 1
+                                (verilog-forward-ws&directives)
+                                1 )
+                       (verilog-beg-of-statement)
+                       ))
+            ;; if first word token not keyword, it maybe the instance name
+            ;;   check next word token
+            (if (looking-at "\\<\\w+\\>\\|\\s-*(\\s-*\\w+")
+                (progn (verilog-beg-of-statement)
+                       (if (looking-at (concat "\\<\\(constraint\\|"
+                                               "\\(?:\\w+\\s-*:\\s-*\\)?\\(coverpoint\\|cross\\)"
+                                               "\\|with\\)\\>\\|" verilog-in-constraint-re))
+                           (setq pass 1)))))
+          (if (eq pass 0)
+              (progn (goto-char pt) nil) 1)))
     ;; not
     nil))
 
 (defun verilog-at-struct-p ()
-  "If at the { of a struct, return true, moving point to struct."
+  "If at the { of a struct, return true, not moving point."
   (save-excursion
     (if (and (equal (char-after) ?\{)
              (verilog-backward-token))
         (looking-at "\\<struct\\|union\\|packed\\|\\(un\\)?signed\\>")
       nil)))
+
+(defun verilog-at-struct-mv-p ()
+  "If at the { of a struct, return true, moving point to struct."
+  (let ((pt (point)))
+    (if (and (equal (char-after) ?\{)
+             (verilog-backward-token))
+        (if (looking-at "\\<struct\\|union\\|packed\\|\\(un\\)?signed\\>")
+            (progn (verilog-beg-of-statement) (point))
+          (progn (goto-char pt) nil))
+      (progn (goto-char pt) nil))))
+
+(defun verilog-at-close-struct-p ()
+  "If at the } that closes a struct, return true."
+  (if (and
+       (equal (char-after) ?\})
+       (verilog-in-struct-p))
+      ;; true
+      (save-excursion
+	(if (looking-at "}\\(?:\\s-*\\w+\\s-*\\)?;") 1))
+    ;; false
+    nil))
 
 (defun verilog-parenthesis-depth ()
  "Return non zero if in parenthetical-expression."
@@ -6276,8 +6372,9 @@ Only look at a few lines to determine indent level."
 
      (;-- Handle the ends
       (or
-       (looking-at verilog-end-block-re )
-       (verilog-at-close-constraint-p))
+       (looking-at verilog-end-block-re)
+       (verilog-at-close-constraint-p)
+       (verilog-at-close-struct-p))
       (let ((val (if (eq type 'statement)
 		     (- ind verilog-indent-level)
 		   ind)))

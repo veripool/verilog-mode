@@ -15,9 +15,9 @@ module top;
          req.randomize()
            with
              {
-              A inside {0,8'hFF};
-              B inside {0,8'hFF};
-              });
+            A inside {0,8'hFF};
+            B inside {0,8'hFF};
+         };
          $sformat (msg,"ALU Request: %s", req.convert2string());
          avm_report_message("TOP",msg);
          $display;
@@ -26,11 +26,11 @@ module top;
          for (i = 1; i<=10; i++) begin
             req  = new();
             assert(
-              req.randomize() with
-              {
-               op inside {[add_op : mul_op]};
-               }
-            );
+                   req.randomize() with
+                   {
+                      op inside {[add_op : mul_op]};
+                   }
+                   );
             $sformat (msg,"ALU Request: %s", req.convert2string());
             avm_report_message("TOP",msg);
          end // for (i = 1; i<=10; i++)
