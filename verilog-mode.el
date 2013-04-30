@@ -7592,11 +7592,11 @@ See also `verilog-sk-header' for an alternative format."
   (list name bits comment mem enum signed type multidim modport))
 (defsubst verilog-sig-name (sig)
   (car sig))
-(defsubst verilog-sig-bits (sig)
+(defsubst verilog-sig-bits (sig) ;; First element of packed array (pre signal-name)
   (nth 1 sig))
 (defsubst verilog-sig-comment (sig)
   (nth 2 sig))
-(defsubst verilog-sig-memory (sig)
+(defsubst verilog-sig-memory (sig) ;; Unpacked array (post signal-name)
   (nth 3 sig))
 (defsubst verilog-sig-enum (sig)
   (nth 4 sig))
@@ -7606,7 +7606,7 @@ See also `verilog-sk-header' for an alternative format."
   (nth 6 sig))
 (defsubst verilog-sig-type-set (sig type)
   (setcar (nthcdr 6 sig) type))
-(defsubst verilog-sig-multidim (sig)
+(defsubst verilog-sig-multidim (sig) ;; Second and additional elements of packed array
   (nth 7 sig))
 (defsubst verilog-sig-multidim-string (sig)
   (if (verilog-sig-multidim sig)
@@ -10844,7 +10844,9 @@ If PAR-VALUES replace final strings with these parameter values."
     ;; Default net value if not found
     (setq tpl-net (concat port
 			  (if vl-modport (concat "." vl-modport) "")
-			  (if (verilog-sig-multidim port-st)
+			  (if (and (verilog-sig-bits port-st)
+				   (or (verilog-sig-multidim port-st)
+				       (verilog-sig-memory port-st)))
 			      (concat "/*" vl-mbits vl-bits "*/")
 			    (concat vl-bits))))
     ;; Find template
