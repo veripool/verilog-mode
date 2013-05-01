@@ -1001,7 +1001,7 @@ those temporaries reset.  See example in `verilog-auto-reset'."
   "True means AUTORESET should determine the width of signals.
 This is then used to set the width of the zero (32'h0 for example).  This
 is required by some lint tools that aren't smart enough to ignore widths of
-the constant zero. This may result in ugly code when parameters determine
+the constant zero.  This may result in ugly code when parameters determine
 the MSB or LSB of a signal inside an AUTORESET.
 
 If nil, AUTORESET uses \"0\" as the constant.
@@ -10992,6 +10992,10 @@ Limitations:
   Gate primitives (and/or) may have AUTOINST for the purpose of
   AUTOWIRE declarations, etc.  Gates are the only case when
   position based connections are passed.
+
+  The array part of arrayed instances are ignored; this may
+  result in undesirable default AUTOINST connections; use a
+  template instead.
 
 For example, first take the submodule InstModule.v:
 
