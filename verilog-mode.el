@@ -502,11 +502,11 @@ If 'all' is selected, then all line ups described below are done.
 If 'declarations', then just declarations are lined up with any
 preceding declarations, taking into account widths and the like,
 so or example the code:
- 	reg [31:0] a;
- 	reg b;
+	reg [31:0] a;
+	reg b;
 would become
- 	reg [31:0] a;
- 	reg        b;
+	reg [31:0] a;
+	reg        b;
 
 If 'assignment', then assignments are lined up with any preceding
 assignments, so for example the code
@@ -1060,7 +1060,7 @@ inputs.  This is then used by an upper module:
 
 	module ExampInst;
 	   InstModule
- 	     #(PARAM(10))
+	     #(.PARAM(10))
 	    instName
 	     (/*AUTOINST*/
 	      .i 	(i[PARAM-1:0]));
@@ -1071,7 +1071,7 @@ instead expand to:
 
 	module ExampInst;
 	   InstModule
- 	     #(PARAM(10))
+	     #(.PARAM(10))
 	    instName
 	     (/*AUTOINST*/
 	      .i 	(i[9:0]));"
@@ -8598,7 +8598,7 @@ Outputs comments above subcell signals, for example:
 		   (subprim (member submod verilog-gate-keywords))
 		   (comment (concat inst " of " submod ".v"))
 		   submodi submoddecls)
-    	      (cond
+	      (cond
 	       (subprim
 		(setq submodi `primitive
 		      submoddecls (verilog-decls-new nil nil nil nil nil nil nil nil nil)
@@ -13001,7 +13001,7 @@ Typing \\[verilog-auto] will make this into:
 		      ;; count(enums) == width(sig)
 		      (equal (number-to-string (length enum-sigs))
 			     (verilog-sig-width undecode-sig)))))
-  	   (enum-chars 0)
+	   (enum-chars 0)
 	   (ascii-chars 0))
       ;;
       ;; Find number of ascii chars needed
