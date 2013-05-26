@@ -9100,8 +9100,9 @@ warning message, you need to add to your init file:
       (while (re-search-forward "^\\s-*`define\\s-+\\([a-zA-Z0-9_$]+\\)\\s-+\\(.*\\)$" nil t)
 	(let ((defname (match-string-no-properties 1))
 	      (defvalue (match-string-no-properties 2)))
-	  (setq defvalue (verilog-string-replace-matches "\\s-*/[/*].*$" "" nil nil defvalue))
-	  (verilog-set-define defname defvalue origbuf)))
+	  (unless (verilog-inside-comment-or-string-p (match-beginning 0))
+	    (setq defvalue (verilog-string-replace-matches "\\s-*/[/*].*$" "" nil nil defvalue))
+	    (verilog-set-define defname defvalue origbuf))))
       ;; Hack: Read parameters
       (goto-char (point-min))
       (while (re-search-forward
@@ -9114,8 +9115,9 @@ warning message, you need to add to your init file:
 	  (forward-comment 99999)
 	  (while (looking-at (concat "\\s-*,?\\s-*\\(?:/[/*].*?$\\)?\\s-*\\([a-zA-Z0-9_$]+\\)"
 				     "\\s-*=\\s-*\\([^;,]*\\),?\\s-*\\(/[/*].*?$\\)?\\s-*"))
-	    (verilog-set-define (match-string-no-properties 1)
-				(match-string-no-properties 2) origbuf enumname)
+	    (unless (verilog-inside-comment-or-string-p (match-beginning 0))
+	      (verilog-set-define (match-string-no-properties 1)
+				  (match-string-no-properties 2) origbuf enumname))
 	    (goto-char (match-end 0))
 	    (forward-comment 99999)))))))
 
