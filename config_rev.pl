@@ -27,7 +27,8 @@ if ($data =~ /Changed but not updated/i
 
 # Filter the code
 my $wholefile = join('',<STDIN>);
-$wholefile =~ s/__VMVERSION__/$rev/mg;
+$wholefile =~ s/__VMVERSION__-__VMREVISION__/$rev/mg;
+$wholefile =~ s/__VMPACKAGER__/vpo/mg;
 print $wholefile;
 
 # Die after the print, so at least the header has good contents
