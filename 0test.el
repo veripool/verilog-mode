@@ -133,6 +133,8 @@
 	      (progn
 		(setq files (cdr files))))))))
     
+    (message "emacs-version %s" emacs-version)
+
     (while files
       (setq file (car files))
       (setq temp-file (concat (if running-on-xemacs "x/t/" "e/t/")
