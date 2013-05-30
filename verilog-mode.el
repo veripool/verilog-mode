@@ -37,25 +37,26 @@
 
 ;;; Commentary:
 
-;; This mode borrows heavily from the Pascal-mode and the cc-mode of Emacs
-
 ;; USAGE
 ;; =====
 
-;; A major mode for editing Verilog HDL source code.  When you have
-;; entered Verilog mode, you may get more info by pressing C-h m. You
-;; may also get online help describing various functions by: C-h f
-;; <Name of function you want described>
+;; A major mode for editing Verilog and SystemVerilog HDL source code (IEEE
+;; 1364-2005 and IEEE 1800-2012 standards).  When you have entered Verilog
+;; mode, you may get more info by pressing C-h m. You may also get online
+;; help describing various functions by: C-h f <Name of function you want
+;; described>
 
 ;; KNOWN BUGS / BUG REPORTS
 ;; =======================
 
-;; Verilog is a rapidly evolving language, and hence this mode is
-;; under continuous development.  Hence this is beta code, and likely
-;; has bugs.  Please report any issues to the issue tracker at
-;; http://www.veripool.org/verilog-mode
+;; SystemVerilog is a rapidly evolving language, and hence this mode is
+;; under continuous development.  Please report any issues to the issue
+;; tracker at
+;;
+;;    http://www.veripool.org/verilog-mode
+;;
 ;; Please use verilog-submit-bug-report to submit a report; type C-c
-;; C-b to invoke this and as a result I will have a much easier time
+;; C-b to invoke this and as a result we will have a much easier time
 ;; of reproducing the bug you find, and hence fixing it.
 
 ;; INSTALLING THE MODE
@@ -109,8 +110,8 @@
 ;       verilog-indent-begin-after-if    t
 ;       verilog-auto-lineup              'declarations
 ;       verilog-highlight-p1800-keywords nil
-;	verilog-linter			 "my_lint_shell_command"
-;	)
+;       verilog-linter			 "my_lint_shell_command"
+;       )
 
 ;; 
 
