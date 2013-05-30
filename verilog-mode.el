@@ -661,7 +661,7 @@ to see the effect as font color choices are cached by Emacs."
 (put 'verilog-highlight-p1800-keywords 'safe-local-variable 'verilog-booleanp)
 
 (defcustom verilog-highlight-grouping-keywords nil
-  "Non-nil means highlight grouping keywords 'begin' and 'end' more dramatically.
+  "Non-nil means highlight grouping keywords more dramatically.
 If false, these words are in the `font-lock-type-face'; if True then they are in
 `verilog-font-lock-ams-face'.  Some find that special highlighting on these
 grouping constructs allow the structure of the code to be understood at a glance."
@@ -958,7 +958,7 @@ See also `verilog-library-flags', `verilog-library-directories'."
 (put 'verilog-library-extensions 'safe-local-variable 'listp)
 
 (defcustom verilog-active-low-regexp nil
-  "If set, treat signals matching this regexp as active low.
+  "If true, treat signals matching this regexp as active low.
 This is used for AUTORESET and AUTOTIEOFF.  For proper behavior,
 you will probably also need `verilog-auto-reset-widths' set."
   :group 'verilog-mode-auto
@@ -1133,21 +1133,21 @@ won't merge conflict."
 (put 'verilog-auto-inst-interfaced-ports 'safe-local-variable 'verilog-booleanp)
 
 (defcustom verilog-auto-input-ignore-regexp nil
-  "If set, when creating AUTOINPUT list, ignore signals matching this regexp.
+  "If non-nil, when creating AUTOINPUT, ignore signals matching this regexp.
 See the \\[verilog-faq] for examples on using this."
   :group 'verilog-mode-auto
   :type '(choice (const nil) regexp))
 (put 'verilog-auto-input-ignore-regexp 'safe-local-variable 'stringp)
 
 (defcustom verilog-auto-inout-ignore-regexp nil
-  "If set, when creating AUTOINOUT list, ignore signals matching this regexp.
+  "If non-nil, when creating AUTOINOUT, ignore signals matching this regexp.
 See the \\[verilog-faq] for examples on using this."
   :group 'verilog-mode-auto
   :type '(choice (const nil) regexp))
 (put 'verilog-auto-inout-ignore-regexp 'safe-local-variable 'stringp)
 
 (defcustom verilog-auto-output-ignore-regexp nil
-  "If set, when creating AUTOOUTPUT list, ignore signals matching this regexp.
+  "If non-nil, when creating AUTOOUTPUT, ignore signals matching this regexp.
 See the \\[verilog-faq] for examples on using this."
   :group 'verilog-mode-auto
   :type '(choice (const nil) regexp))
@@ -1171,14 +1171,14 @@ assignment, else the data type for variable creation."
 (put 'verilog-auto-tieoff-declaration 'safe-local-variable 'stringp)
 
 (defcustom verilog-auto-tieoff-ignore-regexp nil
-  "If set, when creating AUTOTIEOFF list, ignore signals matching this regexp.
+  "If non-nil, when creating AUTOTIEOFF, ignore signals matching this regexp.
 See the \\[verilog-faq] for examples on using this."
   :group 'verilog-mode-auto
   :type '(choice (const nil) regexp))
 (put 'verilog-auto-tieoff-ignore-regexp 'safe-local-variable 'stringp)
 
 (defcustom verilog-auto-unused-ignore-regexp nil
-  "If set, when creating AUTOUNUSED list, ignore signals matching this regexp.
+  "If non-nil, when creating AUTOUNUSED, ignore signals matching this regexp.
 See the \\[verilog-faq] for examples on using this."
   :group 'verilog-mode-auto
   :type '(choice (const nil) regexp))
@@ -1603,7 +1603,7 @@ If set will become buffer local.")
   (nth 3 (parse-partial-sexp (point-at-bol) (point))))
 
 (defsubst verilog-string-match-fold (regexp string &optional start)
-  "Like `string-match', but uses `verilog-case-fold'.
+  "Like `string-match', but use `verilog-case-fold'.
 Return index of start of first match for REGEXP in STRING, or nil.
 Matching ignores case if `verilog-case-fold' is non-nil.
 If third arg START is non-nil, start search at that index in STRING."
@@ -3143,7 +3143,7 @@ to full text form for parsing.  Additional actions may be specified with
 ;; Comment detection and caching
 
 (defvar verilog-scan-cache-preserving nil
-  "If set, the specified buffer's comment properties are static.
+  "If true, the specified buffer's comment properties are static.
 Buffer changes will be ignored.  See `verilog-inside-comment-or-string-p'
 and `verilog-scan'.")
 
@@ -7792,7 +7792,7 @@ Signals must be in standard (base vector) form."
     (nreverse out-list)))
 
 (defun verilog-signals-with (func in-list)
-  "Return IN-LIST with only signals where FUNC passed each signal is true."
+  "Return list of signals where FUNC is true executed on each signal in IN-LIST."
   (let (out-list)
     (while in-list
       (when (funcall func (car in-list))
@@ -9320,7 +9320,7 @@ Used for __FLAGS__ in `verilog-expand-command'."
 ;;
 
 (defvar verilog-dir-cache-preserving nil
-  "If set, the directory cache is enabled, and file system changes are ignored.
+  "If true, the directory cache is enabled, and file system changes are ignored.
 See `verilog-dir-exists-p' and `verilog-dir-files'.")
 
 ;; If adding new cached variable, add also to verilog-preserve-dir-cache
