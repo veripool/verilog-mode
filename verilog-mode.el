@@ -4093,9 +4093,8 @@ Uses `verilog-scan' cache."
 	   (error "%s: Can't find endmodule" (verilog-point-text))
 	   (point-max)))))
 
-(defun verilog-label-be (&optional arg)
-  "Label matching begin ... end, fork ... join and case ... endcase statements.
-With ARG, first kill any existing labels."
+(defun verilog-label-be ()
+  "Label matching begin ... end, fork ... join and case ... endcase statements."
   (interactive)
   (let ((cnt 0)
 	(oldpos (point))
