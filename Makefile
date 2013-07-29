@@ -135,12 +135,12 @@ $(S)bits/verilog-mode.el : verilog-mode.el
 x/verilog-mode.el : verilog-mode.el ./config_rev.pl
 	rm -rf x
 	mkdir x
-	./config_rev.pl . verilog-mode.el <verilog-mode.el >x/verilog-mode.el
+	./config_rev.pl . . <verilog-mode.el >x/verilog-mode.el
 
 e/verilog-mode.el : verilog-mode.el ./config_rev.pl
 	-rm -rf e
 	-mkdir e
-	./config_rev.pl . verilog-mode.el <verilog-mode.el >e/verilog-mode.el
+	./config_rev.pl . . <verilog-mode.el >e/verilog-mode.el
 
 e/verilog-mode.el.gz : e/verilog-mode.el
 	gzip --best $< --stdout > $@

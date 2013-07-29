@@ -1443,6 +1443,8 @@ If set will become buffer local.")
        :help		"Help on AUTOASCIIENUM - creating ASCII for enumerations"]
       ["AUTOASSIGNMODPORT"		(describe-function 'verilog-auto-assign-modport)
        :help		"Help on AUTOASSIGNMODPORT - creating assignments to/from modports"]
+      ["AUTOINOUT"			(describe-function 'verilog-auto-inout)
+       :help		"Help on AUTOINOUT - adding inouts from cells"]
       ["AUTOINOUTCOMP"			(describe-function 'verilog-auto-inout-comp)
        :help		"Help on AUTOINOUTCOMP - copying complemented i/o from another file"]
       ["AUTOINOUTIN"			(describe-function 'verilog-auto-inout-in)
@@ -1453,12 +1455,10 @@ If set will become buffer local.")
        :help		"Help on AUTOINOUTMODULE - copying i/o from another file"]
       ["AUTOINOUTPARAM"			(describe-function 'verilog-auto-inout-param)
        :help		"Help on AUTOINOUTPARAM - copying parameters from another file"]
-      ["AUTOINSERTLISP"			(describe-function 'verilog-auto-insert-lisp)
-       :help		"Help on AUTOINSERTLISP - insert text from a lisp function"]
-      ["AUTOINOUT"			(describe-function 'verilog-auto-inout)
-       :help		"Help on AUTOINOUT - adding inouts from cells"]
       ["AUTOINPUT"			(describe-function 'verilog-auto-input)
        :help		"Help on AUTOINPUT - adding inputs from cells"]
+      ["AUTOINSERTLISP"			(describe-function 'verilog-auto-insert-lisp)
+       :help		"Help on AUTOINSERTLISP - insert text from a lisp function"]
       ["AUTOINST"			(describe-function 'verilog-auto-inst)
        :help		"Help on AUTOINST - adding pins for cells"]
       ["AUTOINST (.*)"			(describe-function 'verilog-auto-star)
@@ -1477,7 +1477,7 @@ If set will become buffer local.")
        :help		"Help on AUTOREGINPUT - declaring inputs for non-wires"]
       ["AUTORESET"			(describe-function 'verilog-auto-reset)
        :help		"Help on AUTORESET - resetting always blocks"]
-      ["AUTOSENSE"			(describe-function 'verilog-auto-sense)
+      ["AUTOSENSE or AS"		(describe-function 'verilog-auto-sense)
        :help		"Help on AUTOSENSE - sensitivity lists for always blocks"]
       ["AUTOTIEOFF"			(describe-function 'verilog-auto-tieoff)
        :help		"Help on AUTOTIEOFF - tying off unused outputs"]
@@ -13154,12 +13154,12 @@ Using \\[describe-function], see also:
     `verilog-auto-arg'          for AUTOARG module instantiations
     `verilog-auto-ascii-enum'   for AUTOASCIIENUM enumeration decoding
     `verilog-auto-assign-modport' for AUTOASSIGNMODPORT assignment to/from modport
+    `verilog-auto-inout'        for AUTOINOUT making hierarchy inouts
     `verilog-auto-inout-comp'   for AUTOINOUTCOMP copy complemented i/o
     `verilog-auto-inout-in'     for AUTOINOUTIN inputs for all i/o
     `verilog-auto-inout-modport'  for AUTOINOUTMODPORT i/o from an interface modport
     `verilog-auto-inout-module' for AUTOINOUTMODULE copying i/o from elsewhere
     `verilog-auto-inout-param'  for AUTOINOUTPARAM copying params from elsewhere
-    `verilog-auto-inout'        for AUTOINOUT making hierarchy inouts
     `verilog-auto-input'        for AUTOINPUT making hierarchy inputs
     `verilog-auto-insert-lisp'  for AUTOINSERTLISP insert code from lisp function
     `verilog-auto-inst'         for AUTOINST instantiation pins
@@ -13171,7 +13171,7 @@ Using \\[describe-function], see also:
     `verilog-auto-reg'          for AUTOREG registers
     `verilog-auto-reg-input'    for AUTOREGINPUT instantiation registers
     `verilog-auto-reset'        for AUTORESET flop resets
-    `verilog-auto-sense'        for AUTOSENSE always sensitivity lists
+    `verilog-auto-sense'        for AUTOSENSE or AS always sensitivity lists
     `verilog-auto-tieoff'       for AUTOTIEOFF output tieoffs
     `verilog-auto-undef'        for AUTOUNDEF `undef of local `defines
     `verilog-auto-unused'       for AUTOUNUSED unused inputs/inouts
