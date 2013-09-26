@@ -2805,7 +2805,7 @@ find the errors."
     (modify-syntax-entry ?> "." table)
     (modify-syntax-entry ?& "." table)
     (modify-syntax-entry ?| "." table)
-    (modify-syntax-entry ?` "w" table)
+    (modify-syntax-entry ?` "w" table) ;; ` is part of definition symbols in Verilog
     (modify-syntax-entry ?_ "w" table)
     (modify-syntax-entry ?\' "." table)
 
