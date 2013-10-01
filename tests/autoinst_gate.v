@@ -16,6 +16,13 @@ module wrapper
     i3[31:0]
     /*AUTOINST*/);
 
+// bug676
+ buf # 1 mybuf[1:0]
+   (bout[1:0],
+    // Inputs,
+    bin[1:0]
+    /*AUTOINST*/);
+
  //--------------------------------------------------------------------------
 
 endmodule

@@ -5448,6 +5448,7 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 	  (t
 	   (setq depth (verilog-current-indent-level)))))
       (message "You are at nesting %s depth %d" type depth))))
+
 (defun verilog-calc-1 ()
   (catch 'nesting
     (let ((re (concat "\\({\\|}\\|" verilog-indent-re "\\)"))
@@ -7996,6 +7997,12 @@ Tieoff value uses `verilog-active-low-regexp' and
     (verilog-backward-open-paren)
     (verilog-re-search-backward-quick "\\b[a-zA-Z0-9`_\$]" nil nil))
   (skip-chars-backward "a-zA-Z0-9'_$")
+  ;; #1 is legal syntax for gate primitives
+  (when (save-excursion
+	  (verilog-backward-syntactic-ws-quick)
+	  (eq ?# (char-before)))
+    (verilog-re-search-backward-quick "\\b[a-zA-Z0-9`_\$]" nil nil)
+    (skip-chars-backward "a-zA-Z0-9'_$"))
   (looking-at "[a-zA-Z0-9`_\$]+")
   ;; Important: don't use match string, this must work with Emacs 19 font-lock on
   (buffer-substring-no-properties (match-beginning 0) (match-end 0))
