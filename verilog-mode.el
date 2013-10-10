@@ -10832,7 +10832,7 @@ If PAR-VALUES replace final strings with these parameter values."
 		    ""))
 	 (case-fold-search nil)
 	 (check-values par-values)
-	 tpl-net)
+	 tpl-net dflt-bits)
     ;; Replace parameters in bit-width
     (when (and check-values
 	       (not (equal vl-bits "")))
@@ -10850,13 +10850,14 @@ If PAR-VALUES replace final strings with these parameter values."
 	    vl-mbits (verilog-simplify-range-expression vl-mbits)
 	    vl-width (verilog-make-width-expression vl-bits))) ; Not in the loop for speed
     ;; Default net value if not found
-    (setq tpl-net (concat port
+    (setq dflt-bits (if (and (verilog-sig-bits port-st)
+			     (or (verilog-sig-multidim port-st)
+				 (verilog-sig-memory port-st)))
+			(concat "/*" vl-mbits vl-bits "*/")
+		      (concat vl-bits))
+	  tpl-net (concat port
 			  (if vl-modport (concat "." vl-modport) "")
-			  (if (and (verilog-sig-bits port-st)
-				   (or (verilog-sig-multidim port-st)
-				       (verilog-sig-memory port-st)))
-			      (concat "/*" vl-mbits vl-bits "*/")
-			    (concat vl-bits))))
+			  dflt-bits))
     ;; Find template
     (cond (tpl-ass	    ; Template of exact port name
 	   (setq tpl-net (nth 1 tpl-ass)))
@@ -10889,6 +10890,7 @@ If PAR-VALUES replace final strings with these parameter values."
 		 (substring tpl-net (match-end 0))))))
       ;; Replace @ and [] magic variables in final output
       (setq tpl-net (verilog-string-replace-matches "@" tpl-num nil nil tpl-net))
+      (setq tpl-net (verilog-string-replace-matches "\\[\\]\\[\\]" dflt-bits nil nil tpl-net))
       (setq tpl-net (verilog-string-replace-matches "\\[\\]" vl-bits nil nil tpl-net)))
     ;; Insert it
     (indent-to indent-pt)
@@ -11084,6 +11086,19 @@ Templates:
   words and capitalized.  Only signals that must be different for each
   instantiation need to be listed.
 
+  Inside a template, a [] in a connection name (with nothing else
+  inside the brackets) will be replaced by the same bus subscript
+  as it is being connected to, or the [] will be removed if it is
+  a single bit signal.
+
+  Inside a template, a [][] in a connection name will behave
+  similarly to a [] for scalar or single-dimensional connection;
+  for a multidimensional connection it will print a comment
+  similar to that printed when a template is not used.  Generally
+  it is a good idea to do this for all connections in a template,
+  as then they will work for any width signal, and with AUTOWIRE.
+  See PTL_BUS becoming PTL_BUSNEW below.
+ 
   Inside a template, a [] in a connection name (with nothing else inside
   the brackets) will be replaced by the same bus subscript as it is being
   connected to, or the [] will be removed if it is a single bit signal.
