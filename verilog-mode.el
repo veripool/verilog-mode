@@ -11752,6 +11752,7 @@ same expansion will result from only extracting outputs starting with ov:
 		      (verilog-subdecls-get-outputs modsubdecls)
 		      (append (verilog-decls-get-outputs moddecls)
 			      (verilog-decls-get-inouts moddecls)
+			      (verilog-decls-get-inputs moddecls)
 			      (verilog-subdecls-get-inputs modsubdecls)
 			      (verilog-subdecls-get-inouts modsubdecls)))))
       (when regexp
@@ -11878,6 +11879,7 @@ same expansion will result from only extracting inputs starting with i:
 		      (verilog-subdecls-get-inputs modsubdecls)
 		      (append (verilog-decls-get-inputs moddecls)
 			      (verilog-decls-get-inouts moddecls)
+			      (verilog-decls-get-outputs moddecls)
 			      (verilog-decls-get-vars moddecls)
 			      (verilog-decls-get-consts moddecls)
 			      (verilog-decls-get-gparams moddecls)
