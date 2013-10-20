@@ -1187,6 +1187,7 @@ See the \\[verilog-faq] for examples on using this."
 (defcustom verilog-case-fold t
   "Non-nil means `verilog-mode' regexps should ignore case.
 This variable is t for backward compatibility; nil is suggested."
+  :version "24.4"
   :group 'verilog-mode
   :type 'boolean)
 (put 'verilog-case-fold 'safe-local-variable 'verilog-booleanp)
@@ -2805,6 +2806,8 @@ find the errors."
     (modify-syntax-entry ?> "." table)
     (modify-syntax-entry ?& "." table)
     (modify-syntax-entry ?| "." table)
+    ;; FIXME: This goes against Emacs conventions.  Use "_" syntax instead and
+    ;; then use regexps with things like "\\_<...\\_>".
     (modify-syntax-entry ?` "w" table) ;; ` is part of definition symbols in Verilog
     (modify-syntax-entry ?_ "w" table)
     (modify-syntax-entry ?\' "." table)
@@ -12300,7 +12303,7 @@ Limitations:
   Interface names must be resolvable to filenames.  See `verilog-auto-inst'.
 
 As with other autos, any inputs/outputs declared in the module
-will suppress the AUTO from redeclaring an inputs/outputs by
+will suppress the AUTO from redeclaring an input/output by
 the same name.
 
 An example:
