@@ -4081,14 +4081,7 @@ Uses `verilog-scan' cache."
   (interactive)
   (verilog-re-search-forward verilog-end-defun-re nil 'move))
 
-(defun verilog-get-beg-of-defun (&optional warn)
-  (save-excursion
-    (cond ((verilog-re-search-forward-quick verilog-defun-re nil t)
-	   (point))
-	  (t
-	   (error "%s: Can't find module beginning" (verilog-point-text))
-	   (point-max)))))
-(defun verilog-get-end-of-defun (&optional warn)
+(defun verilog-get-end-of-defun ()
   (save-excursion
     (cond ((verilog-re-search-forward-quick verilog-end-defun-re nil t)
 	   (point))
@@ -6888,8 +6881,7 @@ Region is defined by B and EDPOS."
 	((b (prog2
 		(beginning-of-line)
 		(point-marker)
-	      (end-of-line)))
-	 (e (point-marker)))
+	      (end-of-line))))
       (if (re-search-backward " /\\* \[#-\]# \[a-zA-Z\]+ \[0-9\]+ ## \\*/" b t)
 	  (progn
 	    (replace-match " /* -#  ## */")
@@ -7080,24 +7072,6 @@ for matches of `str' and adding the occurrence tp `all' through point END."
 		(setq verilog-all (cons match verilog-all)))))
       (forward-line 1)))
   verilog-all)
-
-(defun verilog-type-completion ()
-  "Calculate all possible completions for types."
-  (let ((start (point))
-	goon)
-    ;; Search for all reachable type declarations
-    (while (or (verilog-beg-of-defun)
-	       (setq goon (not goon)))
-      (save-excursion
-	(if (and (< start (prog1 (save-excursion (verilog-end-of-defun)
-						 (point))
-			    (forward-char 1)))
-		 (verilog-re-search-forward
-		  "\\<type\\>\\|\\<\\(begin\\|function\\|procedure\\)\\>"
-		  start t)
-		 (not (match-end 1)))
-	    ;; Check current type declaration
-	    (verilog-get-completion-decl start))))))
 
 (defun verilog-var-completion ()
   "Calculate all possible completions for variables (or constants)."
@@ -8089,7 +8063,7 @@ Optional NUM-PARAM and MAX-PARAM check for a specific number of parameters."
 (defun verilog-read-decls ()
   "Compute signal declaration information for the current module at point.
 Return an array of [outputs inouts inputs wire reg assign const]."
-  (let ((end-mod-point (or (verilog-get-end-of-defun t) (point-max)))
+  (let ((end-mod-point (or (verilog-get-end-of-defun) (point-max)))
 	(functask 0) (paren 0) (sig-paren 0) (v2kargs-ok t)
 	in-modport in-clocking ptype ign-prop
 	sigs-in sigs-out sigs-inout sigs-var sigs-assign sigs-const
@@ -8595,7 +8569,7 @@ Outputs comments above subcell signals, for example:
 	    // Inputs
 	    .in  (in));"
   (save-excursion
-    (let ((end-mod-point (verilog-get-end-of-defun t))
+    (let ((end-mod-point (verilog-get-end-of-defun))
 	  st-point end-inst-point
 	  ;; below 3 modified by verilog-read-sub-decls-line
 	  sigs-out sigs-inout sigs-in sigs-intf sigs-intfd)
@@ -8890,7 +8864,7 @@ IGNORE-NEXT is true to ignore next token, fake from inside case statement."
 (defun verilog-read-instants ()
   "Parse module at point and return list of ( ( file instance ) ... )."
   (verilog-beg-of-defun-quick)
-  (let* ((end-mod-point (verilog-get-end-of-defun t))
+  (let* ((end-mod-point (verilog-get-end-of-defun))
 	 (state nil)
 	 (instants-list nil))
     (save-excursion
@@ -10043,19 +10017,6 @@ This repairs those mis-inserted by an AUTOARG."
     (when (looking-at ",")
       (delete-char 1))))
 
-(defun verilog-get-list (start end)
-  "Return the elements of a comma separated list between START and END."
-  (interactive)
-  (let ((my-list (list))
-	my-string)
-    (save-excursion
-      (while (< (point) end)
-	(when (re-search-forward "\\([^,{]+\\)" end t)
-	  (setq my-string (verilog-string-remove-spaces (match-string 1)))
-	  (setq my-list (nconc my-list (list my-string) ))
-	  (goto-char (match-end 0))))
-      my-list)))
-
 (defun verilog-make-width-expression (range-exp)
   "Return an expression calculating the length of a range [x:y] in RANGE-EXP."
   ;; strip off the []
@@ -11111,7 +11072,7 @@ Templates:
   it is a good idea to do this for all connections in a template,
   as then they will work for any width signal, and with AUTOWIRE.
   See PTL_BUS becoming PTL_BUSNEW below.
- 
+
   Inside a template, a [] in a connection name (with nothing else inside
   the brackets) will be replaced by the same bus subscript as it is being
   connected to, or the [] will be removed if it is a single bit signal.
