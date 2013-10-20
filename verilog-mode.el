@@ -7182,6 +7182,7 @@ exact match, nil otherwise."
 	     ;; Return nil if there was no matching label
 	     nil
 	   ;; Get longest string common in the labels
+           ;; FIXME: Why not use `try-completion'?
 	   (let* ((elm (cdr verilog-all))
 		  (match (car verilog-all))
 		  (min (length match))
@@ -7218,6 +7219,7 @@ exact match, nil otherwise."
   "Complete word at current point.
 \(See also `verilog-toggle-completions', `verilog-type-keywords',
 and `verilog-separator-keywords'.)"
+  ;; FIXME: Provide completion-at-point-function.
   (interactive)
   (let* ((b (save-excursion (skip-chars-backward "a-zA-Z0-9_") (point)))
 	 (e (save-excursion (skip-chars-forward "a-zA-Z0-9_") (point)))
@@ -7789,6 +7791,7 @@ Signals must be in standard (base vector) form."
   "Return list of signals in IN-LIST that aren't parameters or numeric constants."
   (let (out-list)
     (while in-list
+      ;; Namespace intentionally short for AUTOs and compatibility
       (unless (boundp (intern (concat "vh-" (verilog-sig-name (car in-list)))))
 	(setq out-list (cons (car in-list) out-list)))
       (setq in-list (cdr in-list)))
@@ -9034,12 +9037,14 @@ If found returns `verilog-read-auto-template-inside' structure."
   "Set the definition DEFNAME to the DEFVALUE in the given BUFFER.
 Optionally associate it with the specified enumeration ENUMNAME."
   (with-current-buffer (or buffer (current-buffer))
+    ;; Namespace intentionally short for AUTOs and compatibility
     (let ((mac (intern (concat "vh-" defname))))
       ;;(message "Define %s=%s" defname defvalue) (sleep-for 1)
       ;; Need to define to a constant if no value given
       (set (make-local-variable mac)
 	   (if (equal defvalue "") "1" defvalue)))
     (if enumname
+	;; Namespace intentionally short for AUTOs and compatibility
 	(let ((enumvar (intern (concat "venum-" enumname))))
 	  ;;(message "Define %s=%s" defname defvalue) (sleep-for 1)
 	  (unless (boundp enumvar) (set enumvar nil))
@@ -9424,10 +9429,12 @@ If undefined, and WING-IT, return just SYMBOL without the tick, else nil."
   (while (and symbol (string-match "^`" symbol))
     (setq symbol (substring symbol 1))
     (setq symbol
+	  ;; Namespace intentionally short for AUTOs and compatibility
 	  (if (boundp (intern (concat "vh-" symbol)))
 	      ;; Emacs has a bug where boundp on a buffer-local
 	      ;; variable in only one buffer returns t in another.
 	      ;; This can confuse, so check for nil.
+	      ;; Namespace intentionally short for AUTOs and compatibility
 	      (let ((val (eval (intern (concat "vh-" symbol)))))
 		(if (eq val nil)
 		    (if wing-it symbol nil)
@@ -9460,10 +9467,12 @@ If the variable vh-{symbol} is defined, substitute that value."
       (setq symbol (match-string 1 text))
       ;;(message symbol)
       (cond ((and
+	      ;; Namespace intentionally short for AUTOs and compatibility
 	      (boundp (intern (concat "vh-" symbol)))
 	      ;; Emacs has a bug where boundp on a buffer-local
 	      ;; variable in only one buffer returns t in another.
 	      ;; This can confuse, so check for nil.
+	      ;; Namespace intentionally short for AUTOs and compatibility
 	      (setq val (eval (intern (concat "vh-" symbol)))))
 	     (setq text (replace-match val nil nil text)))
 	    (t (setq ok nil)))))
@@ -9807,6 +9816,7 @@ those clocking block's signals."
 	  (setq out-list (cons (car in-list) out-list)))
       (setq in-list (cdr in-list)))
     ;; New scheme
+    ;; Namespace intentionally short for AUTOs and compatibility
     (let* ((enumvar (intern (concat "venum-" enum)))
 	   (enumlist (and (boundp enumvar) (eval enumvar))))
       (while enumlist
