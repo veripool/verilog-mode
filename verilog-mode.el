@@ -163,12 +163,12 @@
     (condition-case nil
         (if (fboundp 'store-match-data)
             nil ;; fab
-          (defmacro store-match-data (&rest args) nil))
+          (defmacro store-match-data (&rest _args) nil))
       (error nil))
     (condition-case nil
         (if (fboundp 'char-before)
             nil ;; great
-          (defmacro char-before (&rest body)
+          (defmacro char-before (&rest _body)
             (char-after (1- (point)))))
       (error nil))
     (condition-case nil
@@ -210,23 +210,23 @@ STRING should be given if the last search was by `string-match' on STRING."
     (if (and (featurep 'custom) (fboundp 'custom-declare-variable))
         nil ;; We've got what we needed
       ;; We have the old custom-library, hack around it!
-      (defmacro defgroup (&rest args)  nil)
-      (defmacro customize (&rest args)
+      (defmacro defgroup (&rest _args)  nil)
+      (defmacro customize (&rest _args)
         (message
 	 "Sorry, Customize is not available with this version of Emacs"))
-      (defmacro defcustom (var value doc &rest args)
+      (defmacro defcustom (var value doc &rest _args)
         `(defvar ,var ,value ,doc))
       )
     (if (fboundp 'defface)
         nil				; great!
-      (defmacro defface (var values doc &rest args)
+      (defmacro defface (var values doc &rest _args)
         `(make-face ,var))
       )
 
     (if (and (featurep 'custom) (fboundp 'customize-group))
         nil ;; We've got what we needed
       ;; We have an intermediate custom-library, hack around it!
-      (defmacro customize-group (var &rest args)
+      (defmacro customize-group (var &rest _args)
         `(customize ,var))
       )
 
@@ -259,23 +259,23 @@ STRING should be given if the last search was by `string-match' on STRING."
 					;with just a two input regexp
                       (defun verilog-regexp-opt (a b)
                         "Deal with differing number of required arguments for  `regexp-opt'.
-         Call 'regexp-opt' on A and B."
-                        (regexp-opt a b 't))
+         Call `regexp-opt' on A and B."
+                        (regexp-opt a b t))
                     (error nil))
                   )
                  ((eq args 2) ;; It takes 2
                   (defun verilog-regexp-opt (a b)
-                    "Call 'regexp-opt' on A and B."
+                    "Call `regexp-opt' on A and B."
                     (regexp-opt a b))
                   )
                  (t nil)))
             ;; We can't tell; assume it takes 2
             (defun verilog-regexp-opt (a b)
-              "Call 'regexp-opt' on A and B."
+              "Call `regexp-opt' on A and B."
               (regexp-opt a b))
             )
         ;; There is no regexp-opt, provide our own
-        (defun verilog-regexp-opt (strings &optional paren shy)
+        (defun verilog-regexp-opt (strings &optional paren _shy)
           (let ((open (if paren "\\(" "")) (close (if paren "\\)" "")))
             (concat open (mapconcat 'regexp-quote strings "\\|") close)))
         )
@@ -6486,9 +6486,9 @@ Do not count named blocks or case-statements."
 		 (looking-at "\*")))
 	  (insert "* ")))))
 
-(defun verilog-comment-indent (&optional arg)
+(defun verilog-comment-indent (&optional _arg)
   "Return the column number the line should be indented to.
-ARG is ignored, for `comment-indent-function' compatibility."
+_ARG is ignored, for `comment-indent-function' compatibility."
   (cond
    ((verilog-in-star-comment-p)
     (save-excursion
@@ -6650,8 +6650,8 @@ Be verbose about progress unless optional QUIET set."
 	      (forward-line 1))
 	    (unless quiet (message "")))))))
 
-(defun verilog-pretty-expr (&optional quiet myre)
-  "Line up expressions around point, optionally QUIET with regexp MYRE ignored."
+(defun verilog-pretty-expr (&optional quiet _myre)
+  "Line up expressions around point, optionally QUIET with regexp _MYRE ignored."
   (interactive)
   (if (not (verilog-in-comment-or-string-p))
       (save-excursion
@@ -10809,7 +10809,7 @@ See the example in `verilog-auto-inout-modport'."
 		(setq sigs (cdr sigs))))
 	    (verilog-insert-indent "// End of automatics\n")))))))
 
-(defun verilog-auto-inst-port-map (port-st)
+(defun verilog-auto-inst-port-map (_port-st)
   nil)
 
 (defvar vl-cell-type nil "See `verilog-auto-inst'.") ; Prevent compile warning
@@ -10897,7 +10897,7 @@ If PAR-VALUES replace final strings with these parameter values."
 			     (setq expr (verilog-string-replace-matches "\\\\\"" "\"" nil nil expr))
 			     (setq expr (verilog-string-replace-matches "@" tpl-num nil nil expr))
 			     (prin1 (eval (car (read-from-string expr)))
-				    (lambda (ch) ())))))
+				    (lambda (_ch) ())))))
 		     (if (numberp value) (setq value (number-to-string value)))
 		     value))
 		 (substring tpl-net (match-end 0))))))
@@ -12313,7 +12313,7 @@ Limitations:
   Interface names must be resolvable to filenames.  See `verilog-auto-inst'.
 
 As with other autos, any inputs/outputs declared in the module
-will suppress the AUTO from redeclaring an input/output by
+will suppress the AUTO from redeclaring an inputs/outputs by
 the same name.
 
 An example:
@@ -13776,7 +13776,7 @@ and the case items."
   "Map containing mouse bindings for `verilog-mode'.")
 
 
-(defun verilog-highlight-region (beg end old-len)
+(defun verilog-highlight-region (beg end _old-len)
   "Colorize included files and modules in the (changed?) region.
 Clicking on the middle-mouse button loads them in a buffer (as in dired)."
   (when (or verilog-highlight-includes
