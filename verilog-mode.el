@@ -5453,7 +5453,7 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 	(catch 'continue
 	  (cond
 	   ((equal (char-after) ?\{)
-            ;; block type returned based on outer contraint { or inner
+            ;; block type returned based on outer constraint { or inner
 	    (if (verilog-at-constraint-p)
                 (cond (inconstraint (throw 'nesting 'constraint))
                       (t            (throw 'nesting 'statement)))))
