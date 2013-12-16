@@ -8214,6 +8214,7 @@ Return an array of [outputs inouts inputs wire reg assign const]."
 		 (setq in-clocking t))
 		((equal keywd "type")
 		 (setq ptype t))
+		((equal keywd "var"))
 		;; Ifdef?  Ignore name of define
 		((member keywd '("`ifdef" "`ifndef" "`elsif"))
 		 (setq rvalue t))
