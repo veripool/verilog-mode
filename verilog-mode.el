@@ -4430,6 +4430,7 @@ Limit search to point LIM."
 	  "\\(`ifdef\\>\\)\\|"
 	  "\\(`ifndef\\>\\)\\|"
 	  "\\(`elsif\\>\\)"))
+
 (defun verilog-set-auto-endcomments (indent-str kill-existing-comment)
   "Add ending comment with given INDENT-STR.
 With KILL-EXISTING-COMMENT, remove what was there before.
@@ -8065,7 +8066,7 @@ Optional NUM-PARAM and MAX-PARAM check for a specific number of parameters."
 Return an array of [outputs inouts inputs wire reg assign const]."
   (let ((end-mod-point (or (verilog-get-end-of-defun) (point-max)))
 	(functask 0) (paren 0) (sig-paren 0) (v2kargs-ok t)
-	in-modport in-clocking ptype ign-prop
+	in-modport in-clocking in-ign-to-semi ptype ign-prop
 	sigs-in sigs-out sigs-inout sigs-var sigs-assign sigs-const
 	sigs-gparam sigs-intf sigs-modports
 	vec expect-signal keywd newsig rvalue enum io signed typedefed multidim
@@ -8097,19 +8098,24 @@ Return an array of [outputs inouts inputs wire reg assign const]."
 	  (or (re-search-forward "[^\\]\"" nil t)	;; don't forward-char first, since we look for a non backslash first
 	      (error "%s: Unmatched quotes, at char %d" (verilog-point-text) (point))))
 	 ((eq ?\; (following-char))
-	  (when (and in-modport (not (eq in-modport t))) ;; end of a modport declaration
-	    (verilog-modport-decls-set
-	     in-modport
-	     (verilog-decls-new sigs-out sigs-inout sigs-in
-				nil nil nil nil nil nil))
-	    ;; Pop from varstack to restore state to pre-clocking
-	    (setq tmp (car varstack)
-		  varstack (cdr varstack)
-		  sigs-out (aref tmp 0)
-		  sigs-inout (aref tmp 1)
-		  sigs-in (aref tmp 2)))
-	  (setq vec nil  io nil  expect-signal nil  newsig nil  paren 0  rvalue nil
-		v2kargs-ok nil  in-modport nil  ign-prop nil)
+	  (cond (in-ign-to-semi  ;; Such as inside a "import ...;" in a module header
+		 (setq in-ign-to-semi nil))
+		((and in-modport (not (eq in-modport t))) ;; end of a modport declaration
+		 (verilog-modport-decls-set
+		  in-modport
+		  (verilog-decls-new sigs-out sigs-inout sigs-in
+				     nil nil nil nil nil nil))
+		 ;; Pop from varstack to restore state to pre-clocking
+		 (setq tmp (car varstack)
+		       varstack (cdr varstack)
+		       sigs-out (aref tmp 0)
+		       sigs-inout (aref tmp 1)
+		       sigs-in (aref tmp 2))
+		 (setq vec nil  io nil  expect-signal nil  newsig nil  paren 0  rvalue nil
+		       v2kargs-ok nil  in-modport nil  ign-prop nil))
+		(t
+		 (setq vec nil  io nil  expect-signal nil  newsig nil  paren 0  rvalue nil
+		       v2kargs-ok nil  in-modport nil  ign-prop nil)))
 	  (forward-char 1))
 	 ((eq ?= (following-char))
 	  (setq rvalue t  newsig nil)
@@ -8212,6 +8218,9 @@ Return an array of [outputs inouts inputs wire reg assign const]."
 		 (setq in-modport t))
 		((equal keywd "clocking")
 		 (setq in-clocking t))
+		((equal keywd "import")
+		 (if v2kargs-ok  ;; import in module header, not a modport import
+		     (setq in-ign-to-semi t  rvalue t)))
 		((equal keywd "type")
 		 (setq ptype t))
 		((equal keywd "var"))
@@ -8286,6 +8295,7 @@ Return an array of [outputs inouts inputs wire reg assign const]."
 		      (eq functask 0)
 		      (not (member keywd verilog-keywords)))
 		 ;; Add new signal to expect-signal's variable
+		 ;;(if dbg (setq dbg (concat dbg (format "Pt %s  New sig %s'\n" (point) keywd))))
 		 (setq newsig (verilog-sig-new keywd vec nil nil enum signed typedefed multidim modport))
 		 (set expect-signal (cons newsig
 					  (symbol-value expect-signal))))))
