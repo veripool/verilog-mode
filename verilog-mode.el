@@ -1748,6 +1748,7 @@ To call on \\[verilog-auto], set `verilog-auto-delete-trailing-whitespace'."
     (unless (bolp) (insert "\n"))))
 
 (defvar compile-command)
+(defvar create-lockfiles)  ;; Emacs 24
 
 ;; compilation program
 (defun verilog-set-compile-command ()
@@ -12081,7 +12082,7 @@ against the previous example's module:
 			     (verilog-signals-matching-regexp sig-list-if regexp)
 			     "interface" direction-re))
 	  (when v2k (verilog-repair-open-comma))
-	  (when (or sig-list-i sig-list-o sig-list-io)
+	  (when (or sig-list-i sig-list-o sig-list-io sig-list-if)
 	    (verilog-insert-indent "// Beginning of automatic in/out/inouts (from specific module)\n")
 	    ;; Don't sort them so an upper AUTOINST will match the main module
 	    (verilog-insert-definition modi sig-list-o  "output" indent-pt v2k t)
