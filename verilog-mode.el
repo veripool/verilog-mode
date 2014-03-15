@@ -1634,7 +1634,7 @@ will break, as the o's continuously replace.  xa -> x works ok though."
     string))
 
 (defsubst verilog-re-search-forward (REGEXP BOUND NOERROR)
-  ; checkdoc-params: (REGEXP BOUND NOERROR)
+  ;; checkdoc-params: (REGEXP BOUND NOERROR)
   "Like `re-search-forward', but skips over match in comments or strings."
   (let ((mdata '(nil nil)))  ;; So match-end will return nil if no matches found
     (while (and
@@ -1650,7 +1650,7 @@ will break, as the o's continuously replace.  xa -> x works ok though."
     (match-end 0)))
 
 (defsubst verilog-re-search-backward (REGEXP BOUND NOERROR)
-  ; checkdoc-params: (REGEXP BOUND NOERROR)
+  ;; checkdoc-params: (REGEXP BOUND NOERROR)
   "Like `re-search-backward', but skips over match in comments or strings."
   (let ((mdata '(nil nil)))  ;; So match-end will return nil if no matches found
     (while (and
@@ -1679,7 +1679,7 @@ so there may be a large up front penalty for the first search."
     pt))
 
 (defsubst verilog-re-search-backward-quick (regexp bound noerror)
-  ; checkdoc-params: (REGEXP BOUND NOERROR)
+  ;; checkdoc-params: (REGEXP BOUND NOERROR)
   "Like `verilog-re-search-backward', including use of REGEXP BOUND and NOERROR,
 but trashes match data and is faster for REGEXP that doesn't match often.
 This uses `verilog-scan' and text properties to ignore comments,
@@ -2788,8 +2788,8 @@ find the errors."
      "sync_reject_on" "unique0" "until" "until_with" "untyped" "weak"
      ;; 1800-2012
      "implements" "interconnect" "nettype" "soft"
- )
- "List of Verilog keywords.")
+     )
+  "List of Verilog keywords.")
 
 (defconst verilog-comment-start-regexp "//\\|/\\*"
   "Dual comment value for `comment-start-regexp'.")
@@ -3332,9 +3332,9 @@ Use filename, if current buffer being edited shorten to just buffer name."
 		  (verilog-re-search-backward reg nil 'move))
 	(cond
 	 ((match-end 1) ; matched verilog-end-block-re
-	; try to leap back to matching outward block by striding across
-	; indent level changing tokens then immediately
-	; previous line governs indentation.
+	  ;; try to leap back to matching outward block by striding across
+	  ;; indent level changing tokens then immediately
+	  ;; previous line governs indentation.
 	  (verilog-leap-to-head))
 	 ((match-end 2) ; else, we're in deep
 	  (setq elsec (1+ elsec)))
@@ -3992,7 +3992,7 @@ This puts the mark at the end, and point at the beginning."
     (mark-defun)))
 
 (defun verilog-comment-region (start end)
-  ; checkdoc-params: (start end)
+  ;; checkdoc-params: (start end)
   "Put the region into a Verilog comment.
 The comments that are in this area are \"deformed\":
 `*)' becomes `!(*' and `}' becomes `!{'.
@@ -4223,7 +4223,7 @@ Uses `verilog-scan' cache."
      ((equal (char-after) ?\})
       (forward-char))
 
-      ;; Skip to end of statement
+     ;; Skip to end of statement
      ((condition-case nil
        (setq pos
              (catch 'found
@@ -4285,7 +4285,7 @@ More specifically, point @ in the line foo : @ begin"
 		(setq nest (1+ nest)))
 	       ((match-end 2)
 		(if (= nest 1)
-		(throw 'found 1))
+		    (throw 'found 1))
 		(setq nest (1- nest)))
 	       (t
 		(throw 'found (= nest 0)))))))
@@ -5079,13 +5079,13 @@ FILENAME to find directory to run in, or defaults to `buffer-file-name`."
    (list
     (let ((default (verilog-expand-command verilog-preprocessor)))
       (set (make-local-variable `verilog-preprocessor)
-	      (read-from-minibuffer "Run Preprocessor (like this): "
-				     default nil nil
-				      'verilog-preprocess-history default)))))
+	   (read-from-minibuffer "Run Preprocessor (like this): "
+				 default nil nil
+				 'verilog-preprocess-history default)))))
   (unless command (setq command (verilog-expand-command verilog-preprocessor)))
   (let* ((fontlocked (and (boundp 'font-lock-mode) font-lock-mode))
-	  (dir (file-name-directory (or filename buffer-file-name)))
-	   (cmd (concat "cd " dir "; " command)))
+	 (dir (file-name-directory (or filename buffer-file-name)))
+	 (cmd (concat "cd " dir "; " command)))
     (with-output-to-temp-buffer "*Verilog-Preprocessed*"
       (with-current-buffer (get-buffer "*Verilog-Preprocessed*")
 	(insert (concat "// " cmd "\n"))
@@ -5272,7 +5272,7 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 		   (if (save-excursion (beginning-of-line)
 				       (and (looking-at verilog-directive-re-1)
 					    (not (or (looking-at "[ \t]*`[ou]vm_")
-                                 (looking-at "[ \t]*`vmm_")))))
+						     (looking-at "[ \t]*`vmm_")))))
 		       (throw 'nesting 'directive))
            ;; indent structs as if there were module level
            (setq structres (verilog-in-struct-nested-p))
@@ -5511,10 +5511,10 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 					; endfunction
 	      (verilog-beg-of-statement)
 	      (if (looking-at verilog-beg-block-re-ordered)
-              (throw 'nesting 'block)
-            (throw 'nesting 'defun)))
+		  (throw 'nesting 'block)
+		(throw 'nesting 'defun)))
 
-         ;;
+	     ;;
 	     ((looking-at "\\<property\\>")
 					; *sigh*
 					;    {assert|assume|cover} property (); are complete
@@ -5705,7 +5705,7 @@ Jump from end to matching begin, from endcase to matching case, and so on."
 		    (setq sreg reg)
 		    (setq reg "\\(\\<fork\\>\\)\\|\\(\\<join\\(_any\\|_none\\)?\\>\\)" ))
 		   )))
-	    ;no nesting
+	    ;; no nesting
 	    (if (and
 		 (verilog-re-search-backward reg nil 'move)
 		 (match-end 1)) ; task -> could be virtual and/or protected
@@ -6548,10 +6548,9 @@ Be verbose about progress unless optional QUIET set."
 		      endpos (set-marker (make-marker) end)
 		      base-ind (progn
 				 (goto-char start)
-                 (forward-char 1)
-                 (skip-chars-forward " \t")
-                 (current-column))
-		      )
+				 (forward-char 1)
+				 (skip-chars-forward " \t")
+				 (current-column)))
 	      ;; in a declaration block (not in argument list)
 	      (setq
 	       start (progn
@@ -9149,7 +9148,7 @@ foo.v (an include file):
 	`define _FOO_V
 	... contents of file
 	`endif // _FOO_V"
-;;slow:  (verilog-read-defines nil t))
+  ;;slow:  (verilog-read-defines nil t)
   (save-excursion
     (verilog-getopt-flags)
     (goto-char (point-min))
@@ -9538,7 +9537,7 @@ variables to build the path.  With optional CHECK-EXT also check
 		   (setq outlist (cons (expand-file-name
 					fn (file-name-directory current))
 				       outlist)))
-		 (setq chkexts (cdr chkexts)))
+	       (setq chkexts (cdr chkexts)))
 	     (setq chkdirs (cdr chkdirs)))
 	   (setq outlist (nreverse outlist))
 	   (setq verilog-dir-cache-lib-filenames
@@ -13549,8 +13548,7 @@ for sensitivity list."
   ()
   > "begin" '(verilog-sk-prompt-name) \n
   > _ \n
-  > (- verilog-indent-level-behavioral) "end"
-)
+  > (- verilog-indent-level-behavioral) "end" )
 
 (define-skeleton verilog-sk-fork
   "Insert a fork join block."
