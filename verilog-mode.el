@@ -3160,7 +3160,7 @@ and `verilog-scan'.")
   (setq verilog-scan-cache-tick nil))
 
 (defun verilog-scan-cache-ok-p ()
-  "Return t iff the scan cache is up to date."
+  "Return t if the scan cache is up to date."
   (or (and verilog-scan-cache-preserving
 	   (eq verilog-scan-cache-preserving (current-buffer))
 	   verilog-scan-cache-tick)
@@ -9635,7 +9635,7 @@ Return modi if successful, else print message unless IGNORE-ERROR is true."
 		allow-cache
 		(setq modi (gethash module verilog-modi-lookup-cache))
 		(equal verilog-modi-lookup-last-current current)
-		;; Iff hit is in current buffer, then tick must match
+		;; If hit is in current buffer, then tick must match
 		(or (equal verilog-modi-lookup-last-tick (buffer-chars-modified-tick))
 		    (not (equal current (verilog-modi-file-or-buffer modi)))))
 	   ;;(message "verilog-modi-lookup: HIT %S" modi)
