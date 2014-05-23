@@ -5143,7 +5143,9 @@ Save the result unless optional NO-SAVE is t."
    (mapc (lambda (buf)
 	   (when (buffer-file-name buf)
 	     (with-current-buffer buf
-	       (verilog-mode))))
+	       (verilog-mode)
+	       (verilog-auto-reeval-locals)
+	       (verilog-getopt-flags))))
 	 (buffer-list))
    ;; Process the files
    (mapcar (lambda (buf)
