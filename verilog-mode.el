@@ -5157,7 +5157,9 @@ Save the result unless optional NO-SAVE is t."
 		 (message (concat "Processing " (buffer-file-name buf)))
 		 (set-buffer buf)
 		 (funcall funref)
-		 (unless no-save (save-buffer)))))
+		 (when (and (not no-save)
+			    (buffer-modified-p)) ;; Avoid "no changes to be saved"
+		   (save-buffer)))))
 	   (buffer-list))))
 
 (defun verilog-batch-auto ()
