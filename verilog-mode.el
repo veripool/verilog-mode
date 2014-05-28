@@ -5140,27 +5140,29 @@ Save the result unless optional NO-SAVE is t."
    ;; Make sure any sub-files we read get proper mode
    (setq-default major-mode 'verilog-mode)
    ;; Ditto files already read in
-   (mapc (lambda (buf)
-	   (when (buffer-file-name buf)
-	     (with-current-buffer buf
-	       (verilog-mode)
-	       (verilog-auto-reeval-locals)
-	       (verilog-getopt-flags))))
-	 (buffer-list))
-   ;; Process the files
-   (mapcar (lambda (buf)
+   ;; Remember buffer list, so don't later pickup any verilog-getopt files
+   (let ((orig-buffer-list (buffer-list)))
+     (mapc (lambda (buf)
 	     (when (buffer-file-name buf)
-	       (save-excursion
-		 (if (not (file-exists-p (buffer-file-name buf)))
-		     (error
-		      (concat "File not found: " (buffer-file-name buf))))
-		 (message (concat "Processing " (buffer-file-name buf)))
-		 (set-buffer buf)
-		 (funcall funref)
-		 (when (and (not no-save)
-			    (buffer-modified-p)) ;; Avoid "no changes to be saved"
-		   (save-buffer)))))
-	   (buffer-list))))
+	       (with-current-buffer buf
+		 (verilog-mode)
+		 (verilog-auto-reeval-locals)
+		 (verilog-getopt-flags))))
+	   orig-buffer-list)
+     ;; Process the files
+     (mapcar (lambda (buf)
+	       (when (buffer-file-name buf)
+		 (save-excursion
+		   (if (not (file-exists-p (buffer-file-name buf)))
+		       (error
+			(concat "File not found: " (buffer-file-name buf))))
+		   (message (concat "Processing " (buffer-file-name buf)))
+		   (set-buffer buf)
+		   (funcall funref)
+		   (when (and (not no-save)
+			      (buffer-modified-p)) ;; Avoid "no changes to be saved"
+		     (save-buffer)))))
+	     orig-buffer-list))))
 
 (defun verilog-batch-auto ()
   "For use with --batch, perform automatic expansions as a stand-alone tool.
