@@ -23,6 +23,8 @@ EMACS_DEST = /usr/share/emacs/site-lisp/
 ELC	= -batch -q -f batch-byte-compile
 MAKECHANGELOG = perl makechangelog
 
+default : e/verilog-mode.elc x/verilog-mode.elc
+
 release : .timestamps
 install : .timestamps ChangeLog test $(D)/mmencoded_verilog-mode $(D)/emacs-version.h\
 	$(S)ChangeLog.txt email $(S)bits/verilog-mode.el local \

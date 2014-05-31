@@ -1020,6 +1020,19 @@ SystemVerilog designs."
   :type 'string)
 (put 'verilog-assignment-delay 'safe-local-variable 'stringp)
 
+(defcustom verilog-auto-arg-format 'packed
+  "Formatting to use for AUTOARG signal names.
+If 'packed', then as many inputs and outputs that fit within
+`fill-column' will be put onto one line.
+
+If 'single', then a single input or output will be put onto each
+line."
+  :type '(radio (const :tag "Line up Assignments and Declarations" packed)
+		(const :tag "Line up Assignment statements" single))
+  :group 'verilog-mode-auto)
+(put 'verilog-auto-arg-format 'safe-local-variable
+     '(lambda (x) (memq x '(packed single))))
+
 (defcustom verilog-auto-arg-sort nil
   "Non-nil means AUTOARG signal names will be sorted, not in declaration order.
 Declaration order is advantageous with order based instantiations
@@ -10623,7 +10636,7 @@ If FORCE, always reread it."
 ;;
 
 (defun verilog-auto-arg-ports (sigs message indent-pt)
-  "Print a list of ports for an AUTOINST.
+  "Print a list of ports for AUTOARG.
 Takes SIGS list, adds MESSAGE to front and inserts each at INDENT-PT."
   (when sigs
     (when verilog-auto-arg-sort
@@ -10635,13 +10648,19 @@ Takes SIGS list, adds MESSAGE to front and inserts each at INDENT-PT."
     (let ((space ""))
       (indent-to indent-pt)
       (while sigs
-	(cond ((> (+ 2 (current-column) (length (verilog-sig-name (car sigs)))) fill-column)
+	(cond ((equal verilog-auto-arg-format 'single)
+	       (indent-to indent-pt)
+	       (setq space "\n"))
+	      ;; verilog-auto-arg-format 'packed
+	      ((> (+ 2 (current-column) (length (verilog-sig-name (car sigs)))) fill-column)
 	       (insert "\n")
-	       (indent-to indent-pt))
-	      (t (insert space)))
+	       (indent-to indent-pt)
+	       (setq space " "))
+	      (t
+	       (insert space)
+	       (setq space " ")))
 	(insert (verilog-sig-name (car sigs)) ",")
-	(setq sigs (cdr sigs)
-	      space " ")))))
+	(setq sigs (cdr sigs))))))
 
 (defun verilog-auto-arg ()
   "Expand AUTOARG statements.
@@ -10676,9 +10695,11 @@ Typing \\[verilog-auto] will make this into:
 	  output o;
 	endmodule
 
-The argument declarations may be printed in declaration order to best suit
-order based instantiations, or alphabetically, based on the
-`verilog-auto-arg-sort' variable.
+The argument declarations may be printed in declaration order to
+best suit order based instantiations, or alphabetically, based on
+the `verilog-auto-arg-sort' variable.
+
+Formatting is controlled with `verilog-auto-arg-format' variable.
 
 Any ports declared between the ( and /*AUTOARG*/ are presumed to be
 predeclared and are not redeclared by AUTOARG.  AUTOARG will make a
