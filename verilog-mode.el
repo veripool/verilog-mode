@@ -10649,6 +10649,7 @@ Takes SIGS list, adds MESSAGE to front and inserts each at INDENT-PT."
       (indent-to indent-pt)
       (while sigs
 	(cond ((equal verilog-auto-arg-format 'single)
+	       (insert space)
 	       (indent-to indent-pt)
 	       (setq space "\n"))
 	      ;; verilog-auto-arg-format 'packed

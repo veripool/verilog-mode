@@ -1,9 +1,12 @@
 // msg1354
 module f (/*AUTOARG*/
           // Outputs
-          o2,o1,
+          o2,
+          o1,
           // Inputs
-          z,a,q
+          z,
+          a,
+          q
           );
    
    output o2;
