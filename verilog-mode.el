@@ -11816,10 +11816,18 @@ Typing \\[verilog-auto] will make this into:
 	   wire tempa = i;
 	   wire tempb = tempa;
 	   wire o = tempb;
-	endmodule"
+	endmodule
+
+You may also provide an optional regular expression, in which case only
+signals matching the regular expression will be included.  For example the
+same expansion will result from only extracting outputs starting with ov:
+
+	   /*AUTOOUTPUTEVERY(\"^ov\")*/"
   (save-excursion
     ;;Point must be at insertion point
     (let* ((indent-pt (current-indentation))
+	   (params (verilog-read-auto-params 0 1))
+	   (regexp (nth 0 params))
 	   (v2k  (verilog-in-paren-quick))
 	   (modi (verilog-modi-current))
 	   (moddecls (verilog-modi-get-decls modi))
@@ -11827,6 +11835,11 @@ Typing \\[verilog-auto] will make this into:
 		      (verilog-signals-not-in
 		       (verilog-decls-get-signals moddecls)
 		       (verilog-decls-get-ports moddecls)))))
+      (when regexp
+	(setq sig-list (verilog-signals-matching-regexp
+			sig-list regexp)))
+      (setq sig-list (verilog-signals-not-matching-regexp
+		      sig-list verilog-auto-output-ignore-regexp))
       (verilog-forward-or-insert-line)
       (when v2k (verilog-repair-open-comma))
       (when sig-list
@@ -13312,7 +13325,7 @@ Wilson Snyder (wsnyder@wsnyder.org)."
 	       (verilog-auto-re-search-do "/\\*AUTOREG\\*/" 'verilog-auto-reg)
 	       (verilog-auto-re-search-do "/\\*AUTOREGINPUT\\*/" 'verilog-auto-reg-input)
 	       ;; outputevery needs AUTOOUTPUTs done first
-	       (verilog-auto-re-search-do "/\\*AUTOOUTPUTEVERY\\*/" 'verilog-auto-output-every)
+	       (verilog-auto-re-search-do "/\\*AUTOOUTPUTEVERY\\((.*?)\\)?\\*/" 'verilog-auto-output-every)
 	       ;; After we've created all new variables
 	       (verilog-auto-re-search-do "/\\*AUTOUNUSED\\*/" 'verilog-auto-unused)
 	       ;; Must be after all inputs outputs are generated
