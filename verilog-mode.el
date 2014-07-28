@@ -111,6 +111,7 @@
 ;       verilog-auto-lineup              'declarations
 ;       verilog-highlight-p1800-keywords nil
 ;       verilog-linter			 "my_lint_shell_command"
+;       verilog-auto-bitwidth            t
 ;       )
 
 ;; 
@@ -710,6 +711,12 @@ The name of the function or case will be set between the braces."
   :group 'verilog-mode-actions
   :type 'boolean)
 (put 'verilog-auto-endcomments 'safe-local-variable 'verilog-booleanp)
+
+(defcustom verilog-auto-bitwidth t
+  "Non-nil means automatically insert apostrophe after bitwidth."
+  :group 'verilog-mode-actions
+  :type 'boolean)
+(put 'verilog-auto-bitwidth 'safe-local-variable 'verilog-booleanp)
 
 (defcustom verilog-auto-delete-trailing-whitespace nil
   "Non-nil means to `delete-trailing-whitespace' in `verilog-auto'."
@@ -1326,6 +1333,18 @@ If set will become buffer local.")
     (define-key map "\C-c\C-z" 'verilog-inject-auto)
     (define-key map "\C-c\C-e" 'verilog-expand-vector)
     (define-key map "\C-c\C-h" 'verilog-header)
+
+    (define-key map "b" 'electric-verilog-b)
+    (define-key map "B" 'electric-verilog-bb)
+    (define-key map "h" 'electric-verilog-h)
+    (define-key map "H" 'electric-verilog-hh)
+    (define-key map "d" 'electric-verilog-d)
+    (define-key map "D" 'electric-verilog-dd)
+    (define-key map "x" 'electric-verilog-x)
+    (define-key map "X" 'electric-verilog-xx)
+    (define-key map "s" 'electric-verilog-s)
+    (define-key map "S" 'electric-verilog-ss)
+    
     map)
   "Keymap used in Verilog mode.")
 
@@ -3897,7 +3916,66 @@ With optional ARG, remove existing end of line comments."
 		 (kill-region (point) oldpnt)))))))
    (t (progn (insert "\t")))))
 
-
+;;
+;; Convert 3b to 3'b automatically.
+;; Copied from vlog-mode (http://vlog-mode.sourceforge.net/)
+;;
+(defun electric-verilog-bitwidth (c)
+  "Convert 3b to 3'b automatically."
+  (and verilog-auto-bitwidth
+       (looking-back "\\<[0-9]+")
+       (insert "'"))
+  (insert c))
+
+(defun electric-verilog-b ()
+  "Add possible ' before inserting b, for numbers."
+  (interactive)
+  (electric-verilog-bitwidth "b"))
+
+(defun electric-verilog-bb ()
+  "Add possible ' before inserting B, for numbers."
+  (interactive)
+  (electric-verilog-bitwidth "B"))
+
+(defun electric-verilog-h ()
+  "Add possible ' before inserting h, for numbers."
+  (interactive)
+  (electric-verilog-bitwidth "h"))
+
+(defun electric-verilog-hh ()
+  "Add possible ' before inserting H, for numbers."
+  (interactive)
+  (electric-verilog-bitwidth "H"))
+
+(defun electric-verilog-dd ()
+  "Add possible ' before inserting D, for numbers."
+  (interactive)
+  (electric-verilog-bitwidth "D"))
+
+(defun electric-verilog-d ()
+  "Add possible ' before inserting d, for numbers."
+  (interactive)
+  (electric-verilog-bitwidth "d"))
+
+(defun electric-verilog-x ()
+  "Add possible ' before inserting x, for numbers."
+  (interactive)
+  (electric-verilog-bitwidth "x"))
+
+(defun electric-verilog-xx ()
+  "Add possible ' before inserting X, for numbers."
+  (interactive)
+  (electric-verilog-bitwidth "X"))
+
+(defun electric-verilog-s ()
+  "Add possible ' before inserting s, for numbers (Verilog 2000)."
+  (interactive)
+  (electric-verilog-bitwidth "s"))
+
+(defun electric-verilog-ss ()
+  "Add possible ' before inserting S, for numbers (Verilog 2000)."
+  (interactive)
+  (electric-verilog-bitwidth "S"))
 
 ;;
 ;; Interactive functions
@@ -13957,6 +14035,7 @@ Files are checked based on `verilog-library-flags'."
        verilog-auto-tieoff-ignore-regexp
        verilog-auto-unused-ignore-regexp
        verilog-auto-wire-type
+       verilog-auto-bitwidth
        verilog-before-auto-hook
        verilog-before-delete-auto-hook
        verilog-before-getopt-flags-hook
