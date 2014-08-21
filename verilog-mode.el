@@ -8257,7 +8257,8 @@ Return an array of [outputs inouts inputs wire reg assign const]."
 			(setq typedefed
 			      (if typedefed (concat typedefed " " keywd) keywd)))
 		       (t (setq vec nil  enum nil  rvalue nil  signed nil
-				typedefed nil  multidim nil  sig-paren paren
+				typedefed keywd  ; Have a type
+				multidim nil  sig-paren paren
 				expect-signal 'sigs-var  modport nil))))
 		;; Interface with optional modport in v2k arglist?
 		;; Skip over parsing modport, and take the interface name as the type
