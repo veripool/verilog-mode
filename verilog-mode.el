@@ -2265,7 +2265,10 @@ find the errors."
 	  ;;  "\\(assert\\|assume\\|cover\\)\\s-+property\\>"
 
 (defconst verilog-no-indent-begin-re
-  "\\<\\(if\\|else\\|while\\|for\\|repeat\\|always\\|always_comb\\|always_ff\\|always_latch\\)\\>")
+  (eval-when-compile
+    (verilog-regexp-words
+     '( "if" "else" "while" "for" "repeat" "always" "always_comb" "always_ff" "always_latch"
+	"initial" "final"))))
 
 (defconst verilog-ends-re
   ;; Parenthesis indicate type of keyword found
