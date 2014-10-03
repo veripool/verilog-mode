@@ -1474,6 +1474,8 @@ If set will become buffer local.")
        :help		"Help on AUTOINPUT - adding inputs from cells"]
       ["AUTOINSERTLISP"			(describe-function 'verilog-auto-insert-lisp)
        :help		"Help on AUTOINSERTLISP - insert text from a lisp function"]
+      ["AUTOINSERTLAST"			(describe-function 'verilog-auto-insert-last)
+       :help		"Help on AUTOINSERTLISPLAST - insert text from a lisp function"]
       ["AUTOINST"			(describe-function 'verilog-auto-inst)
        :help		"Help on AUTOINST - adding pins for cells"]
       ["AUTOINST (.*)"			(describe-function 'verilog-auto-star)
@@ -12435,9 +12437,13 @@ driver/monitor using AUTOINST in the testbench."
 
 (defun verilog-auto-insert-lisp ()
   "Expand AUTOINSERTLISP statements, as part of \\[verilog-auto].
-The Lisp code provided is called, and the Lisp code calls
-`insert` to insert text into the current file beginning on the
-line after the AUTOINSERTLISP.
+The Lisp code provided is called before other AUTOS are expanded,
+and the Lisp code generally will call `insert` to insert text
+into the current file beginning on the line after the
+AUTOINSERTLISP.
+
+See also AUTOINSERTLAST and `verilog-auto-insert-last' which
+executes after (as opposed to before) other AUTOs.
 
 See also AUTO_LISP, which takes a Lisp expression and evaluates
 it during `verilog-auto-inst' but does not insert any text.
@@ -12493,6 +12499,20 @@ text:
       (forward-line -1)
       (setq verilog-scan-cache-tick nil) ;; Clear cache; inserted unknown text
       (verilog-delete-empty-auto-pair))))
+
+(defun verilog-auto-insert-last ()
+  "Expand AUTOINSERTLAST statements, as part of \\[verilog-auto].
+The Lisp code provided is called after all other AUTOS have been
+expanded, and the Lisp code generally will call `insert` to
+insert text into the current file beginning on the line after the
+AUTOINSERTLAST.
+
+Other than when called (after AUTOs are expanded), the functionality
+is otherwise identical to AUTOINSERTLISP and `verilog-auto-insert-lisp' which
+executes before (as opposed to after) other AUTOs.
+
+See `verilog-auto-insert-lisp' for examples."
+  (verilog-auto-insert-lisp))
 
 (defun verilog-auto-sense-sigs (moddecls presense-sigs)
   "Return list of signals for current AUTOSENSE block."
@@ -13220,6 +13240,7 @@ Using \\[describe-function], see also:
     `verilog-auto-inout-param'  for AUTOINOUTPARAM copying params from elsewhere
     `verilog-auto-input'        for AUTOINPUT making hierarchy inputs
     `verilog-auto-insert-lisp'  for AUTOINSERTLISP insert code from lisp function
+    `verilog-auto-insert-last'  for AUTOINSERTLAST insert code from lisp function
     `verilog-auto-inst'         for AUTOINST instantiation pins
     `verilog-auto-star'         for AUTOINST .* SystemVerilog pins
     `verilog-auto-inst-param'   for AUTOINSTPARAM instantiation params
@@ -13296,7 +13317,6 @@ Wilson Snyder (wsnyder@wsnyder.org)."
 		 (verilog-inject-arg))
 	       ;;
 	       ;; Do user inserts first, so their code can insert AUTOs
-	       ;; We may provide an AUTOINSERTLISPLAST if another cleanup pass is needed
 	       (verilog-auto-re-search-do "/\\*AUTOINSERTLISP(.*?)\\*/"
 					  'verilog-auto-insert-lisp)
 	       ;; Expand instances before need the signals the instances input/output
@@ -13335,6 +13355,8 @@ Wilson Snyder (wsnyder@wsnyder.org)."
 	       (verilog-auto-re-search-do "/\\*AUTOUNUSED\\*/" 'verilog-auto-unused)
 	       ;; Must be after all inputs outputs are generated
 	       (verilog-auto-re-search-do "/\\*AUTOARG\\*/" 'verilog-auto-arg)
+	       ;; User inserts
+	       (verilog-auto-re-search-do "/\\*AUTOINSERTLAST(.*?)\\*/" 'verilog-auto-insert-last)
 	       ;; Fix line numbers (comments only)
 	       (when verilog-auto-inst-template-numbers
 		 (verilog-auto-templated-rel))
