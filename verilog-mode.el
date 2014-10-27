@@ -4128,9 +4128,7 @@ Uses `verilog-scan' cache."
     (while (and
 	    (> (marker-position e) (point))
 	    (verilog-re-search-forward
-	     (concat
-	      "\\<end\\(\\(function\\)\\|\\(task\\)\\|\\(module\\)\\|\\(primitive\\)\\|\\(interface\\)\\|\\(package\\)\\|\\(case\\)\\)?\\>"
-	      "\\|\\(`endif\\)\\|\\(`else\\)")
+	     verilog-auto-end-comment-lines-re
 	     nil 'move))
       (goto-char (match-beginning 0))
       (let ((indent-str (verilog-indent-line)))
