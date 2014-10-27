@@ -11731,6 +11731,9 @@ Limitations:
 
   Typedefs must match `verilog-typedef-regexp', which is disabled by default.
 
+  Types are added to declarations if an AUTOLOGIC or
+  `verilog-auto-wire-type' is set to logic.
+
   Signals matching `verilog-auto-output-ignore-regexp' are not included.
 
 An example (see `verilog-auto-inst' for what else is going on here):
@@ -11872,6 +11875,9 @@ Limitations:
 
   Typedefs must match `verilog-typedef-regexp', which is disabled by default.
 
+  Types are added to declarations if an AUTOLOGIC or
+  `verilog-auto-wire-type' is set to logic.
+
   Signals matching `verilog-auto-input-ignore-regexp' are not included.
 
 An example (see `verilog-auto-inst' for what else is going on here):
@@ -11951,6 +11957,9 @@ Limitations:
   instantiation, all bets are off.  (For example due to an AUTO_TEMPLATE).
 
   Typedefs must match `verilog-typedef-regexp', which is disabled by default.
+
+  Types are added to declarations if an AUTOLOGIC or
+  `verilog-auto-wire-type' is set to logic.
 
   Signals matching `verilog-auto-inout-ignore-regexp' are not included.
 
@@ -12244,7 +12253,7 @@ You may also provide an optional regular expression, in which case only
 signals matching the regular expression will be included.  For example the
 same expansion will result from only extracting signals starting with i:
 
-	   /*AUTOINOUTCOMP(\"ExampMain\",\"^i\")*/"
+	   /*AUTOINOUTIN(\"ExampMain\",\"^i\")*/"
   (verilog-auto-inout-module nil t))
 
 (defun verilog-auto-inout-param ()
