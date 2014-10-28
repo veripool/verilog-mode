@@ -2763,10 +2763,45 @@ find the errors."
   "String used to mark end of excluded text.")
 (defconst verilog-preprocessor-re
   (eval-when-compile
+    (concat
+     ;; single words
+     "\\(?:"
     (verilog-regexp-words
-     `(
-       "`define" "`include" "`ifdef" "`ifndef" "`if" "`endif" "`else"
-       ))))
+      `("`__FILE__"
+        "`__LINE__"
+        "`celldefine"
+        "`else"
+        "`end_keywords"
+        "`endcelldefine"
+        "`endif"
+        "`nounconnected_drive"
+        "`resetall"
+        "`unconnected_drive"
+        "`undefineall"))
+     "\\)\\|\\(?:"
+     ;; two words: i.e. `ifdef DEFINE
+     "\\<\\(`elsif\\|`ifn?def\\|`undef\\|`default_nettype\\|`begin_keywords\\)\\>\\s-+\\<.+\\>"
+     "\\)\\|\\(?:"
+     ;; `line number "filename" level
+     "\\<\\(`line\\)\\>\\s-+[0-9]+\\s-+\"[^\"]+\"\\s-+[012]"
+     "\\)\\|\\(?:"
+     ;;`include "file" or `include <file>
+     "\\<\\(`include\\)\\>\\s-+\\(?:\"[^\"]+\"\\|<[^>]+>\\)"
+     "\\)\\|\\(?:"
+     ;; `pragma <stuff> (no mention in IEEE 1800-2012 that pragma can span multiple lines
+     "\\<\\(`pragma\\)\\>\\s-+.+$"
+     "\\)\\|\\(?:"
+     ;; `timescale time_unit / time_precision
+     "\\<\\(`timescale\\)\\>\\s-+10\\{0,2\\}\\s-*[munpf]?s\\s-*\\/\\s-*10\\{0,2\\}\\s-*[munpf]?s"
+     "\\)\\|\\(?:"
+     ;; `define and `if can span multiple lines if line ends in '\'. NOTE:  `if is not IEEE 1800-2012
+     ;; from http://www.emacswiki.org/emacs/MultilineRegexp
+     "\\<\\(`define\\|`if\\)\\>" ;; directive
+     "\\s-+"                     ;; separator
+     "\\(.*\\(?:\n.*\\)*?\\)"    ;; definition: to end of line, then maybe more lines (excludes any trailing \n)
+     "\\(?:\n\\s-*\n\\|\\'\\)"   ;; blank line or EOF
+     "\\)"
+     )))
 
 (defconst verilog-keywords
   '( "`case" "`default" "`define" "`else" "`endfor" "`endif"
@@ -4194,13 +4229,15 @@ Uses `verilog-scan' cache."
 	      ;; stop if previous token is an ender
 	      (save-excursion
 		(verilog-backward-token)
-		(or
-		 (looking-at verilog-end-block-re)
-		 (looking-at verilog-preprocessor-re))))) ;; end of test
+		(looking-at verilog-end-block-re)))) ;; end of test
       (verilog-backward-syntactic-ws)
       (verilog-backward-token))
     ;; Now point is where the previous line ended.
-    (verilog-forward-syntactic-ws)))
+    (verilog-forward-syntactic-ws)
+    ;; Skip forward over any preprocessor directives, as they have wacky indentation
+    (if (looking-at verilog-preprocessor-re)
+        (progn (goto-char (match-end 0))
+               (verilog-forward-syntactic-ws)))))
 
 (defun verilog-beg-of-statement-1 ()
   "Move backward to beginning of statement."
