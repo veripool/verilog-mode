@@ -6471,6 +6471,9 @@ Only look at a few lines to determine indent level."
 	   (looking-at verilog-declaration-re))
       (verilog-indent-declaration ind))
 
+     (;-- form feeds - ignored as bug in indent-line-to in < 24.5
+      (looking-at "\f"))
+
      (;-- Everything else
       t
       (let ((val (eval (cdr (assoc type verilog-indent-alist)))))
