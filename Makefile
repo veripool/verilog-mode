@@ -52,7 +52,7 @@ $(1): e/verilog-mode.elc
 	@echo
 	@echo == $(1)
 	@mkdir -p e/t x/t
-	VERILOG_MODE_THREAD=$(2) time $(EMACS)  --batch -q -l e/verilog-mode.elc -l 0test.el
+	VERILOG_MODE_THREAD=$(2) time $(EMACS)  --batch -q --no-site-file -l e/verilog-mode.elc -l 0test.el
 endef
 
 $(eval $(call test_emacs_sub,test_emacs_1,1of5))
@@ -69,7 +69,7 @@ test_xemacs:: $(1)
 $(1): x/verilog-mode.elc
 	@echo
 	@echo == $(1)
-	VERILOG_MODE_THREAD=$(2) time $(XEMACS)  --batch -q -l x/verilog-mode.elc -l 0test.el
+	VERILOG_MODE_THREAD=$(2) time $(XEMACS)  --batch -vanilla -l x/verilog-mode.elc -l 0test.el
 endef
 
 $(eval $(call test_xemacs_sub,test_xemacs_1,1of5))
