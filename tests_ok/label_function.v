@@ -53,7 +53,7 @@ module test();
    function automatic void f9
      (int a,
       int b);
-   endfunction // f10
+   endfunction // f9
    
    // mismatched keyword
    function f10;

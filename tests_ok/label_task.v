@@ -38,7 +38,7 @@ module test();
    task automatic t9
      (int a,
       int b);
-   endtask // t10
+   endtask // t9
    
    // mismatched keyword
    task t10;
