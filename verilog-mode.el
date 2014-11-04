@@ -12122,13 +12122,14 @@ same expansion will result from only extracting signals starting with i:
 
 	   /*AUTOINOUTMODULE(\"ExampMain\",\"^i\")*/
 
-You may also provide an optional second regular expression, in
-which case only signals which have that pin direction and data
-type will be included.  This matches against everything before
-the signal name in the declaration, for example against
-\"input\" (single bit), \"output logic\" (direction and type) or
-\"output [1:0]\" (direction and implicit type).  You also
-probably want to skip spaces in your regexp.
+You may also provide an optional third argument regular
+expression, in which case only signals which have that pin
+direction and data type matching that regular expression will be
+included.  This matches against everything before the signal name
+in the declaration, for example against \"input\" (single bit),
+\"output logic\" (direction and type) or \"output
+[1:0]\" (direction and implicit type).  You also probably want to
+skip spaces in your regexp.
 
 For example, the below will result in matching the output \"o\"
 against the previous example's module:
@@ -12247,7 +12248,21 @@ You may also provide an optional regular expression, in which case only
 signals matching the regular expression will be included.  For example the
 same expansion will result from only extracting signals starting with i:
 
-	   /*AUTOINOUTCOMP(\"ExampMain\",\"^i\")*/"
+	   /*AUTOINOUTCOMP(\"ExampMain\",\"^i\")*/
+
+You may also provide an optional third argument regular
+expression, in which case only signals which have that pin
+direction and data type matching that regular expression will be
+included.  This matches against everything before the signal name
+in the declaration, for example against \"input\" (single bit),
+\"output logic\" (direction and type) or \"output
+[1:0]\" (direction and implicit type).  You also probably want to
+skip spaces in your regexp.
+
+For example, the below will result in matching the output \"o\"
+against the previous example's module:
+
+	   /*AUTOINOUTCOMP(\"ExampMain\",\"\",\"^output.*\")*/"
   (verilog-auto-inout-module t nil))
 
 (defun verilog-auto-inout-in ()
