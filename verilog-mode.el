@@ -2269,8 +2269,9 @@ find the errors."
 (defconst verilog-no-indent-begin-re
   (eval-when-compile
     (verilog-regexp-words
-     '( "if" "else" "while" "for" "repeat" "always" "always_comb" "always_ff" "always_latch"
-	"initial" "final"))))
+     '("always" "always_comb" "always_ff" "always_latch" "initial" "final" ;; procedural blocks
+       "if" "else"                                                         ;; conditional statements
+       "while" "for" "foreach" "repeat" "do" "forever" ))))                ;; loop statements
 
 (defconst verilog-ends-re
   ;; Parenthesis indicate type of keyword found
