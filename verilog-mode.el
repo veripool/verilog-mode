@@ -4251,13 +4251,12 @@ Uses `verilog-scan' cache."
         (verilog-backward-syntactic-ws)
         (if (or (bolp)
                 (= (preceding-char) ?\;)
-		(save-excursion
+		(progn
 		  (verilog-backward-token)
 		  (looking-at verilog-ends-re)))
             (progn
               (goto-char pt)
-              (throw 'done t))
-          (verilog-backward-token))))
+              (throw 'done t)))))
     (verilog-forward-syntactic-ws)))
 ;
 ;    (while (and
@@ -6147,14 +6146,18 @@ Return >0 for nested struct."
 (defun verilog-at-constraint-p ()
   "If at the { of a constraint or coverpoint definition, return true, moving point to constraint."
   (if (save-excursion
+	(let ((p (point)))
 	(and
 	 (equal (char-after) ?\{)
 	 (forward-list)
 	 (progn (backward-char 1)
 		(verilog-backward-ws&directives)
+	  (and
 		(or (equal (char-before) ?\{) ;; empty case
                     (equal (char-before) ?\;)
-                    (equal (char-before) ?\})))))
+                    (equal (char-before) ?\}))
+                    ;; skip what looks like bus repitition operator {#{
+                    (not (string-match "^{\\s-*[0-9]+\\s-*{" (buffer-substring p (point)))))))))
       (progn
         (let ( (pt (point)) (pass 0))
           (verilog-backward-ws&directives)
