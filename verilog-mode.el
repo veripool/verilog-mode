@@ -4199,7 +4199,7 @@ Uses `verilog-scan' cache."
 	;; then move back a token and test again.
 	(not (or
 	      ;; stop if beginning of buffer
-	      (bolp)
+	      (bobp)
 	      ;; stop if we find a ;
 	      (= (preceding-char) ?\;)
 	      ;; stop if we see a named coverpoint
