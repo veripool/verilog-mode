@@ -13,6 +13,18 @@ module x;
    begin
    end
    
+   initial forever
+   begin
+   end
+   
+   foreach(1)
+   begin
+   end
+   
+   do
+   begin
+   end while (i);
+   
 endmodule
 
 // Local Variables:

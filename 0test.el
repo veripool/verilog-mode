@@ -29,11 +29,11 @@
     (verilog-mode)
     (message (concat file ": deleting indent..."))
     (global-replace-regexp "[ \t]+$" "")
-    
+
     (message (concat file ": deleting autos..."))
     (verilog-delete-auto)
-    
-    (cond 
+
+    (cond
      ((string-match "^inject_" file)
       (message (concat file ": testing inject-auto..."))
       (verilog-inject-auto))
@@ -42,12 +42,13 @@
       (verilog-auto)))
     (message (concat file ": auto OK..."))
 
+    (when (string-match "^label_" file)
+      (message (concat file ": testing auto labeling of begin/end..."))
+      (verilog-label-be))
+
     (unless (getenv "VERILOG_MODE_NO_INDENTS")
       (verilog-test-indent-buffer file)
-      
-;;      (message (concat file ": testing auto endcomments..."))
-;;      (verilog-label-be)
-  
+
       (untabify (point-min) (point-max))
       )
     (write-file (concat "../" temp-file))
@@ -75,7 +76,7 @@
       (message (format "Indented %d lines" ln))
       ))
   (message (concat file ": indents OK...")))
-  
+
 (defun vl-diff-file (golden-file temp-file)
   (message (concat golden-file ": running diff of " golden-file " and " temp-file ))
   (with-temp-buffer
@@ -117,7 +118,7 @@
     (when (getenv "VERILOG_MODE_TEST_FILE")
       (setq files (list (getenv "VERILOG_MODE_TEST_FILE")))
       (message "**** Only testing files in $VERILOG_MODE_TEST_FILE"))
-    
+
     (when (getenv "VERILOG_MODE_START_FILE")
       (let* ((startfiles (list (getenv "VERILOG_MODE_START_FILE")))
 	     (startfile (car startfiles)))
@@ -132,7 +133,7 @@
 		  (throw 'done 0))
 	      (progn
 		(setq files (cdr files))))))))
-    
+
     (message "emacs-version %s" emacs-version)
 
     (while files
@@ -150,10 +151,10 @@
 		    (not (vl-do-on-thread file-num))))
             (t
              (message (concat "Considering test " file ))
-             (if running-on-xemacs 
+             (if running-on-xemacs
                  (progn
                    (setq cf (concat "skip_for_xemacs/" file))
-                   (if (file-exists-p cf ) ; 
+                   (if (file-exists-p cf ) ;
                        (message (concat "Skipping testing " file " on Xemacs because file " cf "exists"))
                      (progn
 		       (verilog-test-file file temp-file)
@@ -204,7 +205,7 @@
   (setq enable-local-eval t)
   (setq auto-mode-alist (cons  '("\\.v\\'" . verilog-mode) auto-mode-alist))
   (setq-default fill-column 100)
-  (if running-on-xemacs 
+  (if running-on-xemacs
       (setq again "make test_xemacs")
     (setq again "make test_emacs"))
   (verilog-test)

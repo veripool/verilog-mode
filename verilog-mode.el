@@ -2288,8 +2288,9 @@ find the errors."
 (defconst verilog-no-indent-begin-re
   (eval-when-compile
     (verilog-regexp-words
-     '( "if" "else" "while" "for" "repeat" "always" "always_comb" "always_ff" "always_latch"
-	"initial" "final"))))
+     '("always" "always_comb" "always_ff" "always_latch" "initial" "final" ;; procedural blocks
+       "if" "else"                                                         ;; conditional statements
+       "while" "for" "foreach" "repeat" "do" "forever" ))))                ;; loop statements
 
 (defconst verilog-ends-re
   ;; Parenthesis indicate type of keyword found
@@ -2347,6 +2348,7 @@ find the errors."
 		"endinterface"
 		"endpackage"
 		"endsequence"
+		"endproperty"
 		"endspecify"
 		"endtable"
 		"endtask"
@@ -2379,6 +2381,7 @@ find the errors."
           "\\(program\\)\\|"	   ; 13
           "\\(sequence\\)\\|"	   ; 14
 	  "\\(clocking\\)\\|"      ; 15
+	  "\\(property\\)\\|"      ; 16
 	  "\\)\\>\\)"))
 (defconst verilog-end-block-re
   (eval-when-compile
@@ -2537,15 +2540,20 @@ find the errors."
        "join" "join_any" "join_none"
        "end"
        "endcase"
-       "endconfig"
+       "endchecker"
        "endclass"
        "endclocking"
+       "endconfig"
        "endfunction"
        "endgenerate"
+       "endgroup"
        "endmodule"
        "endprimitive"
        "endinterface"
        "endpackage"
+       "endprogram"
+       "endproperty"
+       "endsequence"
        "endspecify"
        "endtable"
        "endtask" )
@@ -2775,10 +2783,45 @@ find the errors."
   "String used to mark end of excluded text.")
 (defconst verilog-preprocessor-re
   (eval-when-compile
-    (verilog-regexp-words
-     `(
-       "`define" "`include" "`ifdef" "`ifndef" "`if" "`endif" "`else"
-       ))))
+    (concat
+     ;; single words
+     "\\(?:"
+     (verilog-regexp-words
+      `("`__FILE__"
+	"`__LINE__"
+	"`celldefine"
+	"`else"
+	"`end_keywords"
+	"`endcelldefine"
+	"`endif"
+	"`nounconnected_drive"
+	"`resetall"
+	"`unconnected_drive"
+	"`undefineall"))
+     "\\)\\|\\(?:"
+     ;; two words: i.e. `ifdef DEFINE
+     "\\<\\(`elsif\\|`ifn?def\\|`undef\\|`default_nettype\\|`begin_keywords\\)\\>\\s-"
+     "\\)\\|\\(?:"
+     ;; `line number "filename" level
+     "\\<\\(`line\\)\\>\\s-+[0-9]+\\s-+\"[^\"]+\"\\s-+[012]"
+     "\\)\\|\\(?:"
+     ;;`include "file" or `include <file>
+     "\\<\\(`include\\)\\>\\s-+\\(?:\"[^\"]+\"\\|<[^>]+>\\)"
+     "\\)\\|\\(?:"
+     ;; `pragma <stuff> (no mention in IEEE 1800-2012 that pragma can span multiple lines
+     "\\<\\(`pragma\\)\\>\\s-+.+$"
+     "\\)\\|\\(?:"
+     ;; `timescale time_unit / time_precision
+     "\\<\\(`timescale\\)\\>\\s-+10\\{0,2\\}\\s-*[munpf]?s\\s-*\\/\\s-*10\\{0,2\\}\\s-*[munpf]?s"
+     "\\)\\|\\(?:"
+     ;; `define and `if can span multiple lines if line ends in '\'. NOTE: `if is not IEEE 1800-2012
+     ;; from http://www.emacswiki.org/emacs/MultilineRegexp
+     (concat "\\<\\(`define\\|`if\\)\\>" ;; directive
+	     "\\s-+" ;; separator
+	     "\\(.*\\(?:\n.*\\)*?\\)" ;; definition: to tend of line, the maybe more lines (excludes any trailing \n)
+	     "\\(?:\n\\s-*\n\\|\\'\\)") ;; blank line or EOF
+     "\\)"
+     )))
 
 (defconst verilog-keywords
   '( "`case" "`default" "`define" "`else" "`endfor" "`endif"
@@ -4153,9 +4196,7 @@ Uses `verilog-scan' cache."
     (while (and
 	    (> (marker-position e) (point))
 	    (verilog-re-search-forward
-	     (concat
-	      "\\<end\\(\\(function\\)\\|\\(task\\)\\|\\(module\\)\\|\\(primitive\\)\\|\\(interface\\)\\|\\(package\\)\\|\\(case\\)\\)?\\>"
-	      "\\|\\(`endif\\)\\|\\(`else\\)")
+	     verilog-auto-end-comment-lines-re
 	     nil 'move))
       (goto-char (match-beginning 0))
       (let ((indent-str (verilog-indent-line)))
@@ -4184,45 +4225,47 @@ Uses `verilog-scan' cache."
 	;; or the token before us unambiguously ends a statement,
 	;; then move back a token and test again.
 	(not (or
-          ;; stop if beginning of buffer
+	      ;; stop if beginning of buffer
 	      (bolp)
-          ;; stop if we find a ;
+	      ;; stop if we find a ;
 	      (= (preceding-char) ?\;)
-          ;; stop if we see a named coverpoint
+	      ;; stop if we see a named coverpoint
 	      (looking-at "\\w+\\W*:\\W*\\(coverpoint\\|cross\\|constraint\\)")
-          ;; keep going if we are in the middle of a word
+	      ;; keep going if we are in the middle of a word
 	      (not (or (looking-at "\\<") (forward-word -1)))
-          ;; stop if we see an assertion (perhaps labeled)
+	      ;; stop if we see an assertion (perhaps labeled)
 	      (and
 	       (looking-at "\\(\\<\\(assert\\|assume\\|cover\\)\\>\\s-+\\<property\\>\\)\\|\\(\\<assert\\>\\)")
 	       (progn
-             (setq h (point))
-             (save-excursion
-               (verilog-backward-token)
-               (if (looking-at verilog-label-re)
-                   (setq h (point))))
-             (goto-char h)))
-          ;; stop if we see an extended complete reg, perhaps a complete one
+		 (setq h (point))
+		 (save-excursion
+		   (verilog-backward-token)
+		   (if (looking-at verilog-label-re)
+		       (setq h (point))))
+		 (goto-char h)))
+	      ;; stop if we see an extended complete reg, perhaps a complete one
 	      (and
-           (looking-at verilog-complete-reg)
-           (let* ((p (point)))
-             (while (and (looking-at verilog-extended-complete-re)
-                         (progn (setq p (point))
-                                (verilog-backward-token)
-                                (/= p (point)))))
-             (goto-char p)))
-          ;; stop if we see a complete reg (previous found extended ones)
+	       (looking-at verilog-complete-reg)
+	       (let* ((p (point)))
+		 (while (and (looking-at verilog-extended-complete-re)
+			     (progn (setq p (point))
+				    (verilog-backward-token)
+				    (/= p (point)))))
+		 (goto-char p)))
+	      ;; stop if we see a complete reg (previous found extended ones)
 	      (looking-at verilog-basic-complete-re)
-          ;; stop if previous token is an ender
+	      ;; stop if previous token is an ender
 	      (save-excursion
-            (verilog-backward-token)
-            (or
-             (looking-at verilog-end-block-re)
-             (looking-at verilog-preprocessor-re))))) ;; end of test
-    (verilog-backward-syntactic-ws)
-    (verilog-backward-token))
+		(verilog-backward-token)
+		(looking-at verilog-end-block-re))))
+      (verilog-backward-syntactic-ws)
+      (verilog-backward-token))
     ;; Now point is where the previous line ended.
-    (verilog-forward-syntactic-ws)))
+    (verilog-forward-syntactic-ws)
+    ;; Skip forward over any preprocessor directives, as they have wacky indentation
+    (if (looking-at verilog-preprocessor-re)
+	(progn (goto-char (match-end 0))
+	       (verilog-forward-syntactic-ws)))))
 
 (defun verilog-beg-of-statement-1 ()
   "Move backward to beginning of statement."
@@ -4236,13 +4279,12 @@ Uses `verilog-scan' cache."
         (verilog-backward-syntactic-ws)
         (if (or (bolp)
                 (= (preceding-char) ?\;)
-		(save-excursion
+		(progn
 		  (verilog-backward-token)
 		  (looking-at verilog-ends-re)))
             (progn
               (goto-char pt)
-              (throw 'done t))
-          (verilog-backward-token))))
+              (throw 'done t)))))
     (verilog-forward-syntactic-ws)))
 ;
 ;    (while (and
@@ -4800,10 +4842,10 @@ primitive or interface named NAME."
 		  (cond
 		   ((match-end 5) ;; of verilog-end-block-ordered-re
 		    (setq reg "\\(\\<function\\>\\)\\|\\(\\<\\(endfunction\\|task\\|\\(macro\\)?module\\|primitive\\)\\>\\)")
-		    (setq name-re "\\w+\\s-*("))
+		    (setq name-re "\\w+\\(?:\n\\|\\s-\\)*[(;]"))
 		   ((match-end 6) ;; of verilog-end-block-ordered-re
 		    (setq reg "\\(\\<task\\>\\)\\|\\(\\<\\(endtask\\|function\\|\\(macro\\)?module\\|primitive\\)\\>\\)")
-		    (setq name-re "\\w+\\s-*("))
+		    (setq name-re "\\w+\\(?:\n\\|\\s-\\)*[(;]"))
 		   ((match-end 7) ;; of verilog-end-block-ordered-re
 		    (setq reg "\\(\\<\\(macro\\)?module\\>\\)\\|\\<endmodule\\>"))
 		   ((match-end 8) ;; of verilog-end-block-ordered-re
@@ -4822,6 +4864,8 @@ primitive or interface named NAME."
 		    (setq reg "\\(\\<\\(rand\\)?sequence\\>\\)\\|\\(\\<\\(endsequence\\|primitive\\|interface\\|\\(macro\\)?module\\)\\>\\)"))
 		   ((match-end 15) ;; of verilog-end-block-ordered-re
 		    (setq reg "\\(\\<clocking\\>\\)\\|\\<endclocking\\>"))
+		   ((match-end 16) ;; of verilog-end-block-ordered-re
+		    (setq reg "\\(\\<property\\>\\)\\|\\<endproperty\\>"))
 
 		   (t (error "Problem in verilog-set-auto-endcomments")))
 		  (let (b e)
@@ -6130,14 +6174,18 @@ Return >0 for nested struct."
 (defun verilog-at-constraint-p ()
   "If at the { of a constraint or coverpoint definition, return true, moving point to constraint."
   (if (save-excursion
+	(let ((p (point)))
 	(and
 	 (equal (char-after) ?\{)
 	 (forward-list)
 	 (progn (backward-char 1)
 		(verilog-backward-ws&directives)
+	  (and
 		(or (equal (char-before) ?\{) ;; empty case
                     (equal (char-before) ?\;)
-                    (equal (char-before) ?\})))))
+                    (equal (char-before) ?\}))
+                    ;; skip what looks like bus repitition operator {#{
+                    (not (string-match "^{\\s-*[0-9]+\\s-*{" (buffer-substring p (point)))))))))
       (progn
         (let ( (pt (point)) (pass 0))
           (verilog-backward-ws&directives)
@@ -6455,6 +6503,9 @@ Only look at a few lines to determine indent level."
 	    (eq type 'block))
 	   (looking-at verilog-declaration-re))
       (verilog-indent-declaration ind))
+
+     (;-- form feeds - ignored as bug in indent-line-to in < 24.5
+      (looking-at "\f"))
 
      (;-- Everything else
       t
@@ -11758,6 +11809,9 @@ Limitations:
 
   Typedefs must match `verilog-typedef-regexp', which is disabled by default.
 
+  Types are added to declarations if an AUTOLOGIC or
+  `verilog-auto-wire-type' is set to logic.
+
   Signals matching `verilog-auto-output-ignore-regexp' are not included.
 
 An example (see `verilog-auto-inst' for what else is going on here):
@@ -11899,6 +11953,9 @@ Limitations:
 
   Typedefs must match `verilog-typedef-regexp', which is disabled by default.
 
+  Types are added to declarations if an AUTOLOGIC or
+  `verilog-auto-wire-type' is set to logic.
+
   Signals matching `verilog-auto-input-ignore-regexp' are not included.
 
 An example (see `verilog-auto-inst' for what else is going on here):
@@ -11978,6 +12035,9 @@ Limitations:
   instantiation, all bets are off.  (For example due to an AUTO_TEMPLATE).
 
   Typedefs must match `verilog-typedef-regexp', which is disabled by default.
+
+  Types are added to declarations if an AUTOLOGIC or
+  `verilog-auto-wire-type' is set to logic.
 
   Signals matching `verilog-auto-inout-ignore-regexp' are not included.
 
@@ -12095,13 +12155,14 @@ same expansion will result from only extracting signals starting with i:
 
 	   /*AUTOINOUTMODULE(\"ExampMain\",\"^i\")*/
 
-You may also provide an optional second regular expression, in
-which case only signals which have that pin direction and data
-type will be included.  This matches against everything before
-the signal name in the declaration, for example against
-\"input\" (single bit), \"output logic\" (direction and type) or
-\"output [1:0]\" (direction and implicit type).  You also
-probably want to skip spaces in your regexp.
+You may also provide an optional third argument regular
+expression, in which case only signals which have that pin
+direction and data type matching that regular expression will be
+included.  This matches against everything before the signal name
+in the declaration, for example against \"input\" (single bit),
+\"output logic\" (direction and type) or \"output
+[1:0]\" (direction and implicit type).  You also probably want to
+skip spaces in your regexp.
 
 For example, the below will result in matching the output \"o\"
 against the previous example's module:
@@ -12220,7 +12281,21 @@ You may also provide an optional regular expression, in which case only
 signals matching the regular expression will be included.  For example the
 same expansion will result from only extracting signals starting with i:
 
-	   /*AUTOINOUTCOMP(\"ExampMain\",\"^i\")*/"
+	   /*AUTOINOUTCOMP(\"ExampMain\",\"^i\")*/
+
+You may also provide an optional third argument regular
+expression, in which case only signals which have that pin
+direction and data type matching that regular expression will be
+included.  This matches against everything before the signal name
+in the declaration, for example against \"input\" (single bit),
+\"output logic\" (direction and type) or \"output
+[1:0]\" (direction and implicit type).  You also probably want to
+skip spaces in your regexp.
+
+For example, the below will result in matching the output \"o\"
+against the previous example's module:
+
+	   /*AUTOINOUTCOMP(\"ExampMain\",\"\",\"^output.*\")*/"
   (verilog-auto-inout-module t nil))
 
 (defun verilog-auto-inout-in ()
@@ -12271,7 +12346,7 @@ You may also provide an optional regular expression, in which case only
 signals matching the regular expression will be included.  For example the
 same expansion will result from only extracting signals starting with i:
 
-	   /*AUTOINOUTCOMP(\"ExampMain\",\"^i\")*/"
+	   /*AUTOINOUTIN(\"ExampMain\",\"^i\")*/"
   (verilog-auto-inout-module nil t))
 
 (defun verilog-auto-inout-param ()
