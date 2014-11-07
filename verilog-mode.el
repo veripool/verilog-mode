@@ -5893,7 +5893,9 @@ Set point to where line starts."
    (;-- any of begin|initial|while are complete statements; 'begin : foo' is also complete
     t
     (forward-word -1)
-    (while (= (preceding-char) ?\_)
+    (while (or (= (preceding-char) ?\_)
+               (= (preceding-char) ?\@)
+               (= (preceding-char) ?\.))
       (forward-word -1))
     (cond
      ((looking-at "\\<else\\>")
