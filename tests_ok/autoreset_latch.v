@@ -43,8 +43,8 @@ module device(
       /*AUTORESET*/
       // Beginning of autoreset for uninitialized flops
       next_ready = 1'h0;
-      next_pass = 1'b0;
-      next_fail = 1'b0;
+      next_pass = 1'h0;
+      next_fail = 1'h0;
       // End of automatics
       case (state)
 	IDLE :	begin
