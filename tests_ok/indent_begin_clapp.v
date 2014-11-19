@@ -25,6 +25,18 @@ module x;
    begin
    end while (i);
    
+   initial @a.b
+   begin
+   end
+   
+   always @E
+   begin
+   end
+   
+   forever @E
+   begin
+   end
+   
 endmodule
 
 // Local Variables:

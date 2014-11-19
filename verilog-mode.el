@@ -2446,7 +2446,7 @@ find the errors."
    "\\(\\<package\\>\\)\\|"
    "\\(\\<final\\>\\)\\|"
    "\\(@\\)\\|"
-   "\\(\\<while\\>\\)\\|"
+   "\\(\\<while\\>\\)\\|\\(\\<do\\>\\)\\|"
    "\\(\\<for\\(ever\\|each\\)?\\>\\)\\|"
    "\\(\\<repeat\\>\\)\\|\\(\\<wait\\>\\)\\|"
    "#"))
@@ -4226,7 +4226,7 @@ Uses `verilog-scan' cache."
 	;; then move back a token and test again.
 	(not (or
 	      ;; stop if beginning of buffer
-	      (bolp)
+	      (bobp)
 	      ;; stop if we find a ;
 	      (= (preceding-char) ?\;)
 	      ;; stop if we see a named coverpoint
@@ -5920,7 +5920,9 @@ Set point to where line starts."
    (;-- any of begin|initial|while are complete statements; 'begin : foo' is also complete
     t
     (forward-word -1)
-    (while (= (preceding-char) ?\_)
+    (while (or (= (preceding-char) ?\_)
+               (= (preceding-char) ?\@)
+               (= (preceding-char) ?\.))
       (forward-word -1))
     (cond
      ((looking-at "\\<else\\>")
@@ -8972,7 +8974,6 @@ IGNORE-NEXT is true to ignore next token, fake from inside case statement."
   (save-excursion
     (let* (;;(dbg "")
 	   sigs-out-d sigs-out-i sigs-out-unk sigs-temp sigs-in)
-      (search-forward ")")
       (verilog-read-always-signals-recurse nil nil nil)
       (setq sigs-out-i (append sigs-out-i sigs-out-unk)
 	    sigs-out-unk nil)
@@ -12618,7 +12619,9 @@ See `verilog-auto-insert-lisp' for examples."
 
 (defun verilog-auto-sense-sigs (moddecls presense-sigs)
   "Return list of signals for current AUTOSENSE block."
-  (let* ((sigss (verilog-read-always-signals))
+  (let* ((sigss (save-excursion
+		  (search-forward ")")
+		  (verilog-read-always-signals)))
 	 (sig-list (verilog-signals-not-params
 		    (verilog-signals-not-in (verilog-alw-get-inputs sigss)
 					    (append (and (not verilog-auto-sense-include-inputs)
@@ -12808,11 +12811,12 @@ Typing \\[verilog-auto] will make this into:
 			   (save-excursion
 			     (verilog-read-signals
 			      (save-excursion
-				(verilog-re-search-backward-quick "\\(@\\|\\<begin\\>\\|\\<if\\>\\|\\<case\\>\\)" nil t)
+				(verilog-re-search-backward-quick
+				 "\\(@\\|\\<\\(begin\\|if\\|case\\|always\\(_latch\\|_ff\\|_comb\\)?\\)\\>\\)" nil t)
 				(point))
 			      (point)))))
       (save-excursion
-	(verilog-re-search-backward-quick "@" nil t)
+	(verilog-re-search-backward-quick "\\(@\\|\\<\\(always\\(_latch\\|_ff\\|_comb\\)?\\)\\>\\)" nil t)
         (setq sigss (verilog-read-always-signals)))
       (setq dly-list (verilog-alw-get-outputs-delayed sigss))
       (setq sig-list (verilog-signals-not-in (append
