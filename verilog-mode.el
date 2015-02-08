@@ -1,6 +1,6 @@
 ;;; verilog-mode.el --- major mode for editing verilog source in Emacs
 
-;; Copyright (C) 1996-2014 Free Software Foundation, Inc.
+;; Copyright (C) 1996-2015 Free Software Foundation, Inc.
 
 ;; Author: Michael McNamara <mac@verilog.com>
 ;;    Wilson Snyder <wsnyder@wsnyder.org>
@@ -6186,7 +6186,7 @@ Return >0 for nested struct."
 		(or (equal (char-before) ?\{) ;; empty case
                     (equal (char-before) ?\;)
                     (equal (char-before) ?\}))
-                    ;; skip what looks like bus repitition operator {#{
+                    ;; skip what looks like bus repetition operator {#{
                     (not (string-match "^{\\s-*[0-9]+\\s-*{" (buffer-substring p (point)))))))))
       (progn
         (let ( (pt (point)) (pass 0))
