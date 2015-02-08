@@ -111,6 +111,7 @@
 ;       verilog-auto-lineup              'declarations
 ;       verilog-highlight-p1800-keywords nil
 ;       verilog-linter			 "my_lint_shell_command"
+;       verilog-electric-apostrophe      t
 ;       )
 
 ;; 
@@ -710,6 +711,12 @@ The name of the function or case will be set between the braces."
   :group 'verilog-mode-actions
   :type 'boolean)
 (put 'verilog-auto-endcomments 'safe-local-variable 'verilog-booleanp)
+
+(defcustom verilog-electric-apostrophe nil
+  "Non-nil means automatically insert apostrophe after bitwidth."
+  :group 'verilog-mode-actions
+  :type 'boolean)
+(put 'verilog-electric-apostrophe 'safe-local-variable 'verilog-booleanp)
 
 (defcustom verilog-auto-delete-trailing-whitespace nil
   "Non-nil means to `delete-trailing-whitespace' in `verilog-auto'."
@@ -1327,6 +1334,18 @@ If set will become buffer local.")
     (define-key map "\C-c\C-z" 'verilog-inject-auto)
     (define-key map "\C-c\C-e" 'verilog-expand-vector)
     (define-key map "\C-c\C-h" 'verilog-header)
+
+    (define-key map "b" 'electric-verilog-apostrophe)
+    (define-key map "B" 'electric-verilog-apostrophe)
+    (define-key map "h" 'electric-verilog-apostrophe)
+    (define-key map "H" 'electric-verilog-apostrophe)
+    (define-key map "d" 'electric-verilog-apostrophe)
+    (define-key map "D" 'electric-verilog-apostrophe)
+    (define-key map "x" 'electric-verilog-apostrophe)
+    (define-key map "X" 'electric-verilog-apostrophe)
+    (define-key map "s" 'electric-verilog-apostrophe)
+    (define-key map "S" 'electric-verilog-apostrophe)
+    
     map)
   "Keymap used in Verilog mode.")
 
@@ -3946,7 +3965,15 @@ With optional ARG, remove existing end of line comments."
 		 (kill-region (point) oldpnt)))))))
    (t (progn (insert "\t")))))
 
-
+;; From vlog-mode (http://vlog-mode.sourceforge.net/)
+(defun electric-verilog-apostrophe ()
+  "Insert apostrophe after bitwidth (e.g 1b -> 1'b)."
+  (interactive)
+  (and verilog-electric-apostrophe
+       (looking-back "\\<[0-9]+")
+       (not (looking-back "\\\\[0-9]+"))
+       (insert "'"))
+  (insert last-input-event))
 
 ;;
 ;; Interactive functions
@@ -14076,6 +14103,7 @@ Files are checked based on `verilog-library-flags'."
        verilog-auto-tieoff-ignore-regexp
        verilog-auto-unused-ignore-regexp
        verilog-auto-wire-type
+       verilog-electric-apostrophe
        verilog-before-auto-hook
        verilog-before-delete-auto-hook
        verilog-before-getopt-flags-hook
