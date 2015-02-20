@@ -10932,7 +10932,12 @@ If PAR-VALUES replace final strings with these parameter values."
 			(concat "/*" vl-mbits vl-bits "*/")
 		      (concat vl-bits))
 	  tpl-net (concat port
-			  (if vl-modport (concat "." vl-modport) "")
+			  (if (and vl-modport
+				   ;; .modport cannot be added if attachment is
+				   ;; already declared as modport, VCS croaks
+				   (let ((sig (assoc port (verilog-decls-get-interfaces moddecls))))
+				     (not (and sig (verilog-sig-modport sig)))))
+			      (concat "." vl-modport) "")
 			  dflt-bits))
     ;; Find template
     (cond (tpl-ass	    ; Template of exact port name
