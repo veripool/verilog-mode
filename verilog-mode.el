@@ -8419,7 +8419,6 @@ Return an array of [outputs inouts inputs wire reg assign const]."
   (defvar sigs-temp)
   ;; These are known to be from other packages and may not be defined
   (defvar diff-command nil)
-  (defvar vector-skip-list)
   ;; There are known to be from newer versions of Emacs
   (defvar create-lockfiles))
 
@@ -10884,7 +10883,7 @@ See the example in `verilog-auto-inout-modport'."
 (defvar vl-bits  nil "See `verilog-auto-inst'.") ; Prevent compile warning
 (defvar vl-mbits nil "See `verilog-auto-inst'.") ; Prevent compile warning
 
-(defun verilog-auto-inst-port (port-st indent-pt tpl-list tpl-num for-star par-values)
+(defun verilog-auto-inst-port (port-st indent-pt moddecls tpl-list tpl-num for-star par-values)
   "Print out an instantiation connection for this PORT-ST.
 Insert to INDENT-PT, use template TPL-LIST.
 @ are instantiation numbers, replaced with TPL-NUM.
@@ -10901,9 +10900,10 @@ If PAR-VALUES replace final strings with these parameter values."
 	 (vl-mbits (if (verilog-sig-multidim port-st)
                        (verilog-sig-multidim-string port-st) ""))
 	 (vl-bits (if (or verilog-auto-inst-vector
-			  (not (assoc port vector-skip-list))
+			  (not (assoc port (verilog-decls-get-signals moddecls)))
 			  (not (equal (verilog-sig-bits port-st)
-				      (verilog-sig-bits (assoc port vector-skip-list)))))
+				      (verilog-sig-bits
+				       (assoc port (verilog-decls-get-signals moddecls))))))
 		      (or (verilog-sig-bits port-st) "")
 		    ""))
 	 (case-fold-search nil)
@@ -11002,12 +11002,12 @@ If PAR-VALUES replace final strings with these parameter values."
 ;;(x "incom[@\"(+ (* 8 @) 7)\":@\"(* 8 @)\"]")
 ;;(x ".out (outgo[@\"(concat (+ (* 8 @) 7) \\\":\\\" ( * 8 @))\"]));")
 
-(defun verilog-auto-inst-port-list (sig-list indent-pt tpl-list tpl-num for-star par-values)
+(defun verilog-auto-inst-port-list (sig-list indent-pt moddecls tpl-list tpl-num for-star par-values)
   "For `verilog-auto-inst' print a list of ports using `verilog-auto-inst-port'."
   (when verilog-auto-inst-sort
     (setq sig-list (sort (copy-alist sig-list) `verilog-signals-sort-compare)))
   (mapc (lambda (port)
-	  (verilog-auto-inst-port port indent-pt
+	  (verilog-auto-inst-port port indent-pt moddecls
 				  tpl-list tpl-num for-star par-values))
 	sig-list))
 
@@ -11366,8 +11366,6 @@ For more information see the \\[verilog-faq] and forums at URL
 					  (+ 16 (* 8 (/ (+ indent-pt 7) 8)))))
 	   (modi (verilog-modi-current))
 	   (moddecls (verilog-modi-get-decls modi))
-	   (vector-skip-list (unless verilog-auto-inst-vector
-			       (verilog-decls-get-signals moddecls)))
 	   submod submodi submoddecls
 	   inst skip-pins tpl-list tpl-num did-first par-values)
 
@@ -11409,7 +11407,7 @@ For more information see the \\[verilog-faq] and forums at URL
 	    (when (not did-first) (verilog-auto-inst-first) (setq did-first t))
             ;; Note these are searched for in verilog-read-sub-decls.
 	    (verilog-insert-indent "// Interfaced\n")
-	    (verilog-auto-inst-port-list sig-list indent-pt
+	    (verilog-auto-inst-port-list sig-list indent-pt moddecls
 					 tpl-list tpl-num for-star par-values)))
 	(let ((sig-list (verilog-signals-not-in
 			 (verilog-decls-get-interfaces submoddecls)
@@ -11419,7 +11417,7 @@ For more information see the \\[verilog-faq] and forums at URL
 	    (when (not did-first) (verilog-auto-inst-first) (setq did-first t))
             ;; Note these are searched for in verilog-read-sub-decls.
 	    (verilog-insert-indent "// Interfaces\n")
-	    (verilog-auto-inst-port-list sig-list indent-pt
+	    (verilog-auto-inst-port-list sig-list indent-pt moddecls
 					 tpl-list tpl-num for-star par-values)))
 	(let ((sig-list (verilog-signals-not-in
 			 (verilog-decls-get-outputs submoddecls)
@@ -11428,7 +11426,7 @@ For more information see the \\[verilog-faq] and forums at URL
 	  (when sig-list
 	    (when (not did-first) (verilog-auto-inst-first) (setq did-first t))
 	    (verilog-insert-indent "// Outputs\n")
-	    (verilog-auto-inst-port-list sig-list indent-pt
+	    (verilog-auto-inst-port-list sig-list indent-pt moddecls
 					 tpl-list tpl-num for-star par-values)))
 	(let ((sig-list (verilog-signals-not-in
 			 (verilog-decls-get-inouts submoddecls)
@@ -11437,7 +11435,7 @@ For more information see the \\[verilog-faq] and forums at URL
 	  (when sig-list
 	    (when (not did-first) (verilog-auto-inst-first) (setq did-first t))
 	    (verilog-insert-indent "// Inouts\n")
-	    (verilog-auto-inst-port-list sig-list indent-pt
+	    (verilog-auto-inst-port-list sig-list indent-pt moddecls
 					 tpl-list tpl-num for-star par-values)))
 	(let ((sig-list (verilog-signals-not-in
 			 (verilog-decls-get-inputs submoddecls)
@@ -11446,7 +11444,7 @@ For more information see the \\[verilog-faq] and forums at URL
 	  (when sig-list
 	    (when (not did-first) (verilog-auto-inst-first) (setq did-first t))
 	    (verilog-insert-indent "// Inputs\n")
-	    (verilog-auto-inst-port-list sig-list indent-pt
+	    (verilog-auto-inst-port-list sig-list indent-pt moddecls
 					 tpl-list tpl-num for-star par-values)))
 	;; Kill extra semi
 	(save-excursion
@@ -11509,8 +11507,6 @@ Templates:
 					  (+ 16 (* 8 (/ (+ indent-pt 7) 8)))))
 	   (modi (verilog-modi-current))
 	   (moddecls (verilog-modi-get-decls modi))
-	   (vector-skip-list (unless verilog-auto-inst-vector
-			       (verilog-decls-get-signals moddecls)))
 	   submod submodi submoddecls
 	   inst skip-pins tpl-list tpl-num did-first)
       ;; Find module name that is instantiated
@@ -11550,7 +11546,7 @@ Templates:
 	    (when (not did-first) (verilog-auto-inst-first) (setq did-first t))
             ;; Note these are searched for in verilog-read-sub-decls.
 	    (verilog-insert-indent "// Parameters\n")
-	    (verilog-auto-inst-port-list sig-list indent-pt
+	    (verilog-auto-inst-port-list sig-list indent-pt moddecls
 					 tpl-list tpl-num nil nil)))
 	;; Kill extra semi
 	(save-excursion
