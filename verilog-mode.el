@@ -4800,6 +4800,9 @@ primitive or interface named NAME."
 				(throw 'skip 1))))
 			 ))))
 		  (end-of-line)
+      (if kill-existing-comment
+          (verilog-kill-existing-comment))
+      (delete-horizontal-space)
 		  (insert (concat " // " string ))))
 
 	       (;- this is end{function,generate,task,module,primitive,table,generate}
