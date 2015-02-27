@@ -8293,10 +8293,9 @@ Return an array of [outputs inouts inputs wire reg assign const]."
 		       typedefed nil  multidim nil    ptype nil   modport nil
 		       expect-signal 'sigs-assign     sig-paren paren))
 		((member keywd '("localparam" "genvar"))
-		 (unless io
-		   (setq vec nil        enum nil      rvalue nil  signed nil
-			 typedefed nil  multidim nil  ptype nil   modport nil
-			 expect-signal 'sigs-const    sig-paren paren)))
+		 (setq vec nil        enum nil      rvalue nil  signed nil
+		       typedefed nil  multidim nil  ptype nil   modport nil
+		       expect-signal 'sigs-const    sig-paren paren))
 		((member keywd '("signed" "unsigned"))
 		 (setq signed keywd))
 		((member keywd '("assert" "assume" "cover" "expect" "restrict"))
