@@ -2799,7 +2799,16 @@ find the errors."
      ;; from http://www.emacswiki.org/emacs/MultilineRegexp
      (concat "\\<\\(`define\\|`if\\)\\>" ;; directive
 	     "\\s-+" ;; separator
-	     "\\(.*\\(?:\n.*\\)*?\\)" ;; definition: to tend of line, the maybe more lines (excludes any trailing \n)
+             "\\(?:.*?\\(?:\n.*\\)*?\\)" ;; definition: to end of line, then maybe more lines (excludes any trailing \n)
+	     "\\(?:\n\\s-*\n\\|\\'\\)") ;; blank line or EOF
+     "\\)\\|\\(?:"
+     ;; `<macro>() : i.e. `uvm_info(a,b,c) or any other pre-defined macro
+     ;; Since parameters inside the macro can have parentheses, and
+     ;; the macro can span multiple lines, just look for the opening
+     ;; parentheses and then continue to the end of the first
+     ;; non-escaped EOL
+     (concat "\\<`\\w+\\>\\s-*("
+      "\\(?:.*?\\(?:\n.*\\)*?\\)" ;; definition: to end of line, then maybe more lines (excludes any trailing \n)
 	     "\\(?:\n\\s-*\n\\|\\'\\)") ;; blank line or EOF
      "\\)"
      )))
