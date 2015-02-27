@@ -4217,7 +4217,7 @@ Uses `verilog-scan' cache."
 	      (not (or (looking-at "\\<") (forward-word -1)))
 	      ;; stop if we see an assertion (perhaps labeled)
 	      (and
-	       (looking-at "\\(\\<\\(assert\\|assume\\|cover\\)\\>\\s-+\\<property\\>\\)\\|\\(\\<assert\\>\\)")
+	       (looking-at "\\(\\w+\\W*:\\W*\\)?\\(\\<\\(assert\\|assume\\|cover\\)\\>\\s-+\\<property\\>\\)\\|\\(\\<assert\\>\\)")
 	       (progn
 		 (setq h (point))
 		 (save-excursion
