@@ -6387,7 +6387,6 @@ Only look at a few lines to determine indent level."
 	(cond
 	 ((or
 	   (= (preceding-char) ?\,)
-	   (= (preceding-char) ?\])
 	   (save-excursion
 	     (verilog-beg-of-statement-1)
 	     (looking-at verilog-declaration-re)))
