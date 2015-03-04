@@ -36,7 +36,6 @@ install : .timestamps ChangeLog test $(D)/mmencoded_verilog-mode $(D)/emacs-vers
 
 test:	.timestamps/test
 .timestamps/test: x/verilog-mode.elc e/verilog-mode.elc mmencoded_verilog-mode verilog.info 0test.el .timestamps
-	mkdir -p e/t x/t
 ifeq ($(VERILOG_MODE_TEST_FILE),)
 	$(MAKE) test_batch test_errors test_emacs test_xemacs
 	@touch $@
@@ -51,7 +50,7 @@ test_emacs:: $(1)
 $(1): e/verilog-mode.elc
 	@echo
 	@echo == $(1)
-	@mkdir -p e/t x/t
+	@mkdir -p e/t
 	VERILOG_MODE_THREAD=$(2) time $(EMACS)  --batch -q --no-site-file -l e/verilog-mode.elc -l 0test.el
 endef
 
@@ -69,6 +68,7 @@ test_xemacs:: $(1)
 $(1): x/verilog-mode.elc
 	@echo
 	@echo == $(1)
+	@mkdir -p x/t
 	VERILOG_MODE_THREAD=$(2) time $(XEMACS)  --batch -vanilla -l x/verilog-mode.elc -l 0test.el
 endef
 
