@@ -4209,6 +4209,8 @@ Uses `verilog-scan' cache."
 	(not (or
 	      ;; stop if beginning of buffer
 	      (bobp)
+	      ;; stop if looking at a pre-processor directive
+	      (looking-at "`\\w+")
 	      ;; stop if we find a ;
 	      (= (preceding-char) ?\;)
 	      ;; stop if we see a named coverpoint
