@@ -1,6 +1,6 @@
 ;;; verilog-mode.el --- major mode for editing verilog source in Emacs
 
-;; Copyright (C) 1996-2014 Free Software Foundation, Inc.
+;; Copyright (C) 1996-2015 Free Software Foundation, Inc.
 
 ;; Author: Michael McNamara <mac@verilog.com>
 ;;    Wilson Snyder <wsnyder@wsnyder.org>
@@ -2799,7 +2799,16 @@ find the errors."
      ;; from http://www.emacswiki.org/emacs/MultilineRegexp
      (concat "\\<\\(`define\\|`if\\)\\>" ;; directive
 	     "\\s-+" ;; separator
-	     "\\(.*\\(?:\n.*\\)*?\\)" ;; definition: to tend of line, the maybe more lines (excludes any trailing \n)
+             "\\(?:.*?\\(?:\n.*\\)*?\\)" ;; definition: to end of line, then maybe more lines (excludes any trailing \n)
+	     "\\(?:\n\\s-*\n\\|\\'\\)") ;; blank line or EOF
+     "\\)\\|\\(?:"
+     ;; `<macro>() : i.e. `uvm_info(a,b,c) or any other pre-defined macro
+     ;; Since parameters inside the macro can have parentheses, and
+     ;; the macro can span multiple lines, just look for the opening
+     ;; parentheses and then continue to the end of the first
+     ;; non-escaped EOL
+     (concat "\\<`\\w+\\>\\s-*("
+      "\\(?:.*?\\(?:\n.*\\)*?\\)" ;; definition: to end of line, then maybe more lines (excludes any trailing \n)
 	     "\\(?:\n\\s-*\n\\|\\'\\)") ;; blank line or EOF
      "\\)"
      )))
@@ -4200,6 +4209,8 @@ Uses `verilog-scan' cache."
 	(not (or
 	      ;; stop if beginning of buffer
 	      (bobp)
+	      ;; stop if looking at a pre-processor directive
+	      (looking-at "`\\w+")
 	      ;; stop if we find a ;
 	      (= (preceding-char) ?\;)
 	      ;; stop if we see a named coverpoint
@@ -4208,7 +4219,7 @@ Uses `verilog-scan' cache."
 	      (not (or (looking-at "\\<") (forward-word -1)))
 	      ;; stop if we see an assertion (perhaps labeled)
 	      (and
-	       (looking-at "\\(\\<\\(assert\\|assume\\|cover\\)\\>\\s-+\\<property\\>\\)\\|\\(\\<assert\\>\\)")
+	       (looking-at "\\(\\w+\\W*:\\W*\\)?\\(\\<\\(assert\\|assume\\|cover\\)\\>\\s-+\\<property\\>\\)\\|\\(\\<assert\\>\\)")
 	       (progn
 		 (setq h (point))
 		 (save-excursion
@@ -4800,6 +4811,9 @@ primitive or interface named NAME."
 				(throw 'skip 1))))
 			 ))))
 		  (end-of-line)
+      (if kill-existing-comment
+          (verilog-kill-existing-comment))
+      (delete-horizontal-space)
 		  (insert (concat " // " string ))))
 
 	       (;- this is end{function,generate,task,module,primitive,table,generate}
@@ -6159,7 +6173,7 @@ Return >0 for nested struct."
 		(or (equal (char-before) ?\{) ;; empty case
                     (equal (char-before) ?\;)
                     (equal (char-before) ?\}))
-                    ;; skip what looks like bus repitition operator {#{
+                    ;; skip what looks like bus repetition operator {#{
                     (not (string-match "^{\\s-*[0-9]+\\s-*{" (buffer-substring p (point)))))))))
       (progn
         (let ( (pt (point)) (pass 0))
@@ -6375,7 +6389,6 @@ Only look at a few lines to determine indent level."
 	(cond
 	 ((or
 	   (= (preceding-char) ?\,)
-	   (= (preceding-char) ?\])
 	   (save-excursion
 	     (verilog-beg-of-statement-1)
 	     (looking-at verilog-declaration-re)))
@@ -8281,10 +8294,9 @@ Return an array of [outputs inouts inputs wire reg assign const]."
 		       typedefed nil  multidim nil    ptype nil   modport nil
 		       expect-signal 'sigs-assign     sig-paren paren))
 		((member keywd '("localparam" "genvar"))
-		 (unless io
-		   (setq vec nil        enum nil      rvalue nil  signed nil
-			 typedefed nil  multidim nil  ptype nil   modport nil
-			 expect-signal 'sigs-const    sig-paren paren)))
+		 (setq vec nil        enum nil      rvalue nil  signed nil
+		       typedefed nil  multidim nil  ptype nil   modport nil
+		       expect-signal 'sigs-const    sig-paren paren))
 		((member keywd '("signed" "unsigned"))
 		 (setq signed keywd))
 		((member keywd '("assert" "assume" "cover" "expect" "restrict"))
@@ -8419,7 +8431,6 @@ Return an array of [outputs inouts inputs wire reg assign const]."
   (defvar sigs-temp)
   ;; These are known to be from other packages and may not be defined
   (defvar diff-command nil)
-  (defvar vector-skip-list)
   ;; There are known to be from newer versions of Emacs
   (defvar create-lockfiles))
 
@@ -8947,7 +8958,6 @@ IGNORE-NEXT is true to ignore next token, fake from inside case statement."
   (save-excursion
     (let* (;;(dbg "")
 	   sigs-out-d sigs-out-i sigs-out-unk sigs-temp sigs-in)
-      (search-forward ")")
       (verilog-read-always-signals-recurse nil nil nil)
       (setq sigs-out-i (append sigs-out-i sigs-out-unk)
 	    sigs-out-unk nil)
@@ -10885,7 +10895,7 @@ See the example in `verilog-auto-inout-modport'."
 (defvar vl-bits  nil "See `verilog-auto-inst'.") ; Prevent compile warning
 (defvar vl-mbits nil "See `verilog-auto-inst'.") ; Prevent compile warning
 
-(defun verilog-auto-inst-port (port-st indent-pt tpl-list tpl-num for-star par-values)
+(defun verilog-auto-inst-port (port-st indent-pt moddecls tpl-list tpl-num for-star par-values)
   "Print out an instantiation connection for this PORT-ST.
 Insert to INDENT-PT, use template TPL-LIST.
 @ are instantiation numbers, replaced with TPL-NUM.
@@ -10902,9 +10912,10 @@ If PAR-VALUES replace final strings with these parameter values."
 	 (vl-mbits (if (verilog-sig-multidim port-st)
                        (verilog-sig-multidim-string port-st) ""))
 	 (vl-bits (if (or verilog-auto-inst-vector
-			  (not (assoc port vector-skip-list))
+			  (not (assoc port (verilog-decls-get-signals moddecls)))
 			  (not (equal (verilog-sig-bits port-st)
-				      (verilog-sig-bits (assoc port vector-skip-list)))))
+				      (verilog-sig-bits
+				       (assoc port (verilog-decls-get-signals moddecls))))))
 		      (or (verilog-sig-bits port-st) "")
 		    ""))
 	 (case-fold-search nil)
@@ -10933,7 +10944,12 @@ If PAR-VALUES replace final strings with these parameter values."
 			(concat "/*" vl-mbits vl-bits "*/")
 		      (concat vl-bits))
 	  tpl-net (concat port
-			  (if vl-modport (concat "." vl-modport) "")
+			  (if (and vl-modport
+				   ;; .modport cannot be added if attachment is
+				   ;; already declared as modport, VCS croaks
+				   (let ((sig (assoc port (verilog-decls-get-interfaces moddecls))))
+				     (not (and sig (verilog-sig-modport sig)))))
+			      (concat "." vl-modport) "")
 			  dflt-bits))
     ;; Find template
     (cond (tpl-ass	    ; Template of exact port name
@@ -11003,12 +11019,12 @@ If PAR-VALUES replace final strings with these parameter values."
 ;;(x "incom[@\"(+ (* 8 @) 7)\":@\"(* 8 @)\"]")
 ;;(x ".out (outgo[@\"(concat (+ (* 8 @) 7) \\\":\\\" ( * 8 @))\"]));")
 
-(defun verilog-auto-inst-port-list (sig-list indent-pt tpl-list tpl-num for-star par-values)
+(defun verilog-auto-inst-port-list (sig-list indent-pt moddecls tpl-list tpl-num for-star par-values)
   "For `verilog-auto-inst' print a list of ports using `verilog-auto-inst-port'."
   (when verilog-auto-inst-sort
     (setq sig-list (sort (copy-alist sig-list) `verilog-signals-sort-compare)))
   (mapc (lambda (port)
-	  (verilog-auto-inst-port port indent-pt
+	  (verilog-auto-inst-port port indent-pt moddecls
 				  tpl-list tpl-num for-star par-values))
 	sig-list))
 
@@ -11367,8 +11383,6 @@ For more information see the \\[verilog-faq] and forums at URL
 					  (+ 16 (* 8 (/ (+ indent-pt 7) 8)))))
 	   (modi (verilog-modi-current))
 	   (moddecls (verilog-modi-get-decls modi))
-	   (vector-skip-list (unless verilog-auto-inst-vector
-			       (verilog-decls-get-signals moddecls)))
 	   submod submodi submoddecls
 	   inst skip-pins tpl-list tpl-num did-first par-values)
 
@@ -11410,7 +11424,7 @@ For more information see the \\[verilog-faq] and forums at URL
 	    (when (not did-first) (verilog-auto-inst-first) (setq did-first t))
             ;; Note these are searched for in verilog-read-sub-decls.
 	    (verilog-insert-indent "// Interfaced\n")
-	    (verilog-auto-inst-port-list sig-list indent-pt
+	    (verilog-auto-inst-port-list sig-list indent-pt moddecls
 					 tpl-list tpl-num for-star par-values)))
 	(let ((sig-list (verilog-signals-not-in
 			 (verilog-decls-get-interfaces submoddecls)
@@ -11420,7 +11434,7 @@ For more information see the \\[verilog-faq] and forums at URL
 	    (when (not did-first) (verilog-auto-inst-first) (setq did-first t))
             ;; Note these are searched for in verilog-read-sub-decls.
 	    (verilog-insert-indent "// Interfaces\n")
-	    (verilog-auto-inst-port-list sig-list indent-pt
+	    (verilog-auto-inst-port-list sig-list indent-pt moddecls
 					 tpl-list tpl-num for-star par-values)))
 	(let ((sig-list (verilog-signals-not-in
 			 (verilog-decls-get-outputs submoddecls)
@@ -11429,7 +11443,7 @@ For more information see the \\[verilog-faq] and forums at URL
 	  (when sig-list
 	    (when (not did-first) (verilog-auto-inst-first) (setq did-first t))
 	    (verilog-insert-indent "// Outputs\n")
-	    (verilog-auto-inst-port-list sig-list indent-pt
+	    (verilog-auto-inst-port-list sig-list indent-pt moddecls
 					 tpl-list tpl-num for-star par-values)))
 	(let ((sig-list (verilog-signals-not-in
 			 (verilog-decls-get-inouts submoddecls)
@@ -11438,7 +11452,7 @@ For more information see the \\[verilog-faq] and forums at URL
 	  (when sig-list
 	    (when (not did-first) (verilog-auto-inst-first) (setq did-first t))
 	    (verilog-insert-indent "// Inouts\n")
-	    (verilog-auto-inst-port-list sig-list indent-pt
+	    (verilog-auto-inst-port-list sig-list indent-pt moddecls
 					 tpl-list tpl-num for-star par-values)))
 	(let ((sig-list (verilog-signals-not-in
 			 (verilog-decls-get-inputs submoddecls)
@@ -11447,7 +11461,7 @@ For more information see the \\[verilog-faq] and forums at URL
 	  (when sig-list
 	    (when (not did-first) (verilog-auto-inst-first) (setq did-first t))
 	    (verilog-insert-indent "// Inputs\n")
-	    (verilog-auto-inst-port-list sig-list indent-pt
+	    (verilog-auto-inst-port-list sig-list indent-pt moddecls
 					 tpl-list tpl-num for-star par-values)))
 	;; Kill extra semi
 	(save-excursion
@@ -11510,8 +11524,6 @@ Templates:
 					  (+ 16 (* 8 (/ (+ indent-pt 7) 8)))))
 	   (modi (verilog-modi-current))
 	   (moddecls (verilog-modi-get-decls modi))
-	   (vector-skip-list (unless verilog-auto-inst-vector
-			       (verilog-decls-get-signals moddecls)))
 	   submod submodi submoddecls
 	   inst skip-pins tpl-list tpl-num did-first)
       ;; Find module name that is instantiated
@@ -11551,7 +11563,7 @@ Templates:
 	    (when (not did-first) (verilog-auto-inst-first) (setq did-first t))
             ;; Note these are searched for in verilog-read-sub-decls.
 	    (verilog-insert-indent "// Parameters\n")
-	    (verilog-auto-inst-port-list sig-list indent-pt
+	    (verilog-auto-inst-port-list sig-list indent-pt moddecls
 					 tpl-list tpl-num nil nil)))
 	;; Kill extra semi
 	(save-excursion
@@ -12593,7 +12605,9 @@ See `verilog-auto-insert-lisp' for examples."
 
 (defun verilog-auto-sense-sigs (moddecls presense-sigs)
   "Return list of signals for current AUTOSENSE block."
-  (let* ((sigss (verilog-read-always-signals))
+  (let* ((sigss (save-excursion
+		  (search-forward ")")
+		  (verilog-read-always-signals)))
 	 (sig-list (verilog-signals-not-params
 		    (verilog-signals-not-in (verilog-alw-get-inputs sigss)
 					    (append (and (not verilog-auto-sense-include-inputs)
@@ -12783,11 +12797,12 @@ Typing \\[verilog-auto] will make this into:
 			   (save-excursion
 			     (verilog-read-signals
 			      (save-excursion
-				(verilog-re-search-backward-quick "\\(@\\|\\<begin\\>\\|\\<if\\>\\|\\<case\\>\\)" nil t)
+				(verilog-re-search-backward-quick
+				 "\\(@\\|\\<\\(begin\\|if\\|case\\|always\\(_latch\\|_ff\\|_comb\\)?\\)\\>\\)" nil t)
 				(point))
 			      (point)))))
       (save-excursion
-	(verilog-re-search-backward-quick "@" nil t)
+	(verilog-re-search-backward-quick "\\(@\\|\\<\\(always\\(_latch\\|_ff\\|_comb\\)?\\)\\>\\)" nil t)
         (setq sigss (verilog-read-always-signals)))
       (setq dly-list (verilog-alw-get-outputs-delayed sigss))
       (setq sig-list (verilog-signals-not-in (append
