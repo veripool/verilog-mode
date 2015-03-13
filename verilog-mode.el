@@ -282,6 +282,50 @@ STRING should be given if the last search was by `string-match' on STRING."
     ;; Emacs.
     (defalias 'verilog-regexp-opt 'regexp-opt)))
 
+;; emacs >=22 has looking-back, but older emacs and xemacs don't.
+;; This function is lifted directly from emacs's subr.el
+;; so that it can be used by xemacs.
+;; The idea for this was borrowed from org-mode via this link:
+;; https://lists.gnu.org/archive/html/emacs-orgmode/2009-12/msg00032.html
+(eval-and-compile
+  (cond
+   ((fboundp 'looking-back)
+    (defalias 'verilog-looking-back 'looking-back))
+   (t 
+    (defun verilog-looking-back (regexp &optional limit greedy)
+      "Return non-nil if text before point matches regular expression REGEXP.
+Like `looking-at' except matches before point, and is slower.
+LIMIT if non-nil speeds up the search by specifying a minimum
+starting position, to avoid checking matches that would start
+before LIMIT.
+
+If GREEDY is non-nil, extend the match backwards as far as
+possible, stopping when a single additional previous character
+cannot be part of a match for REGEXP.  When the match is
+extended, its starting position is allowed to occur before
+LIMIT.
+
+As a general recommendation, try to avoid using `looking-back'
+wherever possible, since it is slow."
+   (let ((start (point))
+         (pos
+          (save-excursion
+            (and (re-search-backward (concat "\\(?:" regexp "\\)\\=") limit t)
+                 (point)))))
+     (if (and greedy pos)
+         (save-restriction
+           (narrow-to-region (point-min) start)
+           (while (and (> pos (point-min))
+                       (save-excursion
+                         (goto-char pos)
+                         (backward-char 1)
+                         (looking-at (concat "\\(?:"  regexp "\\)\\'"))))
+             (setq pos (1- pos)))
+           (save-excursion
+             (goto-char pos)
+             (looking-at (concat "\\(?:"  regexp "\\)\\'")))))
+     (not (null pos)))))))
+
 (eval-and-compile
   ;; Both xemacs and emacs
   (condition-case nil
@@ -2411,11 +2455,9 @@ find the errors."
    "\\(\\<begin\\>\\)\\|"		         ; 1
    "\\(\\<else\\>\\)\\|"		         ; 2
    "\\(\\<end\\>\\s-+\\<else\\>\\)\\|"	         ; 3
-   "\\(\\<always_comb\\>\\(\[ \t\]*@\\)?\\)\\|"  ; 4
-   "\\(\\<always_ff\\>\\(\[ \t\]*@\\)?\\)\\|"    ; 5
-   "\\(\\<always_latch\\>\\(\[ \t\]*@\\)?\\)\\|" ; 6
+   "\\(\\<always\\(?:_ff\\)?\\>\\(?:\[ \t\]*@\\)\\)\\|"    ; 4 (matches always or always_ff w/ @...)
+   "\\(\\<always\\(?:_comb\\|_latch\\)?\\>\\)\\|"  ; 5 (matches always, always_comb, always_latch w/o @...)
    "\\(\\<fork\\>\\)\\|"			 ; 7
-   "\\(\\<always\\>\\(\[ \t\]*@\\)?\\)\\|"
    "\\(\\<if\\>\\)\\|"
    verilog-property-re "\\|"
    "\\(\\(" verilog-label-re "\\)?\\<assert\\>\\)\\|"
@@ -4726,8 +4768,8 @@ primitive or interface named NAME."
 					    (setq str (concat " // else: !assert " str ))
 					    (throw 'skip 1)))))))))
 
-			     (; always_comb, always_ff, always_latch
-			      (or (match-end 4) (match-end 5) (match-end 6))
+			     (; always, always_comb, always_latch w/o @...
+			      (match-end 5)
 			      (goto-char (match-end 0))
 			      (setq there (point))
 			      (setq err nil)
@@ -6062,7 +6104,16 @@ Optional BOUND limits search."
  (save-match-data
    (save-excursion
      (verilog-re-search-backward "\\((\\*\\)\\|\\(\\*)\\)" nil 'move)
-     (numberp (match-beginning 1)))))
+     (cond
+      ((match-end 1)
+         (progn (goto-char (match-end 1))
+                (not (looking-at "\\s-*)")))
+        nil)
+       ((match-end 2)
+        (progn (goto-char (match-beginning 2))
+               (not (looking-at "(\\s-*")))
+        nil)
+       (t nil)))))
 
 (defun verilog-in-parameter-p ()
  "Return true if point is in a parameter assignment #( p1=1, p2=5)."
@@ -6293,8 +6344,8 @@ Return >0 for nested struct."
 	       (goto-char (- (point) 2))
 	       t) ;; Let nth 4 state handle the rest
 	      ((and (not (bobp))
-		    (= (char-before) ?\))
-		    (= (char-before (1- (point))) ?\*))
+              (verilog-looking-back "\\*)")
+              (not (verilog-looking-back "(\\s-*\\*)")))
 	       (goto-char (- (point) 2))
 	       (if (search-backward "(*" nil t)
 		   (progn
@@ -6338,7 +6389,8 @@ Return >0 for nested struct."
 	      (progn
 		(goto-char h)
 		nil))))
-	 ((looking-at "(\\*")
+	 ((and (looking-at "(\\*")              ;; attribute start, but not an event (*) or (* )
+	       (not (looking-at "(\\*\\s-*)")))
 	  (progn
 	    (setq h (point))
 	    (goto-char (match-end 0))
