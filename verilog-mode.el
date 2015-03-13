@@ -5544,8 +5544,12 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 	   ((equal (char-after) ?\{)
             ;; block type returned based on outer constraint { or inner
 	    (if (verilog-at-constraint-p)
-                (cond (inconstraint (throw 'nesting 'constraint))
-                      (t            (throw 'nesting 'statement)))))
+                (cond (inconstraint
+                       (beginning-of-line nil)
+                       (skip-chars-forward " \t")
+                       (throw 'nesting 'constraint))
+                      (t
+                       (throw 'nesting 'statement)))))
 	   ((equal (char-after) ?\})
 	    (let (par-pos
                   (there (verilog-at-close-constraint-p)))

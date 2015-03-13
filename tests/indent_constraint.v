@@ -129,3 +129,18 @@ module foo;
  j = 9;
  end
 endmodule // foo
+
+
+// Issue 324 - constraint indentation is not correct
+// This checks for indentation around { and } inside constraint contents
+class myclass;
+constraint c {
+foreach(items[i]) {
+if(write) {
+items[i].op_code == WRITE;
+} else if(read) {
+items[i].op_code == READ;
+}
+}
+}
+endclass // myclass
