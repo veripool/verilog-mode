@@ -291,7 +291,7 @@ STRING should be given if the last search was by `string-match' on STRING."
   (cond
    ((fboundp 'looking-back)
     (defalias 'verilog-looking-back 'looking-back))
-   (t 
+   (t
     (defun verilog-looking-back (regexp &optional limit greedy)
       "Return non-nil if text before point matches regular expression REGEXP.
 Like `looking-at' except matches before point, and is slower.
@@ -12202,20 +12202,26 @@ You may also provide an optional third argument regular
 expression, in which case only signals which have that pin
 direction and data type matching that regular expression will be
 included.  This matches against everything before the signal name
-in the declaration, for example against \"input\" (single bit),
-\"output logic\" (direction and type) or \"output
-[1:0]\" (direction and implicit type).  You also probably want to
-skip spaces in your regexp.
+in the declaration, for example against \"input\" (single
+bit), \"output logic\" (direction and type) or
+\"output [1:0]\" (direction and implicit type).  You also
+probably want to skip spaces in your regexp.
 
 For example, the below will result in matching the output \"o\"
 against the previous example's module:
 
-	   /*AUTOINOUTMODULE(\"ExampMain\",\"\",\"^output.*\")*/"
+	   /*AUTOINOUTMODULE(\"ExampMain\",\"\",\"^output.*\")*/
+
+You may also provide an optional fourth argument regular
+expression, which if not \"\" only signals which do NOT match
+that expression are included."
+  ;; Beware spacing of quotes in above as can mess up Emacs indenter
   (save-excursion
-    (let* ((params (verilog-read-auto-params 1 3))
+    (let* ((params (verilog-read-auto-params 1 4))
 	   (submod (nth 0 params))
 	   (regexp (nth 1 params))
 	   (direction-re (nth 2 params))
+	   (not-re (nth 3 params))
 	   submodi)
       ;; Lookup position, etc of co-module
       ;; Note this may raise an error
@@ -12250,20 +12256,24 @@ against the previous example's module:
 			     (append (verilog-decls-get-interfaces moddecls)))))
 	  (forward-line 1)
 	  (setq sig-list-i  (verilog-signals-edit-wire-reg
-			     (verilog-signals-matching-dir-re
-			      (verilog-signals-matching-regexp sig-list-i regexp)
-			      "input" direction-re))
+			     (verilog-signals-not-matching-regexp
+			      (verilog-signals-matching-dir-re
+			       (verilog-signals-matching-regexp sig-list-i regexp)
+			       "input" direction-re) not-re))
 		sig-list-o  (verilog-signals-edit-wire-reg
-			     (verilog-signals-matching-dir-re
-			      (verilog-signals-matching-regexp sig-list-o regexp)
-			      "output" direction-re))
+			     (verilog-signals-not-matching-regexp
+			      (verilog-signals-matching-dir-re
+			       (verilog-signals-matching-regexp sig-list-o regexp)
+			       "output" direction-re) not-re))
 		sig-list-io (verilog-signals-edit-wire-reg
+			     (verilog-signals-not-matching-regexp
+			      (verilog-signals-matching-dir-re
+			       (verilog-signals-matching-regexp sig-list-io regexp)
+			       "inout" direction-re) not-re))
+		sig-list-if (verilog-signals-not-matching-regexp
 			     (verilog-signals-matching-dir-re
-			      (verilog-signals-matching-regexp sig-list-io regexp)
-			      "inout" direction-re))
-		sig-list-if (verilog-signals-matching-dir-re
-			     (verilog-signals-matching-regexp sig-list-if regexp)
-			     "interface" direction-re))
+			      (verilog-signals-matching-regexp sig-list-if regexp)
+			      "interface" direction-re) not-re))
 	  (when v2k (verilog-repair-open-comma))
 	  (when (or sig-list-i sig-list-o sig-list-io sig-list-if)
 	    (verilog-insert-indent "// Beginning of automatic in/out/inouts (from specific module)\n")
@@ -12330,15 +12340,20 @@ You may also provide an optional third argument regular
 expression, in which case only signals which have that pin
 direction and data type matching that regular expression will be
 included.  This matches against everything before the signal name
-in the declaration, for example against \"input\" (single bit),
-\"output logic\" (direction and type) or \"output
-[1:0]\" (direction and implicit type).  You also probably want to
-skip spaces in your regexp.
+in the declaration, for example against \"input\" (single
+bit), \"output logic\" (direction and type)
+or \"output [1:0]\" (direction and implicit type).  You also
+probably want to skip spaces in your regexp.
 
 For example, the below will result in matching the output \"o\"
 against the previous example's module:
 
-	   /*AUTOINOUTCOMP(\"ExampMain\",\"\",\"^output.*\")*/"
+	   /*AUTOINOUTCOMP(\"ExampMain\",\"\",\"^output.*\")*/
+
+You may also provide an optional fourth argument regular
+expression, which if not \"\" only signals which do NOT match
+that expression are included."
+  ;; Beware spacing of quotes in above as can mess up Emacs indenter
   (verilog-auto-inout-module t nil))
 
 (defun verilog-auto-inout-in ()
