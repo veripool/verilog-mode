@@ -2623,10 +2623,10 @@ find the errors."
 (defconst verilog-declaration-re
   (concat "\\(" verilog-declaration-prefix-re "\\s-*\\)?" verilog-declaration-core-re))
 (defconst verilog-range-re "\\(\\[[^]]*\\]\\s-*\\)+")
-(defconst verilog-optional-signed-re "\\s-*\\(signed\\)?")
+(defconst verilog-optional-signed-re "\\s-*\\(\\(un\\)?signed\\)?")
 (defconst verilog-optional-signed-range-re
   (concat
-   "\\s-*\\(\\<\\(reg\\|wire\\)\\>\\s-*\\)?\\(\\<signed\\>\\s-*\\)?\\(" verilog-range-re "\\)?"))
+   "\\s-*\\(\\<\\(reg\\|wire\\)\\>\\s-*\\)?\\(\\<\\(un\\)?signed\\>\\s-*\\)?\\(" verilog-range-re "\\)?"))
 (defconst verilog-macroexp-re "`\\sw+")
 
 (defconst verilog-delay-re "#\\s-*\\(\\([0-9_]+\\('s?[hdxbo][0-9a-fA-F_xz]+\\)?\\)\\|\\(([^()]*)\\)\\|\\(\\sw+\\)\\)")

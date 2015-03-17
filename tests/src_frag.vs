@@ -14,6 +14,7 @@ module src_frag (
    logic 	    local_3; // Local Signal 3
    var logic 	    local_4; // Local Signal 4
    var logic 	    local_5; // Local Signal 5
+   logic signed [1:0] local_6;
 
    logic 	    local_1; // Local Signal 1
    input logic 	    in_lg;
@@ -35,6 +36,7 @@ module src_frag (
    int 		    f;
    longint 	    li;
    integer 	    I;
+   int unsigned uI;
    time 	    t;
    bit 		    b;
    logic 	    l;
