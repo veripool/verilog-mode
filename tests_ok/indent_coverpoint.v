@@ -15,10 +15,15 @@ covergroup cg @(posedge clk);
       bins b3 = { [85:169] };
       bins b4 = { [170:255] };
    }
-   c: cross a , b, c {
+   c: coverpoint v_c iff ( !g ) {
+      bins c1 = {0};
+      bins c2 = { [1:84] };
+      bins c3 = { [85:169] };
+      bins c4 = { [170:255] };
+   }
+   d: cross a , b, c {
       bins c1 = ! binsof(a) intersect {[100:200]}; // 4 cross products
       bins c2 = binsof(a.a2) || binsof(b.b2); // 7 cross products
       bins c3 = binsof(a.a1) && binsof(b.b4); // 1 cross product
    }
 endgroup
-

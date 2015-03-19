@@ -6245,7 +6245,7 @@ Return >0 for nested struct."
                        ))
             ;; if first word token not keyword, it maybe the instance name
             ;;   check next word token
-            (if (looking-at "\\<\\w+\\>\\|\\s-*(\\s-*\\w+")
+            (if (looking-at "\\<\\w+\\>\\|\\s-*(\\s-*\\S-+")
                 (progn (verilog-beg-of-statement)
                        (if (looking-at (concat "\\<\\(constraint\\|"
                                                "\\(?:\\w+\\s-*:\\s-*\\)?\\(coverpoint\\|cross\\)"
