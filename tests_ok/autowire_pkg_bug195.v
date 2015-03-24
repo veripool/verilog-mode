@@ -1,6 +1,6 @@
 `default_nettype none
-  
-  package testcase_pkg;
+
+package testcase_pkg;
    
    typedef int unsigned uint;
    

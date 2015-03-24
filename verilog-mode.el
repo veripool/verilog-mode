@@ -1924,14 +1924,22 @@ find the errors."
 (if (featurep 'xemacs) (add-hook 'compilation-mode-hook 'verilog-error-regexp-add-xemacs))
 (if (featurep 'emacs) (add-hook 'compilation-mode-hook 'verilog-error-regexp-add-emacs))
 
-(defconst verilog-directive-re
+(defconst verilog-compiler-directives
   (eval-when-compile
-    (verilog-regexp-words
-     '(
-   "`case" "`default" "`define" "`else" "`elsif" "`endfor" "`endif"
-   "`endprotect" "`endswitch" "`endwhile" "`for" "`format" "`if" "`ifdef"
-   "`ifndef" "`include" "`let" "`protect" "`switch" "`timescale"
-   "`time_scale" "`undef" "`while" ))))
+    '( ;; compiler directives, from IEEE 1800-2012 section 22.1
+    "`__FILE__" "`__LINE" "`begin_keywords" "`celldefine" "`default_nettype"
+    "`define" "`else" "`elsif" "`end_keywords" "`endcelldefine" "`endif"
+    "`ifdef" "`ifndef" "`include" "`line" "`nounconnected_drive" "`pragma"
+    "`resetall" "`timescale" "`unconnected_drive" "`undef" "`undefineall"
+     ;; compiler directives not covered by IEEE 1800
+     "`case" "`default" "`endfor" "`endprotect" "`endswitch" "`endwhile" "`for"
+     "`format" "`if" "`let" "`protect" "`switch" "`timescale" "`time_scale"
+     "`while"
+     ))
+  "List of Verilog compiler directives.")
+
+(defconst verilog-directive-re
+  (verilog-regexp-words verilog-compiler-directives))
 
 (defconst verilog-directive-re-1
   (concat "[ \t]*"  verilog-directive-re))
@@ -2856,11 +2864,8 @@ find the errors."
      )))
 
 (defconst verilog-keywords
-  '( "`case" "`default" "`define" "`else" "`endfor" "`endif"
-     "`endprotect" "`endswitch" "`endwhile" "`for" "`format" "`if" "`ifdef"
-     "`ifndef" "`include" "`let" "`protect" "`switch" "`timescale"
-     "`time_scale" "`undef" "`while"
-
+  (append verilog-compiler-directives
+   '(
      "after" "alias" "always" "always_comb" "always_ff" "always_latch" "and"
      "assert" "assign" "assume" "automatic" "before" "begin" "bind"
      "bins" "binsof" "bit" "break" "buf" "bufif0" "bufif1" "byte"
@@ -2902,7 +2907,7 @@ find the errors."
      "sync_reject_on" "unique0" "until" "until_with" "untyped" "weak"
      ;; 1800-2012
      "implements" "interconnect" "nettype" "soft"
-     )
+     ))
   "List of Verilog keywords.")
 
 (defconst verilog-comment-start-regexp "//\\|/\\*"
