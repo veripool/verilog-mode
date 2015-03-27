@@ -4271,7 +4271,8 @@ Uses `verilog-scan' cache."
 		 (setq h (point))
 		 (save-excursion
 		   (verilog-backward-token)
-		   (if (looking-at verilog-label-re)
+		   (if (and (looking-at verilog-label-re)
+		            (not (looking-at verilog-end-block-re)))
 		       (setq h (point))))
 		 (goto-char h)))
 	      ;; stop if we see an extended complete reg, perhaps a complete one
