@@ -7905,6 +7905,48 @@ Signals must be in standard (base vector) form."
 	   (nreverse out-list)))))
 ;;(verilog-signals-not-in '(("A" "") ("B" "") ("DEL" "[2:3]")) '(("DEL" "") ("EXT" "")))
 
+(defun verilog-signals-not-in-struct (in-list not-list)
+  "Return list of signals in IN-LIST that aren't also in NOT-LIST.
+Also remove any duplicates in IN-LIST.
+Any structure in not-list will remove all members in in-list.
+Signals must be in standard (base vector) form."
+  (cond ((eval-when-compile (fboundp 'make-hash-table))
+	 (let ((ht (make-hash-table :test 'equal :rehash-size 4.0))
+	       out-list addit nm)
+	   (while not-list
+	     (puthash (car (car not-list)) t ht)
+	     (setq not-list (cdr not-list)))
+	   (while in-list
+	     (setq nm (verilog-sig-name (car in-list)))
+	     (when (not (gethash nm ht))
+	       (setq addit t)
+	       (while (string-match "^\\([^\\].*\\)\\.[^.]+$" nm)
+		 (setq nm (match-string 1 nm))
+		 (setq addit (and addit
+				  (not (gethash nm ht)))))
+	       (when addit
+		 (setq out-list (cons (car in-list) out-list))
+		 (puthash (verilog-sig-name (car in-list)) t ht)))
+	     (setq in-list (cdr in-list)))
+	   (nreverse out-list)))
+	;; Slower Fallback if no hash tables (pre Emacs 21.1/XEmacs 21.4)
+	(t
+	 (let (out-list addit nm)
+	   (while in-list
+	     (setq nm (verilog-sig-name (car in-list)))
+	     (when (and (not (assoc nm not-list))
+			(not (assoc nm out-list)))
+	       (setq addit t)
+	       (while (string-match "^\\([^\\].*\\)\\.[^.]+$" nm)
+		 (setq nm (match-string 1 nm))
+		 (setq addit (and addit
+				  (not (assoc nm not-list)))))
+	       (when addit
+		 (setq out-list (cons (car in-list) out-list))))
+	     (setq in-list (cdr in-list)))
+	   (nreverse out-list)))))
+;;(verilog-signals-not-in-struct '(("A" "") ("B" "") ("DEL.SUB.A" "[2:3]")) '(("DEL.SUB" "") ("EXT" "")))
+
 (defun verilog-signals-memory (in-list)
   "Return list of signals in IN-LIST that are memorized (multidimensional)."
   (let (out-list)
@@ -12882,14 +12924,15 @@ Typing \\[verilog-auto] will make this into:
 	(verilog-re-search-backward-quick "\\(@\\|\\<\\(always\\(_latch\\|_ff\\|_comb\\)?\\)\\>\\)" nil t)
         (setq sigss (verilog-read-always-signals)))
       (setq dly-list (verilog-alw-get-outputs-delayed sigss))
-      (setq sig-list (verilog-signals-not-in (append
-					      (verilog-alw-get-outputs-delayed sigss)
-					      (when (or (not (verilog-alw-get-uses-delayed sigss))
-							verilog-auto-reset-blocking-in-non)
-						(verilog-alw-get-outputs-immediate sigss)))
-					     (append
-					      (verilog-alw-get-temps sigss)
-					      prereset-sigs)))
+      (setq sig-list (verilog-signals-not-in-struct
+		      (append
+		       (verilog-alw-get-outputs-delayed sigss)
+		       (when (or (not (verilog-alw-get-uses-delayed sigss))
+				 verilog-auto-reset-blocking-in-non)
+			 (verilog-alw-get-outputs-immediate sigss)))
+		      (append
+		       (verilog-alw-get-temps sigss)
+		       prereset-sigs)))
       (setq sig-list (sort sig-list `verilog-signals-sort-compare))
       (when sig-list
 	(insert "\n");
