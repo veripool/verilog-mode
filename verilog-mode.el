@@ -706,9 +706,10 @@ to see the effect as font color choices are cached by Emacs."
 
 (defcustom verilog-highlight-grouping-keywords nil
   "Non-nil means highlight grouping keywords more dramatically.
-If false, these words are in the `font-lock-type-face'; if True then they are in
-`verilog-font-lock-ams-face'.  Some find that special highlighting on these
-grouping constructs allow the structure of the code to be understood at a glance."
+If false, these words are in the `font-lock-type-face'; if True
+then they are in `verilog-font-lock-grouping-keywords-face'.
+Some find that special highlighting on these grouping constructs
+allow the structure of the code to be understood at a glance."
   :group 'verilog-mode-indent
   :type 'boolean)
 (put 'verilog-highlight-grouping-keywords 'safe-local-variable 'verilog-booleanp)
@@ -3011,10 +3012,10 @@ See also `verilog-font-lock-extra-types'.")
 (defface verilog-font-lock-grouping-keywords-face
   '((((class color)
       (background light))
-     (:foreground "red4" :bold t ))
+     (:foreground "Purple" :bold t ))
     (((class color)
       (background dark))
-     (:foreground "red4" :bold t ))
+     (:foreground "orange1" :bold t ))
     (t (:italic t)))
   "Font lock mode face used to highlight verilog grouping keywords."
   :group 'font-lock-highlighting-faces)
@@ -3124,7 +3125,7 @@ See also `verilog-font-lock-extra-types'.")
 	 ;; Fontify all types
 	 (if verilog-highlight-grouping-keywords
 	     (cons (concat "\\<\\(" verilog-font-grouping-keywords "\\)\\>")
-		   'verilog-font-lock-ams-face)
+		   'verilog-font-lock-grouping-keywords-face)
 	   (cons (concat "\\<\\(" verilog-font-grouping-keywords "\\)\\>")
 		 'font-lock-type-face))
 	 (cons (concat "\\<\\(" verilog-type-font-keywords "\\)\\>")
