@@ -157,16 +157,16 @@ verilog.info : verilog.texinfo
 	makeinfo verilog.texinfo > verilog.info
 
 ######################################################################
-# GNU BZR version
+# GNU GIT version
 
 gnutrunk:
-	@echo "gnutrunk needs to be a symlink to a emacs/trunk bazaar checkout"
+	@echo "gnutrunk needs to be a symlink to a emacs/trunk git checkout"
 	false
 
 .PHONY: gnu-update gnu-update-trunk
 gnu-update: gnu-update-trunk
 gnu-update-trunk: gnutrunk
-	echo "NOT DOING: cd gnutrunk && bzr update"
+	echo "NOT DOING: cd gnutrunk && git pull"
 
 .PHONY: gnu-diff-trunk gnu-diff
 gnu-diff: gnu-diff-trunk
@@ -174,6 +174,11 @@ gnu-diff-trunk: gnu-update-trunk verilog-mode-tognu.el
 	diff -u gnutrunk/lisp/progmodes/verilog-mode.el verilog-mode-tognu.el 
 verilog-mode.patch: gnu-update verilog-mode-tognu.el
 	diff -u gnutrunk/lisp/progmodes/verilog-mode.el verilog-mode-tognu.el > $@
+# Before install, clean to make sure we get proper git ID
+gnu-cp:
+	$(MAKE) clean
+	$(MAKE) verilog-mode-tognu.el
+	cp verilog-mode-tognu.el gnutrunk/lisp/progmodes/verilog-mode.el
 
 verilog-mode-tognu.el: e/verilog-mode.el Makefile
 	cat e/verilog-mode.el \
