@@ -292,7 +292,7 @@ STRING should be given if the last search was by `string-match' on STRING."
    ((fboundp 'looking-back)
     (defalias 'verilog-looking-back 'looking-back))
    (t
-    (defun verilog-looking-back (regexp &optional limit greedy)
+    (defun verilog-looking-back (regexp limit &optional greedy)
       "Return non-nil if text before point matches regular expression REGEXP.
 Like `looking-at' except matches before point, and is slower.
 LIMIT if non-nil speeds up the search by specifying a minimum
@@ -5224,7 +5224,8 @@ FILENAME to find directory to run in, or defaults to `buffer-file-name`."
           ;; We should use font-lock-ensure in preference to
           ;; font-lock-fontify-buffer, but IIUC the problem this is supposed to
           ;; solve only appears in Emacsen older than font-lock-ensure anyway.
-          (when fontlocked (font-lock-fontify-buffer)))))))
+          ;; So avoid bytecomp's interactive-only by going through intern.
+          (when fontlocked (funcall (intern "font-lock-fontify-buffer"))))))))
 
 
 ;;
@@ -6351,8 +6352,8 @@ Return >0 for nested struct."
 	       (goto-char (- (point) 2))
 	       t) ;; Let nth 4 state handle the rest
 	      ((and (not (bobp))
-              (verilog-looking-back "\\*)")
-              (not (verilog-looking-back "(\\s-*\\*)")))
+		    (verilog-looking-back "\\*)" nil)
+		    (not (verilog-looking-back "(\\s-*\\*)" nil)))
 	       (goto-char (- (point) 2))
 	       (if (search-backward "(*" nil t)
 		   (progn
