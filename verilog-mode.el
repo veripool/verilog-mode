@@ -9207,13 +9207,19 @@ If found returns `verilog-read-auto-template-inside' structure."
 (defvar verilog-auto-template-hits nil "Successful lookups with `verilog-read-auto-template-hit'.")
 (make-variable-buffer-local 'verilog-auto-template-hits)
 
+(defun verilog-read-auto-template-init ()
+  "Initialize `verilog-read-auto-template'."
+  (when (eval-when-compile (fboundp 'make-hash-table)) ;; else feature not allowed
+    (when verilog-auto-template-warn-unused
+      (setq verilog-auto-template-hits
+	    (make-hash-table :test 'equal :rehash-size 4.0)))))
+
 (defun verilog-read-auto-template-hit (tpl-ass)
   "Record that TPL-ASS template from `verilog-read-auto-template' was used."
   (when (eval-when-compile (fboundp 'make-hash-table)) ;; else feature not allowed
     (when verilog-auto-template-warn-unused
       (unless verilog-auto-template-hits
-	(setq verilog-auto-template-hits
-	      (make-hash-table :test 'equal :rehash-size 4.0)))
+	(verilog-read-auto-template-init))
       (puthash (vector (nth 2 tpl-ass) (nth 3 tpl-ass)) t
 	       verilog-auto-template-hits))))
 
@@ -13501,7 +13507,7 @@ Wilson Snyder (wsnyder@wsnyder.org)."
 	     ;; we'll misremember we have generated IOs, confusing AUTOOUTPUT
 	     (setq verilog-modi-cache-list nil)
 	     ;; Local state
-	     (setq verilog-auto-template-hits nil)
+	     (verilog-read-auto-template-init)
 	     ;; If we're not in verilog-mode, change syntax table so parsing works right
 	     (unless (eq major-mode `verilog-mode) (verilog-mode))
 	     ;; Allow user to customize
