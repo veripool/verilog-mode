@@ -1,5 +1,9 @@
+import "DPI" function string fna (input string str1);
+import "DPI-C" function void fnb (input bit[7:0] data[]);
+import "DPI-C" pure function void fnc (output bit[7:0] data[]);
+
 module testbench;
-   
+
    import "DPI" function string fn1 (input string str1);
    import "DPI-C" function void dpiWriteArray (input bit[7:0] data[]);
    import "DPI-C" pure function void dpiReadArray (output bit[7:0] data[]);
@@ -9,7 +13,7 @@ module testbench;
                                              int iv_low_u, int iv_low_l);
    import "DPI-C" function void dpiAesSetSkip (int skip);
    import "DPI-C" function void dpiAesCBCEncrypt ();
-   
+
    logic a;
 endmodule // testbench
 
@@ -17,7 +21,7 @@ endmodule // testbench
  package ref_model;
  import "DPI-C" xx_write_bmp_file =
  function void write_bmp_file(input string filename);
- 
+
  import "DPI-C" xx_demosaic =
  function void demosaic(regs regs,
  inout pix_buf imgR, imgG, imgB);
