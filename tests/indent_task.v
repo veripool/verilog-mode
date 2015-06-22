@@ -77,3 +77,16 @@ class a;
    
 endclass // a
 
+class base_test extends uvm_test;
+   `uvm_component_utils(base_test)
+   typedef virtual my_if my_vif_t;
+   // A task definition starting with the virtual keyword should not be
+   // detected as a declaration. This issue is seen when an attempt to indent
+   // each declaration is done (when the verilog-auto-lineup variable is set
+   // to 'declarations).
+   //   In other words, the "task" in "virtual task" below must not be
+   // aligned with "my_if" in the "typedef virtual my_if.." line above.
+   virtual task run_phase(uvm_phase phase);
+      super.run_phase(phase);
+   endtask // run_phase
+endclass // base_test

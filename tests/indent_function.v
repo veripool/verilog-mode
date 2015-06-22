@@ -35,5 +35,16 @@ class pure_virt_func_class;
    endfunction // f
 endclass // pure_virt_func_class
 
-
-
+class base_test extends uvm_test;
+   `uvm_component_utils(base_test)
+   typedef virtual my_if my_vif_t;
+   // A function definition starting with the virtual keyword should not be
+   // detected as a declaration. This issue is seen when an attempt to indent
+   // each declaration is done (when the verilog-auto-lineup variable is set
+   // to 'declarations).
+   //   In other words, the "function" in "virtual function" below must not be
+   // aligned with "my_if" in the "typedef virtual my_if.." line above.
+   virtual function void start_of_simulation_phase(uvm_phase phase);
+      super.start_of_simulation_phase(phase);
+   endfunction : start_of_simulation_phase
+endclass : base_test

@@ -6563,7 +6563,11 @@ Only look at a few lines to determine indent level."
       (and (or
 	    (eq type 'defun)
 	    (eq type 'block))
-	   (looking-at verilog-declaration-re))
+	   (looking-at verilog-declaration-re)
+           ;; Do not consider "virtual function", "virtual task", "virtual class"
+           ;; as declarations
+           (not (looking-at (concat verilog-declaration-re
+                                    "\\s-+\\(function\\|task\\|class\\)\\b"))))
       (verilog-indent-declaration ind))
 
      (;-- form feeds - ignored as bug in indent-line-to in < 24.5
