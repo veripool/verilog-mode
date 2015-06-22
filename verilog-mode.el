@@ -2780,12 +2780,18 @@ find the errors."
      `(
        "endmodule" "endprimitive" "endinterface" "endpackage" "endprogram" "endclass"
        ))))
+
+(defconst verilog-dpi-import-export-re
+  (eval-when-compile
+    "\\(\\<\\(import\\|export\\)\\>\\s-+\"DPI\\(-C\\)?\"\\s-+\\(\\<\\(context\\|pure\\)\\>\\s-+\\)?\\([A-Za-z_][A-Za-z0-9_]*\\s-*=\\s-*\\)?\\<\\(function\\|task\\)\\>\\)"
+    ))
+
 (defconst verilog-disable-fork-re "\\(disable\\|wait\\)\\s-+fork\\>")
 (defconst verilog-extended-case-re "\\(\\(unique0?\\s-+\\|priority\\s-+\\)?case[xz]?\\)")
 (defconst verilog-extended-complete-re
   (concat "\\(\\(\\<extern\\s-+\\|\\<\\(\\<\\(pure\\|context\\)\\>\\s-+\\)?virtual\\s-+\\|\\<protected\\s-+\\)*\\(\\<function\\>\\|\\<task\\>\\)\\)"
 	  "\\|\\(\\(\\<typedef\\>\\s-+\\)*\\(\\<struct\\>\\|\\<union\\>\\|\\<class\\>\\)\\)"
-	  "\\|\\(\\(\\<import\\>\\s-+\\)?\\(\"DPI\\(-C\\)?\"\\s-+\\)?\\(\\<\\(pure\\|context\\)\\>\\s-+\\)?\\([A-Za-z_][A-Za-z0-9_]*\\s-+=\\s-+\\)?\\(function\\>\\|task\\>\\)\\)"
+	  "\\|\\(\\(\\<\\(import\\|export\\)\\>\\s-+\\)?\\(\"DPI\\(-C\\)?\"\\s-+\\)?\\(\\<\\(pure\\|context\\)\\>\\s-+\\)?\\([A-Za-z_][A-Za-z0-9_]*\\s-*=\\s-*\\)?\\(function\\>\\|task\\>\\)\\)"
 	  "\\|" verilog-extended-case-re ))
 (defconst verilog-basic-complete-re
   (eval-when-compile
@@ -5652,9 +5658,13 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 					; ...
 					; endfunction
 	      (verilog-beg-of-statement)
-	      (if (looking-at verilog-beg-block-re-ordered)
-		  (throw 'nesting 'block)
-		(throw 'nesting 'defun)))
+	      (cond
+	       ((looking-at verilog-dpi-import-export-re)
+	        (throw 'continue 'foo))
+	       ((looking-at verilog-beg-block-re-ordered)
+	        (throw 'nesting 'block))
+	       (t
+	        (throw 'nesting 'defun))))
 
 	     ;;
 	     ((looking-at "\\<property\\>")
