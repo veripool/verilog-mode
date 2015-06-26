@@ -4219,6 +4219,7 @@ Uses `verilog-scan' cache."
   "Label matching begin ... end, fork ... join and case ... endcase statements."
   (interactive)
   (let ((cnt 0)
+	(case-fold-search nil)
 	(oldpos (point))
 	(b (progn
 	     (verilog-beg-of-defun)
@@ -5397,6 +5398,7 @@ type of the current line, return that lines' indent level and its type.
 Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
   (save-excursion
     (let* ((starting_position (point))
+	   (case-fold-search nil)
 	   (par 0)
 	   (begin (looking-at "[ \t]*begin\\>"))
 	   (lim (save-excursion (verilog-re-search-backward "\\(\\<begin\\>\\)\\|\\(\\<module\\>\\)" nil t)))
