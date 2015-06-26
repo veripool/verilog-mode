@@ -6051,6 +6051,9 @@ Optional BOUND limits search."
 	      (setq p
 		    (save-excursion
 		      (beginning-of-line)
+		      ;; for as long as we're right after a continued line, keep moving up
+		      (while (and (verilog-looking-back "\\\\[\n\r\f]" nil)
+                      (forward-line -1)))
 		      (cond
 		       ((and verilog-highlight-translate-off
 			     (verilog-within-translate-off))
