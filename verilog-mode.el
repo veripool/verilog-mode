@@ -5661,6 +5661,8 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 	      (cond
 	       ((looking-at verilog-dpi-import-export-re)
 	        (throw 'continue 'foo))
+	       ((looking-at "\\<pure\\>\\s-+\\<virtual\\>\\s-+\\(?:\\<\\(local\\|protected\\|static\\)\\>\\s-+\\)?\\<\\(function\\|task\\)\\>\\s-+")
+	        (throw 'nesting 'statement))
 	       ((looking-at verilog-beg-block-re-ordered)
 	        (throw 'nesting 'block))
 	       (t
