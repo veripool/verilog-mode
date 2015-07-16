@@ -1,5 +1,10 @@
+import "DPI-C" function string fna (input string str1);
+export "DPI" c_identifier = task task_identifier;
+import "DPI" context function string fnb (input string str1);
+
 module testbench;
    
+   import "DPI" function string fn1 (input string str1);
    import "DPI-C" function void dpiWriteArray (input bit[7:0] data[]);
    import "DPI-C" pure function void dpiReadArray (output bit[7:0] data[]);
    import "DPI-C" function void dpiAesSetKey ( int key_high_u int key_high_l,

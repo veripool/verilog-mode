@@ -2780,12 +2780,18 @@ find the errors."
      `(
        "endmodule" "endprimitive" "endinterface" "endpackage" "endprogram" "endclass"
        ))))
+
+(defconst verilog-dpi-import-export-re
+  (eval-when-compile
+    "\\(\\<\\(import\\|export\\)\\>\\s-+\"DPI\\(-C\\)?\"\\s-+\\(\\<\\(context\\|pure\\)\\>\\s-+\\)?\\([A-Za-z_][A-Za-z0-9_]*\\s-*=\\s-*\\)?\\<\\(function\\|task\\)\\>\\)"
+    ))
+
 (defconst verilog-disable-fork-re "\\(disable\\|wait\\)\\s-+fork\\>")
 (defconst verilog-extended-case-re "\\(\\(unique0?\\s-+\\|priority\\s-+\\)?case[xz]?\\)")
 (defconst verilog-extended-complete-re
   (concat "\\(\\(\\<extern\\s-+\\|\\<\\(\\<\\(pure\\|context\\)\\>\\s-+\\)?virtual\\s-+\\|\\<protected\\s-+\\)*\\(\\<function\\>\\|\\<task\\>\\)\\)"
 	  "\\|\\(\\(\\<typedef\\>\\s-+\\)*\\(\\<struct\\>\\|\\<union\\>\\|\\<class\\>\\)\\)"
-	  "\\|\\(\\(\\<import\\>\\s-+\\)?\\(\"DPI-C\"\\s-+\\)?\\(\\<\\(pure\\|context\\)\\>\\s-+\\)?\\([A-Za-z_][A-Za-z0-9_]*\\s-+=\\s-+\\)?\\(function\\>\\|task\\>\\)\\)"
+	  "\\|\\(\\(\\<\\(import\\|export\\)\\>\\s-+\\)?\\(\"DPI\\(-C\\)?\"\\s-+\\)?\\(\\<\\(pure\\|context\\)\\>\\s-+\\)?\\([A-Za-z_][A-Za-z0-9_]*\\s-*=\\s-*\\)?\\(function\\>\\|task\\>\\)\\)"
 	  "\\|" verilog-extended-case-re ))
 (defconst verilog-basic-complete-re
   (eval-when-compile
@@ -4213,6 +4219,7 @@ Uses `verilog-scan' cache."
   "Label matching begin ... end, fork ... join and case ... endcase statements."
   (interactive)
   (let ((cnt 0)
+	(case-fold-search nil)
 	(oldpos (point))
 	(b (progn
 	     (verilog-beg-of-defun)
@@ -5391,6 +5398,7 @@ type of the current line, return that lines' indent level and its type.
 Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
   (save-excursion
     (let* ((starting_position (point))
+	   (case-fold-search nil)
 	   (par 0)
 	   (begin (looking-at "[ \t]*begin\\>"))
 	   (lim (save-excursion (verilog-re-search-backward "\\(\\<begin\\>\\)\\|\\(\\<module\\>\\)" nil t)))
@@ -5652,9 +5660,15 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 					; ...
 					; endfunction
 	      (verilog-beg-of-statement)
-	      (if (looking-at verilog-beg-block-re-ordered)
-		  (throw 'nesting 'block)
-		(throw 'nesting 'defun)))
+	      (cond
+	       ((looking-at verilog-dpi-import-export-re)
+	        (throw 'continue 'foo))
+	       ((looking-at "\\<pure\\>\\s-+\\<virtual\\>\\s-+\\(?:\\<\\(local\\|protected\\|static\\)\\>\\s-+\\)?\\<\\(function\\|task\\)\\>\\s-+")
+	        (throw 'nesting 'statement))
+	       ((looking-at verilog-beg-block-re-ordered)
+	        (throw 'nesting 'block))
+	       (t
+	        (throw 'nesting 'defun))))
 
 	     ;;
 	     ((looking-at "\\<property\\>")
@@ -6041,6 +6055,9 @@ Optional BOUND limits search."
 	      (setq p
 		    (save-excursion
 		      (beginning-of-line)
+		      ;; for as long as we're right after a continued line, keep moving up
+		      (while (and (verilog-looking-back "\\\\[\n\r\f]" nil)
+                      (forward-line -1)))
 		      (cond
 		       ((and verilog-highlight-translate-off
 			     (verilog-within-translate-off))
