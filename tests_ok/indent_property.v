@@ -44,4 +44,22 @@ module foo();
         disable iff (ana_byp == 0)
           !$stable(lane_inputs) |-> !$stable(lane_outputs);
    endproperty
+   
+   // Issue #940 - '=' in |=> , #=#, and [=n] operators should not mis-indent next line of continued expression
+   property p_nonSequential;
+      a |-> b[=n] ##0
+        c;
+   endproperty
+   
+   property p_nonOverlapFollowedBy;
+      a #=# 
+        c;
+   endproperty
+   
+   property p_nonBlockingImplication;
+      a |=> b[*n] ##0
+        c;
+   endproperty
+   
+   
 endmodule
