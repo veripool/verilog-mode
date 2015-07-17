@@ -2298,13 +2298,13 @@ find the errors."
 	;; non blocking assignment operator
 	"<="
 	;; comparison
-	"==" "!=" "===" "!===" "<=" ">=" "==\?" "!=\?"
+	"==" "!=" "===" "!==" "<=" ">=" "==\?" "!=\?" "<->"
 	;; event_trigger
 	"->" "->>"
 	;; property_expr
-	"|->" "|=>"
-	;; Is this a legal verilog operator?
-	":="
+	"|->" "|=>" "#-#" "#=#"
+	;; distribution weighting
+	":=" ":/"
 	) 't
       )))
 (defconst verilog-assignment-operation-re
