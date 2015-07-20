@@ -14297,6 +14297,7 @@ but instead, [[Fill in here]] happens!.
 ;; Local Variables:
 ;; checkdoc-permit-comma-termination-flag:t
 ;; checkdoc-force-docstrings-flag:nil
+;; indent-tabs-mode:nil
 ;; End:
 
 ;;; verilog-mode.el ends here
