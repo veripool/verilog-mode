@@ -36,10 +36,9 @@ regarded as a program in the language TeX).
 @setchapternewpage off
 @settitle Verilog Mode
 @titlepage
-@title{The Verilog Mode}
-@subtitle{A guide to using the Verilog Mode}
+@title The Verilog Mode
+@subtitle A guide to using the Verilog Mode
 @author Michael McNamara
-@author 
 @page
 @tex
 \def\$#1${{#1}}  % Kluge: collect RCS revision info without $...$
