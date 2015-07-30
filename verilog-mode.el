@@ -3194,8 +3194,11 @@ See also `verilog-font-lock-extra-types'.")
                                                       'font-lock-preprocessor-face
                                                     'font-lock-type-face))
 		 ;; Fontify delays/numbers
-		 '("\\(@\\)\\|\\(#\\s-*\\(\\(\[0-9_.\]+\\('s?[hdxbo][0-9a-fA-F_xz]*\\)?\\)\\|\\(([^()]+)\\|\\sw+\\)\\)\\)"
+		 '("\\(@\\)\\|\\([ \t\n\f\r]#\\s-*\\(\\(\[0-9_.\]+\\('s?[hdxbo][0-9a-fA-F_xz]*\\)?\\)\\|\\(([^()]+)\\|\\sw+\\)\\)\\)"
 		   0 font-lock-type-face append)
+     ;; Fontify property/sequence cycle delays - these start with '##'
+     '("\\(##\\(\\sw+\\|\\[[^\]]+\\]\\)\\)"
+       0 font-lock-type-face append)
 		 ;; Fontify instantiation names
 		 '("\\([A-Za-z][A-Za-z0-9_]*\\)\\s-*(" 1 font-lock-function-name-face)
 		 )))
