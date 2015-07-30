@@ -6021,16 +6021,16 @@ Set point to where line starts."
 (defun verilog-backward-syntactic-ws-quick ()
   "As with `verilog-backward-syntactic-ws' but use `verilog-scan' cache."
   (while (cond ((bobp)
-		nil) ; Done
-	       ((> (skip-syntax-backward " ") 0)
-		t)
+                nil) ; Done
+               ((< (skip-syntax-backward " ") 0)
+                t)
                ((eq (preceding-char) ?\n)  ; \n's terminate // so aren't space syntax
-		(forward-char -1)
-		t)
-	       ((or (verilog-inside-comment-or-string-p (1- (point)))
-		    (verilog-inside-comment-or-string-p (point)))
+                (forward-char -1)
+                t)
+               ((or (verilog-inside-comment-or-string-p (1- (point)))
+                    (verilog-inside-comment-or-string-p (point)))
                 (re-search-backward "[/\"]" nil t)  ; Only way a comment or quote can begin
-		t))))
+                t))))
 
 (defun verilog-forward-syntactic-ws ()
   (verilog-skip-forward-comment-p)
@@ -6375,8 +6375,10 @@ Return >0 for nested struct."
                 (goto-char (- (point) 2))
                 t)  ; Let nth 4 state handle the rest
                ((and (not (bobp))
-                     (verilog-looking-back "\\*)" nil)
-                     (not (verilog-looking-back "(\\s-*\\*)" nil)))
+                     ;;(verilog-looking-back "\\*)" nil) ;; super slow, use two char-before instead
+                     (= (char-before) ?\))
+                     (= (char-before (1- (point))) ?\*)
+                     (not (verilog-looking-back "(\\s-*\\*)" nil))) ;; slow but unlikely to be called
                 (goto-char (- (point) 2))
                 (if (search-backward "(*" nil t)
                     (progn
