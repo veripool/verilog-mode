@@ -4234,7 +4234,7 @@ Uses `verilog-scan' cache."
 	     (point-marker))))
     (goto-char (marker-position b))
     (if (> (- e b) 200)
-	(message  "Relabeling module..."))
+	(message "Relabeling module..."))
     (while (and
 	    (> (marker-position e) (point))
 	    (verilog-re-search-forward
@@ -4252,7 +4252,7 @@ Uses `verilog-scan' cache."
     (if (or
 	 (> (- e b) 200)
 	 (> cnt 20))
-	(message  "%d lines auto commented" cnt))))
+	(message "%d lines auto commented" cnt))))
 
 (defun verilog-beg-of-statement ()
   "Move backward to beginning of statement."
@@ -7568,7 +7568,7 @@ If search fails, other files are checked based on
 	(regexp "\\(module\\s-+\\w+\\s-*(\\)\\|\\(\\w+\\s-+\\w+\\s-*(\\)"))
     (with-output-to-temp-buffer "*Occur*"
       (save-excursion
-	(message (format "Searching for %s ..." regexp))
+	(message "Searching for %s ..." regexp)
 	;; Find next match, but give up if prev match was at end of buffer.
 	(while (and (not (= prevpos (point-max)))
 		    (verilog-re-search-forward regexp nil t))
