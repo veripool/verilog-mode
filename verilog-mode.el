@@ -8377,18 +8377,18 @@ Return an array of [outputs inouts inputs wire reg assign const]."
 		 (setcar (cdr (cdr (cdr newsig)))
 			 (if (verilog-sig-memory newsig)
 			     (concat (verilog-sig-memory newsig) (match-string 1))
-			   (match-string 1))))
+			   (match-string-no-properties 1))))
                 (vec  ; Multidimensional
 		 (setq multidim (cons vec multidim))
 		 (setq vec (verilog-string-replace-matches
-			    "\\s-+" "" nil nil (match-string 1))))
+			    "\\s-+" "" nil nil (match-string-no-properties 1))))
                 (t  ; Bit width
 		 (setq vec (verilog-string-replace-matches
-			    "\\s-+" "" nil nil (match-string 1))))))
+			    "\\s-+" "" nil nil (match-string-no-properties 1))))))
 	 ;; Normal or escaped identifier -- note we remember the \ if escaped
 	 ((looking-at "\\s-*\\([a-zA-Z0-9`_$]+\\|\\\\[^ \t\n\f]+\\)")
 	  (goto-char (match-end 0))
-	  (setq keywd (match-string 1))
+	  (setq keywd (match-string-no-properties 1))
 	  (when (string-match "^\\\\" (match-string 1))
             (setq keywd (concat keywd " ")))  ; Escaped ID needs space at end
 	  ;; Add any :: package names to same identifier
@@ -8575,7 +8575,8 @@ Return an array of [outputs inouts inputs wire reg assign const]."
   ;; These are known to be from other packages and may not be defined
   (defvar diff-command nil)
   ;; There are known to be from newer versions of Emacs
-  (defvar create-lockfiles))
+  (defvar create-lockfiles)
+  (defvar which-func-modes))
 
 (defun verilog-read-sub-decls-sig (submoddecls comment port sig vec multidim)
   "For `verilog-read-sub-decls-line', add a signal."
@@ -8717,22 +8718,22 @@ Inserts the list of signals found, using submodi to look up each port."
       (while (not done)
 	;; Get port name
 	(cond ((looking-at "\\s-*\\.\\s-*\\([a-zA-Z0-9`_$]*\\)\\s-*(\\s-*")
-	       (setq port (match-string 1))
+	       (setq port (match-string-no-properties 1))
 	       (goto-char (match-end 0)))
 	      ;; .\escaped (
 	      ((looking-at "\\s-*\\.\\s-*\\(\\\\[^ \t\n\f]*\\)\\s-*(\\s-*")
-               (setq port (concat (match-string 1) " "))  ; escaped id's need trailing space
+               (setq port (concat (match-string-no-properties 1) " "))  ; escaped id's need trailing space
 	       (goto-char (match-end 0)))
 	      ;; .name
 	      ((looking-at "\\s-*\\.\\s-*\\([a-zA-Z0-9`_$]*\\)\\s-*[,)/]")
 	       (verilog-read-sub-decls-sig
-		submoddecls comment (match-string 1) t ; sig==t for .name
+		submoddecls comment (match-string-no-properties 1) t ; sig==t for .name
 		nil nil) ; vec multidim
 	       (setq port nil))
 	      ;; .\escaped_name
 	      ((looking-at "\\s-*\\.\\s-*\\(\\\\[^ \t\n\f]*\\)\\s-*[,)/]")
 	       (verilog-read-sub-decls-sig
-		submoddecls comment (concat (match-string 1) " ") t ; sig==t for .name
+		submoddecls comment (concat (match-string-no-properties 1) " ") t ; sig==t for .name
 		nil nil) ; vec multidim
 	       (setq port nil))
 	      ;; random
@@ -8748,20 +8749,20 @@ Inserts the list of signals found, using submodi to look up each port."
 	  (cond ((looking-at "\\([a-zA-Z_][a-zA-Z_0-9]*\\)\\s-*)")
 		 (verilog-read-sub-decls-sig
 		  submoddecls comment port
-		  (verilog-string-remove-spaces (match-string 1)) ; sig
+		  (verilog-string-remove-spaces (match-string-no-properties 1)) ; sig
 		  nil nil)) ; vec multidim
 		;;
 		((looking-at "\\([a-zA-Z_][a-zA-Z_0-9]*\\)\\s-*\\(\\[[^]]+\\]\\)\\s-*)")
 		 (verilog-read-sub-decls-sig
 		  submoddecls comment port
-		  (verilog-string-remove-spaces (match-string 1)) ; sig
-		  (match-string 2) nil)) ; vec multidim
+		  (verilog-string-remove-spaces (match-string-no-properties 1)) ; sig
+		  (match-string-no-properties 2) nil)) ; vec multidim
 		;; Fastpath was above looking-at's.
 		;; For something more complicated invoke a parser
 		((looking-at "[^)]+")
 		 (verilog-read-sub-decls-expr
 		  submoddecls comment port
-		  (buffer-substring
+		  (buffer-substring-no-properties
 		   (point) (1- (progn (search-backward "(") ; start at (
 				      (verilog-forward-sexp-ign-cmt 1)
 				      (point)))))))) ; expr
