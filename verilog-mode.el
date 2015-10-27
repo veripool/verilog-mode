@@ -827,6 +827,10 @@ Function takes three arguments, the original buffer, the
 difference buffer, and the point in original buffer with the
 first difference.")
 
+(defvar verilog-diff-ignore-regexp nil
+  "Non-nil specifies regexp which `verilog-diff-auto' will ignore.
+This is typically nil.")
+
 ;;; Compile support:
 ;;
 
@@ -10686,10 +10690,11 @@ Typing \\[verilog-inject-auto] will make this into:
 ;; Auto diff:
 ;;
 
-(defun verilog-diff-buffers-p (b1 b2 &optional whitespace)
+(defun verilog-diff-buffers-p (b1 b2 &optional whitespace regexp)
   "Return nil if buffers B1 and B2 have same contents.
 Else, return point in B1 that first mismatches.
-If optional WHITESPACE true, ignore whitespace."
+If optional WHITESPACE true, ignore whitespace.
+If optional REGEXP, ignore differences matching it."
   (save-excursion
     (let* ((case-fold-search nil)  ; compare-buffer-substrings cares
 	   (p1 (with-current-buffer b1 (goto-char (point-min))))
@@ -10710,6 +10715,15 @@ If optional WHITESPACE true, ignore whitespace."
 	    (goto-char p2)
 	    (skip-chars-forward " \t\n\r\f\v")
 	    (setq p2 (point))))
+	(when regexp
+	  (with-current-buffer b1
+	    (goto-char p1)
+	    (when (looking-at regexp)
+              (setq p1 (match-end 0))))
+	  (with-current-buffer b2
+	    (goto-char p2)
+	    (when (looking-at regexp)
+              (setq p2 (match-end 0)))))
 	(setq size (min (- maxp1 p1) (- maxp2 p2)))
 	(setq progress (compare-buffer-substrings b2 p2 (+ size p2)
 						  b1 p1 (+ size p1)))
@@ -10798,7 +10812,7 @@ or `diff' in batch mode."
 	    ;; Restore name if unwind
 	    (with-current-buffer b1 (setq buffer-file-name name1)))))
       ;;
-      (setq diffpt (verilog-diff-buffers-p b1 b2 t))
+      (setq diffpt (verilog-diff-buffers-p b1 b2 t verilog-diff-ignore-regexp))
       (cond ((not diffpt)
 	     (unless noninteractive (message "AUTO expansion identical"))
              (kill-buffer newname))  ; Nice to cleanup after oneself
