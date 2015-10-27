@@ -4,7 +4,7 @@ module autoinst_unsigned_bug302;
          // Parameters
          .No1                           (No1),
          .No2                           (No2),
-         .No3                           (No3)) u_Abc
+         .No3                           (No3/*.[No1:0][No2-1:0]*/)) u_Abc
      (/*AUTOINST*/
       // Inputs
       .ck                               (ck),

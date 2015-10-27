@@ -8578,7 +8578,7 @@ Return an array of [outputs inouts inputs wire reg assign const]."
   (defvar create-lockfiles)
   (defvar which-func-modes))
 
-(defun verilog-read-sub-decls-sig (submoddecls comment port sig vec multidim)
+(defun verilog-read-sub-decls-sig (submoddecls comment port sig vec multidim mem)
   "For `verilog-read-sub-decls-line', add a signal."
   ;; sig eq t to indicate .name syntax
   ;;(message "vrsds: %s(%S)" port sig)
@@ -8589,6 +8589,7 @@ Return an array of [outputs inouts inputs wire reg assign const]."
       (setq sig  (if dotname port (verilog-symbol-detick-denumber sig)))
       (if vec (setq vec  (verilog-symbol-detick-denumber vec)))
       (if multidim (setq multidim  (mapcar `verilog-symbol-detick-denumber multidim)))
+      (if mem (setq mem (verilog-symbol-detick-denumber mem)))
       (unless (or (not sig)
                   (equal sig ""))  ; Ignore .foo(1'b1) assignments
 	(cond ((or (setq portdata (assoc port (verilog-decls-get-inouts submoddecls)))
@@ -8598,7 +8599,7 @@ Return an array of [outputs inouts inputs wire reg assign const]."
 			    sig
 			    (if dotname (verilog-sig-bits portdata) vec)
 			    (concat "To/From " comment)
-			    (verilog-sig-memory portdata)
+                            mem
 			    nil
 			    (verilog-sig-signed portdata)
 			    (unless (member (verilog-sig-type portdata) '("wire" "reg"))
@@ -8612,7 +8613,7 @@ Return an array of [outputs inouts inputs wire reg assign const]."
 			    sig
 			    (if dotname (verilog-sig-bits portdata) vec)
 			    (concat "From " comment)
-			    (verilog-sig-memory portdata)
+			    mem
 			    nil
 			    (verilog-sig-signed portdata)
 			    ;; Though ok in SV, in V2K code, propagating the
@@ -8631,7 +8632,7 @@ Return an array of [outputs inouts inputs wire reg assign const]."
 			    sig
 			    (if dotname (verilog-sig-bits portdata) vec)
 			    (concat "To " comment)
-			    (verilog-sig-memory portdata)
+			    mem
 			    nil
 			    (verilog-sig-signed portdata)
 			    (unless (member (verilog-sig-type portdata) '("wire" "reg"))
@@ -8644,7 +8645,7 @@ Return an array of [outputs inouts inputs wire reg assign const]."
 			    sig
 			    (if dotname (verilog-sig-bits portdata) vec)
 			    (concat "To/From " comment)
-			    (verilog-sig-memory portdata)
+			    mem
 			    nil
 			    (verilog-sig-signed portdata)
 			    (verilog-sig-type portdata)
@@ -8657,7 +8658,7 @@ Return an array of [outputs inouts inputs wire reg assign const]."
 			    sig
 			    (if dotname (verilog-sig-bits portdata) vec)
 			    (concat "To/From " comment)
-			    (verilog-sig-memory portdata)
+			    mem
 			    nil
 			    (verilog-sig-signed portdata)
 			    (verilog-sig-type portdata)
@@ -8670,7 +8671,7 @@ Return an array of [outputs inouts inputs wire reg assign const]."
   "For `verilog-read-sub-decls-line', parse a subexpression and add signals."
   ;;(message "vrsde: `%s'" expr)
   ;; Replace special /*[....]*/ comments inserted by verilog-auto-inst-port
-  (setq expr (verilog-string-replace-matches "/\\*\\(\\[[^*]+\\]\\)\\*/" "\\1" nil nil expr))
+  (setq expr (verilog-string-replace-matches "/\\*\\(\\.?\\[[^*]+\\]\\)\\*/" "\\1" nil nil expr))
   ;; Remove front operators
   (setq expr (verilog-string-replace-matches "^\\s-*[---+~!|&]+\\s-*" "" nil nil expr))
   ;;
@@ -8684,7 +8685,7 @@ Return an array of [outputs inouts inputs wire reg assign const]."
 	(while (setq mstr (pop mlst))
 	  (verilog-read-sub-decls-expr submoddecls comment port mstr)))))
    (t
-    (let (sig vec multidim)
+    (let (sig vec multidim mem)
       ;; Remove leading reduction operators, etc
       (setq expr (verilog-string-replace-matches "^\\s-*[---+~!|&]+\\s-*" "" nil nil expr))
       ;;(message "vrsde-ptop: `%s'" expr)
@@ -8704,10 +8705,15 @@ Return an array of [outputs inouts inputs wire reg assign const]."
 	(when vec (setq multidim (cons vec multidim)))
 	(setq vec (match-string 1 expr)
 	      expr (substring expr (match-end 0))))
+      ;; Find .[unpacked_memory] or .[unpacked][unpacked]...
+      (while (string-match "^\\s-*\\.\\(\\[[^]]+\\]\\)" expr)
+	;;(message "vrsde-m: `%s'" (match-string 1 expr))
+	(setq mem (match-string 1 expr)
+	      expr (substring expr (match-end 0))))
       ;; If found signal, and nothing unrecognized, add the signal
       ;;(message "vrsde-rem: `%s'" expr)
       (when (and sig (string-match "^\\s-*$" expr))
-	(verilog-read-sub-decls-sig submoddecls comment port sig vec multidim))))))
+	(verilog-read-sub-decls-sig submoddecls comment port sig vec multidim mem))))))
 
 (defun verilog-read-sub-decls-line (submoddecls comment)
   "For `verilog-read-sub-decls', read lines of port defs until none match.
@@ -8728,13 +8734,13 @@ Inserts the list of signals found, using submodi to look up each port."
 	      ((looking-at "\\s-*\\.\\s-*\\([a-zA-Z0-9`_$]*\\)\\s-*[,)/]")
 	       (verilog-read-sub-decls-sig
 		submoddecls comment (match-string-no-properties 1) t ; sig==t for .name
-		nil nil) ; vec multidim
+		nil nil nil) ; vec multidim mem
 	       (setq port nil))
 	      ;; .\escaped_name
 	      ((looking-at "\\s-*\\.\\s-*\\(\\\\[^ \t\n\f]*\\)\\s-*[,)/]")
 	       (verilog-read-sub-decls-sig
 		submoddecls comment (concat (match-string-no-properties 1) " ") t ; sig==t for .name
-		nil nil) ; vec multidim
+		nil nil nil) ; vec multidim mem
 	       (setq port nil))
 	      ;; random
 	      ((looking-at "\\s-*\\.[^(]*(")
@@ -8750,13 +8756,13 @@ Inserts the list of signals found, using submodi to look up each port."
 		 (verilog-read-sub-decls-sig
 		  submoddecls comment port
 		  (verilog-string-remove-spaces (match-string-no-properties 1)) ; sig
-		  nil nil)) ; vec multidim
+		  nil nil nil)) ; vec multidim mem
 		;;
 		((looking-at "\\([a-zA-Z_][a-zA-Z_0-9]*\\)\\s-*\\(\\[[^]]+\\]\\)\\s-*)")
 		 (verilog-read-sub-decls-sig
 		  submoddecls comment port
 		  (verilog-string-remove-spaces (match-string-no-properties 1)) ; sig
-		  (match-string-no-properties 2) nil)) ; vec multidim
+		  (match-string-no-properties 2) nil nil)) ; vec multidim mem
 		;; Fastpath was above looking-at's.
 		;; For something more complicated invoke a parser
 		((looking-at "[^)]+")
@@ -10225,7 +10231,7 @@ When MODI is non-null, also add to modi-cache, for tracking."
 
 (eval-when-compile
   (if (not (boundp 'indent-pt))
-      (defvar indent-pt nil "Local used by insert-indent")))
+      (defvar indent-pt nil "Local used by `verilog-insert-indent'.")))
 
 (defun verilog-insert-indent (&rest stuff)
   "Indent to position stored in local `indent-pt' variable, then insert STUFF.
@@ -11055,6 +11061,7 @@ If PAR-VALUES replace final strings with these parameter values."
 	 (vl-name (verilog-sig-name port-st))
 	 (vl-width (verilog-sig-width port-st))
 	 (vl-modport (verilog-sig-modport port-st))
+	 (vl-memory (verilog-sig-memory port-st))
 	 (vl-mbits (if (verilog-sig-multidim port-st)
                        (verilog-sig-multidim-string port-st) ""))
 	 (vl-bits (if (or verilog-auto-inst-vector
@@ -11079,15 +11086,25 @@ If PAR-VALUES replace final strings with these parameter values."
 			(concat "\\<" (nth 0 (car check-values)) "\\>")
 			(concat "(" (nth 1 (car check-values)) ")")
 			t t vl-mbits)
+	      vl-memory (when vl-memory
+                          (verilog-string-replace-matches
+                           (concat "\\<" (nth 0 (car check-values)) "\\>")
+                           (concat "(" (nth 1 (car check-values)) ")")
+                           t t vl-memory))
 	      check-values (cdr check-values)))
       (setq vl-bits (verilog-simplify-range-expression vl-bits)
 	    vl-mbits (verilog-simplify-range-expression vl-mbits)
+	    vl-memory (when vl-memory (verilog-simplify-range-expression vl-memory))
 	    vl-width (verilog-make-width-expression vl-bits))) ; Not in the loop for speed
     ;; Default net value if not found
-    (setq dflt-bits (if (and (verilog-sig-bits port-st)
-			     (or (verilog-sig-multidim port-st)
-				 (verilog-sig-memory port-st)))
-			(concat "/*" vl-mbits vl-bits "*/")
+    (setq dflt-bits (if (or (and (verilog-sig-bits port-st)
+                                 (verilog-sig-multidim port-st))
+                            (verilog-sig-memory port-st))
+			(concat "/*" vl-mbits vl-bits
+                                ;; .[ used to separate packed from unpacked
+                                (if vl-memory "." "")
+                                (if vl-memory vl-memory "")
+                                "*/")
 		      (concat vl-bits))
 	  tpl-net (concat port
 			  (if (and vl-modport

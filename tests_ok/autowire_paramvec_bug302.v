@@ -10,7 +10,7 @@ module Abc_TEST ();
          /*AUTOINSTPARAM*/
          // Parameters
          .No2                           (No2),
-         .No3                           (No3)) u_Abc
+         .No3                           (No3/*.[No1:0][No2-1:0]*/)) u_Abc
      (
       /*AUTOINST*/
       // Inputs

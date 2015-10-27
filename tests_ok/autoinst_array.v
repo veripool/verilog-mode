@@ -38,16 +38,16 @@ module top
    submod_a a_inst
      (/*AUTOINST*/
       // Outputs
-      .parallel_out                     (parallel_out/*[15:0]*/),
+      .parallel_out                     (parallel_out/*[15:0].[0:7]*/),
       // Inputs
       .serial_in                        (serial_in[15:0]));
    
    submod_b b_inst
      (/*AUTOINST*/
       // Outputs
-      .final_out                        (final_out/*[15:0]*/),
+      .final_out                        (final_out/*[15:0].[0:7]*/),
       // Inputs
-      .parallel_out                     (parallel_out/*[15:0]*/));
+      .parallel_out                     (parallel_out/*[15:0].[0:7]*/));
    
    
 endmodule
