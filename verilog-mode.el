@@ -10528,6 +10528,41 @@ removed."
 	  (re-search-backward ",")
 	  (delete-char 1))))))
 
+(defun verilog-delete-auto-buffer ()
+  "Perform `verilog-delete-auto' on the current buffer.
+Intended for internal use inside a `verilog-save-no-change-functions' block."
+  ;; Allow user to customize
+  (verilog-run-hooks 'verilog-before-delete-auto-hook)
+
+  ;; Remove those that have multi-line insertions, possibly with parameters
+  ;; We allow anything beginning with AUTO, so that users can add their own
+  ;; patterns
+  (verilog-auto-re-search-do
+   (concat "/\\*AUTO[A-Za-z0-9_]+"
+           ;; Optional parens or quoted parameter or .* for (((...)))
+           "\\(\\|([^)]*)\\|(\"[^\"]*\")\\).*?"
+           "\\*/")
+   'verilog-delete-autos-lined)
+  ;; Remove those that are in parenthesis
+  (verilog-auto-re-search-do
+   (concat "/\\*"
+           (eval-when-compile
+             (verilog-regexp-words
+              `("AS" "AUTOARG" "AUTOCONCATWIDTH" "AUTOINST" "AUTOINSTPARAM"
+                "AUTOSENSE")))
+           "\\*/")
+   'verilog-delete-to-paren)
+  ;; Do .* instantiations, but avoid removing any user pins by looking for our magic comments
+  (verilog-auto-re-search-do "\\.\\*"
+                             'verilog-delete-auto-star-all)
+  ;; Remove template comments ... anywhere in case was pasted after AUTOINST removed
+  (goto-char (point-min))
+  (while (re-search-forward "\\s-*// \\(Templated\\|Implicit \\.\\*\\)\\([ \tLT0-9]*\\| LHS: .*\\)?$" nil t)
+    (replace-match ""))
+
+  ;; Final customize
+  (verilog-run-hooks 'verilog-delete-auto-hook))
+
 (defun verilog-delete-auto ()
   "Delete the automatic outputs, regs, and wires created by \\[verilog-auto].
 Use \\[verilog-auto] to re-insert the updated AUTOs.
@@ -10540,37 +10575,8 @@ called before and after this function, respectively."
         (find-file-noselect (buffer-file-name)))  ; To check we have latest version
     (verilog-save-no-change-functions
      (verilog-save-scan-cache
-      ;; Allow user to customize
-      (verilog-run-hooks 'verilog-before-delete-auto-hook)
+      (verilog-delete-auto-buffer)))))
 
-      ;; Remove those that have multi-line insertions, possibly with parameters
-      ;; We allow anything beginning with AUTO, so that users can add their own
-      ;; patterns
-      (verilog-auto-re-search-do
-       (concat "/\\*AUTO[A-Za-z0-9_]+"
-	       ;; Optional parens or quoted parameter or .* for (((...)))
-	       "\\(\\|([^)]*)\\|(\"[^\"]*\")\\).*?"
-	       "\\*/")
-       'verilog-delete-autos-lined)
-      ;; Remove those that are in parenthesis
-      (verilog-auto-re-search-do
-       (concat "/\\*"
-	       (eval-when-compile
-		 (verilog-regexp-words
-		  `("AS" "AUTOARG" "AUTOCONCATWIDTH" "AUTOINST" "AUTOINSTPARAM"
-		    "AUTOSENSE")))
-	       "\\*/")
-       'verilog-delete-to-paren)
-      ;; Do .* instantiations, but avoid removing any user pins by looking for our magic comments
-      (verilog-auto-re-search-do "\\.\\*"
-				 'verilog-delete-auto-star-all)
-      ;; Remove template comments ... anywhere in case was pasted after AUTOINST removed
-      (goto-char (point-min))
-      (while (re-search-forward "\\s-*// \\(Templated\\|Implicit \\.\\*\\)\\([ \tLT0-9]*\\| LHS: .*\\)?$" nil t)
-	(replace-match ""))
-
-      ;; Final customize
-      (verilog-run-hooks 'verilog-delete-auto-hook)))))
 
 ;;; Auto inject:
 ;;
@@ -13600,7 +13606,7 @@ Wilson Snyder (wsnyder@wsnyder.org)."
 	      ;; INST: Lower modules correct, no internal dependencies, FIRST
 	      (verilog-preserve-modi-cache
 	       ;; Clear existing autos else we'll be screwed by existing ones
-	       (verilog-delete-auto)
+	       (verilog-delete-auto-buffer)
 	       ;; Injection if appropriate
 	       (when inject
 		 (verilog-inject-inst)
