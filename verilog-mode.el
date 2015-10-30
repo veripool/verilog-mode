@@ -326,6 +326,14 @@ wherever possible, since it is slow."
         (not (null pos)))))))
 
 (eval-and-compile
+  (cond
+   ((fboundp 'restore-buffer-modified-p)
+    ;; Faster, as does not update mode line when nothing changes
+    (defalias 'verilog-restore-buffer-modified-p 'restore-buffer-modified-p))
+   (t
+    (defalias 'verilog-restore-buffer-modified-p 'set-buffer-modified-p))))
+
+(eval-and-compile
   ;; Both xemacs and emacs
   (condition-case nil
       (require 'diff)  ; diff-command and diff-switches
@@ -3243,7 +3251,7 @@ user-visible changes to the buffer must not be within a
 	 (progn ,@body)
        (and (not modified)
 	    (buffer-modified-p)
-	    (set-buffer-modified-p nil)))))
+	    (verilog-restore-buffer-modified-p nil)))))
 
 (defmacro verilog-save-no-change-functions (&rest body)
   "Execute BODY forms, disabling all change hooks in BODY.
@@ -13655,7 +13663,7 @@ Wilson Snyder (wsnyder@wsnyder.org)."
 	     ;;
 	     ;; If end result is same as when started, clear modified flag
 	     (cond ((and oldbuf (equal oldbuf (buffer-string)))
-		    (set-buffer-modified-p nil)
+		    (verilog-restore-buffer-modified-p nil)
 		    (unless noninteractive (message "Updating AUTOs...done (no changes)")))
 		   (t (unless noninteractive (message "Updating AUTOs...done"))))
 	     ;; End of after-change protection
