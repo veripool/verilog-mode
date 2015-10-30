@@ -230,10 +230,9 @@ STRING should be given if the last search was by `string-match' on STRING."
         `(customize ,var))
       )
 
-    (unless (boundp 'inhibit-point-motion-hooks)
-      (defvar inhibit-point-motion-hooks nil))
-    (unless (boundp 'deactivate-mark)
-      (defvar deactivate-mark nil))
+    (defvar inhibit-modification-hooks)
+    (defvar inhibit-point-motion-hooks)
+    (defvar deactivate-mark)
     )
   ;;
   ;; OK, do this stuff if we are NOT XEmacs:
@@ -8577,7 +8576,7 @@ Return an array of [outputs inouts inputs wire reg assign const]."
   (defvar sigs-out-unk)
   (defvar sigs-temp)
   ;; These are known to be from other packages and may not be defined
-  (defvar diff-command nil)
+  (defvar diff-command)
   ;; There are known to be from newer versions of Emacs
   (defvar create-lockfiles)
   (defvar which-func-modes))
