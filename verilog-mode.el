@@ -8086,7 +8086,7 @@ Duplicate signals are also removed.  For example A[2] and A[1] become A[2:1]."
 	     (when (and sv-busstring
 			(not (equal sv-busstring (verilog-sig-bits sig))))
                (when nil  ; Debugging
-		 (message (concat "Warning, can't merge into single bus %s%s"
+		 (message (concat "Warning, can't merge into single bus `%s%s'"
 				  ", the AUTOs may be wrong")
 			  sv-name bus))
 	       (setq buswarn ", Couldn't Merge"))
@@ -9913,7 +9913,7 @@ Return modi if successful, else print message unless IGNORE-ERROR is true."
 	       (or mif ignore-error
 		   (error
 		    (concat
-		     "%s: Can't locate %s module definition%s"
+		     "%s: Can't locate `%s' module definition%s"
 		     "\n    Check the verilog-library-directories variable."
 		     "\n    I looked in (if not listed, doesn't exist):\n\t%s")
 		    (verilog-point-text) module
@@ -10022,7 +10022,7 @@ Report errors unless optional IGNORE-ERROR."
   (let* ((realname (verilog-symbol-detick name t))
 	 (modport (assoc name (verilog-decls-get-modports (verilog-modi-get-decls modi)))))
     (or modport ignore-error
-	(error "%s: Can't locate %s modport definition%s"
+	(error "%s: Can't locate `%s' modport definition%s"
                (verilog-point-text) name
                (if (not (equal name realname))
                    (concat " (Expanded macro to " realname ")")
@@ -10212,7 +10212,7 @@ When MODI is non-null, also add to modi-cache, for tracking."
 	  ((equal direction "parameter")
 	   (verilog-modi-cache-add-gparams modi sigs))
 	  (t
-	   (error "Unsupported verilog-insert-definition direction: %s" direction))))
+	   (error "Unsupported verilog-insert-definition direction: `%s'" direction))))
   (or dont-sort
       (setq sigs (sort (copy-alist sigs) `verilog-signals-sort-compare)))
   (while sigs
@@ -10758,7 +10758,7 @@ Ignores WHITESPACE if t, and writes output to stdout if SHOW."
   ;; call `diff' as `diff' has different calling semantics on different
   ;; versions of Emacs.
   (if (not (file-exists-p f1))
-      (message "Buffer %s has no associated file on disc" (buffer-name b2))
+      (message "Buffer `%s' has no associated file on disk" (buffer-name b2))
     (with-temp-buffer "*Verilog-Diff*"
                       (let ((outbuf (current-buffer))
                             (f2 (make-temp-file "vm-diff-auto-")))
@@ -13362,13 +13362,16 @@ Typing \\[verilog-auto] will make this into:
 	   (sig-list-all  (verilog-decls-get-iovars moddecls))
 	   ;;
 	   (undecode-sig (or (assoc undecode-name sig-list-all)
-			     (error "%s: Signal %s not found in design" (verilog-point-text) undecode-name)))
+			     (error "%s: Signal `%s' not found in design"
+                                    (verilog-point-text) undecode-name)))
 	   (undecode-enum (or (verilog-sig-enum undecode-sig)
-			      (error "%s: Signal %s does not have an enum tag" (verilog-point-text) undecode-name)))
+			      (error "%s: Signal `%s' does not have an enum tag"
+                                     (verilog-point-text) undecode-name)))
 	   ;;
 	   (enum-sigs (verilog-signals-not-in
 		       (or (verilog-signals-matching-enum sig-list-consts undecode-enum)
-			   (error "%s: No state definitions for %s" (verilog-point-text) undecode-enum))
+			   (error "%s: No state definitions for `%s'"
+                                  (verilog-point-text) undecode-enum))
 		       nil))
 	   ;;
 	   (one-hot (or
