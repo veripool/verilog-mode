@@ -3273,15 +3273,16 @@ For insignificant changes, see instead `verilog-save-buffer-state'."
     (let* ((verilog-save-font-mod-hooked (- (point-max) (point-min)))
            (fontlocked (when (and (boundp 'font-lock-mode) font-lock-mode)
                          (font-lock-mode 0)
-                         t))
-           (inhibit-point-motion-hooks t)
-           (inhibit-modification-hooks t)
-           (verilog-no-change-functions t)
-           before-change-functions ; XEmacs ignores inhibit-modification-hooks
-           after-change-functions) ; XEmacs ignores inhibit-modification-hooks
+                         t)))
       (run-hook-with-args 'before-change-functions (point-min) (point-max))
       (unwind-protect
-          (progn ,@body)
+          ;; Must inhibit and restore hooks before restoring font-lock
+          (let* ((inhibit-point-motion-hooks t)
+                 (inhibit-modification-hooks t)
+                 (verilog-no-change-functions t)
+                 before-change-functions ; XEmacs ignores inhibit-modification-hooks
+                 after-change-functions) ; XEmacs ignores inhibit-modification-hooks
+            (progn ,@body))
         ;; Unwind forms
         (run-hook-with-args 'after-change-functions (point-min) (point-max)
                             verilog-save-font-mod-hooked) ; old length
