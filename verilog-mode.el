@@ -3026,7 +3026,7 @@ See also `verilog-font-lock-extra-types'.")
   "Font lock mode face used to highlight AMS keywords."
   :group 'font-lock-highlighting-faces)
 
-(defvar verilog-font-grouping-keywords-face
+(defvar verilog-font-lock-grouping-keywords-face
   'verilog-font-lock-grouping-keywords-face
   "Font to use for Verilog Grouping Keywords (such as begin..end).")
 (defface verilog-font-lock-grouping-keywords-face
