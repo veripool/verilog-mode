@@ -9016,7 +9016,8 @@ IGNORE-NEXT is true to ignore next token, fake from inside case statement."
 	    ;;(if dbg (setq dbg (concat dbg (format "\tif-check-else-other %s\n" keywd))))
 	    (setq gotend t))
 	   ;; Final statement?
-	   ((and exit-keywd (equal keywd exit-keywd))
+	   ((and exit-keywd (and (equal keywd exit-keywd)
+                                 (not (looking-at "::"))))
 	    (setq gotend t)
 	    (forward-char (length keywd)))
 	   ;; Standard tokens...
@@ -9032,7 +9033,9 @@ IGNORE-NEXT is true to ignore next token, fake from inside case statement."
 		(goto-char (match-end 0))
 	      (forward-char 1)))
            ((equal keywd ":")  ; Case statement, begin/end label, x?y:z
-            (cond ((equal "endcase" exit-keywd)  ; case x: y=z; statement next
+            (cond ((looking-at "::")
+                   (forward-char 1))  ; Another forward-char below
+                  ((equal "endcase" exit-keywd)  ; case x: y=z; statement next
 		   (setq ignore-next nil rvalue nil))
                   ((equal "?" exit-keywd)  ; x?y:z rvalue
                    )  ; NOP
@@ -9127,7 +9130,7 @@ IGNORE-NEXT is true to ignore next token, fake from inside case statement."
       (verilog-read-always-signals-recurse nil nil nil)
       (setq sigs-out-i (append sigs-out-i sigs-out-unk)
 	    sigs-out-unk nil)
-      ;;(if dbg (with-current-buffer (get-buffer-create "*vl-dbg*")) (delete-region (point-min) (point-max)) (insert dbg) (setq dbg ""))
+      ;;(if dbg (with-current-buffer (get-buffer-create "*vl-dbg*") (delete-region (point-min) (point-max)) (insert dbg) (setq dbg "")))
       ;; Return what was found
       (verilog-alw-new sigs-out-d sigs-out-i sigs-temp sigs-in))))
 
