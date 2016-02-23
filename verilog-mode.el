@@ -1321,8 +1321,13 @@ See also `verilog-case-fold'."
   :type 'hook)
 
 (defvar verilog-imenu-generic-expression
-  '((nil "^\\s-*\\(\\(m\\(odule\\|acromodule\\)\\)\\|primitive\\)\\s-+\\([a-zA-Z0-9_.:]+\\)" 4)
-    ("*Vars*" "^\\s-*\\(reg\\|wire\\)\\s-+\\(\\|\\[[^]]+\\]\\s-+\\)\\([A-Za-z0-9_]+\\)" 3))
+  '((nil "^\\s-*\\(?:m\\(?:odule\\|acromodule\\)\\|p\\(?:rimitive\\|rogram\\|ackage\\)\\)\\s-+\\([a-zA-Z0-9_.:]+\\)" 1)
+    ("*Variables*" "^\\s-*\\(reg\\|wire\\|logic\\)\\s-+\\(\\|\\[[^]]+\\]\\s-+\\)\\([A-Za-z0-9_]+\\)" 3)
+    ("*Classes*" "^\\s-*\\(?:virtual\\s-+\\)?class\\s-+\\([a-zA-Z_0-9]+\\)" 1)
+    ("*Tasks*" "^\\s-*\\(?:virtual\\s-+\\)?task\\s-+\\([a-zA-Z_0-9:]+\\)\\s-*[(;]" 1)
+    ("*Functions*" "^\\s-*\\(?:virtual\\s-+\\)?function\\s-+\\(?:\\w+\\s-+\\)?\\([a-zA-Z_0-9:]+\\)\\s-*[(;]" 1)
+    ("*Interfaces*" "^\\s-*interface\\s-+\\([a-zA-Z_0-9]+\\)" 1)
+    ("*Types*" "^\\s-*typedef\\s-+.*\\s-+\\([a-zA-Z_0-9]+\\)\\s-*;" 1))
   "Imenu expression for Verilog mode.  See `imenu-generic-expression'.")
 
 ;;
