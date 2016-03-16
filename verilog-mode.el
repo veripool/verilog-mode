@@ -9824,9 +9824,13 @@ Uses the CURRENT filename, `verilog-library-extensions',
 `verilog-library-directories' and `verilog-library-files'
 variables to build the path."
   ;; Return search locations for it
-  (append (list current)		; first, current buffer
-	  (verilog-library-filenames module current t)
-	  verilog-library-files))	; finally, any libraries
+  (append (list current)                ; first, current buffer
+          (verilog-library-filenames module current t)
+                                        ; finally, any libraries
+                                        ; Prefix with file-remote-p in
+                                        ; case this file is remote
+          (mapcar (lambda (fname) (concat (file-remote-p current) fname))
+                  verilog-library-files)))
 
 ;;
 ;; Module Information
