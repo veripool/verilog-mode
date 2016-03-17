@@ -1323,9 +1323,9 @@ See also `verilog-case-fold'."
 (defvar verilog-imenu-generic-expression
   '((nil            "^\\s-*\\(?:m\\(?:odule\\|acromodule\\)\\|p\\(?:rimitive\\|rogram\\|ackage\\)\\)\\s-+\\([a-zA-Z0-9_.:]+\\)" 1)
     ("*Variables*"  "^\\s-*\\(reg\\|wire\\|logic\\)\\s-+\\(\\|\\[[^]]+\\]\\s-+\\)\\([A-Za-z0-9_]+\\)" 3)
-    ("*Classes*"    "^\\s-*\\(?:\\(?:static\\|local\\|virtual\\|protected\\)\\s-+\\)?class\\s-+\\([A-Za-z_][A-Za-z0-9_]+\\)" 1)
-    ("*Tasks*"      "^\\s-*\\(?:\\(?:static\\|local\\|virtual\\|protected\\)\\s-+\\)?task\\s-+\\(?:\\(?:static\\|automatic\\)\\s-+\\)?\\([A-Za-z_][A-Za-z0-9_:]+\\)" 1)
-    ("*Functions*"  "^\\s-*\\(?:\\(?:static\\|local\\|virtual\\|protected\\)\\s-+\\)?function\\s-+\\(?:\\w+\\s-+\\)?\\([A-Za-z_][A-Za-z0-9_:]+\\)" 1)
+    ("*Classes*"    "^\\s-*\\(?:\\(?:virtual\\|interface\\)\\s-+\\)?class\\s-+\\([A-Za-z_][A-Za-z0-9_]+\\)" 1)
+    ("*Tasks*"      "^\\s-*\\(?:\\(?:static\\|pure\\|virtual\\|local\\|protected\\)\\s-+\\)*task\\s-+\\(?:\\(?:static\\|automatic\\)\\s-+\\)?\\([A-Za-z_][A-Za-z0-9_:]+\\)" 1)
+    ("*Functions*"  "^\\s-*\\(?:\\(?:static\\|pure\\|virtual\\|local\\|protected\\)\\s-+\\)*function\\s-+\\(?:\\(?:static\\|automatic\\)\\s-+\\)?\\(?:\\w+\\s-+\\)?\\([A-Za-z_][A-Za-z0-9_:]+\\)" 1)
     ("*Interfaces*" "^\\s-*interface\\s-+\\([a-zA-Z_0-9]+\\)" 1)
     ("*Types*"      "^\\s-*typedef\\s-+.*\\s-+\\([a-zA-Z_0-9]+\\)\\s-*;" 1))
   "Imenu expression for Verilog mode.  See `imenu-generic-expression'.")
@@ -3875,6 +3875,25 @@ Key bindings specific to `verilog-mode-map' are:
   (add-hook 'write-contents-hooks 'verilog-auto-save-check nil 'local)
   ;; verilog-mode-hook call added by define-derived-mode
   )
+
+;;; Integration with the speedbar
+;;
+
+(eval-when-compile (require 'speedbar))
+
+(defun verilog-speedbar-initialize ()
+  "Initialize speedbar to understand `verilog-mode'."
+  ;; Set Verilog file extensions (extracted from `auto-mode-alist')
+  (let ((mode-alist auto-mode-alist))
+    (while mode-alist
+      (when (eq (cdar mode-alist) 'verilog-mode)
+        (speedbar-add-supported-extension (caar mode-alist)))
+      (setq mode-alist (cdr mode-alist)))))
+
+;; If the speedbar is loaded, execute initialization instructions right away,
+;; otherwise add the initialization instructions to the speedbar loader.
+(eval-after-load "speedbar" '(verilog-speedbar-initialize))
+
 
 ;;; Electric functions:
 ;;
