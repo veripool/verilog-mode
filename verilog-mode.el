@@ -349,6 +349,11 @@ wherever possible, since it is slow."
   (condition-case nil
       (unless (fboundp 'prog-mode)
 	(define-derived-mode prog-mode fundamental-mode "Prog"))
+    (error nil))
+  ;; Added in Emacs 25.1
+  (condition-case nil
+      (unless (fboundp 'forward-word-strictly)
+        (defalias 'forward-word-strictly 'forward-word))
     (error nil)))
 
 (eval-when-compile
@@ -3475,7 +3480,7 @@ Use filename, if current buffer being edited shorten to just buffer name."
 	(found nil)
 	(st (point)))
     (if (not (looking-at "\\<"))
-	(forward-word -1))
+	(forward-word-strictly -1))
     (cond
      ((verilog-skip-backward-comment-or-string))
      ((looking-at "\\<else\\>")
@@ -3527,7 +3532,7 @@ Use filename, if current buffer being edited shorten to just buffer name."
 	(st (point))
 	(nest 'yes))
     (if (not (looking-at "\\<"))
-	(forward-word -1))
+	(forward-word-strictly -1))
     (cond
      ((verilog-skip-forward-comment-or-string)
       (verilog-forward-syntactic-ws))
@@ -3550,11 +3555,11 @@ Use filename, if current buffer being edited shorten to just buffer name."
 	       (and (looking-at "fork")
 		    (progn
                       (setq here (point))  ; sometimes a fork is just a fork
-		      (forward-word -1)
+		      (forward-word-strictly -1)
 		      (looking-at verilog-disable-fork-re))))
               (progn  ; it is a disable fork; ignore it
 		(goto-char (match-end 0))
-		(forward-word 1)
+		(forward-word-strictly 1)
 		(setq reg nil))
             (progn  ; it is a nice simple fork
               (goto-char here)   ; return from looking for "disable fork"
@@ -3604,7 +3609,7 @@ Use filename, if current buffer being edited shorten to just buffer name."
         ;; Search forward for matching endclocking
         (setq reg "\\(\\<clocking\\>\\)\\|\\(\\<endclocking\\>\\)" )))
       (if (and reg
-	       (forward-word 1))
+	       (forward-word-strictly 1))
 	  (catch 'skip
 	    (if (eq nest 'yes)
 		(let ((depth 1)
@@ -3623,7 +3628,7 @@ Use filename, if current buffer being edited shorten to just buffer name."
 			     (looking-at verilog-disable-fork-re)
 			     (and (looking-at "fork")
 				  (progn
-				    (forward-word -1)
+				    (forward-word-strictly -1)
 				    (looking-at verilog-disable-fork-re))))
                             (progn  ; it is a disable fork; another false alarm
 			      (goto-char (match-end 0)))
@@ -4316,7 +4321,7 @@ Uses `verilog-scan' cache."
 	      ;; stop if we see a named coverpoint
 	      (looking-at "\\w+\\W*:\\W*\\(coverpoint\\|cross\\|constraint\\)")
 	      ;; keep going if we are in the middle of a word
-	      (not (or (looking-at "\\<") (forward-word -1)))
+	      (not (or (looking-at "\\<") (forward-word-strictly -1)))
 	      ;; stop if we see an assertion (perhaps labeled)
 	      (and
 	       (looking-at "\\(\\w+\\W*:\\W*\\)?\\(\\<\\(assert\\|assume\\|cover\\)\\>\\s-+\\<property\\>\\)\\|\\(\\<assert\\>\\)")
@@ -4865,7 +4870,7 @@ primitive or interface named NAME."
 
                              ((looking-at "\\<end\\>")
                               ;; HERE
-                              (forward-word 1)
+                              (forward-word-strictly 1)
                               (verilog-forward-syntactic-ws)
                               (setq err nil)
                               (setq str (verilog-get-expr))
@@ -5980,7 +5985,7 @@ Set point to where line starts."
       (verilog-backward-up-list 1)
       (verilog-backward-syntactic-ws)
       (let ((back (point)))
-	(forward-word -1)
+	(forward-word-strictly -1)
 	(cond
 	 ;;XX
 	 ((looking-at "\\<\\(always\\(_latch\\|_ff\\|_comb\\)?\\|case\\(\\|[xz]\\)\\|for\\(\\|each\\|ever\\)\\|i\\(f\\|nitial\\)\\|repeat\\|while\\)\\>")
@@ -6021,11 +6026,11 @@ Set point to where line starts."
 
    (;-- any of begin|initial|while are complete statements; 'begin : foo' is also complete
     t
-    (forward-word -1)
+    (forward-word-strictly -1)
     (while (or (= (preceding-char) ?\_)
                (= (preceding-char) ?\@)
                (= (preceding-char) ?\.))
-      (forward-word -1))
+      (forward-word-strictly -1))
     (cond
      ((looking-at "\\<else\\>")
       t)
@@ -6539,7 +6544,7 @@ Only look at a few lines to determine indent level."
 				  (= (following-char) ?\`))
 			     (progn
 			       (forward-char 1)
-			       (forward-word 1)
+			       (forward-word-strictly 1)
 			       (skip-chars-forward " \t")))
 			    ((= (following-char) ?\[)
 			     (progn
