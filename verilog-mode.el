@@ -3884,7 +3884,7 @@ Key bindings specific to `verilog-mode-map' are:
 ;;; Integration with the speedbar
 ;;
 
-(eval-when-compile (require 'speedbar))
+(declare-function speedbar-add-supported-extension "speedbar" (extension))
 
 (defun verilog-speedbar-initialize ()
   "Initialize speedbar to understand `verilog-mode'."
