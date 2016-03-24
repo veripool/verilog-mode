@@ -3884,7 +3884,9 @@ Key bindings specific to `verilog-mode-map' are:
 ;;; Integration with the speedbar
 ;;
 
-(declare-function speedbar-add-supported-extension "speedbar" (extension))
+;; This causes problems with XEmacs byte-compiles.
+;; For GNU Emacs, the eval-after-load will handle if it isn't loaded yet.
+;;(declare-function speedbar-add-supported-extension "speedbar" (extension))
 
 (defun verilog-speedbar-initialize ()
   "Initialize speedbar to understand `verilog-mode'."
