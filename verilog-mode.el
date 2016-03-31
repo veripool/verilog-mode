@@ -9853,8 +9853,13 @@ variables to build the path."
   (append (list current)                ; first, current buffer
           (verilog-library-filenames module current t)
                                         ; finally, any libraries
-                                        ; possibly remote
-          (mapcar (lambda (fname) (concat (file-remote-p current) fname))
+                                        ; Prefix absolute paths (only)
+                                        ; with file-remote-p in case
+                                        ; this file is remote.
+          (mapcar (lambda (fname)
+                    (if (file-name-absolute-p fname)
+                        (concat (file-remote-p current) fname)
+                      fname))
                   verilog-library-files)))
 
 ;;
