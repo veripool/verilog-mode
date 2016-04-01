@@ -9852,9 +9852,11 @@ variables to build the path."
   ;; Return search locations for it
   (append (list current)                ; first, current buffer
           (verilog-library-filenames module current t)
-                                        ; finally, any libraries
-                                        ; possibly remote
-          (mapcar (lambda (fname) (concat (file-remote-p current) fname))
+          ;; Finally any libraries; fixed up if using e.g. tramp
+          (mapcar (lambda (fname)
+                    (if (file-name-absolute-p fname)
+                        (concat (file-remote-p current) fname)
+                      fname))
                   verilog-library-files)))
 
 ;;
