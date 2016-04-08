@@ -29,3 +29,11 @@ module foo;
 endmodule // foo
 
  
+class A;
+   extern static function int f1();
+   extern static function int f2(int src,int dst);
+   extern static function int f3(int src,int dst);
+   extern static function chandle f10(int src);
+   extern function automatic int f11(int mcid);
+   extern function automatic int f13(int mcid);
+endclass
