@@ -6302,7 +6302,7 @@ Return >0 for nested struct."
 	(let ((p (point)))
           (and
            (equal (char-after) ?\{)
-           (forward-list)
+           (ignore-errors (forward-list))
            (progn (backward-char 1)
                   (verilog-backward-ws&directives)
                   (and
