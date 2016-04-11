@@ -2561,15 +2561,15 @@ find the errors."
 	   "\\|\\(\\<table\\>\\)"		;7
 	   "\\|\\(\\<specify\\>\\)"		;8
 	   "\\|\\(\\<function\\>\\)"		;9
-	   "\\|\\(\\(\\(\\<virtual\\>\\s-+\\)\\|\\(\\<protected\\>\\s-+\\)\\)*\\<function\\>\\)"	;10
-	   "\\|\\(\\<task\\>\\)"		;14
-	   "\\|\\(\\(\\(\\<virtual\\>\\s-+\\)\\|\\(\\<protected\\>\\s-+\\)\\)*\\<task\\>\\)"	;15
-	   "\\|\\(\\<generate\\>\\)"		;18
-	   "\\|\\(\\<covergroup\\>\\)"	;16 20
-	   "\\|\\(\\(\\(\\<cover\\>\\s-+\\)\\|\\(\\<assert\\>\\s-+\\)\\)*\\<property\\>\\)"	;17 21
-	   "\\|\\(\\<\\(rand\\)?sequence\\>\\)" ;21 25
-	   "\\|\\(\\<clocking\\>\\)"          ;22 27
-	   "\\|\\(\\<`[ou]vm_[a-z_]+_begin\\>\\)" ;28
+           "\\|\\(\\(?:\\(?:\\<virtual\\>\\s-+\\)\\|\\(?:\\<protected\\>\\s-+\\)\\)*\\<function\\>\\)"  ;10
+           "\\|\\(\\<task\\>\\)"                ;11
+           "\\|\\(\\(?:\\(?:\\<virtual\\>\\s-+\\)\\|\\(?:\\<protected\\>\\s-+\\)\\)*\\<task\\>\\)"      ;12
+           "\\|\\(\\<generate\\>\\)"            ;13
+           "\\|\\(\\<covergroup\\>\\)"          ;14
+           "\\|\\(\\(?:\\(?:\\<cover\\>\\s-+\\)\\|\\(?:\\<assert\\>\\s-+\\)\\)*\\<property\\>\\)"       ;15
+           "\\|\\(\\<\\(?:rand\\)?sequence\\>\\)" ;16
+           "\\|\\(\\<clocking\\>\\)"              ;17
+           "\\|\\(\\<`[ou]vm_[a-z_]+_begin\\>\\)" ;18
            "\\|\\(\\<`vmm_[a-z_]+_member_begin\\>\\)"
 	   ;;
 	   ))
@@ -3584,28 +3584,28 @@ Use filename, if current buffer being edited shorten to just buffer name."
         ;; Search forward for matching endfunction
         (setq reg "\\<endfunction\\>" )
         (setq nest 'no))
-       ((match-end 14)
+       ((match-end 11)
         ;; Search forward for matching endtask
         (setq reg "\\<endtask\\>" )
         (setq nest 'no))
-       ((match-end 15)
+       ((match-end 12)
         ;; Search forward for matching endtask
         (setq reg "\\<endtask\\>" )
         (setq nest 'no))
-       ((match-end 19)
+       ((match-end 12)
         ;; Search forward for matching endgenerate
         (setq reg "\\(\\<generate\\>\\)\\|\\(\\<endgenerate\\>\\)" ))
-       ((match-end 20)
+       ((match-end 13)
         ;; Search forward for matching endgroup
         (setq reg "\\(\\<covergroup\\>\\)\\|\\(\\<endgroup\\>\\)" ))
-       ((match-end 21)
+       ((match-end 14)
         ;; Search forward for matching endproperty
         (setq reg "\\(\\<property\\>\\)\\|\\(\\<endproperty\\>\\)" ))
-       ((match-end 25)
+       ((match-end 15)
         ;; Search forward for matching endsequence
         (setq reg "\\(\\<\\(rand\\)?sequence\\>\\)\\|\\(\\<endsequence\\>\\)" )
         (setq md 3)) ; 3 to get to endsequence in the reg above
-       ((match-end 27)
+       ((match-end 17)
         ;; Search forward for matching endclocking
         (setq reg "\\(\\<clocking\\>\\)\\|\\(\\<endclocking\\>\\)" )))
       (if (and reg
@@ -5694,7 +5694,7 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
                     (goto-char here)
                     (throw 'nesting 'block)))))
 
-             ((match-end 27)  ; *sigh* might be a clocking declaration
+             ((match-end 17)  ; *sigh* might be a clocking declaration
               (let ((here (point)))
                 (if (verilog-in-paren)
                     t ; this is a normal statement
