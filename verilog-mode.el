@@ -9340,22 +9340,29 @@ Optionally associate it with the specified enumeration ENUMNAME."
 If the filename is provided, `verilog-library-flags' will be used to
 resolve it.  If optional RECURSE is non-nil, recurse through \\=`includes.
 
-Parameters must be simple assignments to constants, or have their own
-\"parameter\" label rather than a list of parameters.  Thus:
+Localparams must be simple assignments to constants, or have their own
+\"localparam\" label rather than a list of localparams.  Thus:
 
-    parameter X = 5, Y = 10;	// Ok
-    parameter X = {1\\='b1, 2\\='h2};	// Ok
-    parameter X = {1\\='b1, 2\\='h2}, Y = 10;	// Bad, make into 2 parameter lines
+    localparam X = 5, Y = 10;	// Ok
+    localparam X = {1\\='b1, 2\\='h2};	// Ok
+    localparam X = {1\\='b1, 2\\='h2}, Y = 10;	// Bad, make into 2 localparam lines
 
 Defines must be simple text substitutions, one on a line, starting
 at the beginning of the line.  Any ifdefs or multiline comments around the
 define are ignored.
 
-Defines are stored inside Emacs variables using the name vh-{definename}.
+Defines are stored inside Emacs variables using the name
+vh-{definename}.
 
-This function is useful for setting vh-* variables.  The file variables
-feature can be used to set defines that `verilog-mode' can see; put at the
-*END* of your file something like:
+Localparams define what symbols are constants so that AUTOSENSE
+will not include them in sensitivity lists.  However any
+parameters in the include file are not considered ports in the
+including file, thus will not appear in AUTOINSTPARAM lists for a
+parent module..
+
+The file variables feature can be used to set defines that
+`verilog-mode' can see; put at the *END* of your file something
+like:
 
     // Local Variables:
     // vh-macro:\"macro_definition\"
