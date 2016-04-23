@@ -753,6 +753,13 @@ mode is experimental."
   :type 'boolean)
 (put 'verilog-auto-declare-nettype 'safe-local-variable `stringp)
 
+(defcustom verilog-auto-wire-comment t
+  "Non-nil indicates to insert to/from comments with `verilog-auto-wire' etc."
+  :version "25.1"
+  :group 'verilog-mode-actions
+  :type 'boolean)
+(put 'verilog-auto-wire-comment 'safe-local-variable `verilog-booleanp)
+
 (defcustom verilog-auto-wire-type nil
   "Non-nil specifies the data type to use with `verilog-auto-wire' etc.
 Set this to \"logic\" for SystemVerilog code, or use `verilog-auto-logic'."
@@ -10285,8 +10292,9 @@ When MODI is non-null, also add to modi-cache, for tracking."
 	      direction))
        indent-pt)
       (insert (if v2k "," ";"))
-      (if (or (not (verilog-sig-comment sig))
-	      (equal "" (verilog-sig-comment sig)))
+      (if (or (not verilog-auto-wire-comment)
+              (not (verilog-sig-comment sig))
+              (equal "" (verilog-sig-comment sig)))
 	  (insert "\n")
 	(indent-to (max 48 (+ indent-pt 40)))
 	(verilog-insert "// " (verilog-sig-comment sig) "\n"))
