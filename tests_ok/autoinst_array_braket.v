@@ -12,7 +12,7 @@ module dut (
    logic [3:-3]              b_threed; // From subb of sub.v
    logic [2:-1]              b_twod; // From subb of sub.v
    logic [1:-1]              c_oned; // From subc of sub.v
-   logic [y][x] [3:-3]       c_threed; // From subc of sub.v
+   logic [x][y] [3:-3]       c_threed; // From subc of sub.v
    logic [x] [2:-1]          c_twod; // From subc of sub.v
    logic [1:-1]              d_oned; // From subd of sub.v
    logic [1:-1][2:-1] [3:-3] d_threed; // From subd of sub.v
@@ -29,7 +29,7 @@ module dut (
              // Outputs
              .oned                      (oned[1:-1]),
              .twod                      (twod/*[1:-1][2:-1]*/),
-             .threed                    (threed/*[2:-1][1:-1][3:-3]*/));
+             .threed                    (threed/*[1:-1][2:-1][3:-3]*/));
    
    /* sub AUTO_TEMPLATE (
     .oned                       (b_oned[]),
@@ -66,6 +66,6 @@ module dut (
              // Outputs
              .oned                      (d_oned[1:-1]),          // Templated
              .twod                      (d_twod/*[1:-1][2:-1]*/), // Templated
-             .threed                    (d_threed/*[2:-1][1:-1][3:-3]*/)); // Templated
+             .threed                    (d_threed/*[1:-1][2:-1][3:-3]*/)); // Templated
    
 endmodule

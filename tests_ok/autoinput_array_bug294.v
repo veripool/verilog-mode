@@ -9,6 +9,9 @@ endmodule
 
 module dut (
             /*AUTOINPUT*/
+            // Beginning of automatic inputs (from unused autoinst inputs)
+            input logic reg2 [5][6]         // To foo_i of mod1.v
+            // End of automatics
             /*AUTOOUTPUT*/
             );
    
@@ -22,11 +25,11 @@ module dut (
               // Inputs
               .reg1                     (reg1/*[1:0].[4]*/),
               .reg2                     (reg2/*.[5][6]*/),
-              .reg4                     (reg4/*[3:0][1:0][2:0]*/));
+              .reg4                     (reg4/*[1:0][3:0][2:0]*/));
    
    /* drv_i AUTO_TEMPLATE (.reg1(reg1[]), );*/
    mod2 drv_i(/*AUTOINST*/
               // Outputs
               .reg1                     (reg1/*[1:0].[4]*/),
-              .reg4                     (reg4/*[3:0][1:0][2:0]*/));
+              .reg4                     (reg4/*[1:0][3:0][2:0]*/));
 endmodule

@@ -7841,7 +7841,7 @@ See also `verilog-sk-header' for an alternative format."
   (if (verilog-sig-multidim sig)
       (let ((str "") (args (verilog-sig-multidim sig)))
 	(while args
-	  (setq str (concat str (car args)))
+	  (setq str (concat (car args) str))
 	  (setq args (cdr args)))
 	str)))
 (defsubst verilog-sig-modport (sig)
@@ -8761,7 +8761,7 @@ Return an array of [outputs inouts inputs wire reg assign const]."
 	(setq vec (match-string 1 expr)
 	      expr (substring expr (match-end 0))))
       ;; Find .[unpacked_memory] or .[unpacked][unpacked]...
-      (while (string-match "^\\s-*\\.\\(\\[[^]]+\\]\\)" expr)
+      (while (string-match "^\\s-*\\.\\(\\(\\[[^]]+\\]\\)+\\)" expr)
 	;;(message "vrsde-m: `%s'" (match-string 1 expr))
 	(setq mem (match-string 1 expr)
 	      expr (substring expr (match-end 0))))
@@ -8829,6 +8829,7 @@ Inserts the list of signals found, using submodi to look up each port."
 				      (point)))))))) ; expr
 	;;
 	(forward-line 1)))))
+;;(verilog-read-sub-decls-line (verilog-subdecls-new nil nil nil nil nil) "Cmt")
 
 (defun verilog-read-sub-decls-gate (submoddecls comment submod end-inst-point)
   "For `verilog-read-sub-decls', read lines of UDP gate decl until none match.
