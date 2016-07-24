@@ -1768,7 +1768,7 @@ so there may be a large up front penalty for the first search."
   (let (pt)
     (while (and (not pt)
 		(re-search-forward regexp bound noerror))
-      (if (verilog-inside-comment-or-string-p)
+      (if (verilog-inside-comment-or-string-p (match-beginning 0))
           (re-search-forward "[/\"\n]" nil t)  ; Only way a comment or quote can end
 	(setq pt (match-end 0))))
     pt))
@@ -1782,7 +1782,7 @@ so there may be a large up front penalty for the first search."
   (let (pt)
     (while (and (not pt)
 		(re-search-backward regexp bound noerror))
-      (if (verilog-inside-comment-or-string-p)
+      (if (verilog-inside-comment-or-string-p (match-beginning 0))
           (re-search-backward "[/\"]" nil t)  ; Only way a comment or quote can begin
 	(setq pt (match-beginning 0))))
     pt))
