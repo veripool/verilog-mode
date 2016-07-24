@@ -1138,31 +1138,66 @@ be replaced, and will remain symbolic.
 For example, imagine a submodule uses parameters to declare the size of its
 inputs.  This is then used by an upper module:
 
-	module InstModule (o,i);
-	   parameter WIDTH;
-	   input [WIDTH-1:0] i;
-	endmodule
+        module InstModule (o,i);
+           parameter WIDTH;
+           input [WIDTH-1:0] i;
+           parameter type OUT_t;
+           output OUT_t o;
+        endmodule
 
-	module ExampInst;
-	   InstModule
-	     #(.PARAM(10))
-	    instName
-	     (/*AUTOINST*/
-	      .i 	(i[PARAM-1:0]));
+        module ExampInst;
+           /*AUTOOUTPUT*/
+           // Beginning of automatic outputs
+           output OUT_t o;
+           // End of automatics
 
-Note even though PARAM=10, the AUTOINST has left the parameter as a
-symbolic name.  If `verilog-auto-inst-param-value' is set, this will
+           InstModule
+             #(.WIDTH(10),
+               ,.OUT_t(upper_t))
+            instName
+             (/*AUTOINST*/
+              .i        (i[WIDTH-1:0]),
+              .o        (o));
+
+Note even though WIDTH=10, the AUTOINST has left the parameter as
+a symbolic name.  Likewise the OUT_t is preserved as the name
+from the instantiated module.
+
+If `verilog-auto-inst-param-value' is set, this will
 instead expand to:
 
 	module ExampInst;
-	   InstModule
-	     #(.PARAM(10))
-	    instName
-	     (/*AUTOINST*/
-	      .i 	(i[9:0]));"
+           /*AUTOOUTPUT*/
+           // Beginning of automatic outputs
+           output upper_t o;
+           // End of automatics
+
+           InstModule
+             #(.WIDTH(10),
+               ,.OUT_t(upper_t))
+            instName
+             (/*AUTOINST*/
+              .i        (i[9:0]),
+              .o        (o));
+
+Note that the instantiation now has \"i[9:0]\" as the WIDTH
+was expanded.  Likewise the data type of \"o\" in the AUTOOUTPUT
+is now upper_t, from the OUT_t parameter override.
+This second expansion of parameter types can be overridden with
+`verilog-auto-inst-param-value-type'."
   :group 'verilog-mode-auto
   :type 'boolean)
 (put 'verilog-auto-inst-param-value 'safe-local-variable 'verilog-booleanp)
+
+(defcustom verilog-auto-inst-param-value-type t
+  "Non-nil means expand parameter type in instantiations.
+If nil, leave parameter types as symbolic names.
+
+See `verilog-auto-inst-param-value'."
+  :version "25.1"
+  :group 'verilog-mode-auto
+  :type 'boolean)
+(put 'verilog-auto-inst-param-value-type 'safe-local-variable 'verilog-booleanp)
 
 (defcustom verilog-auto-inst-sort nil
   "Non-nil means AUTOINST signals will be sorted, not in declaration order.
@@ -8633,12 +8668,20 @@ Return an array of [outputs inouts inputs wire reg assign const]."
   (defvar create-lockfiles)
   (defvar which-func-modes))
 
-(defun verilog-read-sub-decls-sig (submoddecls comment port sig vec multidim mem)
+(defun verilog-read-sub-decls-type (par-values portdata)
+  "For `verilog-read-sub-decls-line', decode a signal type."
+  (let* ((type (verilog-sig-type portdata))
+         (pvassoc (assoc type par-values)))
+    (cond ((member type '("wire" "reg")) nil)
+          (pvassoc (nth 1 pvassoc))
+          (t type))))
+
+(defun verilog-read-sub-decls-sig (submoddecls par-values comment port sig vec multidim mem)
   "For `verilog-read-sub-decls-line', add a signal."
   ;; sig eq t to indicate .name syntax
   ;;(message "vrsds: %s(%S)" port sig)
   (let ((dotname (eq sig t))
-	portdata)
+        portdata)
     (when sig
       (setq port (verilog-symbol-detick-denumber port))
       (setq sig  (if dotname port (verilog-symbol-detick-denumber sig)))
@@ -8657,8 +8700,7 @@ Return an array of [outputs inouts inputs wire reg assign const]."
                             mem
 			    nil
 			    (verilog-sig-signed portdata)
-			    (unless (member (verilog-sig-type portdata) '("wire" "reg"))
-			      (verilog-sig-type portdata))
+                            (verilog-read-sub-decls-type par-values portdata)
 			    multidim nil)
 			   sigs-inout)))
 	      ((or (setq portdata (assoc port (verilog-decls-get-outputs submoddecls)))
@@ -8676,8 +8718,7 @@ Return an array of [outputs inouts inputs wire reg assign const]."
 			    ;; Also for backwards compatibility we don't propagate
 			    ;;  "input wire" upwards.
 			    ;; See also `verilog-signals-edit-wire-reg'.
-			    (unless (member (verilog-sig-type portdata) '("wire" "reg"))
-			      (verilog-sig-type portdata))
+                            (verilog-read-sub-decls-type par-values portdata)
 			    multidim nil)
 			   sigs-out)))
 	      ((or (setq portdata (assoc port (verilog-decls-get-inputs submoddecls)))
@@ -8690,8 +8731,7 @@ Return an array of [outputs inouts inputs wire reg assign const]."
 			    mem
 			    nil
 			    (verilog-sig-signed portdata)
-			    (unless (member (verilog-sig-type portdata) '("wire" "reg"))
-			      (verilog-sig-type portdata))
+                            (verilog-read-sub-decls-type par-values portdata)
 			    multidim nil)
 			   sigs-in)))
 	      ((setq portdata (assoc port (verilog-decls-get-interfaces submoddecls)))
@@ -8703,7 +8743,7 @@ Return an array of [outputs inouts inputs wire reg assign const]."
 			    mem
 			    nil
 			    (verilog-sig-signed portdata)
-			    (verilog-sig-type portdata)
+                            (verilog-read-sub-decls-type par-values portdata)
 			    multidim nil)
 			   sigs-intf)))
 	      ((setq portdata (and verilog-read-sub-decls-in-interfaced
@@ -8716,13 +8756,13 @@ Return an array of [outputs inouts inputs wire reg assign const]."
 			    mem
 			    nil
 			    (verilog-sig-signed portdata)
-			    (verilog-sig-type portdata)
+                            (verilog-read-sub-decls-type par-values portdata)
 			    multidim nil)
 			   sigs-intf)))
 	      ;; (t  -- warning pin isn't defined.)   ; Leave for lint tool
 	      )))))
 
-(defun verilog-read-sub-decls-expr (submoddecls comment port expr)
+(defun verilog-read-sub-decls-expr (submoddecls par-values comment port expr)
   "For `verilog-read-sub-decls-line', parse a subexpression and add signals."
   ;;(message "vrsde: `%s'" expr)
   ;; Replace special /*[....]*/ comments inserted by verilog-auto-inst-port
@@ -8738,7 +8778,7 @@ Return an array of [outputs inouts inputs wire reg assign const]."
       (let ((mlst (split-string (match-string 1 expr) "[{},]"))
 	    mstr)
 	(while (setq mstr (pop mlst))
-	  (verilog-read-sub-decls-expr submoddecls comment port mstr)))))
+          (verilog-read-sub-decls-expr submoddecls par-values comment port mstr)))))
    (t
     (let (sig vec multidim mem)
       ;; Remove leading reduction operators, etc
@@ -8768,9 +8808,9 @@ Return an array of [outputs inouts inputs wire reg assign const]."
       ;; If found signal, and nothing unrecognized, add the signal
       ;;(message "vrsde-rem: `%s'" expr)
       (when (and sig (string-match "^\\s-*$" expr))
-	(verilog-read-sub-decls-sig submoddecls comment port sig vec multidim mem))))))
+        (verilog-read-sub-decls-sig submoddecls par-values comment port sig vec multidim mem))))))
 
-(defun verilog-read-sub-decls-line (submoddecls comment)
+(defun verilog-read-sub-decls-line (submoddecls par-values comment)
   "For `verilog-read-sub-decls', read lines of port defs until none match.
 Inserts the list of signals found, using submodi to look up each port."
   (let (done port)
@@ -8788,13 +8828,13 @@ Inserts the list of signals found, using submodi to look up each port."
 	      ;; .name
 	      ((looking-at "\\s-*\\.\\s-*\\([a-zA-Z0-9`_$]*\\)\\s-*[,)/]")
 	       (verilog-read-sub-decls-sig
-		submoddecls comment (match-string-no-properties 1) t ; sig==t for .name
+                submoddecls par-values comment (match-string-no-properties 1) t ; sig==t for .name
 		nil nil nil) ; vec multidim mem
 	       (setq port nil))
 	      ;; .\escaped_name
 	      ((looking-at "\\s-*\\.\\s-*\\(\\\\[^ \t\n\f]*\\)\\s-*[,)/]")
 	       (verilog-read-sub-decls-sig
-		submoddecls comment (concat (match-string-no-properties 1) " ") t ; sig==t for .name
+                submoddecls par-values comment (concat (match-string-no-properties 1) " ") t ; sig==t for .name
 		nil nil nil) ; vec multidim mem
 	       (setq port nil))
 	      ;; random
@@ -8809,29 +8849,29 @@ Inserts the list of signals found, using submodi to look up each port."
 	(when port
 	  (cond ((looking-at "\\([a-zA-Z_][a-zA-Z_0-9]*\\)\\s-*)")
 		 (verilog-read-sub-decls-sig
-		  submoddecls comment port
+                  submoddecls par-values comment port
 		  (verilog-string-remove-spaces (match-string-no-properties 1)) ; sig
 		  nil nil nil)) ; vec multidim mem
 		;;
 		((looking-at "\\([a-zA-Z_][a-zA-Z_0-9]*\\)\\s-*\\(\\[[^]]+\\]\\)\\s-*)")
 		 (verilog-read-sub-decls-sig
-		  submoddecls comment port
+                  submoddecls par-values comment port
 		  (verilog-string-remove-spaces (match-string-no-properties 1)) ; sig
 		  (match-string-no-properties 2) nil nil)) ; vec multidim mem
 		;; Fastpath was above looking-at's.
 		;; For something more complicated invoke a parser
 		((looking-at "[^)]+")
 		 (verilog-read-sub-decls-expr
-		  submoddecls comment port
+                  submoddecls par-values comment port
 		  (buffer-substring-no-properties
 		   (point) (1- (progn (search-backward "(") ; start at (
 				      (verilog-forward-sexp-ign-cmt 1)
 				      (point)))))))) ; expr
 	;;
 	(forward-line 1)))))
-;;(verilog-read-sub-decls-line (verilog-subdecls-new nil nil nil nil nil) "Cmt")
+;;(verilog-read-sub-decls-line (verilog-subdecls-new nil nil nil nil nil) nil "Cmt")
 
-(defun verilog-read-sub-decls-gate (submoddecls comment submod end-inst-point)
+(defun verilog-read-sub-decls-gate (submoddecls par-values comment submod end-inst-point)
   "For `verilog-read-sub-decls', read lines of UDP gate decl until none match.
 Inserts the list of signals found."
   (save-excursion
@@ -8855,7 +8895,7 @@ Inserts the list of signals found."
 	       (setq verilog-read-sub-decls-gate-ios (or (car iolist) "input")
 		     iolist (cdr iolist))
 	       (verilog-read-sub-decls-expr
-		submoddecls comment "primitive_port"
+                submoddecls par-values comment "primitive_port"
 		(match-string 0)))
 	      (t
 	       (forward-char 1)
@@ -8881,13 +8921,16 @@ Outputs comments above subcell signals, for example:
 	    .in  (in));"
   (save-excursion
     (let ((end-mod-point (verilog-get-end-of-defun))
-	  st-point end-inst-point
+          st-point end-inst-point par-values
 	  ;; below 3 modified by verilog-read-sub-decls-line
 	  sigs-out sigs-inout sigs-in sigs-intf sigs-intfd)
       (verilog-beg-of-defun-quick)
       (while (verilog-re-search-forward-quick "\\(/\\*AUTOINST\\*/\\|\\.\\*\\)" end-mod-point t)
 	(save-excursion
 	  (goto-char (match-beginning 0))
+          (setq par-values (and verilog-auto-inst-param-value
+                                verilog-auto-inst-param-value-type
+                                (verilog-read-inst-param-value)))
 	  (unless (verilog-inside-comment-or-string-p)
 	    ;; Attempt to snarf a comment
 	    (let* ((submod (verilog-read-inst-module))
@@ -8905,7 +8948,7 @@ Outputs comments above subcell signals, for example:
 						     (point))
 		      st-point (point))
 		(forward-char 1)
-		(verilog-read-sub-decls-gate submoddecls comment submod end-inst-point))
+                (verilog-read-sub-decls-gate submoddecls par-values comment submod end-inst-point))
 	       ;; Non-primitive
 	       (t
 		(when (setq submodi (verilog-modi-lookup submod t))
@@ -8919,19 +8962,19 @@ Outputs comments above subcell signals, for example:
 		  ;; However I want it to be runnable even on user's manually added signals
 		  (let ((verilog-read-sub-decls-in-interfaced t))
 		    (while (re-search-forward "\\s *(?\\s *// Interfaced" end-inst-point t)
-                      (verilog-read-sub-decls-line submoddecls comment)))  ; Modifies sigs-ifd
+                      (verilog-read-sub-decls-line submoddecls par-values comment)))  ; Modifies sigs-ifd
 		  (goto-char st-point)
 		  (while (re-search-forward "\\s *(?\\s *// Interfaces" end-inst-point t)
-                    (verilog-read-sub-decls-line submoddecls comment))  ; Modifies sigs-out
+                    (verilog-read-sub-decls-line submoddecls par-values comment))  ; Modifies sigs-out
 		  (goto-char st-point)
 		  (while (re-search-forward "\\s *(?\\s *// Outputs" end-inst-point t)
-                    (verilog-read-sub-decls-line submoddecls comment))  ; Modifies sigs-out
+                    (verilog-read-sub-decls-line submoddecls par-values comment))  ; Modifies sigs-out
 		  (goto-char st-point)
 		  (while (re-search-forward "\\s *(?\\s *// Inouts" end-inst-point t)
-                    (verilog-read-sub-decls-line submoddecls comment))  ; Modifies sigs-inout
+                    (verilog-read-sub-decls-line submoddecls par-values comment))  ; Modifies sigs-inout
 		  (goto-char st-point)
 		  (while (re-search-forward "\\s *(?\\s *// Inputs" end-inst-point t)
-                    (verilog-read-sub-decls-line submoddecls comment))  ; Modifies sigs-in
+                    (verilog-read-sub-decls-line submoddecls par-values comment))  ; Modifies sigs-in
 		  )))))))
       ;; Combine duplicate bits
       ;;(setq rr (vector sigs-out sigs-inout sigs-in))
