@@ -2854,6 +2854,7 @@ find the errors."
     "\\(\\<\\(import\\|export\\)\\>\\s-+\"DPI\\(-C\\)?\"\\s-+\\(\\<\\(context\\|pure\\)\\>\\s-+\\)?\\([A-Za-z_][A-Za-z0-9_]*\\s-*=\\s-*\\)?\\<\\(function\\|task\\)\\>\\)"
     ))
 
+(defconst verilog-default-clocking-re "\\<default\\s-+clocking\\>")
 (defconst verilog-disable-fork-re "\\(disable\\|wait\\)\\s-+fork\\>")
 (defconst verilog-extended-case-re "\\(\\(unique0?\\s-+\\|priority\\s-+\\)?case[xz]?\\|randcase\\)")
 (defconst verilog-extended-complete-re
@@ -5739,11 +5740,15 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
 
              ((match-end 17)  ; *sigh* might be a clocking declaration
               (let ((here (point)))
-                (if (verilog-in-paren)
-                    t ; this is a normal statement
-                  (progn ; or is fork, starts a new block
-                    (goto-char here)
-                    (throw 'nesting 'block)))))
+                (cond ((verilog-in-paren)
+                       t) ; this is a normal statement
+                      ((save-excursion
+                        (verilog-beg-of-statement)
+                        (looking-at verilog-default-clocking-re))
+                       t) ; default clocking, normal statement
+                      (t
+                       (goto-char here) ; or is clocking, starts a new block
+                       (throw 'nesting 'block)))))
 
              ;; need to consider typedef struct here...
              ((looking-at "\\<class\\|struct\\|function\\|task\\>")
@@ -8397,7 +8402,8 @@ Return an array of [outputs inouts inputs wire reg assign const]."
 	in-modport in-clocking in-ign-to-semi ptype ign-prop
 	sigs-in sigs-out sigs-inout sigs-var sigs-assign sigs-const
 	sigs-gparam sigs-intf sigs-modports
-	vec expect-signal keywd newsig rvalue enum io signed typedefed multidim
+	vec expect-signal keywd last-keywd newsig rvalue enum io
+	signed typedefed multidim
 	modport
 	varstack tmp)
     ;;(if dbg (setq dbg (concat dbg (format "\n\nverilog-read-decls START PT %s END %s\n" (point) end-mod-point))))
@@ -8478,7 +8484,8 @@ Return an array of [outputs inouts inputs wire reg assign const]."
 	 ;; Normal or escaped identifier -- note we remember the \ if escaped
 	 ((looking-at "\\s-*\\([a-zA-Z0-9`_$]+\\|\\\\[^ \t\n\f]+\\)")
 	  (goto-char (match-end 0))
-	  (setq keywd (match-string-no-properties 1))
+	  (setq last-keywd keywd
+                keywd (match-string-no-properties 1))
 	  (when (string-match "^\\\\" (match-string 1))
             (setq keywd (concat keywd " ")))  ; Escaped ID needs space at end
 	  ;; Add any :: package names to same identifier
@@ -8543,7 +8550,8 @@ Return an array of [outputs inouts inputs wire reg assign const]."
 		 (setq functask (1- functask)))
 		((equal keywd "modport")
 		 (setq in-modport t))
-		((equal keywd "clocking")
+		((and (equal keywd "clocking")
+                      (not (equal last-keywd "default")))
 		 (setq in-clocking t))
 		((equal keywd "import")
                  (if v2kargs-ok  ; import in module header, not a modport import

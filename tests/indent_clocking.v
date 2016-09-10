@@ -14,5 +14,4 @@ module t;
 	    B2: cover property (foo) a;
 	       assume property (bar) b;	       
 	       a;
-   endclocking // Woops should be indent 3
 endmodule
