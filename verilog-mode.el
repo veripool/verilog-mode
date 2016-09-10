@@ -10888,9 +10888,9 @@ Ignores WHITESPACE if t, and writes output to stdout if SHOW."
 Differences are between buffers B1 and B2, starting at point
 DIFFPT.  This function is called via `verilog-diff-function'."
   (let ((name1 (with-current-buffer b1 (buffer-file-name))))
-    (verilog-warn "%s:%d: Difference in AUTO expansion found"
-		  name1 (with-current-buffer b1
-			  (count-lines (point-min) diffpt)))
+    (verilog-warn-error "%s:%d: Difference in AUTO expansion found"
+                        name1 (with-current-buffer b1
+                                (count-lines (point-min) diffpt)))
     (cond (noninteractive
 	   (verilog-diff-file-with-buffer name1 b2 t t))
 	  (t
