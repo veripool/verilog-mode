@@ -8,5 +8,5 @@ module autoinstparam_belkind_leaf (/*AUTOARG*/
    
 endmodule // leaf
 // Local Variables:
-// eval:(verilog-read-defines)
+// verilog-auto-read-includes:t
 // End:

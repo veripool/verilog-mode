@@ -53,7 +53,7 @@ module CmpEng (/*AUTOARG*/);
 endmodule
 
 // Local Variables:
-// eval:(verilog-read-defines)
+// verilog-auto-read-includes:t
 // verilog-auto-sense-defines-constant: t
 // verilog-auto-reset-widths: unbased
 // verilog-active-low-regexp: "_l$"

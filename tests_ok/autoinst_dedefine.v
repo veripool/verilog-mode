@@ -31,6 +31,6 @@ module bar;
 endmodule
 
 // Local Variables:
-// eval:(verilog-read-defines)
+// verilog-auto-read-includes:t
 // End:
 

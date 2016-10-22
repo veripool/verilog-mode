@@ -11,6 +11,5 @@ endmodule // foo
 
 // Local Variables:
 // verilog-library-directories:(".")
-// eval:(verilog-read-defines)
-// eval:(verilog-read-includes)
+// verilog-auto-read-includes:t
 // End:

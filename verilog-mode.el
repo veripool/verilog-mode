@@ -9428,7 +9428,14 @@ like:
     // End:
 
 If macros are defined earlier in the same file and you want their values,
-you can read them automatically (provided `enable-local-eval' is on):
+you can read them automatically with:
+
+    // Local Variables:
+    // verilog-auto-read-includes:t
+    // End:
+
+Or a more specific alternative example, which requires haing
+`enable-local-eval' non-nil:
 
     // Local Variables:
     // eval:(verilog-read-defines)
@@ -9494,6 +9501,13 @@ ignoring any ifdefs or multiline comments around them.
 file.
 
 It is often useful put at the *END* of your file something like:
+
+    // Local Variables:
+    // verilog-auto-read-includes:t
+    // End:
+
+Or the equivalent longer version, which requires having
+`enable-local-eval' non-nil:
 
     // Local Variables:
     // eval:(verilog-read-defines)

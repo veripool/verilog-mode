@@ -34,6 +34,5 @@ module `SUBMOD_DECL (/*AUTOARG*/);
 endmodule
 
 // Local Variables:
-// eval:(verilog-read-includes)
-// eval:(verilog-read-defines)
+// verilog-auto-read-includes:t
 // End:

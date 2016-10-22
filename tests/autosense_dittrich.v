@@ -25,5 +25,5 @@ module testcase
 endmodule // testcase
 
 // Local Variables:
-// eval:(verilog-read-includes)
+// verilog-auto-read-includes:t
 // End:
