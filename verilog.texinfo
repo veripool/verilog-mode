@@ -4,6 +4,7 @@
 
 @ifinfo
 @format
+INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
 * Verilog-mode: (verilog).	The Verilog Mode user guide.
 END-INFO-DIR-ENTRY
