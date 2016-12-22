@@ -1942,11 +1942,23 @@ be substituted."
 
 (defun verilog-modify-compile-command ()
   "Update `compile-command' using `verilog-expand-command'."
-  (when (and
-	 (stringp compile-command)
-	 (string-match "\\b\\(__FLAGS__\\|__FILE__\\)\\b" compile-command))
-    (set (make-local-variable 'compile-command)
-	 (verilog-expand-command compile-command))))
+  ;; Entry into verilog-mode a call to this before Local Variables exist
+  ;; Likewise user may have hook or something that changes the flags.
+  ;; So, remember we're responsible for the expansion and on re-entry
+  ;; recompute __FLAGS__ on each reentry.
+  (when (stringp compile-command)
+    (when (and
+           (boundp 'verilog-compile-command-post-mod)
+           (equal compile-command verilog-compile-command-post-mod))
+      (setq compile-command verilog-compile-command-pre-mod))
+    (when (and
+           (string-match "\\b\\(__FLAGS__\\|__FILE__\\)\\b" compile-command))
+      (set (make-local-variable 'verilog-compile-command-pre-mod)
+           compile-command)
+      (set (make-local-variable 'compile-command)
+           (verilog-expand-command compile-command))
+      (set (make-local-variable 'verilog-compile-command-post-mod)
+           compile-command))))
 
 (if (featurep 'xemacs)
     ;; Following code only gets called from compilation-mode-hook on XEmacs to add error handling.
