@@ -1356,13 +1356,13 @@ See also `verilog-case-fold'."
   :type 'hook)
 
 (defcustom verilog-before-save-font-hook nil
-  "Hook run before `verilog-save-font-mods' removes highlighting."
+  "Hook run before `verilog-save-font-no-change-functions' removes highlighting."
   :version "24.3"  ; rev735
   :group 'verilog-mode-auto
   :type 'hook)
 
 (defcustom verilog-after-save-font-hook nil
-  "Hook run after `verilog-save-font-mods' restores highlighting."
+  "Hook run after `verilog-save-font-no-change-functions' restores highlighting."
   :version "24.3"  ; rev735
   :group 'verilog-mode-auto
   :type 'hook)
