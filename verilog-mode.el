@@ -1943,6 +1943,10 @@ be substituted."
 		 t t command))
   command)
 
+;; Eliminate compile warning
+(defvar verilog-compile-command-pre-mod)
+(defvar verilog-compile-command-post-mod)
+
 (defun verilog-modify-compile-command ()
   "Update `compile-command' using `verilog-expand-command'."
   ;; Entry into verilog-mode a call to this before Local Variables exist
