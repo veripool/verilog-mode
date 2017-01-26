@@ -5790,11 +5790,9 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
                        (goto-char here) ; or is clocking, starts a new block
                        (throw 'nesting 'block)))))
 
-             ;; need to consider typedef struct here...
              ((looking-at "\\<class\\|struct\\|function\\|task\\>")
               ;; *sigh* These words have an optional prefix:
               ;; extern {virtual|protected}? function a();
-              ;; typedef class foo;
               ;; and we don't want to confuse this with
               ;; function a();
               ;; property
@@ -5804,7 +5802,11 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
               (cond
                ((looking-at verilog-dpi-import-export-re)
                 (throw 'continue 'foo))
-               ((looking-at "\\<pure\\>\\s-+\\<virtual\\>\\s-+\\(?:\\<\\(local\\|protected\\|static\\)\\>\\s-+\\)?\\<\\(function\\|task\\)\\>\\s-+")
+               ((or
+                 (looking-at "\\<pure\\>\\s-+\\<virtual\\>\\s-+\\(?:\\<\\(local\\|protected\\|static\\)\\>\\s-+\\)?\\<\\(function\\|task\\)\\>\\s-+")
+                 ;; Do not throw 'defun for class typedefs like
+                 ;;   typedef class foo;
+                 (looking-at "\\<typedef\\>\\s-+\\(?:\\<virtual\\>\\s-+\\)?\\<class\\>\\s-+"))
                 (throw 'nesting 'statement))
                ((looking-at verilog-beg-block-re-ordered)
                 (throw 'nesting 'block))
