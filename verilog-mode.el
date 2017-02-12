@@ -387,6 +387,14 @@ wherever possible, since it is slow."
 ;;  `("Verilog" ("MA" ["SAA" nil :help "Help SAA"] ["SAB" nil :help "Help SAA"])
 ;;     "----" ["MB" nil :help "Help MB"]))
 
+(defun verilog-define-abbrev-table (tablename definitions &optional docstring &rest props)
+  "Filter `define-abbrev-table' TABLENAME DEFINITIONS
+Provides DOCSTRING PROPS in newer Emacs (23.1)."
+  (condition-case nil
+      (apply 'define-abbrev-table tablename definitions docstring props)
+    (error
+     (define-abbrev-table tablename definitions))))
+
 (defun verilog-define-abbrev (table name expansion &optional hook)
   "Filter `define-abbrev' TABLE NAME EXPANSION and call HOOK.
 Provides SYSTEM-FLAG in newer Emacs."
@@ -1702,7 +1710,13 @@ If set will become buffer local.")
 (defvar verilog-mode-abbrev-table nil
   "Abbrev table in use in Verilog-mode buffers.")
 
-(define-abbrev-table 'verilog-mode-abbrev-table ())
+;;(makunbound 'verilog-mode-abbrev-table) ; For testing, clear out old defvar
+(verilog-define-abbrev-table
+ 'verilog-mode-abbrev-table ()
+ "Abbrev table for Verilog mode skeletons."
+ :case-fixed t
+ ;; Only expand in code.
+ :enable-function (lambda () (not (verilog-in-comment-or-string-p))))
 (verilog-define-abbrev verilog-mode-abbrev-table "class" "" 'verilog-sk-ovm-class)
 (verilog-define-abbrev verilog-mode-abbrev-table "always" "" 'verilog-sk-always)
 (verilog-define-abbrev verilog-mode-abbrev-table "begin" nil `verilog-sk-begin)
