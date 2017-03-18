@@ -770,10 +770,13 @@ mode is experimental."
 
 (defcustom verilog-auto-wire-type nil
   "Non-nil specifies the data type to use with `verilog-auto-wire' etc.
-Set this to \"logic\" for SystemVerilog code, or use `verilog-auto-logic'."
+Set this to \"logic\" for SystemVerilog code, or use `verilog-auto-logic'.
+Set this to \"wire\" to force use of wire when logic is otherwise appropriate;
+this is generally only appropriate when making a non-SystemVerilog wrapper
+containing SystemVerilog cells."
   :version "24.1"  ; rev673
   :group 'verilog-mode-actions
-  :type 'boolean)
+  :type 'string)
 (put 'verilog-auto-wire-type 'safe-local-variable `stringp)
 
 (defcustom verilog-auto-endcomments t
@@ -10393,8 +10396,14 @@ When MODI is non-null, also add to modi-cache, for tracking."
 	      (concat
 	       (when (member direction '("input" "output" "inout"))
 		 (concat direction " "))
-	       (or (verilog-sig-type sig)
-                   verilog-auto-wire-type)))
+               (if (and (verilog-sig-type sig)
+                        verilog-auto-wire-type
+                        (equal "logic" (verilog-sig-type sig))
+                        (equal "wire" verilog-auto-wire-type))
+                   "wire"
+                 (or (verilog-sig-type sig)
+                     verilog-auto-wire-type))))
+             ;;
 	     ((and verilog-auto-declare-nettype
 		   (member direction '("input" "output" "inout")))
 	      (concat direction " " verilog-auto-declare-nettype))
