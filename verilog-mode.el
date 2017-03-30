@@ -10391,18 +10391,20 @@ When MODI is non-null, also add to modi-cache, for tracking."
       (verilog-insert-one-definition
        sig
        ;; Want "type x" or "output type x", not "wire type x"
-       (cond ((or (verilog-sig-type sig)
+       (cond ((and (equal "wire" verilog-auto-wire-type)
+                   (or (not (verilog-sig-type sig))
+                       (equal "logic" (verilog-sig-type sig))))
+              (if (member direction '("input" "output" "inout"))
+                  direction
+                "wire"))
+             ;;
+             ((or (verilog-sig-type sig)
 		  verilog-auto-wire-type)
 	      (concat
 	       (when (member direction '("input" "output" "inout"))
 		 (concat direction " "))
-               (if (and (verilog-sig-type sig)
-                        verilog-auto-wire-type
-                        (equal "logic" (verilog-sig-type sig))
-                        (equal "wire" verilog-auto-wire-type))
-                   "wire"
-                 (or (verilog-sig-type sig)
-                     verilog-auto-wire-type))))
+               (or (verilog-sig-type sig)
+                   verilog-auto-wire-type)))
              ;;
 	     ((and verilog-auto-declare-nettype
 		   (member direction '("input" "output" "inout")))
