@@ -8461,13 +8461,13 @@ Return an array of [outputs inouts inputs wire reg assign const]."
 	;;(if dbg (setq dbg (concat dbg (format "Pt %s  Vec %s   C%c Kwd'%s'\n" (point) vec (following-char) keywd))))
 	(cond
 	 ((looking-at "//")
-	  (if (looking-at "[^\n]*\\(auto\\|synopsys\\)\\s +enum\\s +\\([a-zA-Z0-9_]+\\)")
-	      (setq enum (match-string 2)))
+	  (when (looking-at "[^\n]*\\(auto\\|synopsys\\)\\s +enum\\s +\\([a-zA-Z0-9_]+\\)")
+            (setq enum (match-string 2)))
 	  (search-forward "\n"))
 	 ((looking-at "/\\*")
 	  (forward-char 2)
-	  (if (looking-at "[^\n]*\\(auto\\|synopsys\\)\\s +enum\\s +\\([a-zA-Z0-9_]+\\)")
-	      (setq enum (match-string 2)))
+	  (when (looking-at "[^\n]*\\(auto\\|synopsys\\)\\s +enum\\s +\\([a-zA-Z0-9_]+\\)")
+            (setq enum (match-string 2)))
 	  (or (search-forward "*/")
 	      (error "%s: Unmatched /* */, at char %d" (verilog-point-text) (point))))
 	 ((looking-at "(\\*")
@@ -8480,7 +8480,7 @@ Return an array of [outputs inouts inputs wire reg assign const]."
 	      (error "%s: Unmatched quotes, at char %d" (verilog-point-text) (point))))
 	 ((eq ?\; (following-char))
           (cond (in-ign-to-semi  ; Such as inside a "import ...;" in a module header
-		 (setq in-ign-to-semi nil))
+                 (setq in-ign-to-semi nil  rvalue nil))
                 ((and in-modport (not (eq in-modport t)))  ; end of a modport declaration
 		 (verilog-modport-decls-set
 		  in-modport
@@ -8536,7 +8536,8 @@ Return an array of [outputs inouts inputs wire reg assign const]."
 	  (when (string-match "^\\\\" (match-string 1))
             (setq keywd (concat keywd " ")))  ; Escaped ID needs space at end
 	  ;; Add any :: package names to same identifier
-	  (while (looking-at "\\s-*::\\s-*\\([a-zA-Z0-9`_$]+\\|\\\\[^ \t\n\f]+\\)")
+          ;; '*' here is for "import x::*"
+          (while (looking-at "\\s-*::\\s-*\\(\\*\\|[a-zA-Z0-9`_$]+\\|\\\\[^ \t\n\f]+\\)")
 	    (goto-char (match-end 0))
 	    (setq keywd (concat keywd "::" (match-string 1)))
 	    (when (string-match "^\\\\" (match-string 1))
@@ -8601,8 +8602,8 @@ Return an array of [outputs inouts inputs wire reg assign const]."
                       (not (equal last-keywd "default")))
 		 (setq in-clocking t))
 		((equal keywd "import")
-                 (if v2kargs-ok  ; import in module header, not a modport import
-		     (setq in-ign-to-semi t  rvalue t)))
+                 (when v2kargs-ok  ; import in module header, not a modport import
+                   (setq in-ign-to-semi t  rvalue t)))
 		((equal keywd "type")
 		 (setq ptype t))
 		((equal keywd "var"))
