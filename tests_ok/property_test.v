@@ -13,7 +13,7 @@ module test();
    
    
    // Create a test clock
-   always #01.8 test_clk  = ~test_clk;
+   always #01.8 test_clk = ~test_clk;
    
    //**********************************************************************
    // Testing.

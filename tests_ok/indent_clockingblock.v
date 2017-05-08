@@ -1,5 +1,5 @@
 class mipsbfm_trans extends vmm_data;
-   static vmm_log log  = new ("mipsbfm_trans", "class") ;
+   static vmm_log log = new ("mipsbfm_trans", "class") ;
    logic [31:0] addr, data, mask, op;
    function new();
       super.new(this.log);

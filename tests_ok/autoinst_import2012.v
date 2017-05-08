@@ -15,7 +15,7 @@ interface bus (input clk, rst_n);
 endinterface
 
 package common_pkg;
-   parameter NUM_SLAVES  = 2;
+   parameter NUM_SLAVES = 2;
    // typedefs ...
 endpackage
    

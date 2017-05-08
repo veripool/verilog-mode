@@ -3,7 +3,7 @@
 module x;
    
    always @ (/*AS*/top.agc_tool.adc_dta_i or top.agc_tool.adc_preagc_dta_i) begin
-      agctoolerr  = top.agc_tool.adc_dta_i / top.agc_tool.adc_preagc_dta_i;
+      agctoolerr = top.agc_tool.adc_dta_i / top.agc_tool.adc_preagc_dta_i;
    end
    
 endmodule

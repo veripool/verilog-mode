@@ -52,15 +52,15 @@ module x (/*AUTOARG*/
    always @(/*AS*/in_a or in_b or reset_l) begin
       casex ({reset_l,in_a})
         2'b1_x: begin
-           a  = in_a;
-           b  = in_b;
+           a = in_a;
+           b = in_b;
         end
         2'b0_x: begin
-           c  = 1;
+           c = 1;
            /*AUTORESET*/
            // Beginning of autoreset for uninitialized flops
-           a  = 0;
-           b  = 0;
+           a = 0;
+           b = 0;
            // End of automatics
         end
       endcase

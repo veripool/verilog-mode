@@ -425,5 +425,5 @@ module TEST_TOP (
 endmodule
 
 module TEST (/*AUTOARG*/);
-   parameter NO  = 6456;
+   parameter NO = 6456;
 endmodule

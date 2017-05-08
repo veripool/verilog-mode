@@ -3,7 +3,7 @@ module t;
 endmodule
 class C;
    function int f();
-      f  = 17;
+      f = 17;
    endfunction
    extern function int g();
    virtual function int f();
@@ -16,7 +16,7 @@ class C;
       $display("a of f is %d, g is %d", a.f(),a.g());
    end
    function int C::g();
-      g  = 18;
+      g = 18;
    endfunction // g
    // pure virtual functions have no endfunction.
 endclass // C

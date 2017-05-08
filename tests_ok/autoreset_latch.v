@@ -30,21 +30,21 @@ module device(
       if (!ready) begin
          /*AUTORESET*/
          // Beginning of autoreset for uninitialized flops
-         out0  = 8'h0;
+         out0 = 8'h0;
          // End of automatics
       end
       else begin
-         out0  = sel ? in1 : in0;
+         out0 = sel ? in1 : in0;
       end
    end
    
    always_comb begin
-      next_state  = state;
+      next_state = state;
       /*AUTORESET*/
       // Beginning of autoreset for uninitialized flops
-      next_fail   = 1'h0;
-      next_pass   = 1'h0;
-      next_ready  = 1'h0;
+      next_fail  = 1'h0;
+      next_pass  = 1'h0;
+      next_ready = 1'h0;
       // End of automatics
       case (state)
         IDLE :  begin
@@ -52,15 +52,15 @@ module device(
         end
         /* Other states */
         PASS:   begin
-           next_state  = IDLE;
+           next_state = IDLE;
            // stuff ...
-           next_pass   = 1'b1;
-           next_ready  = 1'b1;
+           next_pass  = 1'b1;
+           next_ready = 1'b1;
         end
         FAIL:   begin
-           next_state  = IDLE;
+           next_state = IDLE;
            // stuff ...
-           next_fail   = 1'b1;
+           next_fail  = 1'b1;
         end
       endcase
    end

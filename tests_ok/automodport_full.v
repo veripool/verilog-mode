@@ -42,10 +42,10 @@ module auto_module
    
    /*AUTOASSIGNMODPORT("automodport_if" "req_mon_mp" "auto_i" )*/
    // Beginning of automatic assignments from modport
-   assign auto_i.manually_listed  = manually_listed;
-   assign auto_i.req_credit  = req_credit;
-   assign auto_i.req_dat  = req_dat;
-   assign auto_i.req_val  = req_val;
+   assign auto_i.manually_listed = manually_listed;
+   assign auto_i.req_credit = req_credit;
+   assign auto_i.req_dat = req_dat;
+   assign auto_i.req_val = req_val;
    // End of automatics
    //ex: assign auto_i.req_credit         = req_credit;
    //ex: assign auto_i.req_data           = req_data;
@@ -53,9 +53,9 @@ module auto_module
    
    /*AUTOASSIGNMODPORT("automodport_if" "rsp_drv_mp" "auto_i" )*/
    // Beginning of automatic assignments from modport
-   assign rsp_cmd  = auto_i.rsp_cmd;
-   assign rsp_data  = auto_i.rsp_data;
-   assign auto_i.rsp_credit  = rsp_credit;
+   assign rsp_cmd = auto_i.rsp_cmd;
+   assign rsp_data = auto_i.rsp_data;
+   assign auto_i.rsp_credit = rsp_credit;
    // End of automatics
    //ex: assign rsp_cmd                   = auto_i.rsp_cmd;
    //ex: assign rsp_data                  = auto_i.rsp_data;
@@ -63,13 +63,13 @@ module auto_module
    
    /*AUTOASSIGNMODPORT("automodport_if" "r.*" "auto_i" )*/
    // Beginning of automatic assignments from modport
-   assign rsp_cmd  = auto_i.rsp_cmd;
-   assign rsp_data  = auto_i.rsp_data;
-   assign auto_i.manually_listed  = manually_listed;
-   assign auto_i.req_credit  = req_credit;
-   assign auto_i.req_dat  = req_dat;
-   assign auto_i.req_val  = req_val;
-   assign auto_i.rsp_credit  = rsp_credit;
+   assign rsp_cmd = auto_i.rsp_cmd;
+   assign rsp_data = auto_i.rsp_data;
+   assign auto_i.manually_listed = manually_listed;
+   assign auto_i.req_credit = req_credit;
+   assign auto_i.req_dat = req_dat;
+   assign auto_i.req_val = req_val;
+   assign auto_i.rsp_credit = rsp_credit;
    // End of automatics
    
    

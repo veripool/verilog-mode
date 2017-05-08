@@ -7,9 +7,9 @@ module autoinst_ifdef_fredrickson_200503_sub
    output wire b
    );
    
-   assign b  = a;
+   assign b = a;
 `ifdef TEST
-   assign d  = c;
+   assign d = c;
 `endif
    
 endmodule // define_sub

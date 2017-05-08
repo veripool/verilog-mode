@@ -11,9 +11,9 @@ module test(/*AUTOARG*/
    
    //wire [5:0]   a2,b2,c2;
    
-   assign {a1,b1,c1}  = {a2,b2,c2};
+   assign {a1,b1,c1} = {a2,b2,c2};
    
    output [1:0] one;
-   assign one  = a2[0];
+   assign one = a2[0];
    
 endmodule

@@ -16,7 +16,7 @@ module appendix1 (/*AUTOARG*/
    /*AUTOWIRE*/
    
    always @ (/*AUTOSENSE*/i) begin
-      z  = i;
+      z = i;
    end
 endmodule
 

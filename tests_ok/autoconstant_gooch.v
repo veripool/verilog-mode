@@ -22,19 +22,19 @@ module autoconstant_gooch
      begin
         case (in1)
           4'b0001 :     begin
-             out1  = in2;
+             out1 = in2;
           end
           4'b0010 :     begin
-             out1  = in2 + in3;
+             out1 = in2 + in3;
           end
           4'b0100 :     begin
-             out1  = in2 - in3;
+             out1 = in2 - in3;
           end
           4'b1000 :     begin
-             out1  = in2;
+             out1 = in2;
           end
           default       :       begin
-             out1  = {4{1'b0}};
+             out1 = {4{1'b0}};
           end
         endcase
      end
@@ -44,19 +44,19 @@ module autoconstant_gooch
      begin
         case (in1)
           4'b0001 :     begin
-             out2  = in2;
+             out2 = in2;
           end
           4'b0010 :     begin
-             out2  = in2 + in3;
+             out2 = in2 + in3;
           end
           4'b0100 :     begin
-             out2  = in2 - in3;
+             out2 = in2 - in3;
           end
           4'b1000 :     begin
-             out2  = in2;
+             out2 = in2;
           end
           default       :       begin
-             out2  = {4{1'b0}};
+             out2 = {4{1'b0}};
           end
         endcase
      end
@@ -66,8 +66,8 @@ module autoconstant_gooch
      begin
         /* AUTO_CONSTANT( temp )*/
         /* AxxxUTO_CONSTANT temp */
-        out3   = in1 + in2;
-        temp2  = temp;
+        out3  = in1 + in2;
+        temp2 = temp;
         
         // ERROR here - above constant definition is not
         // correct - no braces - and so parser keeps looking
@@ -78,19 +78,19 @@ module autoconstant_gooch
         
         case (in1)
           4'b0001 :     begin
-             out3  = in2;
+             out3 = in2;
           end
           4'b0010 :     begin
-             out3  = in2 + in3;
+             out3 = in2 + in3;
           end
           4'b0100 :     begin
-             out3  = in2 - in3;
+             out3 = in2 - in3;
           end
           4'b1000 :     begin
-             out3  = in2;
+             out3 = in2;
           end
           default       :       begin
-             out3  = {4{1'b0}};
+             out3 = {4{1'b0}};
           end
         endcase
      end

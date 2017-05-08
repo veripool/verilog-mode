@@ -13,7 +13,7 @@ module lbm
    integer      i;
    always @ (/*AUTOSENSE*/income) begin
       for (i=0; i<32; i=i+1) begin
-         outgo[i]  = income[i];
+         outgo[i] = income[i];
       end
    end
    

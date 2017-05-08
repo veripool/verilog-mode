@@ -4,7 +4,7 @@ module testMultiLineParams (/*AUTOARG*/) ;
    
    // expect AUTOSENSE to be comboIn only, no params
    always @ ( /*AUTOSENSE*/comboIn) begin
-      comboOout  = param1 & param2 & param3 & comboIn;
+      comboOout = param1 & param2 & param3 & comboIn;
    end
    
 endmodule // foo

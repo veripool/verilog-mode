@@ -19,7 +19,7 @@ module test_top;
                    .wireB               (wireB[16:0]));
       end
       else begin
-         assign wireA  = 0;
+         assign wireA = 0;
       end
    endgenerate
 endmodule

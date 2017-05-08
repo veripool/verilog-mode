@@ -23,5 +23,5 @@ module register (
      if (!rst_n) q <= '0;
    else        q <= d;
    
-   assign qb  = ~q;
+   assign qb = ~q;
 endmodule

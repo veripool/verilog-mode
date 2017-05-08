@@ -4,7 +4,7 @@ module f (/*AUTOARG*/
           x
           );
    
-   always @* r  = "test/*";
+   always @* r = "test/*";
    
    input x;
    

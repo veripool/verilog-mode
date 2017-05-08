@@ -5,7 +5,7 @@ module foo(__a,b);
    output b;
    
    always @(/*AUTOSENSE*/__a or `FOO) begin
-      b  = __a ^ `FOO ;
+      b = __a ^ `FOO ;
    end
    
 endmodule

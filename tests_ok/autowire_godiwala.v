@@ -26,7 +26,7 @@ module FswArbiter (/*AUTOARG*/
    // ========================
    //  Include parameter File
    // ========================
-   parameter DMAO  = 0;
+   parameter DMAO = 0;
    
 `include "chip_fsw_spec_param.v"
    

@@ -58,17 +58,17 @@ module top;
    
    // Stimulus
    initial begin
-      a_i1  = { 4'h0, 4'h2 };
+      a_i1 = { 4'h0, 4'h2 };
       #5;
       $display("Loop Init: a_i1 = { %h, %h }   a_o1 = %h\n",
                a_i1[1], a_i1[0], a_o1);
       #5;
       for (int i=0; i<1; i++) begin
          for (int j=0; j<N; j++) begin
-            temp  = 1'b0;
+            temp = 1'b0;
             for (int k=0; k<M; k++) begin
-               a_i1[j][k]  = temp;
-               temp        = ~temp;
+               a_i1[j][k] = temp;
+               temp       = ~temp;
             end
          end
          #5;

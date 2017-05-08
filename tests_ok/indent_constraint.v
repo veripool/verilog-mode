@@ -98,7 +98,7 @@ module fool;
    
    always @(posedge clk) begin
       if(!M_select)
-        xferCount <  = 8'd0;
+        xferCount < = 8'd0;
       else
         case (condition[1 :0])
           2'b00 : xferCount <= xferCount;
@@ -110,7 +110,7 @@ module fool;
    // But not this :
    always @(posedge clk) begin
       if(!M_select)
-        xferCount <  = 8'd0;
+        xferCount < = 8'd0;
       else
         case ({M_seqAddr,OPB_xferAck})
           2'b00 : xferCount <= xferCount;
@@ -124,9 +124,9 @@ endmodule // fool
 
 module foo;
    initial begin
-      k  = 10;
+      k = 10;
       std::randomize(delay) with { (delay>=1000 && delay<=3000); };
-      j  = 9;
+      j = 9;
    end
 endmodule // foo
 

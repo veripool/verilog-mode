@@ -24,7 +24,7 @@ class data;
    }
    
    function new();
-      data1  = 0;
-      data2  = 78;
+      data1 = 0;
+      data2 = 78;
    endfunction // new
 endclass // data

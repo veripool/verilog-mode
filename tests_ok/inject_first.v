@@ -8,10 +8,10 @@ module ex_inject (i, o,/*AUTOARG*/
    
    // Ok:
    always @ (/*AS*/i or j)
-     o             = i | j;
+     o            = i | j;
    // No change:
-   always @ (j) o  = i | j;
-   always @ (j or i or p) o  = i | j;
+   always @ (j) o = i | j;
+   always @ (j or i or p) o = i | j;
    // Instant
    
    autoinst_lopaz_srpad pad

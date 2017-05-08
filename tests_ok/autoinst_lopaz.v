@@ -2,9 +2,9 @@ module io1_sub(
                /*AUTOARG*/);
    
    wire [42:0] bscan_data;         // boundary scan stitch
-   parameter    bscan_count  = 0;
+   parameter    bscan_count = 0;
    
-   assign       bscan_data[0]  = bscan_in;
+   assign       bscan_data[0] = bscan_in;
    
    /*
     * Emacs template to auto instaniate MD[31:0] pads

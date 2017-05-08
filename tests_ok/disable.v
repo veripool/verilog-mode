@@ -19,7 +19,7 @@ module foo;
                      // st2
                   end
                join_any // first wins
-               a  = b;
+               a = b;
                disable fork; // kill others
             end // block: body_main_fork
          end // block: body_main_fork

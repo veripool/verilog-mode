@@ -5,7 +5,7 @@ module test ();
    always @(/*AUTOSENSE*/r or x)
      begin
         casex(x)
-          5: d  = {r, `XYZ };
+          5: d = {r, `XYZ };
         endcase
      end
    
