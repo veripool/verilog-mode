@@ -42,9 +42,15 @@ module device(
       next_state  = state;
       /*AUTORESET*/
       // Beginning of autoreset for uninitialized flops
+<<<<<<< HEAD
+      next_ready = 1'h0;
+      next_pass = 1'h0;
+      next_fail = 1'h0;
+=======
       next_fail   = 1'h0;
       next_pass   = 1'h0;
       next_ready  = 1'h0;
+>>>>>>> 6e09ad533fc30147751fe48288acc808da4b3f8d
       // End of automatics
       case (state)
         IDLE :  begin
@@ -67,10 +73,17 @@ module device(
    
    always_latch begin
       if (!rstn) begin
+<<<<<<< HEAD
+	 /*AUTORESET*/
+	 // Beginning of autoreset for uninitialized flops
+	 Q <= 8'h0;
+	 // End of automatics
+=======
          /*AUTORESET*/
          // Beginning of autoreset for uninitialized flops
          Q <= 8'h0;
          // End of automatics
+>>>>>>> 6e09ad533fc30147751fe48288acc808da4b3f8d
       end
       else if (clk) begin
          Q <= D;
