@@ -4,7 +4,7 @@ package testcase_pkg;
    
    typedef int unsigned uint;
    
-   localparam uint SIZE  = 8;
+   localparam uint SIZE = 8;
    
    typedef enum {ENUM1, ENUM2} enum_t;
    
@@ -24,7 +24,7 @@ module testcase_top
    logic [testcase_pkg::SIZE-1:0] sub_in; // From testcase_sub1 of testcase_sub1.v
    logic [testcase_pkg::SIZE-1:0] sub_out;      // From testcase_sub2 of testcase_sub2.v
    // End of automatics
-   assign top_out  = sub_out;
+   assign top_out = sub_out;
    testcase_sub1 testcase_sub1 (.*,
                                 // Outputs
                                 .sub_enum       (sub_enum),      // Implicit .*
@@ -46,8 +46,8 @@ module testcase_sub1
    output logic [testcase_pkg::SIZE-1:0] sub_in
    );
    import testcase_pkg::*;
-   assign sub_enum  = top_enum;
-   assign sub_in  = '1;
+   assign sub_enum = top_enum;
+   assign sub_in = '1;
 endmodule
 
 module testcase_sub2
@@ -57,7 +57,7 @@ module testcase_sub2
    output logic [testcase_pkg::SIZE-1:0] sub_out
    );
    import testcase_pkg::*;
-   assign sub_out  = (sub_enum==ENUM1) ? ~sub_in : sub_in;
+   assign sub_out = (sub_enum==ENUM1) ? ~sub_in : sub_in;
 endmodule
 
 // Local Variables:

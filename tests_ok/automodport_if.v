@@ -43,8 +43,8 @@ interface automodport_if
    //----------------------------------------------------------------------------------------
    // Group: Methods
    function void rsp_reset();
-      rsp_cmd   = 2'b0;
-      rsp_data  = 64'b0;
+      rsp_cmd  = 2'b0;
+      rsp_data = 64'b0;
    endfunction : rsp_reset
    
    //----------------------------------------------------------------------------------------

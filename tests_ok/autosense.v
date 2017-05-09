@@ -23,23 +23,23 @@ module autosense (/*AUTOARG*/
    
    always @(/*AUTOSENSE*/ina or inb or inc) begin
       case (inc)
-        1'b1: out     = {`Input ? `one : 1'b0, `Input};
-        default: out  = {2{inb}};
+        1'b1: out    = {`Input ? `one : 1'b0, `Input};
+        default: out = {2{inb}};
       endcase
    end
    
    
    always @(/*AUTOSENSE*/ina) begin
-      out2  = `Input | PARAM_TWO | PARAM_THREE | PARAM_FOUR;
+      out2 = `Input | PARAM_TWO | PARAM_THREE | PARAM_FOUR;
    end
    
    always @(*) begin
       // @ (/*AS*/)
-      out3  = ina;
+      out3 = ina;
    end
    
    always @* begin
-      out3  = ina;
+      out3 = ina;
    end
    
 endmodule

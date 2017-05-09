@@ -20,7 +20,7 @@ module cdl_io (/*AUTOARG*/
    task direct_write;
       input val;
       begin
-         `TOPSIG  = val;
+         `TOPSIG = val;
       end
    endtask
 endmodule

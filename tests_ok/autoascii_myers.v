@@ -12,9 +12,9 @@ module testit;
    
    //== State enumeration
    parameter [2:0] // synopsys enum state_info
-     SM_IDLE   = 3'b000,
-     SM_SEND   = 3'b001,
-     SM_WAIT1  = 3'b010;
+     SM_IDLE  = 3'b000,
+     SM_SEND  = 3'b001,
+     SM_WAIT1 = 3'b010;
    //== State variables
    reg [2:0]  /* synopsys enum state_info */
               state_r; /* synopsys state_vector state_r */
@@ -28,22 +28,22 @@ module testit;
    reg [39:0] _stateascii_r;            // Decode of state_r
    always @(state_r) begin
       case ({state_r})
-        SM_IDLE:  _stateascii_r  = "idle ";
-        SM_SEND:  _stateascii_r  = "send ";
-        SM_WAIT1: _stateascii_r  = "wait1";
-        default:  _stateascii_r  = "%Erro";
+        SM_IDLE:  _stateascii_r = "idle ";
+        SM_SEND:  _stateascii_r = "send ";
+        SM_WAIT1: _stateascii_r = "wait1";
+        default:  _stateascii_r = "%Erro";
       endcase
    end
    // End of automatics
    
    initial begin
-      clk        = 0;
-      a_i        = 0;
-      b_i        = 0;
-      rst_n      = 0;
-      #20 rst_n  = 1;
+      clk       = 0;
+      a_i       = 0;
+      b_i       = 0;
+      rst_n     = 0;
+      #20 rst_n = 1;
    end
-   always #5 clk  = ~clk;
+   always #5 clk = ~clk;
    
    always @(posedge clk or rst_n) begin
       if (~rst_n) begin
@@ -60,7 +60,7 @@ module testit;
    
    task set_a_i;
       begin
-         a_i  = shreg[0];
+         a_i = shreg[0];
       end
    endtask // set_a_i
    

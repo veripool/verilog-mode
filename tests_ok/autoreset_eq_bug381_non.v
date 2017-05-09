@@ -15,7 +15,7 @@ module t();
       end
       else begin
          //reg [32:0] tmp;
-         tmp  = a + b;
+         tmp = a + b;
          if (tmp[32])
            sum <= 32'hffffffff;
          else

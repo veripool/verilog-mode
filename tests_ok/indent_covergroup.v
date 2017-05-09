@@ -7,20 +7,20 @@ module coverage;
       c : coverpoint color;
    endgroup // foo
    
-   foo  = bar;
+   foo = bar;
    
    sequence bar
-     b  = c;
+     b = c;
    endsequence // bar
-   j  = taskt;
+   j = taskt;
    function foo;
       begin
-         foo  = 1;
+         foo = 1;
       end
    endfunction // foo
    
    randsequence bar
-     b  = c;
+     b = c;
    endsequence // bar
    
    case (foo)

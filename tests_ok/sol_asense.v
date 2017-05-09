@@ -30,29 +30,29 @@ module x (/*AUTOARG*/
       
       for (i=0; i<=5; i=i+1) begin
          
-         MTEMP1[3:0]  = {MIERHW[i*3+3],
-                         MIERHW[i*3+2],
-                         MIERHW[i*3+1],
-                         MIERHW[i*3+0]};
+         MTEMP1[3:0] = {MIERHW[i*3+3],
+                        MIERHW[i*3+2],
+                        MIERHW[i*3+1],
+                        MIERHW[i*3+0]};
          
          casex (MTEMP1)
            
-           4'b0000: MTEMP2  = 4'b0101; // +0
-           4'b0001: MTEMP2  = 4'b0001; // +1
-           4'b0010: MTEMP2  = 4'b0001; // +1
-           4'b0011: MTEMP2  = 4'b0010; // +2
-           4'b0100: MTEMP2  = 4'b0010; // +2
-           4'b0101: MTEMP2  = 4'b0100; // +3
-           4'b0110: MTEMP2  = 4'b0100; // +3
-           4'b0111: MTEMP2  = 4'b1000; // +4
-           4'b1000: MTEMP2  = 4'b0111; // -4
-           4'b1001: MTEMP2  = 4'b1011; // -3
-           4'b1010: MTEMP2  = 4'b1011; // -3
-           4'b1011: MTEMP2  = 4'b1101; // -2
-           4'b1100: MTEMP2  = 4'b1101; // -2
-           4'b1101: MTEMP2  = 4'b1110; // -1
-           4'b1110: MTEMP2  = 4'b1110; // -1
-           4'b1111: MTEMP2  = 4'b1010; // -0
+           4'b0000: MTEMP2 = 4'b0101; // +0
+           4'b0001: MTEMP2 = 4'b0001; // +1
+           4'b0010: MTEMP2 = 4'b0001; // +1
+           4'b0011: MTEMP2 = 4'b0010; // +2
+           4'b0100: MTEMP2 = 4'b0010; // +2
+           4'b0101: MTEMP2 = 4'b0100; // +3
+           4'b0110: MTEMP2 = 4'b0100; // +3
+           4'b0111: MTEMP2 = 4'b1000; // +4
+           4'b1000: MTEMP2 = 4'b0111; // -4
+           4'b1001: MTEMP2 = 4'b1011; // -3
+           4'b1010: MTEMP2 = 4'b1011; // -3
+           4'b1011: MTEMP2 = 4'b1101; // -2
+           4'b1100: MTEMP2 = 4'b1101; // -2
+           4'b1101: MTEMP2 = 4'b1110; // -1
+           4'b1110: MTEMP2 = 4'b1110; // -1
+           4'b1111: MTEMP2 = 4'b1010; // -0
            
          endcase
          
@@ -61,7 +61,7 @@ module x (/*AUTOARG*/
       {MBOOTH_P[i*4+3],
        MBOOTH_P[i*4+2],
        MBOOTH_P[i*4+1],
-       MBOOTH_P[i*4+0]}  = MTEMP2[3:0];
+       MBOOTH_P[i*4+0]} = MTEMP2[3:0];
       
    end
    
@@ -77,12 +77,12 @@ module x (/*AUTOARG*/
             or MULTSHCYC or MULTUSCYC)  begin
       
       case (1'b1)
-        CEIopMADH_E_D2_R: HI_P  = MCLA;
-        CEIopMAZH_E_D2_R: HI_P  = MCLA;
-        DIV2HI:           HI_P  = DDATAH;
-        MULTUSCYC:        HI_P  = MCLA;
-        MULTSHCYC:        HI_P  = `DMCLASH;
-        default:          HI_P  = `DCONST;
+        CEIopMADH_E_D2_R: HI_P = MCLA;
+        CEIopMAZH_E_D2_R: HI_P = MCLA;
+        DIV2HI:           HI_P = DDATAH;
+        MULTUSCYC:        HI_P = MCLA;
+        MULTSHCYC:        HI_P = `DMCLASH;
+        default:          HI_P = `DCONST;
       endcase
    end
 endmodule

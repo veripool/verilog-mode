@@ -26,7 +26,7 @@ module autounused
                                      // End of automatics
                                      1'b0};
    
-   defparam partbuf.width  = width;
+   defparam partbuf.width = width;
    wbuf wbuf
      (// Inputs
       .d                                ({da,db,dc}),

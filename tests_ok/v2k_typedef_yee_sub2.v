@@ -25,8 +25,8 @@ module v2k_typedef_yee_sub2
       sub1_to_sub2_ff <= sub1_to_sub2;
    end
    
-   assign sub2_out_pixel  = pixel_ff;
-   assign ready  = sub1_to_sub2_ff;
+   assign sub2_out_pixel = pixel_ff;
+   assign ready = sub1_to_sub2_ff;
    
 endmodule
 

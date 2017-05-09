@@ -7,8 +7,8 @@ class simple_item extends uvm_sequence_item;
    constraint c2 { data < 16'h1000; }
    // UVM automation macros for general objects
    `uvm_object_utils_begin(simple_item)
-      a  = b;
-      c  = d;
+      a = b;
+      c = d;
       `uvm_field_int(addr, UVM_ALL_ON)
       `uvm_field_int(data, UVM_ALL_ON)
       `uvm_field_int(delay, UVM_ALL_ON)

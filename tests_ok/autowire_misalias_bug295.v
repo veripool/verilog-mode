@@ -11,7 +11,7 @@ module foo_autowire_fails (my_interface itf);
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire [2:0] out2;                     // From foobar0 of foobar.v
    // End of automatics
-   assign itf.out2  = out2; // perhaps a namespace collision?
+   assign itf.out2 = out2; // perhaps a namespace collision?
    foobar foobar0
      (/*AUTOINST*/
       // Outputs
@@ -25,7 +25,7 @@ module foo_autowire_works (my_interface itf);
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire [2:0] out2;                     // From foobar0 of foobar.v
    // End of automatics
-   assign itf.out3  = out2;
+   assign itf.out3 = out2;
    foobar foobar0
      (/*AUTOINST*/
       // Outputs

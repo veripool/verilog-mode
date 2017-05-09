@@ -18,20 +18,20 @@ module test (/*AUTOARG*/
    always @ (/*AS*/in0 or in1 or in2 or sel)
      if (sel == 2'b00)
        begin
-          out1  = in1;
-          out2  = in0;
+          out1 = in1;
+          out2 = in0;
        end
      else
        begin
-          out1  = in2;
-          out2  = in1;
+          out1 = in2;
+          out2 = in1;
        end
    
    // OK
    always @ (/*AS*/in1 or in2 or sel)
      if (sel == 2'b00)
-       out1  = in1;
+       out1 = in1;
      else
-       out1  = in2;
+       out1 = in2;
    
 endmodule // test

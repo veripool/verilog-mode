@@ -13,7 +13,7 @@ module autolisp_include (/*AUTOARG*/
    output foo;
    // End of automatics
    
-   assign foo  = bar;
+   assign foo = bar;
    
    // This doesn't need commentary
    /*AUTOINSERTLISP(when nil)*/

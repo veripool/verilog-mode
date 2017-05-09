@@ -7,8 +7,8 @@ class simple_item extends ovm_sequence_item;
    constraint c2 { data < 16'h1000; }
    // OVM automation macros for general objects
    `ovm_object_utils_begin(simple_item)
-      a  = b;
-      c  = d;
+      a = b;
+      c = d;
       `ovm_field_int(addr, OVM_ALL_ON)
       `ovm_field_int(data, OVM_ALL_ON)
       `ovm_field_int(delay, OVM_ALL_ON)

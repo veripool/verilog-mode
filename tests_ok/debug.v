@@ -9,7 +9,7 @@ module z();
    fgasdfasdfasdfasfdasfd <= p;
    gh                     := h;
    gf                        <=g;
-   ssdf  = 5;
-   f     = zsfdsdf >= f;
+   ssdf = 5;
+   f    = zsfdsdf >= f;
    
 endmodule

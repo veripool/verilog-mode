@@ -12,7 +12,7 @@ module ex_output_every (o,i,tempa,tempb)
    wire   tempb;
    wire   o;
    
-   assign tempa  = i;
-   assign tempb  = tempa;
-   assign o  = tempb;
+   assign tempa = i;
+   assign tempb = tempa;
+   assign o = tempb;
 endmodule

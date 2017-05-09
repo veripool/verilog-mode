@@ -7,7 +7,7 @@ module autosense_venkataramanan_begin(/*AUTOARG*/);
      begin : label
         integer       i, j;
         for (i=0; i< = 3; i = i + 1)
-          vec[i]  = b;
+          vec[i] = b;
      end
    
 endmodule

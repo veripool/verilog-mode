@@ -3,19 +3,19 @@ module foo;
    // for each additional in-air txmacphy byte
    task nextTxByte();
       TxByteCnt++;
-      TxLastByteTime  = $time;
+      TxLastByteTime = $time;
    endtask // nextTxByte
    task automatic blah();
       t;
    endtask // blah
    function static foo();
-      foo  = 1;
+      foo = 1;
    endfunction // foo
    // start counting when txmacphy sees first in-air byte
    task firstTxByte();
-      TxByteCnt        = 1;
-      TxFirstByteTime  = $time;
-      TxLastByteTime   = $time;
+      TxByteCnt       = 1;
+      TxFirstByteTime = $time;
+      TxLastByteTime  = $time;
    endtask // firstTxByte
    
    // outputs the overall performance of the RX path in Mbps (MBits per second)
@@ -23,9 +23,9 @@ module foo;
       integer ibps;
       real    Mbps;
       if( RxByteCnt && systemTop.intMonitor.frgRxedCnt >= 2 ) begin
-         ibps  = 
-                 (RxByteCnt*8*1000000000)/(RxLastByteTime-RxFirstByteTime);
-         Mbps  = ibps/1000000;
+         ibps = 
+                (RxByteCnt*8*1000000000)/(RxLastByteTime-RxFirstByteTime);
+         Mbps = ibps/1000000;
          $display("%t: %s - RX average performance: %fMbps (Mbits/sec)",
                   $time, myName, Mbps );
       end
@@ -38,7 +38,7 @@ endmodule // foo
 
 class a;
    virtual function void foo();
-      foo  = 2;
+      foo = 2;
    endfunction // void
    extern function void bar();
    function fred();

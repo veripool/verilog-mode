@@ -1,6 +1,6 @@
 module autoinstparam_belkind (/*AUTOARG*/) ;
    
-   parameter X  = 8;
+   parameter X = 8;
    /*
     autoinstparam_belkind_leaf AUTO_TEMPLATE (
     .P (X),

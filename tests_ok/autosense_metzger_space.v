@@ -14,8 +14,8 @@ module x (/*AUTOARG*/
    output rmsk1;
    output rmsk2;
    
-   always @ (/*AS*/endbyte0 or strtbyte0) rmsk0  = maskcalc(strtbyte0,endbyte0);
-   always @ (/*AS*/endbyte1 or strtbyte1) rmsk1  = maskcalc(strtbyte1,endbyte1);
-   always @ (/*AS*/endbyte2 or strtbyte2) rmsk2  = maskcalc(strtbyte2,endbyte2);
+   always @ (/*AS*/endbyte0 or strtbyte0) rmsk0 = maskcalc(strtbyte0,endbyte0);
+   always @ (/*AS*/endbyte1 or strtbyte1) rmsk1 = maskcalc(strtbyte1,endbyte1);
+   always @ (/*AS*/endbyte2 or strtbyte2) rmsk2 = maskcalc(strtbyte2,endbyte2);
    
 endmodule

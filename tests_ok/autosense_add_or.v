@@ -11,10 +11,10 @@ module autosense_or(/*AUTOARG*/
    output y;
    
    always @(a/*AUTOSENSE*/) begin
-      x  = a;
+      x = a;
    end
    always @(a/*AUTOSENSE*/ or c) begin
-      x  = a | c;
+      x = a | c;
    end
    //   always @(a or/*AUTOSENSE*/c) begin
    //      x = a | c;

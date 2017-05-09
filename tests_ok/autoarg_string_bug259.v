@@ -16,7 +16,7 @@ module bug_minimal
    task force_value_to_1;
       begin
          $display("Enable test module checking ...");
-         force `value  = 1'b1;
+         force `value = 1'b1;
       end
    endtask
    
@@ -24,7 +24,7 @@ module bug_minimal
    task force_value_to_0;
       begin
          $display("Disable test module checking ...");
-         force `value  = 1'b0;
+         force `value = 1'b0;
       end
    endtask
    

@@ -26,7 +26,7 @@ module example (/*AUTOARG*/
               .lower_inb                (lower_inb),
               .lower_ina                (lower_ina));
    always @ (/*AUTOSENSE*/i) begin
-      o  = i;
+      o = i;
    end
 endmodule
 

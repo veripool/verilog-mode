@@ -12,7 +12,7 @@ module tb;
    always @(abcd) begin
       
       // simple immediate assert statement
-      assert (xyz) a  = b;
+      assert (xyz) a = b;
       
       // deferred immediate cover statement w/ #0
       if(x)

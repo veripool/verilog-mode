@@ -12,15 +12,15 @@ module x (/*AUTOARG*/);
           case ({lio_buscfg_brstlen4_sr,lio_buscfg_brstlen2_sr})
             2'b01: // 2-burst
               begin
-                 ibnk_sel_s  = m_cdq_haddr_sr[`DMC_AG_HADDR_BADDR_BST2_RNG];
+                 ibnk_sel_s = m_cdq_haddr_sr[`DMC_AG_HADDR_BADDR_BST2_RNG];
               end
             2'b10: // 4-burst
               begin
-                 ibnk_sel_s  = m_cdq_haddr_sr[`DMC_AG_HADDR_BADDR_BST4_RNG];
+                 ibnk_sel_s = m_cdq_haddr_sr[`DMC_AG_HADDR_BADDR_BST4_RNG];
               end
             default: // 8-burst
               begin
-                 ibnk_sel_s  = m_cdq_haddr_sr[`DMC_AG_HADDR_BADDR_BST8_RNG];
+                 ibnk_sel_s = m_cdq_haddr_sr[`DMC_AG_HADDR_BADDR_BST8_RNG];
               end
           endcase
        end

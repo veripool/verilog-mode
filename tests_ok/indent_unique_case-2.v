@@ -2,18 +2,18 @@ module testmod ();
    always_comb begin
       unique case (eeee)
         ZERO[1:0] : begin
-           a  = 1;
+           a = 1;
         end // case: ZERO[1:0]
         
         ONE[1:0] : begin
-           a  = 1;
+           a = 1;
         end // case: ONE[1:0]
         
         TWO[1:0] : begin
-           a  = 1;
+           a = 1;
         end // case: TWO[1:0]
         THREE[1:0] : begin
-           a  = 1;
+           a = 1;
         end // case: THREE[1:0]
       endcase // unique case (eeee)
    end // always_comb

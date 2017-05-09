@@ -15,7 +15,7 @@ module foo_bar (/*AUTOARG*/
    reg signed [15:0]     result;
    
    always @ (/*AS*/rst) begin
-      result  = 32'sh22 | rst;
+      result = 32'sh22 | rst;
    end
    
 endmodule // foo_bar

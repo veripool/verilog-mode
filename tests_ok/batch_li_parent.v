@@ -6,8 +6,8 @@ module batch_li_parent (/*AUTOARG*/
    input rst;
    input clk;
    
-   parameter WIDTH_0  = 8;
-   parameter WIDTH_1  = 16;
+   parameter WIDTH_0 = 8;
+   parameter WIDTH_1 = 16;
    
    batch_li_child
      #(.WIDTH_1 (WIDTH_0),

@@ -68,7 +68,7 @@ module src_frag (
    semaphore          sm;
    
    
-   defparam v_lg  = 56;
+   defparam v_lg = 56;
    
 endmodule // src_frag
 

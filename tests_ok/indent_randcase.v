@@ -5,11 +5,11 @@ module aa;
    initial begin
       randcase
         10 : begin
-           a  = 1;
+           a = 1;
         end
         15 : begin
-           b  = 0;
-           c  = 5;
+           b = 0;
+           c = 5;
         end
       endcase // randcase
       

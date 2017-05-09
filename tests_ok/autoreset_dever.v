@@ -12,7 +12,7 @@ module x;
    end
    
    // 2010-04-08
-   localparam MPND  = 5;
+   localparam MPND = 5;
    always @(posedge usclk)
      if (~sso_srst_n) begin
         /*AUTORESET*/
