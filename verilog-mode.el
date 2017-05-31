@@ -9337,7 +9337,7 @@ Returns REGEXP and list of ( (signal_name connection_name)... )."
 	      ;; Regexp form??
 	      ((looking-at
 		;; Regexp bug in XEmacs disallows ][ inside [], and wants + last
-		"\\s-*\\.\\(\\([a-zA-Z0-9`_$+@^.*?|---]+\\|[][]\\|\\\\[()|]\\)+\\)\\s-*(\\(.*\\))\\s-*\\(,\\|)\\s-*;\\)")
+		"\\s-*\\.\\(\\([a-zA-Z0-9`_$+@^.*?|---]\\|[][]\\|\\\\[()|]\\)+\\)\\s-*(\\(.*\\))\\s-*\\(,\\|)\\s-*;\\)")
 	       (setq rep (match-string-no-properties 3))
 	       (goto-char (match-end 0))
 	       (setq tpl-wild-list
