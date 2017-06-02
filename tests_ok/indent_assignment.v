@@ -25,4 +25,12 @@ module m;
       a :/ b;
    end
    
+   // bug1169
+   assign a = t ?
+              m :
+              n;
+   assign a = z ?
+              m :
+              n;
+   
 endmodule

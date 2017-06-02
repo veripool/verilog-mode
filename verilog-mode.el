@@ -6662,7 +6662,7 @@ Only look at a few lines to determine indent level."
 	  (let ((val))
 	    (verilog-beg-of-statement-1)
 	    (if (and (< (point) here)
-		     (verilog-re-search-forward "=[ \\t]*" here 'move)
+		     (verilog-re-search-forward "=[ \t]*" here 'move)
 		     ;; not at a |=>, #=#, or [=n] operator
 		     (not (string-match "\\[=.\\|#=#\\||=>"
                                         (or (buffer-substring (- (point) 2) (1+ (point)))
