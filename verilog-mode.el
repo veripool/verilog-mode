@@ -961,7 +961,8 @@ Only used in XEmacs; GNU Emacs uses `verilog-error-regexp-emacs-alist'.")
 These arguments are used to find files for `verilog-auto', and match
 the flags accepted by a standard Verilog-XL simulator.
 
-    -f filename     Reads more `verilog-library-flags' from the filename.
+    -f filename     Reads absolute `verilog-library-flags' from the filename.
+    -F filename     Reads relative `verilog-library-flags' from the filename.
     +incdir+dir     Adds the directory to `verilog-library-directories'.
     -Idir           Adds the directory to `verilog-library-directories'.
     -y dir          Adds the directory to `verilog-library-directories'.
@@ -9612,8 +9613,9 @@ Some macros and such are also found and included.  For dinotrace.el."
 ;; Argument file parsing
 ;;
 
-(defun verilog-getopt (arglist)
-  "Parse -f, -v etc arguments in ARGLIST list or string."
+(defun verilog-getopt (arglist &optional default-dir)
+  "Parse -f, -v etc arguments in ARGLIST list or string.
+Use DEFAULT-DIR to anchor paths if non-nil."
   (unless (listp arglist) (setq arglist (list arglist)))
   (let ((space-args '())
 	arg next-param)
@@ -9631,6 +9633,8 @@ Some macros and such are also found and included.  For dinotrace.el."
 	    space-args (cdr space-args))
       (cond
        ;; Need another arg
+       ((equal arg "-F")
+	(setq next-param arg))
        ((equal arg "-f")
 	(setq next-param arg))
        ((equal arg "-v")
@@ -9654,32 +9658,37 @@ Some macros and such are also found and included.  For dinotrace.el."
        ((or (string-match "^\\+incdir\\+\\(.*\\)" arg)  ; +incdir+dir
             (string-match "^-I\\(.*\\)" arg))   ; -Idir
 	(verilog-add-list-unique `verilog-library-directories
-				 (match-string 1 (substitute-in-file-name arg))))
+				 (substitute-in-file-name (match-string 1 arg))))
        ;; Ignore
        ((equal "+librescan" arg))
        ((string-match "^-U\\(.*\\)" arg))  ; -Udefine
        ;; Second parameters
+       ((equal next-param "-F")
+	(setq next-param nil)
+	(verilog-getopt-file (verilog-substitute-file-name-path arg default-dir)
+                             (file-name-directory (verilog-substitute-file-name-path arg default-dir))))
        ((equal next-param "-f")
 	(setq next-param nil)
-	(verilog-getopt-file (substitute-in-file-name arg)))
+	(verilog-getopt-file (verilog-substitute-file-name-path arg default-dir) nil))
        ((equal next-param "-v")
 	(setq next-param nil)
 	(verilog-add-list-unique `verilog-library-files
-				 (substitute-in-file-name arg)))
+				 (verilog-substitute-file-name-path arg default-dir)))
        ((equal next-param "-y")
 	(setq next-param nil)
 	(verilog-add-list-unique `verilog-library-directories
-				 (substitute-in-file-name arg)))
+				 (verilog-substitute-file-name-path arg default-dir)))
        ;; Filename
        ((string-match "^[^-+]" arg)
 	(verilog-add-list-unique `verilog-library-files
-				 (substitute-in-file-name arg)))
+				 (verilog-substitute-file-name-path arg default-dir)))
        ;; Default - ignore; no warning
        ))))
 ;;(verilog-getopt (list "+libext+.a+.b" "+incdir+foodir" "+define+a+aval" "-f" "otherf" "-v" "library" "-y" "dir"))
 
-(defun verilog-getopt-file (filename)
-  "Read Verilog options from the specified FILENAME."
+(defun verilog-getopt-file (filename &optional default-dir)
+  "Read Verilog options from the specified FILENAME.
+Use DEFAULT-DIR to anchor paths if non-nil."
   (save-excursion
     (let ((fns (verilog-library-filenames filename (buffer-file-name)))
 	  (orig-buffer (current-buffer))
@@ -9695,7 +9704,7 @@ Some macros and such are also found and included.  For dinotrace.el."
 	(when (string-match "//" line)
 	  (setq line (substring line 0 (match-beginning 0))))
 	(with-current-buffer orig-buffer  ; Variables are buffer-local, so need right context.
-	  (verilog-getopt line))))))
+	  (verilog-getopt line default-dir))))))
 
 (defun verilog-getopt-flags ()
   "Convert `verilog-library-flags' into standard library variables."
@@ -9711,6 +9720,13 @@ Some macros and such are also found and included.  For dinotrace.el."
   (verilog-getopt verilog-library-flags)
   ;; Allow user to customize
   (verilog-run-hooks 'verilog-getopt-flags-hook))
+
+(defun verilog-substitute-file-name-path (filename default-dir)
+  "Return FILENAME with environment variables substituted.
+Use DEFAULT-DIR to anchor paths if non-nil."
+  (if default-dir
+      (expand-file-name (substitute-in-file-name filename) default-dir)
+  (substitute-in-file-name filename)))
 
 (defun verilog-add-list-unique (varref object)
   "Append to VARREF list the given OBJECT,
