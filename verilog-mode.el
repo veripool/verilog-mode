@@ -4,7 +4,6 @@
 
 ;; Author: Michael McNamara <mac@verilog.com>
 ;;    Wilson Snyder <wsnyder@wsnyder.org>
-;; X-URL: http://www.verilog.com
 ;; X-URL: http://www.veripool.org
 ;; Created: 3 Jan 1996
 ;; Keywords: languages
@@ -70,7 +69,7 @@
 ;; default.
 
 ;; You can get step by step help in installing this file by going to
-;; <http://www.verilog.com/emacs_install.html>
+;; <http://www.veripool.com/verilog-mode>
 
 ;; The short list of installation instructions are: To set up
 ;; automatic Verilog mode, put this file in your load path, and put
@@ -14429,7 +14428,7 @@ Files are checked based on `verilog-library-flags'."
   (with-output-to-temp-buffer "*verilog-mode help*"
     (princ (format "You are using verilog-mode %s\n" verilog-mode-version))
     (princ "\n")
-    (princ "For new releases, see http://www.verilog.com\n")
+    (princ "For new releases, see http://www.veripool.com/verilog-mode\n")
     (princ "\n")
     (princ "For frequently asked questions, see http://www.veripool.org/verilog-mode-faq.html\n")
     (princ "\n")
