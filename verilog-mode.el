@@ -344,6 +344,12 @@ wherever possible, since it is slow."
       (unless (fboundp 'buffer-chars-modified-tick)  ; Emacs 22 added
 	(defmacro buffer-chars-modified-tick () (buffer-modified-tick)))
     (error nil))
+  ;; Added in Emacs 23.1
+  (condition-case nil
+      (unless (fboundp 'ignore-errors)
+        (defmacro ignore-errors (&rest body)
+          (declare (debug t) (indent 0))
+          `(condition-case nil (progn ,@body) (error nil)))))
   ;; Added in Emacs 24.1
   (condition-case nil
       (unless (fboundp 'prog-mode)
