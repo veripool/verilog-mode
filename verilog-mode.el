@@ -9912,42 +9912,44 @@ Or, just the existing dirnames themselves if there are no wildcards."
   (interactive)
   (unless dirnames
     (error "`verilog-library-directories' should include at least `.'"))
-  (setq dirnames (reverse dirnames))	; not nreverse
-  (let ((dirlist nil)
-	pattern dirfile dirfiles dirname root filename rest basefile)
-    (while dirnames
-      (setq dirname (substitute-in-file-name (car dirnames))
-	    dirnames (cdr dirnames))
-      (cond ((string-match (concat "^\\(\\|[/\\]*[^*?]*[/\\]\\)"  ; root
-                                   "\\([^/\\]*[*?][^/\\]*\\)"     ; filename with *?
-                                   "\\(.*\\)")                    ; rest
-			   dirname)
-	     (setq root (match-string 1 dirname)
-		   filename (match-string 2 dirname)
-		   rest (match-string 3 dirname)
-		   pattern filename)
-	     ;; now replace those * and ? with .+ and .
-	     ;; use ^ and /> to get only whole file names
-	     (setq pattern (verilog-string-replace-matches "[*]" ".+" nil nil pattern)
-		   pattern (verilog-string-replace-matches "[?]" "." nil nil pattern)
-		   pattern (concat "^" pattern "$")
-		   dirfiles (verilog-dir-files root))
-	     (while dirfiles
-	       (setq basefile (car dirfiles)
-		     dirfile (expand-file-name (concat root basefile rest))
-		     dirfiles (cdr dirfiles))
-	       (if (and (string-match pattern basefile)
-			;; Don't allow abc/*/rtl to match abc/rtl via ..
-			(not (equal basefile "."))
-			(not (equal basefile ".."))
-			(file-directory-p dirfile))
-		   (setq dirlist (cons dirfile dirlist)))))
-	    ;; Defaults
-	    (t
-	     (if (file-directory-p dirname)
-		 (setq dirlist (cons dirname dirlist))))))
-    dirlist))
-;;(verilog-expand-dirnames (list "." ".." "nonexist" "../*" "/home/wsnyder/*/v"))
+  (save-match-data
+    (setq dirnames (reverse dirnames))	; not nreverse
+    (let ((dirlist nil)
+          pattern dirfile dirfiles dirname root filename rest basefile)
+      (setq dirnames (mapcar 'substitute-in-file-name dirnames))
+      (while dirnames
+        (setq dirname (car dirnames)
+              dirnames (cdr dirnames))
+        (cond ((string-match (concat "^\\(\\|[/\\]*[^*?]*[/\\]\\)"  ; root
+                                     "\\([^/\\]*[*?][^/\\]*\\)"     ; filename with *?
+                                     "\\(.*\\)")                    ; rest
+                             dirname)
+               (setq root (match-string 1 dirname)
+                     filename (match-string 2 dirname)
+                     rest (match-string 3 dirname)
+                     pattern filename)
+               ;; now replace those * and ? with .+ and .
+               ;; use ^ and /> to get only whole file names
+               (setq pattern (verilog-string-replace-matches "[*]" ".+" nil nil pattern)
+                     pattern (verilog-string-replace-matches "[?]" "." nil nil pattern)
+                     pattern (concat "^" pattern "$")
+                     dirfiles (verilog-dir-files root))
+               (while dirfiles
+                 (setq basefile (car dirfiles)
+                       dirfile (expand-file-name (concat root basefile rest))
+                       dirfiles (cdr dirfiles))
+                 (when (and (string-match pattern basefile)
+                            ;; Don't allow abc/*/rtl to match abc/rtl via ..
+                            (not (equal basefile "."))
+                            (not (equal basefile "..")))
+                   ;; Might have more wildcards, so process again
+                   (setq dirnames (cons dirfile dirnames)))))
+              ;; Defaults
+              (t
+               (if (file-directory-p dirname)
+                   (setq dirlist (cons dirname dirlist))))))
+      dirlist)))
+;;(verilog-expand-dirnames (list "." ".." "nonexist" "../*" "/home/wsnyder/*/v" "../*/*"))
 
 (defun verilog-library-filenames (filename &optional current check-ext)
   "Return a search path to find the given FILENAME or module name.
