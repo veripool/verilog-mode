@@ -12090,7 +12090,7 @@ This is currently equivalent to:
 with the below at the bottom of the file
 
     // Local Variables:
-    // verilog-auto-logic-type:\"logic\"
+    // verilog-auto-wire-type:\"logic\"
     // End:
 
 In the future AUTOLOGIC may declare additional identifiers,
