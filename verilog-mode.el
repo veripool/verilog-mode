@@ -13239,10 +13239,12 @@ Typing \\[verilog-auto] will make this into:
 Replace the /*AUTOTIEOFF*/ comment with code to wire-tie all unused output
 signals to deasserted.
 
-/*AUTOTIEOFF*/ is used to make stub modules; modules that have the same
-input/output list as another module, but no internals.  Specifically, it
-finds all outputs in the module, and if that input is not otherwise declared
-as a register or wire, creates a tieoff.
+/*AUTOTIEOFF*/ is used to make stub modules; modules that have
+the same input/output list as another module, but no internals.
+Specifically, it finds all outputs in the module, and if that
+input is not otherwise declared as a register or wire, nor comes
+from a AUTOINST submodule's output, creates a tieoff. AUTOTIEOFF
+does not examine assignments to determine what is already driven.
 
 AUTORESET ties signals to deasserted, which is presumed to be zero.
 Signals that match `verilog-active-low-regexp' will be deasserted by tying
