@@ -12252,7 +12252,7 @@ same expansion will result from only extracting outputs starting with ov:
   "Expand AUTOOUTPUTEVERY statements, as part of \\[verilog-auto].
 Make output statements for any signals that aren't primary inputs or
 outputs already.  This makes every signal in the design an output.  This is
-useful to get Synopsys to preserve every signal in the design, since it
+useful to get synthesis to preserve every signal in the design, since it
 won't optimize away the outputs.
 
 An example:
@@ -13510,19 +13510,19 @@ Finally, an AUTOASCIIENUM command is used.
   `verilog-auto-wire-type' may be used to change the datatype of
   the declarations.
 
-  \"auto enum\" may be used in place of \"synopsys enum\".
+  \"synopsys enum\" may be used in place of \"auto enum\".
 
 An example:
 
 	//== State enumeration
-	parameter [2:0] // synopsys enum state_info
+	parameter [2:0] // auto enum state_info
 			   SM_IDLE =  3\\='b000,
 			   SM_SEND =  3\\='b001,
 			   SM_WAIT1 = 3\\='b010;
 	//== State variables
-	reg [2:0]  /* synopsys enum state_info */
-		   state_r;  /* synopsys state_vector state_r */
-	reg [2:0]  /* synopsys enum state_info */
+	reg [2:0]  /* auto enum state_info */
+		   state_r;  /* auto state_vector state_r */
+	reg [2:0]  /* auto enum state_info */
 		   state_e1;
 
 	/*AUTOASCIIENUM(\"state_r\", \"state_ascii_r\", \"SM_\")*/
