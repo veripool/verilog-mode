@@ -5426,26 +5426,31 @@ Save the result unless optional NO-SAVE is t."
    ;; Remember buffer list, so don't later pickup any verilog-getopt files
    (let ((orig-buffer-list (buffer-list)))
      (mapc (lambda (buf)
-	     (when (buffer-file-name buf)
-	       (with-current-buffer buf
-		 (verilog-mode)
-		 (verilog-auto-reeval-locals)
-		 (verilog-getopt-flags))))
-	   orig-buffer-list)
+             (when (buffer-file-name buf)
+               (with-current-buffer buf
+                 (set (make-local-variable 'verilog-batch-orig-buffer-string)
+                      (buffer-string))
+                 (put 'verilog-batch-orig-buffer-string 'permanent-local t)
+                 (verilog-mode)
+                 (verilog-auto-reeval-locals)
+                 (verilog-getopt-flags))))
+           orig-buffer-list)
      ;; Process the files
-     (mapcar (lambda (buf)
-	       (when (buffer-file-name buf)
-		 (save-excursion
-		   (if (not (file-exists-p (buffer-file-name buf)))
-		       (error
-			"File not found: %s" (buffer-file-name buf)))
-		   (message "Processing %s" (buffer-file-name buf))
-		   (set-buffer buf)
-		   (funcall funref)
-		   (when (and (not no-save)
-                              (buffer-modified-p))  ; Avoid "no changes to be saved"
-		     (save-buffer)))))
-	     orig-buffer-list))))
+     (mapc (lambda (buf)
+             (when (buffer-file-name buf)
+               (save-excursion
+                 (if (not (file-exists-p (buffer-file-name buf)))
+                     (error
+                      "File not found: %s" (buffer-file-name buf)))
+                 (message "Processing %s" (buffer-file-name buf))
+                 (set-buffer buf)
+                 (funcall funref)
+                 (verilog-star-cleanup)
+                 (when (and (not no-save)
+                            (buffer-modified-p)
+                            (not (equal verilog-batch-orig-buffer-string (buffer-string))))
+                   (save-buffer)))))
+           orig-buffer-list))))
 
 (defun verilog-batch-auto ()
   "For use with --batch, perform automatic expansions as a stand-alone tool.
@@ -11018,8 +11023,7 @@ or `diff' in batch mode."
 	      (progn
 		(with-current-buffer b1 (setq buffer-file-name nil))
 		(verilog-auto)
-		(when (not verilog-auto-star-save)
-		  (verilog-delete-auto-star-implicit)))
+                (verilog-star-cleanup))
 	    ;; Restore name if unwind
 	    (with-current-buffer b1 (setq buffer-file-name name1)))))
       ;;
@@ -11035,6 +11039,11 @@ or `diff' in batch mode."
 ;;
 ;; Auto save
 ;;
+
+(defun verilog-star-cleanup ()
+  "On saving or diff, cleanup .* expansions."
+  (when (not verilog-auto-star-save)
+    (verilog-delete-auto-star-implicit)))
 
 (defun verilog-auto-save-check ()
   "On saving see if we need auto update."
@@ -11055,8 +11064,7 @@ or `diff' in batch mode."
 	   (verilog-auto))
 	 ;; Don't ask again if didn't update
 	 (set (make-local-variable 'verilog-auto-update-tick) (buffer-chars-modified-tick))))
-  (when (not verilog-auto-star-save)
-    (verilog-delete-auto-star-implicit))
+  (verilog-star-cleanup)
   nil)  ; Always return nil -- we don't write the file ourselves
 
 (defun verilog-auto-read-locals ()
