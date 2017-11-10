@@ -1070,6 +1070,18 @@ of each Verilog file that requires it, rather than being set globally."
   :type 'boolean)
 (put 'verilog-auto-sense-defines-constant 'safe-local-variable 'verilog-booleanp)
 
+(defcustom verilog-auto-simplify-expressions t
+  "Non-nil means AUTOs will simplify expressions when calculating bit ranges.
+When nil, do not simply ranges, which may simplify the output,
+but may cause problems when there are multiple instantiations
+outputting to the same wire.  To maintain compatibility with
+other sites, this should be set at the bottom of each Verilog
+file that requires it, rather than being set globally."
+  :version "26.1"
+  :group 'verilog-mode-auto
+  :type 'boolean)
+(put 'verilog-auto-simplify-expressions 'safe-local-variable 'verilog-booleanp)
+
 (defcustom verilog-auto-reset-blocking-in-non t
   "Non-nil means AUTORESET will reset blocking statements.
 When true, AUTORESET will reset in blocking statements those
@@ -10523,8 +10535,9 @@ This repairs those mis-inserted by an AUTOARG."
 (defun verilog-simplify-range-expression (expr)
   "Return a simplified range expression with constants eliminated from EXPR."
   ;; Note this is always called with brackets; ie [z] or [z:z]
-  (if (not (string-match "[---+*()]" expr))
-      expr  ; short-circuit
+  (if (or (not verilog-auto-simplify-expressions)
+          (not (string-match "[---+*()]" expr)))
+      expr  ; disabled or short-circuited
     (let ((out expr)
 	  (last-pass ""))
       (while (not (equal last-pass out))
