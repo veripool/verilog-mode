@@ -6441,9 +6441,11 @@ Return >0 for nested struct."
             ;;   check next word token
             (if (looking-at "\\<\\w+\\>\\|\\s-*(\\s-*\\S-+")
                 (progn (verilog-beg-of-statement)
-                       (if (looking-at (concat "\\<\\(constraint\\|"
+                       (if (and
+                            (not (string-match verilog-named-block-re (buffer-substring pt (point)))) ;; Abort if 'begin' keyword is found
+                            (looking-at (concat "\\<\\(constraint\\|"
                                                "\\(?:\\w+\\s-*:\\s-*\\)?\\(coverpoint\\|cross\\)"
-                                               "\\|with\\)\\>\\|" verilog-in-constraint-re))
+                                               "\\|with\\)\\>\\|" verilog-in-constraint-re)))
                            (setq pass 1)))))
           (if (eq pass 0)
               (progn (goto-char pt) nil) 1)))
