@@ -8643,7 +8643,8 @@ Return an array of [outputs inouts inputs wire reg assign const]."
 		((and v2kargs-ok
 		      (eq paren 1)
 		      (not rvalue)
-		      (looking-at "\\s-*\\(\\.\\(\\s-*[a-zA-Z`_$][a-zA-Z0-9`_$]*\\)\\|\\)\\s-*[a-zA-Z`_$][a-zA-Z0-9`_$]*"))
+                      (or (looking-at "\\s-*#")
+                          (looking-at "\\s-*\\(\\.\\(\\s-*[a-zA-Z`_$][a-zA-Z0-9`_$]*\\)\\|\\)\\s-*[a-zA-Z`_$][a-zA-Z0-9`_$]*")))
 		 (when (match-end 2) (goto-char (match-end 2)))
 		 (setq vec nil          enum nil       rvalue nil  signed nil
 		       typedefed keywd  multidim nil   ptype nil   modport (match-string 2)
@@ -8695,7 +8696,8 @@ Return an array of [outputs inouts inputs wire reg assign const]."
 		((and expect-signal
 		      (not rvalue)
 		      (eq functask 0)
-		      (not (member keywd verilog-keywords)))
+                      (not (member keywd verilog-keywords))
+                      (or (not io) (eq paren sig-paren)))
 		 ;; Add new signal to expect-signal's variable
 		 ;;(if dbg (setq dbg (concat dbg (format "Pt %s  New sig %s'\n" (point) keywd))))
 		 (setq newsig (verilog-sig-new keywd vec nil nil enum signed typedefed multidim modport))
@@ -9309,7 +9311,6 @@ IGNORE-NEXT is true to ignore next token, fake from inside case statement."
 	  (forward-line 1))
 	(beginning-of-line)
 	(if (looking-at "^\\s-*\\([a-zA-Z0-9`_$]+\\)\\s-+\\([a-zA-Z0-9`_$]+\\)\\s-*(")
-	    ;;(if (looking-at "^\\(.+\\)$")
 	    (let ((module (match-string 1))
 		  (instant (match-string 2)))
 	      (if (not (member module verilog-keywords))
