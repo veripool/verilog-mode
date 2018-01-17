@@ -4995,21 +4995,21 @@ primitive or interface named NAME."
                   (match-end 11)  ; of verilog-end-block-ordered-re
                   ;;(goto-char there)
                   (let ((nest 0)
-                        (reg "\\<\\(class\\)\\|\\(endclass\\)\\|\\(package\\|primitive\\|\\(macro\\)?module\\)\\>")
+                        (reg "\\<\\(\\(class\\)\\|\\(endclass\\)\\|\\(package\\|primitive\\|\\(macro\\)?module\\)\\)\\>")
                         string)
                     (save-excursion
                       (catch 'skip
                         (while (verilog-re-search-backward reg nil 'move)
                           (cond
-                           ((match-end 3)	; endclass
+                           ((match-end 4)       ; endclass
                             (ding 't)
                             (setq string "unmatched endclass")
                             (throw 'skip 1))
 
-                           ((match-end 2)	; endclass
+                           ((match-end 3)       ; endclass
                             (setq nest (1+ nest)))
 
-                           ((match-end 1) ; class
+                           ((match-end 2) ; class
                             (setq nest (1- nest))
                             (if (< nest 0)
                                 (progn
