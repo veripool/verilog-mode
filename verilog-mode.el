@@ -1077,7 +1077,7 @@ but may cause problems when there are multiple instantiations
 outputting to the same wire.  To maintain compatibility with
 other sites, this should be set at the bottom of each Verilog
 file that requires it, rather than being set globally."
-  :version "26.1"
+  :version "27.1"
   :group 'verilog-mode-auto
   :type 'boolean)
 (put 'verilog-auto-simplify-expressions 'safe-local-variable 'verilog-booleanp)
@@ -3970,8 +3970,8 @@ Key bindings specific to `verilog-mode-map' are:
   (when (boundp 'hs-special-modes-alist)
     (unless (assq 'verilog-mode hs-special-modes-alist)
       (setq hs-special-modes-alist
-            (cons '(verilog-mode  "\\<begin\\>" "\\<end\\>" nil
-                                  verilog-forward-sexp-function)
+            (cons '(verilog-mode "\\<begin\\>" "\\<end\\>" nil
+                                 verilog-forward-sexp-function)
                   hs-special-modes-alist))))
 
   (add-hook 'completion-at-point-functions
