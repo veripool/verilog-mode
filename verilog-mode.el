@@ -9532,8 +9532,8 @@ warning message, you need to add to your init file:
       (when recurse
 	(goto-char (point-min))
 	(while (re-search-forward "^\\s-*`include\\s-+\\([^ \t\n\f]+\\)" nil t)
-	  (let ((inc (verilog-string-replace-matches
-		      "\"" "" nil nil (match-string-no-properties 1))))
+	  (let ((inc (verilog-substitute-include-name
+                      (match-string-no-properties 1))))
 	    (unless (verilog-inside-comment-or-string-p)
 	      (verilog-read-defines inc recurse t)))))
       ;; Read `defines
@@ -9605,7 +9605,7 @@ foo.v (an include file):
     (verilog-getopt-flags)
     (goto-char (point-min))
     (while (re-search-forward "^\\s-*`include\\s-+\\([^ \t\n\f]+\\)" nil t)
-      (let ((inc (verilog-string-replace-matches "\"" "" nil nil (match-string 1))))
+      (let ((inc (verilog-substitute-include-name (match-string 1))))
 	(verilog-read-defines inc nil t)))))
 
 (defun verilog-read-signals (&optional start end)
@@ -9756,6 +9756,12 @@ Use DEFAULT-DIR to anchor paths if non-nil."
   (if default-dir
       (expand-file-name (substitute-in-file-name filename) default-dir)
   (substitute-in-file-name filename)))
+
+(defun verilog-substitute-include-name (filename)
+  "Return FILENAME for include with define substituted."
+  (setq filename (verilog-string-replace-matches "\"" "" nil nil filename))
+  (verilog-string-replace-matches "\"" "" nil nil
+                                  (verilog-symbol-detick filename t)))
 
 (defun verilog-add-list-unique (varref object)
   "Append to VARREF list the given OBJECT,
