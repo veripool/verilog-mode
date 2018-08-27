@@ -9140,7 +9140,7 @@ Must call `verilog-read-auto-lisp-present' before this function."
   "Recursive routine for parentheses/bracket matching.
 EXIT-KEYWD is expression to stop at, nil if top level.
 RVALUE is true if at right hand side of equal.
-IGNORE-NEXT is true to ignore next token, fake from inside case statement."
+TEMP-NEXT is true to ignore next token, fake from inside case statement."
   (let* ((semi-rvalue (equal "endcase" exit-keywd))  ; true if after a ; we are looking for rvalue
 	 keywd last-keywd sig-tolk sig-last-tolk gotend got-sig got-list end-else-check
 	 ignore-next)
@@ -9179,7 +9179,9 @@ IGNORE-NEXT is true to ignore next token, fake from inside case statement."
 	    ;;(if dbg (setq dbg (concat dbg (format "\tif-check-else-other %s\n" keywd))))
 	    (setq gotend t))
 	   ;; Final statement?
-	   ((and exit-keywd (and (equal keywd exit-keywd)
+	   ((and exit-keywd (and (or (equal keywd exit-keywd)
+                                     (and (equal exit-keywd "'}")
+                                          (equal keywd "}")))
                                  (not (looking-at "::"))))
 	    (setq gotend t)
 	    (forward-char (length keywd)))
@@ -9192,9 +9194,13 @@ IGNORE-NEXT is true to ignore next token, fake from inside case statement."
 	      (setq end-else-check t))
 	    (forward-char 1))
 	   ((equal keywd "'")
-	    (if (looking-at "'[sS]?[hdxboHDXBO]?[ \t]*[0-9a-fA-F_xzXZ?]+")
-		(goto-char (match-end 0))
-	      (forward-char 1)))
+	    (cond ((looking-at "'[sS]?[hdxboHDXBO]?[ \t]*[0-9a-fA-F_xzXZ?]+")
+                   (goto-char (match-end 0)))
+                  ((looking-at "'{")
+                   (forward-char 2)
+                   (verilog-read-always-signals-recurse "'}" t nil))
+                  (t
+                   (forward-char 1))))
            ((equal keywd ":")  ; Case statement, begin/end label, x?y:z
             (cond ((looking-at "::")
                    (forward-char 1))  ; Another forward-char below
@@ -9203,6 +9209,8 @@ IGNORE-NEXT is true to ignore next token, fake from inside case statement."
                   ((equal "?" exit-keywd)  ; x?y:z rvalue
                    )  ; NOP
                   ((equal "]" exit-keywd)  ; [x:y] rvalue
+                   )  ; NOP
+                  ((equal "'}" exit-keywd)  ; Pattern assignment
                    )  ; NOP
                   (got-sig  ; label: statement
 		   (setq ignore-next nil rvalue semi-rvalue got-sig nil))
