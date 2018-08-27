@@ -2730,6 +2730,8 @@ find the errors."
        "localparam" "parameter" "var"
        ;; type creation
        "typedef"
+       ;; randomness
+       "rand"
        ))))
 (defconst verilog-declaration-core-re
   (eval-when-compile
