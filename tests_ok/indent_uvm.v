@@ -43,7 +43,7 @@ class mydata extends uvm_object;
 endclass
 class my_trans extends uvm_sequence_item;
    
-   rand  bit [127:0]               data [];
+   rand bit [127:0] data [];
    
    //---> Configuration
    `uvm_object_utils_begin(my_trans)

@@ -43,7 +43,7 @@ class mydata extends ovm_object;
 endclass
 class my_trans extends ovm_sequence_item;
    
-   rand  bit [127:0]               data [];
+   rand bit [127:0] data [];
    
    //---> Configuration
    `ovm_object_utils_begin(my_trans)
