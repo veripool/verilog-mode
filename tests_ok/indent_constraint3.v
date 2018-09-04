@@ -1,8 +1,8 @@
 //bug433
 
 class data;
-   rand integer data1;
-   rand integer data2,data3;
+   rand integer    data1;
+   rand integer    data2,data3;
    rand reg [31:0] foo;
    
    constraint basic_c {
