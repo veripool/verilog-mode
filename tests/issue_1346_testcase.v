@@ -7,9 +7,9 @@ module design(/*AUTOARG*/
    // Inputs
    i0, i1
    );
-   paramter w1 = 2;
-   paramter w2 = 4;
-   paramter w3 = 256;
+   parameter w1 = 2;
+   parameter w2 = 4;
+   parameter w3 = 256;
    input [w1:0]       i0;
    input [w2:0]       i1;
 
@@ -88,15 +88,15 @@ module test(/*AUTOARG*/
    output [40:0]        y31;                    // From i0_design of design.v
    output [40:0]        y32;                    // From i0_design of design.v
    output [40:0]        y33;                    // From i0_design of design.v
-   output [20:0]        y34;                    // From i0_design of design.v
-   output [20:0]        y35;                    // From i0_design of design.v
-   output [20:0]        y36;                    // From i0_design of design.v
+   output [40:0]        y34;                    // From i0_design of design.v
+   output [40:0]        y35;                    // From i0_design of design.v
+   output [40:0]        y36;                    // From i0_design of design.v
    output [40:0]        y40;                    // From i0_design of design.v
    output [40:0]        y41;                    // From i0_design of design.v
    output [40:0]        y42;                    // From i0_design of design.v
    output [40:0]        y43;                    // From i0_design of design.v
-   output [20:0]        y44;                    // From i0_design of design.v
-   output [20:0]        y45;                    // From i0_design of design.v
+   output [40:0]        y44;                    // From i0_design of design.v
+   output [40:0]        y45;                    // From i0_design of design.v
    // End of automatics
 
    design #(.w1(2),.w2(4),.w3(256)) i0_design(/*AUTOINST*/
@@ -123,15 +123,15 @@ module test(/*AUTOARG*/
                                               .y31              (y31[40:0]),
                                               .y32              (y32[40:0]),
                                               .y33              (y33[40:0]),
-                                              .y34              (y34[20:0]),
-                                              .y35              (y35[20:0]),
-                                              .y36              (y36[20:0]),
+                                              .y34              (y34[40:0]),
+                                              .y35              (y35[40:0]),
+                                              .y36              (y36[40:0]),
                                               .y40              (y40[40:0]),
                                               .y41              (y41[40:0]),
                                               .y42              (y42[40:0]),
                                               .y43              (y43[40:0]),
-                                              .y44              (y44[20:0]),
-                                              .y45              (y45[20:0]),
+                                              .y44              (y44[40:0]),
+                                              .y45              (y45[40:0]),
                                               // Inputs
                                               .i0               (i0[2:0]),
                                               .i1               (i1[4:0]));
