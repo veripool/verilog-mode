@@ -10559,67 +10559,95 @@ This repairs those mis-inserted by an AUTOARG."
   "Return a simplified range expression with constants eliminated from EXPR."
   ;; Note this is always called with brackets; ie [z] or [z:z]
   (if (or (not verilog-auto-simplify-expressions)
-          (not (string-match "[---+*()]" expr)))
+          (not (string-match "[---+*/<>()]" expr)))
       expr  ; disabled or short-circuited
     (let ((out expr)
 	  (last-pass ""))
       (while (not (equal last-pass out))
-	(setq last-pass out)
-	;; Prefix regexp needs beginning of match, or some symbol of
-	;; lesser or equal precedence.  We assume the [:]'s exist in expr.
-	;; Ditto the end.
-	(while (string-match
-		(concat "\\([[({:*+-]\\)"  ; - must be last
-			"(\\<\\([0-9A-Za-z_]+\\))"
-			"\\([])}:*+-]\\)")
-		out)
-	  (setq out (replace-match "\\1\\2\\3" nil nil out)))
-	(while (string-match
-		(concat "\\([[({:*+-]\\)"  ; - must be last
-			"\\$clog2\\s *(\\<\\([0-9]+\\))"
-			"\\([])}:*+-]\\)")
-		out)
-	  (setq out (replace-match
-		     (concat
-		      (match-string 1 out)
-		      (int-to-string (verilog-clog2 (string-to-number (match-string 2 out))))
-		      (match-string 3 out))
-		     nil nil out)))
-	;; For precedence do * before +/-
-	(while (string-match
-		(concat "\\([[({:*+-]\\)"
-			"\\([0-9]+\\)\\s *\\([*]\\)\\s *\\([0-9]+\\)"
-			"\\([])}:*+-]\\)")
-		out)
-	  (setq out (replace-match
-		     (concat (match-string 1 out)
-			     (int-to-string (* (string-to-number (match-string 2 out))
-					       (string-to-number (match-string 4 out))))
-			     (match-string 5 out))
-		     nil nil out)))
-	(while (string-match
-		(concat "\\([[({:+-]\\)" ; No * here as higher prec
-			"\\([0-9]+\\)\\s *\\([---+]\\)\\s *\\([0-9]+\\)"
-			"\\([])}:+-]\\)")
-		out)
-	  (let ((pre (match-string 1 out))
-		(lhs (string-to-number (match-string 2 out)))
-		(rhs (string-to-number (match-string 4 out)))
-		(post (match-string 5 out))
-		val)
-	    (when (equal pre "-")
-	      (setq lhs (- lhs)))
-	    (setq val (if (equal (match-string 3 out) "-")
-			  (- lhs rhs)
-			(+ lhs rhs))
-		  out (replace-match
-		       (concat (if (and (equal pre "-")
-					(< val 0))
-				   ""  ; Not "--20" but just "-20"
-				 pre)
-			       (int-to-string val)
-			       post)
-		       nil nil out)) )))
+        (while (not (equal last-pass out))
+          (setq last-pass out)
+          ;; Prefix regexp needs beginning of match, or some symbol of
+          ;; lesser or equal precedence.  We assume the [:]'s exist in expr.
+          ;; Ditto the end.
+          (while (string-match
+                  (concat "\\([[({:*/<>+-]\\)"  ; - must be last
+                          "(\\<\\([0-9A-Za-z_]+\\))"
+                          "\\([])}:*/<>+-]\\)")
+                  out)
+            (setq out (replace-match "\\1\\2\\3" nil nil out)))
+          (while (string-match
+                  (concat "\\([[({:*/<>+-]\\)"  ; - must be last
+                          "\\$clog2\\s *(\\<\\([0-9]+\\))"
+                          "\\([])}:*/<>+-]\\)")
+                  out)
+            (setq out (replace-match
+                       (concat
+                        (match-string 1 out)
+                        (int-to-string (verilog-clog2 (string-to-number (match-string 2 out))))
+                        (match-string 3 out))
+                       nil nil out)))
+          ;; For precedence do *,/ before +,-,>>,<<
+          (while (string-match
+                  (concat "\\([[({:*/<>+-]\\)"
+                          "\\([0-9]+\\)\\s *\\([*/]\\)\\s *\\([0-9]+\\)"
+                          "\\([])}:*/<>+-]\\)")
+                  out)
+            (setq out (replace-match
+                       (concat (match-string 1 out)
+                               (if (equal (match-string 3 out) "/")
+                                   (int-to-string (/ (string-to-number (match-string 2 out))
+                                                     (string-to-number (match-string 4 out)))))
+                               (if (equal (match-string 3 out) "*")
+                                   (int-to-string (* (string-to-number (match-string 2 out))
+                                                     (string-to-number (match-string 4 out)))))
+                               (match-string 5 out))
+                       nil nil out)))
+          ;; Next precedence is +,-
+          (while (string-match
+                  (concat "\\([[({:<>+-]\\)"  ; No *,/ here as higher prec
+                          "\\([0-9]+\\)\\s *\\([---+]\\)\\s *\\([0-9]+\\)"
+                          "\\([])}:<>+-]\\)")
+                  out)
+            (let ((pre (match-string 1 out))
+                  (lhs (string-to-number (match-string 2 out)))
+                  (rhs (string-to-number (match-string 4 out)))
+                  (post (match-string 5 out))
+                  val)
+              (when (equal pre "-")
+                (setq lhs (- lhs)))
+              (setq val (if (equal (match-string 3 out) "-")
+                            (- lhs rhs)
+                          (+ lhs rhs))
+                    out (replace-match
+                         (concat (if (and (equal pre "-")
+                                          (< val 0))
+                                     ""  ; Not "--20" but just "-20"
+                                   pre)
+                                 (int-to-string val)
+                                 post)
+                         nil nil out)) ))
+          ;; Next precedence is >>,<<
+          (while (string-match
+                  (concat "\\([[({:]\\)"  ;; No << as not transitive
+                          "\\([0-9]+\\)\\s *\\([<]\\{2,3\\}\\|[>]\\{2,3\\}\\)\\s *\\([0-9]+\\)"
+                          "\\([])}:<>]\\)")
+                  out)
+            (setq out (replace-match
+                       (concat (match-string 1 out)
+                               (if (equal (match-string 3 out) ">>")
+                                   (int-to-string (lsh (string-to-number (match-string 2 out))
+                                                       (* -1 (string-to-number (match-string 4 out))))))
+                               (if (equal (match-string 3 out) "<<")
+                                   (int-to-string (lsh (string-to-number (match-string 2 out))
+                                                       (string-to-number (match-string 4 out)))))
+                               (if (equal (match-string 3 out) ">>>")
+                                   (int-to-string (ash (string-to-number (match-string 2 out))
+                                                       (* -1 (string-to-number (match-string 4 out))))))
+                               (if (equal (match-string 3 out) "<<<")
+                                   (int-to-string (ash (string-to-number (match-string 2 out))
+                                                       (string-to-number (match-string 4 out)))))
+                               (match-string 5 out))
+                       nil nil out)))))
       out)))
 
 ;;(verilog-simplify-range-expression "[1:3]")  ; 1
@@ -10633,6 +10661,8 @@ This repairs those mis-inserted by an AUTOARG."
 ;;(verilog-simplify-range-expression "[$clog2(2)]")  ; 1
 ;;(verilog-simplify-range-expression "[$clog2(7)]")  ; 3
 ;;(verilog-simplify-range-expression "[(TEST[1])-1:0]")
+;;(verilog-simplify-range-expression "[1<<2:8>>2]")  ; [4:2]
+;;(verilog-simplify-range-expression "[2*4/(4-2) +2+4 <<4 >>2]")
 
 (defun verilog-clog2 (value)
   "Compute $clog2 - ceiling log2 of VALUE."
