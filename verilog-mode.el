@@ -108,7 +108,6 @@
 ;;         verilog-minimum-comment-distance 40
 ;;         verilog-indent-begin-after-if    t
 ;;         verilog-auto-lineup              'declarations
-;;         verilog-highlight-p1800-keywords nil
 ;;         verilog-linter                   "my_lint_shell_command"
 ;;         )
 
@@ -719,15 +718,13 @@ default avoids too many redundant comments in tight quarters."
 (put 'verilog-minimum-comment-distance 'safe-local-variable 'integerp)
 
 (defcustom verilog-highlight-p1800-keywords nil
-  "Non-nil means highlight words newly reserved by IEEE-1800.
-These will appear in `verilog-font-lock-p1800-face' in order to gently
-suggest changing where these words are used as variables to something else.
-A nil value means highlight these words as appropriate for the SystemVerilog
-IEEE-1800 standard.  Note that changing this will require restarting Emacs
-to see the effect as font color choices are cached by Emacs."
+  "Obsolete.
+Was non-nil means highlight SystemVerilog IEEE-1800 differently.
+All code is now highlighted as if SystemVerilog IEEE-1800."
   :group 'verilog-mode-indent
   :type 'boolean)
 (put 'verilog-highlight-p1800-keywords 'safe-local-variable 'verilog-booleanp)
+(make-obsolete-variable 'verilog-highlight-p1800-keywords nil "27.1")
 
 (defcustom verilog-highlight-grouping-keywords nil
   "Non-nil means highlight grouping keywords more dramatically.
@@ -3110,7 +3107,7 @@ See also `verilog-font-lock-extra-types'.")
 
 (defvar verilog-font-lock-p1800-face
   'verilog-font-lock-p1800-face
-  "Font to use for p1800 keywords.")
+  "Obsolete font to use for p1800 keywords.")
 (defface verilog-font-lock-p1800-face
   '((((class color)
       (background light))
@@ -3121,6 +3118,7 @@ See also `verilog-font-lock-extra-types'.")
     (t (:italic t)))
   "Font lock mode face used to highlight P1800 keywords."
   :group 'font-lock-highlighting-faces)
+(make-obsolete-variable 'verilog-font-lock-p1800-face nil "27.1")
 
 (defvar verilog-font-lock-ams-face
   'verilog-font-lock-ams-face
@@ -3151,133 +3149,110 @@ See also `verilog-font-lock-extra-types'.")
   :group 'font-lock-highlighting-faces)
 
 (let* ((verilog-type-font-keywords
-	(eval-when-compile
-	  (verilog-regexp-opt
-	   '(
-	     "and" "bit" "buf" "bufif0" "bufif1" "cmos" "defparam"
-	     "event" "genvar" "inout" "input" "integer" "localparam"
-	     "logic" "mailbox" "nand" "nmos" "nor" "not" "notif0" "notif1" "or"
-	     "output" "parameter" "pmos" "pull0" "pull1" "pulldown" "pullup"
-	     "rcmos" "real" "realtime" "reg" "rnmos" "rpmos" "rtran"
-	     "rtranif0" "rtranif1" "semaphore" "signed" "struct" "supply"
-	     "supply0" "supply1" "time" "tran" "tranif0" "tranif1"
-	     "tri" "tri0" "tri1" "triand" "trior" "trireg" "typedef"
-	     "uwire" "vectored" "wand" "wire" "wor" "xnor" "xor"
-	     ) nil  )))
+        (eval-when-compile
+          (verilog-regexp-opt
+           '("and" "buf" "bufif0" "bufif1" "cmos" "defparam" "event"
+             "genvar" "highz0" "highz1" "inout" "input" "integer"
+             "localparam" "mailbox" "nand" "nmos" "nor" "not" "notif0"
+             "notif1" "or" "output" "parameter" "pmos" "pull0" "pull1"
+             "pulldown" "pullup" "rcmos" "real" "realtime" "reg" "rnmos"
+             "rpmos" "rtran" "rtranif0" "rtranif1" "semaphore" "signed"
+             "specparam" "strong0" "strong1" "supply" "supply0" "supply1"
+             "time" "tran" "tranif0" "tranif1" "tri" "tri0" "tri1" "triand"
+             "trior" "trireg" "unsigned" "uwire" "vectored" "wand" "weak0"
+             "weak1" "wire" "wor" "xnor" "xor"
+             ;; 1800-2005
+             "bit" "byte" "chandle" "const" "enum" "int" "logic" "longint"
+             "packed" "ref" "shortint" "shortreal" "static" "string"
+             "struct" "type" "typedef" "union" "var"
+             ;; 1800-2009
+             ;; 1800-2012
+             "interconnect" "nettype" ) nil)))
 
        (verilog-pragma-keywords
-	(eval-when-compile
-	  (verilog-regexp-opt
-	   '("surefire" "auto" "synopsys" "rtl_synthesis" "verilint" "leda" "0in"
-	     ) nil  )))
-
-       (verilog-1800-2005-keywords
-	(eval-when-compile
-	  (verilog-regexp-opt
-	   '("alias" "assert" "assume" "automatic" "before" "bind"
-	     "bins" "binsof" "break" "byte" "cell" "chandle" "class"
-	     "clocking" "config" "const" "constraint" "context" "continue"
-	     "cover" "covergroup" "coverpoint" "cross" "deassign" "design"
-	     "dist" "do" "edge" "endclass" "endclocking" "endconfig"
-	     "endgroup" "endprogram" "endproperty" "endsequence" "enum"
-	     "expect" "export" "extends" "extern" "first_match" "foreach"
-	     "forkjoin" "genvar" "highz0" "highz1" "ifnone" "ignore_bins"
-	     "illegal_bins" "import" "incdir" "include" "inside" "instance"
-	     "int" "intersect" "large" "liblist" "library" "local" "longint"
-	     "matches" "medium" "modport" "new" "noshowcancelled" "null"
-	     "packed" "program" "property" "protected" "pull0" "pull1"
-	     "pulsestyle_onevent" "pulsestyle_ondetect" "pure" "rand" "randc"
-	     "randcase" "randsequence" "ref" "release" "return" "scalared"
-	     "sequence" "shortint" "shortreal" "showcancelled" "small" "solve"
-	     "specparam" "static" "string" "strong0" "strong1" "struct"
-	     "super" "tagged" "this" "throughout" "timeprecision" "timeunit"
-	     "type" "union" "unsigned" "use" "var" "virtual" "void"
-	     "wait_order" "weak0" "weak1" "wildcard" "with" "within"
-	     ) nil )))
-
-       (verilog-1800-2009-keywords
-	(eval-when-compile
-	  (verilog-regexp-opt
-	   '("accept_on" "checker" "endchecker" "eventually" "global"
-	     "implies" "let" "nexttime" "reject_on" "restrict" "s_always"
-	     "s_eventually" "s_nexttime" "s_until" "s_until_with" "strong"
-	     "sync_accept_on" "sync_reject_on" "unique0" "until"
-	     "until_with" "untyped" "weak" ) nil )))
-
-       (verilog-1800-2012-keywords
-	(eval-when-compile
-	  (verilog-regexp-opt
-	   '("implements" "interconnect" "nettype" "soft" ) nil )))
+        (eval-when-compile
+          (verilog-regexp-opt
+           '("surefire" "0in" "auto" "leda" "rtl_synthesis" "synopsys"
+             "verilint" ) nil)))
 
        (verilog-ams-keywords
-	(eval-when-compile
-	  (verilog-regexp-opt
-	   '("above" "abs" "absdelay" "acos" "acosh" "ac_stim"
-	     "aliasparam" "analog" "analysis" "asin" "asinh" "atan" "atan2" "atanh"
-	     "branch" "ceil" "connectmodule" "connectrules" "cos" "cosh" "ddt"
-	     "ddx" "discipline" "driver_update" "enddiscipline" "endconnectrules"
-	     "endnature" "endparamset" "exclude" "exp" "final_step" "flicker_noise"
-	     "floor" "flow" "from" "ground" "hypot" "idt" "idtmod" "inf"
-	     "initial_step" "laplace_nd" "laplace_np" "laplace_zd" "laplace_zp"
-	     "last_crossing" "limexp" "ln" "log" "max" "min" "nature"
-	     "net_resolution" "noise_table" "paramset" "potential" "pow" "sin"
-	     "sinh" "slew" "sqrt" "tan" "tanh" "timer" "transition" "white_noise"
-	     "wreal" "zi_nd" "zi_np" "zi_zd" ) nil )))
+        (eval-when-compile
+          (verilog-regexp-opt
+           '("above" "abs" "absdelay" "abstol" "ac_stim" "access" "acos"
+             "acosh" "aliasparam" "analog" "analysis" "asin" "asinh" "atan"
+             "atan2" "atanh" "branch" "ceil" "connect" "connectmodule"
+             "connectrules" "continuous" "cos" "cosh" "ddt" "ddt_nature"
+             "ddx" "discipline" "discrete" "domain" "driver_update"
+             "endconnectrules" "enddiscipline" "endnature" "endparamset"
+             "exclude" "exp" "final_step" "flicker_noise" "floor" "flow"
+             "from" "ground" "hypot" "idt" "idt_nature" "idtmod" "inf"
+             "initial_step" "laplace_nd" "laplace_np" "laplace_zd"
+             "laplace_zp" "last_crossing" "limexp" "ln" "log" "max"
+             "merged" "min" "nature" "net_resolution" "noise_table"
+             "paramset" "potential" "pow" "resolveto" "sin" "sinh" "slew"
+             "split" "sqrt" "tan" "tanh" "timer" "transition" "units"
+             "white_noise" "wreal" "zi_nd" "zi_np" "zi_zd" "zi_zp"
+             ;; Excluded AMS keywords: "assert" "cross" "string"
+             ) nil)))
 
-       (verilog-font-keywords
-	(eval-when-compile
-	  (verilog-regexp-opt
-	   '(
-	     "assign" "case" "casex" "casez" "randcase" "deassign"
-	     "default" "disable" "else" "endcase" "endfunction"
-	     "endgenerate" "endinterface" "endmodule" "endprimitive"
-	     "endspecify" "endtable" "endtask" "final" "for" "force" "return" "break"
-	     "continue" "forever" "fork" "function" "generate" "if" "iff" "initial"
-	     "interface" "join" "join_any" "join_none" "macromodule" "module" "negedge"
-	     "package" "endpackage" "always" "always_comb" "always_ff"
-	     "always_latch" "posedge" "primitive" "priority" "release"
-	     "repeat" "specify" "table" "task" "unique" "wait" "while"
-	     "class" "program" "endclass" "endprogram"
-	     ) nil  )))
+       (verilog-font-general-keywords
+        (eval-when-compile
+          (verilog-regexp-opt
+           '("always" "assign" "automatic" "case" "casex" "casez" "cell"
+             "config" "deassign" "default" "design" "disable" "edge" "else"
+             "endcase" "endconfig" "endfunction" "endgenerate" "endmodule"
+             "endprimitive" "endspecify" "endtable" "endtask" "for" "force"
+             "forever" "fork" "function" "generate" "if" "ifnone" "incdir"
+             "include" "initial" "instance" "join" "large" "liblist"
+             "library" "macromodule" "medium" "module" "negedge"
+             "noshowcancelled" "posedge" "primitive" "pulsestyle_ondetect"
+             "pulsestyle_onevent" "release" "repeat" "scalared"
+             "showcancelled" "small" "specify" "strength" "table" "task"
+             "use" "wait" "while"
+             ;; 1800-2005
+             "alias" "always_comb" "always_ff" "always_latch" "assert"
+             "assume" "before" "bind" "bins" "binsof" "break" "class"
+             "clocking" "constraint" "context" "continue" "cover"
+             "covergroup" "coverpoint" "cross" "dist" "do" "endclass"
+             "endclocking" "endgroup" "endinterface" "endpackage"
+             "endprogram" "endproperty" "endsequence" "expect" "export"
+             "extends" "extern" "final" "first_match" "foreach" "forkjoin"
+             "iff" "ignore_bins" "illegal_bins" "import" "inside"
+             "interface" "intersect" "join_any" "join_none" "local"
+             "matches" "modport" "new" "null" "package" "priority"
+             "program" "property" "protected" "pure" "rand" "randc"
+             "randcase" "randsequence" "return" "sequence" "solve" "super"
+             "tagged" "this" "throughout" "timeprecision" "timeunit"
+             "unique" "virtual" "void" "wait_order" "wildcard" "with"
+             "within"
+             ;; 1800-2009
+             "accept_on" "checker" "endchecker" "eventually" "global"
+             "implies" "let" "nexttime" "reject_on" "restrict" "s_always"
+             "s_eventually" "s_nexttime" "s_until" "s_until_with" "strong"
+             "sync_accept_on" "sync_reject_on" "unique0" "until"
+             "until_with" "untyped" "weak"
+             ;; 1800-2012
+             "implements" "soft" ) nil)))
 
        (verilog-font-grouping-keywords
-	(eval-when-compile
-	  (verilog-regexp-opt
-	   '( "begin" "end" ) nil  ))))
+        (eval-when-compile
+          (verilog-regexp-opt
+           '( "begin" "end" ) nil))))
 
   (setq verilog-font-lock-keywords
 	(list
 	 ;; Fontify all builtin keywords
-	 (concat "\\<\\(" verilog-font-keywords "\\|"
+         (concat "\\<\\(" verilog-font-general-keywords "\\|"
                  ;; And user/system tasks and functions
                  "\\$[a-zA-Z][a-zA-Z0-9_\\$]*"
                  "\\)\\>")
 	 ;; Fontify all types
-	 (if verilog-highlight-grouping-keywords
-	     (cons (concat "\\<\\(" verilog-font-grouping-keywords "\\)\\>")
-		   'verilog-font-lock-grouping-keywords-face)
-	   (cons (concat "\\<\\(" verilog-font-grouping-keywords "\\)\\>")
+         (cons (concat "\\<\\(" verilog-font-grouping-keywords "\\)\\>")
+               (if verilog-highlight-grouping-keywords
+                   'verilog-font-lock-grouping-keywords-face
 		 'font-lock-type-face))
 	 (cons (concat "\\<\\(" verilog-type-font-keywords "\\)\\>")
                'font-lock-type-face)
-	 ;; Fontify IEEE-1800-2005 keywords appropriately
-	 (if verilog-highlight-p1800-keywords
-	     (cons (concat "\\<\\(" verilog-1800-2005-keywords "\\)\\>")
-		   'verilog-font-lock-p1800-face)
-	   (cons (concat "\\<\\(" verilog-1800-2005-keywords "\\)\\>")
-		 'font-lock-type-face))
-	 ;; Fontify IEEE-1800-2009 keywords appropriately
-	 (if verilog-highlight-p1800-keywords
-	     (cons (concat "\\<\\(" verilog-1800-2009-keywords "\\)\\>")
-		   'verilog-font-lock-p1800-face)
-	   (cons (concat "\\<\\(" verilog-1800-2009-keywords "\\)\\>")
-		 'font-lock-type-face))
-	 ;; Fontify IEEE-1800-2012 keywords appropriately
-	 (if verilog-highlight-p1800-keywords
-	     (cons (concat "\\<\\(" verilog-1800-2012-keywords "\\)\\>")
-		   'verilog-font-lock-p1800-face)
-	   (cons (concat "\\<\\(" verilog-1800-2012-keywords "\\)\\>")
-		 'font-lock-type-face))
 	 ;; Fontify Verilog-AMS keywords
 	 (cons (concat "\\<\\(" verilog-ams-keywords "\\)\\>")
 	       'verilog-font-lock-ams-face)))
@@ -8743,6 +8718,7 @@ Return an array of [outputs inouts inputs wire reg assign const]."
   (defvar sigs-out-i)
   (defvar sigs-out-unk)
   (defvar sigs-temp)
+  (defvar verilog-batch-orig-buffer-string)
   ;; These are known to be from other packages and may not be defined
   (defvar diff-command)
   ;; There are known to be from newer versions of Emacs
@@ -14582,7 +14558,6 @@ Files are checked based on `verilog-library-flags'."
        verilog-highlight-grouping-keywords
        verilog-highlight-includes
        verilog-highlight-modules
-       verilog-highlight-p1800-keywords
        verilog-highlight-translate-off
        verilog-indent-begin-after-if
        verilog-indent-declaration-macros
