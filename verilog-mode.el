@@ -8428,7 +8428,7 @@ Optional NUM-PARAM and MAX-PARAM check for a specific number of parameters."
       ;; /*AUTOPUNT("parameter", "parameter")*/
       (backward-sexp 1)
       (while (looking-at "(?\\s *\"\\([^\"]*\\)\"\\s *,?")
-	(setq olist (cons (match-string 1) olist))
+        (setq olist (cons (match-string-no-properties 1) olist))
 	(goto-char (match-end 0))))
     (or (eq nil num-param)
 	(<= num-param (length olist))
@@ -8460,12 +8460,12 @@ Return an array of [outputs inouts inputs wire reg assign const]."
 	(cond
 	 ((looking-at "//")
 	  (when (looking-at "[^\n]*\\(auto\\|synopsys\\)\\s +enum\\s +\\([a-zA-Z0-9_]+\\)")
-            (setq enum (match-string 2)))
+            (setq enum (match-string-no-properties 2)))
 	  (search-forward "\n"))
 	 ((looking-at "/\\*")
 	  (forward-char 2)
 	  (when (looking-at "[^\n]*\\(auto\\|synopsys\\)\\s +enum\\s +\\([a-zA-Z0-9_]+\\)")
-            (setq enum (match-string 2)))
+            (setq enum (match-string-no-properties 2)))
 	  (or (search-forward "*/")
 	      (error "%s: Unmatched /* */, at char %d" (verilog-point-text) (point))))
 	 ((looking-at "(\\*")
@@ -8517,7 +8517,8 @@ Return an array of [outputs inouts inputs wire reg assign const]."
 	  (cond (newsig	; Memory, not just width.  Patch last signal added's memory (nth 3)
 		 (setcar (cdr (cdr (cdr newsig)))
 			 (if (verilog-sig-memory newsig)
-			     (concat (verilog-sig-memory newsig) (match-string 1))
+                             (concat (verilog-sig-memory newsig)
+                                     (match-string-no-properties 1))
 			   (match-string-no-properties 1))))
                 (vec  ; Multidimensional
 		 (setq multidim (cons vec multidim))
@@ -8531,14 +8532,14 @@ Return an array of [outputs inouts inputs wire reg assign const]."
 	  (goto-char (match-end 0))
 	  (setq last-keywd keywd
                 keywd (match-string-no-properties 1))
-	  (when (string-match "^\\\\" (match-string 1))
+          (when (string-match "^\\\\" (match-string-no-properties 1))
             (setq keywd (concat keywd " ")))  ; Escaped ID needs space at end
 	  ;; Add any :: package names to same identifier
           ;; '*' here is for "import x::*"
           (while (looking-at "\\s-*::\\s-*\\(\\*\\|[a-zA-Z0-9`_$]+\\|\\\\[^ \t\n\f]+\\)")
 	    (goto-char (match-end 0))
-	    (setq keywd (concat keywd "::" (match-string 1)))
-	    (when (string-match "^\\\\" (match-string 1))
+            (setq keywd (concat keywd "::" (match-string-no-properties 1)))
+            (when (string-match "^\\\\" (match-string-no-properties 1))
               (setq keywd (concat keywd " "))))  ; Escaped ID needs space at end
 	  (cond ((equal keywd "input")
 		 (setq vec nil        enum nil      rvalue nil  newsig nil  signed nil
@@ -8627,7 +8628,8 @@ Return an array of [outputs inouts inputs wire reg assign const]."
                           (looking-at "\\s-*\\(\\.\\(\\s-*[a-zA-Z`_$][a-zA-Z0-9`_$]*\\)\\|\\)\\s-*[a-zA-Z`_$][a-zA-Z0-9`_$]*")))
 		 (when (match-end 2) (goto-char (match-end 2)))
 		 (setq vec nil          enum nil       rvalue nil  signed nil
-		       typedefed keywd  multidim nil   ptype nil   modport (match-string 2)
+                       typedefed keywd  multidim nil   ptype nil
+                       modport (match-string-no-properties 2)
 		       newsig nil    sig-paren paren
 		       expect-signal 'sigs-intf  io t  ))
 		;; Ignore dotted LHS assignments: "assign foo.bar = z;"
@@ -8954,7 +8956,7 @@ Inserts the list of signals found."
 		     iolist (cdr iolist))
 	       (verilog-read-sub-decls-expr
                 submoddecls par-values comment "primitive_port"
-		(match-string 0)))
+                (match-string-no-properties 0)))
 	      (t
 	       (forward-char 1)
 	       (skip-syntax-forward " ")))))))
@@ -9051,7 +9053,7 @@ For example if declare A A (.B(SIG)) then B will be included in the list."
 	  pins pin)
       (verilog-backward-open-paren)
       (while (re-search-forward "\\.\\([^(,) \t\n\f]*\\)\\s-*" end-mod-point t)
-	(setq pin (match-string 1))
+        (setq pin (match-string-no-properties 1))
 	(unless (verilog-inside-comment-or-string-p)
 	  (setq pins (cons (list pin) pins))
 	  (when (looking-at "(")
@@ -9065,7 +9067,7 @@ For example if declare A A (.B(SIG)) then B will be included in the list."
 	  pins pin)
       (verilog-backward-open-paren)
       (while (re-search-forward "\\([a-zA-Z0-9$_.%`]+\\)" end-mod-point t)
-	(setq pin (match-string 1))
+        (setq pin (match-string-no-properties 1))
 	(unless (verilog-inside-comment-or-string-p)
 	  (setq pins (cons (list pin) pins))))
       (vector pins))))
@@ -9086,7 +9088,7 @@ For example if declare A A (.B(SIG)) then B will be included in the list."
 			   (backward-char 1)
 			   (point)))
 	(while (re-search-forward "\\s-*\\([\"a-zA-Z0-9$_.%`]+\\)\\s-*,*" tpl-end-pt t)
-	  (setq sig-list (cons (list (match-string 1) nil nil) sig-list))))
+          (setq sig-list (cons (list (match-string-no-properties 1) nil nil) sig-list))))
       sig-list)))
 
 (defvar verilog-cache-has-lisp nil "True if any AUTO_LISP in buffer.")
@@ -9300,8 +9302,8 @@ TEMP-NEXT is true to ignore next token, fake from inside case statement."
 	  (forward-line 1))
 	(beginning-of-line)
 	(if (looking-at "^\\s-*\\([a-zA-Z0-9`_$]+\\)\\s-+\\([a-zA-Z0-9`_$]+\\)\\s-*(")
-	    (let ((module (match-string 1))
-		  (instant (match-string 2)))
+            (let ((module (match-string-no-properties 1))
+                  (instant (match-string-no-properties 2)))
 	      (if (not (member module verilog-keywords))
 		  (setq instants-list (cons (list module instant) instants-list)))))
 	(forward-line 1)))
@@ -9321,7 +9323,7 @@ Returns REGEXP and list of ( (signal_name connection_name)... )."
       ;; We reserve @"..." for future lisp expressions that evaluate
       ;; once-per-AUTOINST
       (when (looking-at "\\s-*\"\\([^\"]*\\)\"")
-	(setq tpl-regexp (match-string 1))
+        (setq tpl-regexp (match-string-no-properties 1))
 	(goto-char (match-end 0)))
       (search-forward "(")
       ;; Parse lines in the template
@@ -9591,7 +9593,8 @@ foo.v (an include file):
     (verilog-getopt-flags)
     (goto-char (point-min))
     (while (re-search-forward "^\\s-*`include\\s-+\\([^ \t\n\f]+\\)" nil t)
-      (let ((inc (verilog-substitute-include-name (match-string 1))))
+      (let ((inc (verilog-substitute-include-name
+                  (match-string-no-properties 1))))
 	(verilog-read-defines inc nil t)))))
 
 (defun verilog-read-signals (&optional start end)
@@ -13705,9 +13708,11 @@ being different from the final output's line numbering."
     (while (re-search-forward " Templated T\\([0-9]+\\) L\\([0-9]+\\)" nil t)
       (replace-match
        (concat " Templated "
-	       (int-to-string (+ (nth (string-to-number (match-string 1))
+               (int-to-string (+ (nth (string-to-number
+                                       (match-string-no-properties 1))
 				      template-line)
-				 (string-to-number (match-string 2)))))
+                                 (string-to-number
+                                  (match-string-no-properties 2)))))
        t t))))
 
 (defun verilog-auto-template-lint ()
@@ -14469,11 +14474,14 @@ Files are checked based on `verilog-library-flags'."
       (when (and (not hit)
 		 (looking-at verilog-include-file-regexp))
 	(if (and (car (verilog-library-filenames
-		       (match-string 1) (buffer-file-name)))
+                       (match-string-no-properties 1)
+                       (buffer-file-name)))
 		 (file-readable-p (car (verilog-library-filenames
-					(match-string 1) (buffer-file-name)))))
+                                        (match-string-no-properties 1)
+                                        (buffer-file-name)))))
 	    (find-file (car (verilog-library-filenames
-			     (match-string 1) (buffer-file-name))))
+                             (match-string-no-properties 1)
+                             (buffer-file-name))))
 	  (when warn
 	    (message
 	     "File `%s' isn't readable, use shift-mouse2 to paste in this field"
