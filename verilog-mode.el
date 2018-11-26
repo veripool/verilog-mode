@@ -5397,6 +5397,9 @@ This lets programs calling batch mode to easily extract error messages."
 	(error "%%Error: %s%s" (error-message-string err)
                (if (featurep 'xemacs) "\n" ""))))))  ; XEmacs forgets to add a newline
 
+;; Eliminate compile warning
+(defvar verilog-batch-orig-buffer-string)
+
 (defun verilog-batch-execute-func (funref &optional no-save)
   "Internal processing of a batch command.
 Runs FUNREF on all command arguments.
@@ -8720,7 +8723,6 @@ Return an array of [outputs inouts inputs wire reg assign const]."
   (defvar sigs-out-i)
   (defvar sigs-out-unk)
   (defvar sigs-temp)
-  (defvar verilog-batch-orig-buffer-string)
   ;; These are known to be from other packages and may not be defined
   (defvar diff-command)
   ;; There are known to be from newer versions of Emacs
