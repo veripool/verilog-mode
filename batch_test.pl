@@ -16,34 +16,36 @@ foreach my $test (@tests) {
     push @tests_args, "e/b/$test";
 }
 
-run("emacs --version"
+my $Emacs = $ENV{EMACS} || "emacs";
+
+run("$Emacs --version"
     );
 
-run("emacs --batch --no-site-file -l $tmpdir/verilog-mode.elc"
+run("$Emacs --batch --no-site-file -l $tmpdir/verilog-mode.elc"
     ." -l ./batch_test.el"
     ." ".join(' ',@tests_args)
     ." -f verilog-batch-delete-auto"
     );
 
-run("emacs --batch --no-site-file -l $tmpdir/verilog-mode.elc"
+run("$Emacs --batch --no-site-file -l $tmpdir/verilog-mode.elc"
     ." -l ./batch_test.el"
     ." ".join(' ',@tests_args)
     ." -f verilog-batch-auto"
     );
 
-run("emacs --batch --no-site-file -l $tmpdir/verilog-mode.elc"
+run("$Emacs --batch --no-site-file -l $tmpdir/verilog-mode.elc"
     ." -l ./batch_test.el"
     ." e/b/autoinst_lopaz.v"
     ." -f verilog-batch-diff-auto"
     );
 
-run("emacs --batch --no-site-file -l $tmpdir/verilog-mode.elc"
+run("$Emacs --batch --no-site-file -l $tmpdir/verilog-mode.elc"
     ." -l ./batch_test.el"
     ." e/b/autoinst_star.v"
     ." -f verilog-batch-diff-auto"
     );
 
-run("emacs --batch --no-site-file -l $tmpdir/verilog-mode.elc"
+run("$Emacs --batch --no-site-file -l $tmpdir/verilog-mode.elc"
     ." -l ./batch_test.el"
     ." ".join(' ',@tests_args)
     ." -f verilog-batch-indent"
@@ -53,13 +55,13 @@ foreach my $test (@tests) {
     run("diff tests_batch_ok/$test e/b/$test");
 }
 
-run("emacs --batch --no-site-file -l $tmpdir/verilog-mode.elc"
+run("$Emacs --batch --no-site-file -l $tmpdir/verilog-mode.elc"
     ." -l ./batch_test.el"
     ." ".join(' ',@tests_args)
     ." -f verilog-batch-delete-trailing-whitespace"
     );
 
-run("emacs --batch --no-site-file -l $tmpdir/verilog-mode.elc"
+run("$Emacs --batch --no-site-file -l $tmpdir/verilog-mode.elc"
     ." -l ./batch_prof.el"
     );
 
