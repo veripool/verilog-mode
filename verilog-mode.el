@@ -9905,7 +9905,8 @@ If undefined, and WING-IT, return just SYMBOL without the tick, else nil."
 
 (defun verilog-symbol-detick-text (text)
   "Return TEXT without any known defines.
-If the variable vh-{symbol} is defined, substitute that value."
+If the variable vh-{symbol} is defined, substitute that value.
+This function is intended for use in AUTO_TEMPLATE Lisp expressions."
   (let ((ok t) symbol val)
     (while (and ok (string-match "`\\([a-zA-Z0-9_]+\\)" text))
       (setq symbol (match-string 1 text))
