@@ -16,11 +16,13 @@ S=/home/mac/development/www.verilog.com/src/
 D=$(S)data
 F=/home/mac/external_webpage/src/verilog.com/ftp
 # the directory where the .elc files will be installed
-XEMACS  = xemacs
+XEMACS  ?= xemacs
 XEMACS_DEST = /usr/local/lib/xemacs/xemacs-packages/lisp/prog-modes/
+EMACS   ?= emacs
 EMACS_DEST = /usr/share/emacs/site-lisp/
 ELC	= -batch -q -f batch-byte-compile
 MAKECHANGELOG = perl makechangelog
+export XEMACS
 export EMACS
 
 default : e/verilog-mode.elc x/verilog-mode.elc
