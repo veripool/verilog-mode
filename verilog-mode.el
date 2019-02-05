@@ -8515,21 +8515,23 @@ Return an array of [outputs inouts inputs wire reg assign const]."
 	  (forward-char 1)
 	  (when (< paren sig-paren)
 	    (setq expect-signal nil rvalue nil)))   ; ) that ends variables inside v2k arg list
-	 ((looking-at "\\s-*\\(\\[[^]]+\\]\\)")
-	  (goto-char (match-end 0))
+	 ((looking-at "\\[")
+          (setq keywd (buffer-substring-no-properties
+                       (point)
+                       (progn (forward-sexp 1) (point))))
 	  (cond (newsig	; Memory, not just width.  Patch last signal added's memory (nth 3)
 		 (setcar (cdr (cdr (cdr newsig)))
 			 (if (verilog-sig-memory newsig)
                              (concat (verilog-sig-memory newsig)
-                                     (match-string-no-properties 1))
-			   (match-string-no-properties 1))))
+                                     keywd)
+			   keywd)))
                 (vec  ; Multidimensional
 		 (setq multidim (cons vec multidim))
 		 (setq vec (verilog-string-replace-matches
-			    "\\s-+" "" nil nil (match-string-no-properties 1))))
+			    "\\s-+" "" nil nil keywd)))
                 (t  ; Bit width
 		 (setq vec (verilog-string-replace-matches
-			    "\\s-+" "" nil nil (match-string-no-properties 1))))))
+			    "\\s-+" "" nil nil keywd)))))
 	 ;; Normal or escaped identifier -- note we remember the \ if escaped
 	 ((looking-at "\\s-*\\([a-zA-Z0-9`_$]+\\|\\\\[^ \t\n\f]+\\)")
 	  (goto-char (match-end 0))
