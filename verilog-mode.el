@@ -2786,7 +2786,7 @@ find the errors."
 (defconst verilog-behavioral-block-beg-re
   (eval-when-compile (verilog-regexp-words '("initial" "final" "always" "always_comb" "always_latch" "always_ff"
                                              "function" "task"))))
-(defconst verilog-coverpoint-re "\\w+\\s*:\\s*\\(coverpoint\\|cross\\|constraint\\)")
+(defconst verilog-coverpoint-re "\\w+\\s-*:\\s-*\\(coverpoint\\|cross\\|constraint\\)")
 (defconst verilog-in-constraint-re  ; keywords legal in constraint blocks starting a statement/block
   (eval-when-compile (verilog-regexp-words '("if" "else" "solve" "foreach"))))
 
