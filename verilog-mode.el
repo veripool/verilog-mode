@@ -1285,6 +1285,13 @@ See the \\[verilog-faq] for examples on using this."
   :type '(choice (const nil) regexp))
 (put 'verilog-auto-input-ignore-regexp 'safe-local-variable 'stringp)
 
+(defcustom verilog-auto-reg-input-assigned-ignore-regexp nil
+  "If non-nil, when creating AUTOINPUTREG, ignore signals matching this regexp."
+  :version "27.1"
+  :group 'verilog-mode-auto
+  :type '(choice (const nil) regexp))
+(put 'verilog-auto-reg-input-assigned-ignore-regexp 'safe-local-variable 'stringp)
+
 (defcustom verilog-auto-inout-ignore-regexp nil
   "If non-nil, when creating AUTOINOUT, ignore signals matching this regexp.
 See the \\[verilog-faq] for examples on using this."
@@ -12080,14 +12087,17 @@ Typing \\[verilog-auto] will make this into:
 
 (defun verilog-auto-reg-input ()
   "Expand AUTOREGINPUT statements, as part of \\[verilog-auto].
-Make reg statements instantiation inputs that aren't already declared.
-This is useful for making a top level shell for testing the module that is
-to be instantiated.
+Make reg statements instantiation inputs that aren't already
+declared or assigned to.  This is useful for making a top level
+shell for testing the module that is to be instantiated.
 
 Limitations:
   This ONLY detects inputs of AUTOINSTants (see `verilog-read-sub-decls').
 
   This does NOT work on memories, declare those yourself.
+
+  Assignments cause the assigned-to variable not to be declared unless
+  the name matches `verilog-auto-reg-input-assigned-ignore-regexp'.
 
 An example (see `verilog-auto-inst' for what else is going on here):
 
@@ -12126,7 +12136,9 @@ Typing \\[verilog-auto] will make this into:
 		       (append (verilog-subdecls-get-inputs modsubdecls)
 			       (verilog-subdecls-get-inouts modsubdecls))
 		       (append (verilog-decls-get-signals moddecls)
-			       (verilog-decls-get-assigns moddecls))))))
+                               (verilog-signals-not-matching-regexp
+                                (verilog-decls-get-assigns moddecls)
+                                verilog-auto-reg-input-assigned-ignore-regexp))))))
       (when sig-list
 	(verilog-forward-or-insert-line)
 	(verilog-insert-indent "// Beginning of automatic reg inputs (for undeclared instantiated-module inputs)\n")
