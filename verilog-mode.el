@@ -2060,7 +2060,7 @@ find the errors."
       "`resetall" "`timescale" "`unconnected_drive" "`undef" "`undefineall"
       ;; compiler directives not covered by IEEE 1800
       "`case" "`default" "`endfor" "`endprotect" "`endswitch" "`endwhile" "`for"
-      "`format" "`if" "`let" "`protect" "`switch" "`timescale" "`time_scale"
+      "`format" "`if" "`let" "`protect" "`switch" "`time_scale"
       "`while"
       ))
   "List of Verilog compiler directives.")
@@ -2421,9 +2421,7 @@ find the errors."
      '(
        ;; blocking assignment_operator
        "=" "+=" "-=" "*=" "/=" "%=" "&=" "|=" "^=" "<<=" ">>=" "<<<=" ">>>="
-       ;; non blocking assignment operator
-       "<="
-       ;; comparison
+       ;; comparison (also nonblocking assignment "<=")
        "==" "!=" "===" "!==" "<=" ">=" "==?" "!=?" "<->"
        ;; event_trigger
        "->" "->>"
@@ -2980,9 +2978,10 @@ find the errors."
      "\\<\\(`pragma\\)\\>\\s-+.+$"
      "\\)\\|\\(?:"
      ;; `timescale time_unit / time_precision
-     "\\<\\(`timescale\\)\\>\\s-+10\\{0,2\\}\\s-*[munpf]?s\\s-*\\/\\s-*10\\{0,2\\}\\s-*[munpf]?s"
+     "\\<\\(`timescale\\)\\>\\s-+10\\{0,2\\}\\s-*[munpf]?s\\s-*/\\s-*10\\{0,2\\}\\s-*[munpf]?s"
      "\\)\\|\\(?:"
-     ;; `define and `if can span multiple lines if line ends in '\'. NOTE: `if is not IEEE 1800-2012
+     ;; `define and `if can span multiple lines if line ends in '\'.
+     ;; NOTE: `if is not IEEE 1800-2012.
      ;; from http://www.emacswiki.org/emacs/MultilineRegexp
      (concat "\\<\\(`define\\|`if\\)\\>"  ; directive
              "\\s-+"  ; separator
