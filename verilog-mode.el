@@ -2151,14 +2151,7 @@ find the errors."
        ) nil ) ) )
 
 (defconst verilog-vmm-statement-re
-  (eval-when-compile
-    (verilog-regexp-opt
-     '(
-       "`vmm_\\(data\\|env\\|scenario\\|subenv\\|xactor\\)_member_\\(scalar\\|string\\|enum\\|vmm_data\\|channel\\|xactor\\|subenv\\|user_defined\\)\\(_array\\)?"
-       ;; "`vmm_xactor_member_enum_array"
-       ;; "`vmm_xactor_member_scalar_array"
-       ;; "`vmm_xactor_member_scalar"
-       ) nil )))
+  "`vmm_\\(data\\|env\\|scenario\\|subenv\\|xactor\\)_member_\\(scalar\\|string\\|enum\\|vmm_data\\|channel\\|xactor\\|subenv\\|user_defined\\)\\(_array\\)?")
 
 (defconst verilog-ovm-statement-re
   (eval-when-compile
