@@ -14263,13 +14263,12 @@ and the case items."
 (defun verilog-sk-define-signal ()
   "Insert a definition of signal under point at top of module."
   (interactive "*")
-  (let* ((sig-re "[a-zA-Z0-9_]*")
-	 (v1 (buffer-substring
+  (let* ((v1 (buffer-substring
               (save-excursion
-                (skip-chars-backward sig-re)
+                (skip-chars-backward "a-zA-Z0-9_")
                 (point))
               (save-excursion
-                (skip-chars-forward sig-re)
+                (skip-chars-forward "a-zA-Z0-9_")
                 (point)))))
     (if (not (member v1 verilog-keywords))
 	(save-excursion
