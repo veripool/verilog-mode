@@ -2760,13 +2760,13 @@ find the errors."
 (defconst verilog-delay-re "#\\s-*\\(\\([0-9_]+\\('s?[hdxbo][0-9a-fA-F_xz]+\\)?\\)\\|\\(([^()]*)\\)\\|\\(\\sw+\\)\\)")
 (defconst verilog-declaration-re-2-no-macro
   (concat "\\s-*" verilog-declaration-re
-	  "\\s-*\\(\\(" verilog-optional-signed-range-re "\\)\\|\\(" verilog-delay-re "\\)"
-	  "\\)?"))
+          "\\s-*\\(\\(" verilog-optional-signed-range-re "\\)\\|\\(" verilog-delay-re "\\)"
+          "\\)"))
 (defconst verilog-declaration-re-2-macro
   (concat "\\s-*" verilog-declaration-re
-	  "\\s-*\\(\\(" verilog-optional-signed-range-re "\\)\\|\\(" verilog-delay-re "\\)"
-	  "\\|\\(" verilog-macroexp-re "\\)"
-	  "\\)?"))
+          "\\s-*\\(\\(" verilog-optional-signed-range-re "\\)\\|\\(" verilog-delay-re "\\)"
+          "\\|\\(" verilog-macroexp-re "\\)"
+          "\\)"))
 (defconst verilog-declaration-re-1-macro
   (concat "^" verilog-declaration-re-2-macro))
 
@@ -10810,7 +10810,7 @@ Intended for internal use inside a `verilog-save-font-no-change-functions' block
                              'verilog-delete-auto-star-all)
   ;; Remove template comments ... anywhere in case was pasted after AUTOINST removed
   (goto-char (point-min))
-  (while (re-search-forward "\\s-*// \\(Templated\\|Implicit \\.\\*\\)\\([ \tLT0-9]*\\| LHS: .*\\)?$" nil t)
+  (while (re-search-forward "\\s-*// \\(Templated\\|Implicit \\.\\*\\)\\([ \tLT0-9]*\\| LHS: .*\\)$" nil t)
     (replace-match ""))
 
   ;; Final customize
@@ -11412,7 +11412,7 @@ If PAR-VALUES replace final strings with these parameter values."
     (when tpl-ass
       ;; Evaluate @"(lispcode)"
       (when (string-match "@\".*[^\\]\"" tpl-net)
-	(while (string-match "@\"\\(\\([^\\\"]*\\(\\\\.\\)*\\)*\\)\"" tpl-net)
+        (while (string-match "@\"\\(\\([^\\\"]\\|\\\\.\\)*\\)\"" tpl-net)
 	  (setq tpl-net
 		(concat
 		 (substring tpl-net 0 (match-beginning 0))
