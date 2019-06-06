@@ -3,6 +3,8 @@ module t;
       begin
 	 a  = 8;
       end
+   endclocking
+   default clocking clocking_identifier;
       property foo (a)
 	a   = b;
       endproperty

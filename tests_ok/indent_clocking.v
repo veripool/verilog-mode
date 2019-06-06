@@ -1,8 +1,10 @@
 module t;
    default clocking @(posedge clk);
-   begin
-      a = 8;
-   end
+      begin
+         a = 8;
+      end
+   endclocking
+   default clocking clocking_identifier;
    property foo (a)
      a = b;
    endproperty
