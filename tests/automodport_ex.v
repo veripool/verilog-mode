@@ -18,7 +18,7 @@ module ExampMain
   // End of automatics
 );
 
-   /*AUTOASSIGNMODPORT("ExampIf" "mp" "inst")*/
+   /*AUTOASSIGNMODPORT("ExampIf","mp","inst")*/
    // Beginning of automatic assignments from modport
    assign inst.req_dat = req_dat;
    assign inst.req_val = req_val;

@@ -11,17 +11,19 @@ endinterface
 
 module ExampMain
   ( input clk,
-    /*AUTOINOUTMODPORT("ExampIf" "mp")*/
+    /*AUTOINOUTMODPORT("ExampIf", "mp")*/
     // Beginning of automatic in/out/inouts (from modport)
     input       req_val,
     input [7:0] req_dat
     // End of automatics
     );
-   
-   /*AUTOASSIGNMODPORT("ExampIf","mp","inst")*/
+   /*AUTOASSIGNMODPORT("ExampIf", "mp", "inst")*/
    // Beginning of automatic assignments from modport
    assign inst.req_dat = req_dat;
    assign inst.req_val = req_val;
    // End of automatics
-   
 endmodule
+
+// Local Variables:
+// indent-tabs-mode: nil
+// End:

@@ -26,17 +26,17 @@ module auto_module
       .clk		(my_clk),
       .rst_n		(my_rst_n));
 
-   /*AUTOASSIGNMODPORT("automodport_if" "req_mon_mp" "auto_i" )*/
+   /*AUTOASSIGNMODPORT("automodport_if", "req_mon_mp", "auto_i" )*/
    //ex: assign auto_i.req_credit         = req_credit;
    //ex: assign auto_i.req_data           = req_data;
    //ex: assign auto_i.req_val            = req_val;
 
-   /*AUTOASSIGNMODPORT("automodport_if" "rsp_drv_mp" "auto_i" )*/
+   /*AUTOASSIGNMODPORT("automodport_if", "rsp_drv_mp", "auto_i" )*/
    //ex: assign rsp_cmd                   = auto_i.rsp_cmd;
    //ex: assign rsp_data                  = auto_i.rsp_data;
    //ex: assign auto_i.rsp_credit         = rsp_credit;
 
-   /*AUTOASSIGNMODPORT("automodport_if" "r.*" "auto_i" )*/
+   /*AUTOASSIGNMODPORT("automodport_if", "r.*", "auto_i" )*/
 
 
    initial begin
