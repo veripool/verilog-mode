@@ -13218,7 +13218,7 @@ signals manually (or put them into a \"\\=`ifdef NEVER signal<=\\=`0;
 \\=`endif\" so Verilog-Mode ignores them.)
 
 An example:
-    
+
         module ExampReset ();
            always @(posedge clk or negedge reset_l) begin
               if (!reset_l) begin
@@ -13322,20 +13322,20 @@ An example of making a stub for another module:
           #(parameter P)
           (input i, output o, inout io);
         endmodule
-    
+
         module ExampStub (/*AUTOARG*/);
             /*AUTOINOUTPARAM(\"ExampMain\")*/
             /*AUTOINOUTMODULE(\"ExampMain\")*/
-    
+
             /*AUTOTIEOFF*/
-    
+
             // verilator lint_off UNUSED
             wire _unused_ok = &{1\\='b0,
                                 /*AUTOUNUSED*/
                                 1\\='b0};
             // verilator lint_on  UNUSED
         endmodule
-    
+
 Typing \\[verilog-auto] will make this into:
 
         ...
@@ -13479,13 +13479,13 @@ An example of making a stub for another module:
         module ExampMain
           (input unused_input_a, input unused_input_b);
         endmodule
-    
+
         module ExampStub2 (/*AUTOARG*/);
             /*AUTOINOUTPARAM(\"ExampMain\")*/
             /*AUTOINOUTMODULE(\"ExampMain\")*/
-    
+
             /*AUTOTIEOFF*/
-    
+
             // verilator lint_off UNUSED
             wire _unused_ok = &{1\\='b0,
                                 /*AUTOUNUSED*/
