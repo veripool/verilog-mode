@@ -11524,6 +11524,11 @@ See `verilog-auto-star' for more information.
 The pins are printed in declaration order or alphabetically,
 based on the `verilog-auto-inst-sort' variable.
 
+To debug what file a submodule comes from, in a buffer with
+AUTOINST, use \\[verilog-goto-defun] to switch buffers to the
+point containing the given symbol (i.e. a submodule name)'s
+module definition.
+
 Limitations:
   Module names must be resolvable to filenames by adding a
   `verilog-library-extensions', and being found in the same directory, or
