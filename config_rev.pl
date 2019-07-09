@@ -13,11 +13,19 @@ my $dir = $ARGV[0]; defined $dir or die "%Error: No directory argument,";
 chdir $dir;
 my $file = $ARGV[1]; defined $file or die "%Error: No file argument,";
 
-my $rev = 'UNKNOWN_REV';
-my $data = `git log --pretty=format:'%ad-%h' --date=short -1 $file`;
+my $ver = 'UNKNOWN_VER';
+my $data = `git log --pretty=format:'%ad' --date=short -1 $file`;
 if ($data =~ /(^20.*)/i) {
+    $ver = $1;
+}
+(my $verdot = $ver) =~ s/-/./g;
+
+my $rev = 'UNKNOWN_REV';
+$data = `git log --pretty=format:'%h' --date=short -1 $file`;
+if ($data =~ /(^[0-9a-f]+)/i) {
     $rev = $1;
 }
+my $revdot = sprintf("%09d", hex $rev);
 
 $data = `git status $file`;
 if ($data =~ /Changed but not updated/i
@@ -27,7 +35,10 @@ if ($data =~ /Changed but not updated/i
 
 # Filter the code
 my $wholefile = join('',<STDIN>);
-$wholefile =~ s/__VMVERSION__-__VMREVISION__/$rev/mg;
+$wholefile =~ s/__VMVERSION__/$ver/mg;
+$wholefile =~ s/__VMVERSIONDOT__/$verdot/mg;
+$wholefile =~ s/__VMREVISION__/$rev/mg;
+$wholefile =~ s/__VMREVISIONDOT__/$revdot/mg;
 $wholefile =~ s/__VMPACKAGER__/vpo/mg;
 print $wholefile;
 
