@@ -12390,7 +12390,7 @@ isn't declared elsewhere inside the module.  This is useful for modules which
 only instantiate other modules.
 
 Limitations:
-  This ONLY detects outputs of AUTOINSTants (see `verilog-read-sub-decls').
+  This ONLY detects inputs of AUTOINSTants (see `verilog-read-sub-decls').
 
   If placed inside the parenthesis of a module declaration, it creates
   Verilog 2001 style, else uses Verilog 1995 style.
@@ -12474,7 +12474,7 @@ Make inout statements for any inout signal in an /*AUTOINST*/ that
 isn't declared elsewhere inside the module.
 
 Limitations:
-  This ONLY detects outputs of AUTOINSTants (see `verilog-read-sub-decls').
+  This ONLY detects inouts of AUTOINSTants (see `verilog-read-sub-decls').
 
   If placed inside the parenthesis of a module declaration, it creates
   Verilog 2001 style, else uses Verilog 1995 style.
