@@ -530,8 +530,7 @@ you to the next lint error."
 ;; We don't mark it safe, as it's used as a shell command
 
 (defcustom verilog-preprocessor
-  ;; Very few tools give preprocessed output, so we'll default to Verilog-Perl
-  "vppreproc __FLAGS__ __FILE__"
+  "verilator -E __FLAGS__ __FILE__"
   "Program and arguments to use to preprocess Verilog source.
 This is invoked with `verilog-preprocess', and depending on the
 `verilog-set-compile-command', may also be invoked when you type
@@ -3830,7 +3829,7 @@ Variables controlling indentation/edit style:
 
 Variables controlling other actions:
 
- `verilog-linter'                   (default `surelint')
+ `verilog-linter'                   (default `none')
    Unix program to call to run the lint checker.  This is the default
    command for \\[compile-command] and \\[verilog-auto-save-compile].
 
