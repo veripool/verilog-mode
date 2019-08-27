@@ -7627,9 +7627,9 @@ and `verilog-separator-keywords'.)"
 (defun verilog-build-defun-re (str &optional arg)
   "Return function/task/module starting with STR as regular expression.
 With optional second ARG non-nil, STR is the complete name of the instruction."
-  (if arg
-      (concat "^\\(function\\|task\\|module\\)[ \t]+\\(" str "\\)\\>")
-    (concat "^\\(function\\|task\\|module\\)[ \t]+\\(" str "[a-zA-Z0-9_]*\\)\\>")))
+  (unless arg
+    (setq str (concat str "[a-zA-Z0-9_]*")))
+  (concat "^\\s-*\\(function\\|task\\|module\\)[ \t]+\\(?:\\(?:static\\|automatic\\)\\s-+\\)?\\(" str "\\)\\>"))
 
 (defun verilog-comp-defun (verilog-str verilog-pred verilog-flag)
   "Function passed to `completing-read', `try-completion' or `all-completions'.
