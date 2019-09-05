@@ -8995,7 +8995,7 @@ Outputs comments above subcell signals, for example:
 	  ;; below 3 modified by verilog-read-sub-decls-line
 	  sigs-out sigs-inout sigs-in sigs-intf sigs-intfd)
       (verilog-beg-of-defun-quick)
-      (while (verilog-re-search-forward-quick "\\(/\\*AUTOINST\\*/\\|\\.\\*\\)" end-mod-point t)
+      (while (verilog-re-search-forward-quick "\\(/\\*AUTOINST\\((.*?)\\)?\\*/\\|\\.\\*\\)" end-mod-point t)
 	(save-excursion
 	  (goto-char (match-beginning 0))
           (setq par-values (and verilog-auto-inst-param-value
@@ -10810,6 +10810,7 @@ Intended for internal use inside a `verilog-save-font-no-change-functions' block
              (verilog-regexp-words
               '("AS" "AUTOARG" "AUTOCONCATWIDTH" "AUTOINST" "AUTOINSTPARAM"
                 "AUTOSENSE")))
+           "\\((.*?)\\)?"
            "\\*/")
    'verilog-delete-to-paren)
   ;; Do .* instantiations, but avoid removing any user pins by looking for our magic comments
@@ -10940,7 +10941,7 @@ shown) will make this into:
 	(forward-char 1)
 	(let ((indent-pt (+ (current-column)))
 	      (end-pt (save-excursion (verilog-forward-close-paren) (point))))
-	  (cond ((verilog-re-search-forward-quick "\\(/\\*AUTOINST\\*/\\|\\.\\*\\)" end-pt t)
+	  (cond ((verilog-re-search-forward-quick "\\(/\\*AUTOINST\\((.*?)\\)?\\*/\\|\\.\\*\\)" end-pt t)
                  (goto-char end-pt))  ; Already there, continue search with next instance
 		(t
 		 ;; Delete identical interconnect
@@ -11678,7 +11679,7 @@ Templates:
         InstModule ms2m (/*AUTOINST*/
             // Outputs
             .NotInTemplate      (NotInTemplate),
-            .ptl_bus            (ptl_busnew[3:0]),  // Templated
+            .ptl_bus            (ptl_busnew[3:0]),
             ....
 
 
@@ -11834,7 +11835,7 @@ For more information see the \\[verilog-faq] and forums at URL
   (save-excursion
     ;; Find beginning
     (let* ((pt (point))
-	   (for-star (save-excursion (backward-char 2) (looking-at "\\.\\*")))
+           (for-star (save-excursion (backward-char 2) (looking-at "\\.\\*")))
 	   (indent-pt (save-excursion (verilog-backward-open-paren)
 				      (1+ (current-column))))
 	   (verilog-auto-inst-column (max verilog-auto-inst-column
@@ -11939,6 +11940,10 @@ For more information see the \\[verilog-faq] and forums at URL
 Replace the parameter connections to an instantiation with ones
 automatically derived from the module header of the instantiated netlist.
 
+You may also provide an optional regular expression, in which
+case only parameters matching the regular expression will be
+included.
+
 See \\[verilog-auto-inst] for limitations, and templates to customize the
 output.
 
@@ -11974,7 +11979,9 @@ Templates:
   just as you would with \\[verilog-auto-inst]."
   (save-excursion
     ;; Find beginning
-    (let* ((pt (point))
+    (let* ((params (verilog-read-auto-params 0 1))
+           (regexp (nth 0 params))
+           (pt (point))
 	   (indent-pt (save-excursion (verilog-backward-open-paren)
 				      (1+ (current-column))))
 	   (verilog-auto-inst-column (max verilog-auto-inst-column
@@ -12016,6 +12023,8 @@ Templates:
 			 (verilog-decls-get-gparams submoddecls)
 			 skip-pins))
 	      (vl-dir "parameter"))
+          (when regexp
+            (setq sig-list (verilog-signals-matching-regexp sig-list regexp)))
 	  (when sig-list
 	    (when (not did-first) (verilog-auto-inst-first) (setq did-first t))
             ;; Note these are searched for in verilog-read-sub-decls.
@@ -13889,8 +13898,8 @@ Wilson Snyder (wsnyder@wsnyder.org)."
           (verilog-auto-re-search-do "/\\*AUTOINSERTLISP(.*?)\\*/"
                                      'verilog-auto-insert-lisp)
           ;; Expand instances before need the signals the instances input/output
-          (verilog-auto-re-search-do "/\\*AUTOINSTPARAM\\*/" 'verilog-auto-inst-param)
-          (verilog-auto-re-search-do "/\\*AUTOINST\\*/" 'verilog-auto-inst)
+          (verilog-auto-re-search-do "/\\*AUTOINSTPARAM\\((.*?)\\)?\\*/" 'verilog-auto-inst-param)
+          (verilog-auto-re-search-do "/\\*AUTOINST\\((.*?)\\)?\\*/" 'verilog-auto-inst)
           (verilog-auto-re-search-do "\\.\\*" 'verilog-auto-star)
           ;; Must be done before autoin/out as creates a reg
           (verilog-auto-re-search-do "/\\*AUTOASCIIENUM(.*?)\\*/" 'verilog-auto-ascii-enum)
@@ -14426,7 +14435,7 @@ Clicking on the middle-mouse button loads them in a buffer (as in dired)."
 	    ;; This scanner is syntax-fragile, so don't get bent
 	    (when verilog-highlight-modules
 	      (condition-case nil
-		  (while (verilog-re-search-forward-quick "\\(/\\*AUTOINST\\*/\\|\\.\\*\\)" end-point t)
+		  (while (verilog-re-search-forward-quick "\\(/\\*AUTOINST\\((.*?)\\)?\\*/\\|\\.\\*\\)" end-point t)
 		    (save-excursion
 		      (goto-char (match-beginning 0))
 		      (unless (verilog-inside-comment-or-string-p)
