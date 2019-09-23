@@ -4,7 +4,7 @@
 
 ;; Author: Michael McNamara <mac@verilog.com>
 ;;    Wilson Snyder <wsnyder@wsnyder.org>
-;; X-URL: http://www.veripool.org
+;; X-URL: https://www.veripool.org
 ;; Created: 3 Jan 1996
 ;; Keywords: languages
 ;; The "Version" is the date followed by the decimal rendition of the Git
@@ -55,7 +55,7 @@
 ;; under continuous development.  Please report any issues to the issue
 ;; tracker at
 ;;
-;;    http://www.veripool.org/verilog-mode
+;;    https://www.veripool.org/verilog-mode
 ;;
 ;; Please use verilog-submit-bug-report to submit a report; type C-c
 ;; C-b to invoke this and as a result we will have a much easier time
@@ -72,7 +72,7 @@
 ;; default.
 
 ;; You can get step by step help in installing this file by going to
-;; <http://www.veripool.com/verilog-mode>
+;; <https://www.veripool.org/verilog-mode>
 
 ;; The short list of installation instructions are: To set up
 ;; automatic Verilog mode, put this file in your load path, and put
@@ -117,7 +117,7 @@
 
 ;;; History:
 ;;
-;; See commit history at http://www.veripool.org/verilog-mode.html
+;; See commit history at https://www.veripool.org/verilog-mode
 ;; (This section is required to appease checkdoc.)
 
 ;;; Code:
@@ -2982,7 +2982,7 @@ find the errors."
      "\\)\\|\\(?:"
      ;; `define and `if can span multiple lines if line ends in '\'.
      ;; NOTE: `if is not IEEE 1800-2012.
-     ;; from http://www.emacswiki.org/emacs/MultilineRegexp
+     ;; from https://www.emacswiki.org/emacs/MultilineRegexp
      (concat "\\<\\(`define\\|`if\\)\\>"  ; directive
              "\\s-+"  ; separator
              "\\(?:.*?\\(?:\n.*\\)*?\\)"  ; definition: to end of line, then maybe more lines (excludes any trailing \n)
@@ -11596,7 +11596,7 @@ Exceptions:
   Unless you are instantiating a module multiple times, or the module is
   something trivial like an adder, DO NOT CHANGE SIGNAL NAMES ACROSS HIERARCHY.
   It just makes for unmaintainable code.  To sanitize signal names, try
-  vrename from URL `http://www.veripool.org'.
+  vrename from URL `https://www.veripool.org'.
 
   When you need to violate this suggestion there are two ways to list
   exceptions, placing them before the AUTOINST, or using templates.
@@ -11831,7 +11831,7 @@ Lisp Templates:
   occur.
 
 For more information see the \\[verilog-faq] and forums at URL
-`http://www.veripool.org'."
+`https://www.veripool.org'."
   (save-excursion
     ;; Find beginning
     (let* ((pt (point))
@@ -13840,7 +13840,7 @@ Using \\[describe-function], see also:
     `verilog-read-includes'     for reading \\=`includes
 
 If you have bugs with these autos, please file an issue at
-URL `http://www.veripool.org/verilog-mode' or contact the AUTOAUTHOR
+URL `https://www.veripool.org/verilog-mode' or contact the AUTOAUTHOR
 Wilson Snyder (wsnyder@wsnyder.org)."
   (interactive)
   (unless noninteractive (message "Updating AUTOs..."))
@@ -14521,9 +14521,9 @@ Files are checked based on `verilog-library-flags'."
   (with-output-to-temp-buffer "*verilog-mode help*"
     (princ (format "You are using verilog-mode %s\n" verilog-mode-version))
     (princ "\n")
-    (princ "For new releases, see http://www.veripool.com/verilog-mode\n")
+    (princ "For new releases, see https://www.veripool.org/verilog-mode\n")
     (princ "\n")
-    (princ "For frequently asked questions, see http://www.veripool.org/verilog-mode-faq.html\n")
+    (princ "For frequently asked questions, see https://www.veripool.org/verilog-mode-faq.html\n")
     (princ "\n")
     (princ "To submit a bug, use M-x verilog-submit-bug-report\n")
     (princ "\n")))
@@ -14626,10 +14626,10 @@ my coding ability... until now.  I'd really appreciate anything you
 could do to help me out with this minor deficiency in the product.
 
 I've taken a look at the Verilog-Mode FAQ at
-http://www.veripool.org/verilog-mode-faq.html.
+https://www.veripool.org/verilog-mode-faq.html.
 
 And, I've considered filing the bug on the issue tracker at
-http://www.veripool.org/verilog-mode-bugs
+https://www.veripool.org/verilog-mode-bugs
 since I realize that public bugs are easier for you to track,
 and for others to search, but would prefer to email.
 
