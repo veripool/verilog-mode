@@ -8852,6 +8852,12 @@ Return an array of [outputs inouts inputs wire reg assign const]."
     (let (sig vec multidim mem)
       ;; Remove leading reduction operators, etc
       (setq expr (verilog-string-replace-matches "^\\s-*[---+~!|&]+\\s-*" "" nil nil expr))
+      ;; Remove casting types
+      (setq expr (verilog-string-replace-matches
+                  "^\\s-*[a-zA-Z_][a-zA-Z_0-9]*\\s-*'" "" nil nil expr))
+      ;; Remove simple single set of parens (perhaps from cast, or perhaps not)
+      (setq expr (verilog-string-replace-matches
+                  "^\\s-*(\\([^)]*\\))\\s-*$" "\\1" nil nil expr))
       ;;(message "vrsde-ptop: `%s'" expr)
       (cond  ; Find \signal. Final space is part of escaped signal name
        ((string-match "^\\s-*\\(\\\\[^ \t\n\f]+\\s-\\)" expr)

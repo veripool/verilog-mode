@@ -1,12 +1,14 @@
 module aaa (/*AUTOARG*/
             // Outputs
-            y1, y0,
+            y1, y0, u1, u0,
             // Inputs
             y3, y2
             );
    
    /*AUTOOUTPUT*/
    // Beginning of automatic outputs (from unused autoinst outputs)
+   output u0; // From bbb of bbb.v
+   output u1; // From bbb of bbb.v
    output y0; // From bbb of bbb.v
    output y1; // From bbb of bbb.v
    // End of automatics
