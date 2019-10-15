@@ -8987,14 +8987,16 @@ This only works on instantiations created with /*AUTOINST*/ converted by
 \\[verilog-auto-inst].  Otherwise, it would have to read in the whole
 component library to determine connectivity of the design.
 
-One work around for this problem is to manually create // Inputs and //
-Outputs comments above subcell signals, for example:
+One work around for this problem is to manually create // Inputs
+and // Outputs comments above subcell signals, then have an empty
+AUTOINST, for example:
 
         submod SubModuleName (
             // Outputs
             .out (out),
             // Inputs
-            .in  (in));"
+            .in  (in)
+            /*AUTOINST*/);"
   (save-excursion
     (let ((end-mod-point (verilog-get-end-of-defun))
           st-point end-inst-point par-values
