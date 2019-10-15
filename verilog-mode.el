@@ -335,6 +335,15 @@ wherever possible, since it is slow."
     (defalias 'verilog-restore-buffer-modified-p 'set-buffer-modified-p))))
 
 (eval-and-compile
+  (cond
+   ((fboundp 'quit-window)
+    (defalias 'verilog-quit-window 'quit-window))
+   (t
+    (defun verilog-quit-window (kill-ignored window)
+      "Quit WINDOW and bury its buffer. KILL-IGNORED is ignored."
+      (delete-window window)))))
+
+(eval-and-compile
   ;; Both xemacs and emacs
   (condition-case nil
       (require 'diff)  ; diff-command and diff-switches
@@ -7598,7 +7607,7 @@ and `verilog-separator-keywords'.)"
 	       (display-completion-list allcomp))
 	     ;; Wait for a key press. Then delete *Completion*  window
 	     (momentary-string-display "" (point))
-	     (delete-window (get-buffer-window (get-buffer "*Completions*")))
+	     (verilog-quit-window nil (get-buffer-window "*Completions*"))
 	     )))))
 
 (defun verilog-show-completions ()
@@ -7611,7 +7620,7 @@ and `verilog-separator-keywords'.)"
     (display-completion-list (nth 2 (verilog-completion-at-point))))
   ;; Wait for a key press. Then delete *Completion*  window
   (momentary-string-display "" (point))
-  (delete-window (get-buffer-window (get-buffer "*Completions*"))))
+  (verilog-quit-window nil (get-buffer-window "*Completions*")))
 
 (defun verilog-get-default-symbol ()
   "Return symbol around current point as a string."
