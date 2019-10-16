@@ -8629,6 +8629,9 @@ Return an array of [outputs inouts inputs wire reg assign const]."
 		;; Ifdef?  Ignore name of define
 		((member keywd '("`ifdef" "`ifndef" "`elsif"))
 		 (setq rvalue t))
+		;; Line directive? Skip over the rest of the line
+		((equal keywd "`line")
+		 (forward-line))
 		;; Type?
 		((unless ptype
 		   (verilog-typedef-name-p keywd))
