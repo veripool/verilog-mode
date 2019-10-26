@@ -12,9 +12,6 @@
 #	# See x/verilog-mode.el for version to install
 ######################################################################
 
-S=/home/mac/development/www.verilog.com/src/
-D=$(S)data
-F=/home/mac/external_webpage/src/verilog.com/ftp
 # the directory where the .elc files will be installed
 XEMACS  ?= xemacs
 XEMACS_DEST = /usr/local/lib/xemacs/xemacs-packages/lisp/prog-modes/
@@ -28,16 +25,15 @@ export EMACS
 default : e/verilog-mode.elc x/verilog-mode.elc
 
 release : .timestamps
-install : .timestamps ChangeLog test $(D)/mmencoded_verilog-mode $(D)/emacs-version.h\
-	$(S)ChangeLog.txt email $(S)bits/verilog-mode.el local \
-#	ftp  
-	@echo Installation up to date
+install : .timestamps
+	@echo "Installation not supported by this makefile"
+	false
 
 .timestamps:
 	@mkdir -p $@
 
 test:	.timestamps/test
-.timestamps/test: x/verilog-mode.elc e/verilog-mode.elc mmencoded_verilog-mode verilog.info 0test.el .timestamps
+.timestamps/test: x/verilog-mode.elc e/verilog-mode.elc verilog.info 0test.el .timestamps
 ifeq ($(VERILOG_MODE_TEST_FILE),)
 	$(MAKE) test_batch test_errors test_emacs test_xemacs
 	@touch $@
@@ -103,38 +99,13 @@ local:	.timestamps/local
 	$(EMACS) $(ELC) $(EMACS_DEST)verilog-mode.el
 	@touch $@
 
-ftp:	.timestamps/ftp
-.timestamps/ftp:	$(F) mmencoded_verilog-mode verilog-mode.el README
-	cp mmencoded_verilog-mode $(F)
-	cp verilog-mode.el $(F)
-	cp README $(F)/.message
-	@touch $@
-
-$(F):
-	mkdir $(F)
-
-ChangeLog.txt mmencoded_verilog-mode emacs-version.h : make_log.pl verilog-mode.el README
+ChangeLog.txt emacs-version.h : make_log.pl verilog-mode.el
 ifneq ($(VERILOGMODE_SKIP_MAKELOG),1)
 	./make_log.pl	
 endif
 
 ChangeLog : verilog-mode.el makechangelog
 	$(MAKECHANGELOG) --git verilog-mode.el > $@
-
-email:	.timestamps/email
-.timestamps/email: mmencoded_verilog-mode
-	./make_mail.pl
-	@touch $@
-
-$(D)/mmencoded_verilog-mode : mmencoded_verilog-mode
-	cp $? $@
-$(D)/emacs-version.h : emacs-version.h
-	cp $? $@
-	touch $(S)verilog-mode.html
-$(S)ChangeLog.txt : ChangeLog.txt
-	cp $? $@
-$(S)bits/verilog-mode.el : verilog-mode.el
-	cp $? $@
 
 x/verilog-mode.el : verilog-mode.el ./config_rev.pl
 	rm -rf x
@@ -192,4 +163,4 @@ verilog-mode-tognu.el: e/verilog-mode.el Makefile
 # Clean
 
 clean::
-	/bin/rm -rf .timestamps e x test_dir verilog-mode.patch verilog-mode-tognu.el mmencoded_verilog-mode *.info
+	/bin/rm -rf .timestamps e x test_dir verilog-mode.patch verilog-mode-tognu.el *.info
