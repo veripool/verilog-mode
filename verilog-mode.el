@@ -1255,14 +1255,17 @@ See also `verilog-auto-arg-sort'."
 (put 'verilog-auto-inst-sort 'safe-local-variable 'verilog-booleanp)
 
 (defcustom verilog-auto-inst-vector t
-  "Non-nil means when creating default ports with AUTOINST, use bus subscripts.
+  "True means when creating default ports with AUTOINST, use bus subscripts.
 If nil, skip the subscript when it matches the entire bus as declared in
 the module (AUTOWIRE signals always are subscripted, you must manually
 declare the wire to have the subscripts removed.)  Setting this to nil may
-speed up some simulators, but is less general and harder to read, so avoid."
+speed up some simulators, but is less general and harder to read, so avoid.
+If `unsigned', use vectors for unsigned types (like using true,
+otherwise no vectors if sizes match (like using nil)."
   :group 'verilog-mode-auto
-  :type 'boolean)
-(put 'verilog-auto-inst-vector 'safe-local-variable 'verilog-booleanp)
+  :type '(choice (const nil) (const t) (const unsigned)))
+(put 'verilog-auto-inst-vector 'safe-local-variable
+     '(lambda (x) (memq x '(nil t unsigned))))
 
 (defcustom verilog-auto-inst-template-numbers nil
   "If true, when creating templated ports with AUTOINST, add a comment.
@@ -11375,7 +11378,9 @@ If PAR-VALUES replace final strings with these parameter values."
 	 (vl-memory (verilog-sig-memory port-st))
 	 (vl-mbits (if (verilog-sig-multidim port-st)
                        (verilog-sig-multidim-string port-st) ""))
-	 (vl-bits (if (or verilog-auto-inst-vector
+         (vl-bits (if (or (eq verilog-auto-inst-vector t)
+                          (and (eq verilog-auto-inst-vector `unsigned)
+                               (not (verilog-sig-signed port-st)))
 			  (not (assoc port (verilog-decls-get-signals moddecls)))
 			  (not (equal (verilog-sig-bits port-st)
 				      (verilog-sig-bits
