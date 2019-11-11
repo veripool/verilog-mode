@@ -8489,6 +8489,10 @@ Return an array of [outputs inouts inputs wire reg assign const]."
             (setq enum (match-string-no-properties 2)))
 	  (or (search-forward "*/")
 	      (error "%s: Unmatched /* */, at char %d" (verilog-point-text) (point))))
+         ;; Skip over protected sections with Base64-encoded data
+         ((looking-at "^\\s *`pragma\\s +protect\\s +begin_protected")
+          (or (re-search-forward "^\\s *`pragma\\s +protect\\s +end_protected" nil t)
+              (forward-line)))
 	 ((looking-at "(\\*")
 	  ;; To advance past either "(*)" or "(* ... *)" don't forward past first *
 	  (forward-char 1)
