@@ -40,7 +40,9 @@ module xyz (/*AUTOARG*/
     .signal_f                           (signal_f),
     // Inputs
     .signal_d                           ({1'b1, signal_c}),
-    .signal_e                           ({2'b11, signal_e}));
+    .signal_e                           ({2'b11, signal_e}),
+    .signal_e2                  (({2'b11, signal_e2})),
+    .signal_e3                  ((signal_e3)) );
     */
    
    def u_def
@@ -49,7 +51,9 @@ module xyz (/*AUTOARG*/
       .signal_f                         (signal_f),              // Templated
       // Inputs
       .signal_d                         ({1'b1, signal_c}),      // Templated
-      .signal_e                         ({2'b11, signal_e}));    // Templated
+      .signal_e                         ({2'b11, signal_e}),     // Templated
+      .signal_e2                        (({2'b11, signal_e2})),  // Templated
+      .signal_e3                        ((signal_e3)));          // Templated
    
 endmodule // xyz
 
@@ -70,11 +74,13 @@ module def (/*AUTOARG*/
             // Outputs
             signal_f,
             // Inputs
-            signal_d, signal_e
+            signal_d, signal_e, signal_e2, signal_e3
             );
    
    input [1:0] signal_d;
    input [2:0] signal_e;
+   input [3:0] signal_e2;
+   input [3:0] signal_e3;
    output      signal_f;
    
 endmodule // def

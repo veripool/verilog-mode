@@ -809,9 +809,7 @@ The name of the function or case will be set between the braces."
 (defcustom verilog-auto-ignore-concat nil
   "Non-nil means ignore signals in {...} concatenations for AUTOWIRE etc.
 This will exclude signals referenced as pin connections in {...}
-from AUTOWIRE, AUTOOUTPUT and friends.  This flag should be set
-for backward compatibility only and not set in new designs; it
-may be removed in future versions."
+or (...) from AUTOWIRE, AUTOOUTPUT and friends."
   :group 'verilog-mode-actions
   :type 'boolean)
 (put 'verilog-auto-ignore-concat 'safe-local-variable 'verilog-booleanp)
@@ -8862,11 +8860,10 @@ Return an array of [outputs inouts inputs wire reg assign const]."
    ;; {..., a, b} requires us to recurse on a,b
    ;; To support {#{},{#{a,b}} we'll just split everything on [{},]
    ((string-match "^\\s-*{\\(.*\\)}\\s-*$" expr)
-    (unless verilog-auto-ignore-concat
-      (let ((mlst (split-string (match-string 1 expr) "[{},]"))
-	    mstr)
-	(while (setq mstr (pop mlst))
-          (verilog-read-sub-decls-expr submoddecls par-values comment port mstr)))))
+    (let ((mlst (split-string (match-string 1 expr) "[{},]"))
+          mstr)
+      (while (setq mstr (pop mlst))
+        (verilog-read-sub-decls-expr submoddecls par-values comment port mstr))))
    (t
     (let (sig vec multidim mem)
       ;; Remove leading reduction operators, etc
@@ -8942,7 +8939,10 @@ Inserts the list of signals found, using submodi to look up each port."
 	;; We intentionally ignore (non-escaped) signals with .s in them
 	;; this prevents AUTOWIRE etc from noticing hierarchical sigs.
 	(when port
-	  (cond ((looking-at "\\([a-zA-Z_][a-zA-Z_0-9]*\\)\\s-*)")
+          (cond ((and verilog-auto-ignore-concat
+                      (looking-at "[({]"))
+                 nil) ; {...} or (...) historically ignored with auto-ignore-concat
+                ((looking-at "\\([a-zA-Z_][a-zA-Z_0-9]*\\)\\s-*)")
 		 (verilog-read-sub-decls-sig
                   submoddecls par-values comment port
 		  (verilog-string-remove-spaces (match-string-no-properties 1)) ; sig
