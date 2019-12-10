@@ -6,8 +6,13 @@ module foo();
 endmodule // foo
 
 module bar(input logic a);
+   `protected
+     input            notreally;
+   `endprotected
+     
 `pragma protect begin_protected
 `pragma protect data_block
-   AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA[
+     AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA[
 `pragma protect end_protected
-                                                                               endmodule // bar
+                                                                                 
+                                                                                 endmodule // bar

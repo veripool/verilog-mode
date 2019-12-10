@@ -8491,6 +8491,9 @@ Return an array of [outputs inouts inputs wire reg assign const]."
          ((looking-at "^\\s *`pragma\\s +protect\\s +begin_protected")
           (or (re-search-forward "^\\s *`pragma\\s +protect\\s +end_protected" nil t)
               (forward-line)))
+         ((looking-at "^\\s *`protected\\>")
+          (or (re-search-forward "^\\s *`endprotected\\>" nil t)
+              (forward-line)))
 	 ((looking-at "(\\*")
 	  ;; To advance past either "(*)" or "(* ... *)" don't forward past first *
 	  (forward-char 1)
