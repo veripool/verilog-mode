@@ -9363,6 +9363,8 @@ Returns REGEXP and list of ( (signal_name connection_name)... )."
         (setq tpl-regexp (match-string-no-properties 1))
 	(goto-char (match-end 0)))
       (search-forward "(")
+      (while (verilog-within-string)  ;; e.g. inside a tpl-regexp spec
+        (search-forward "("))
       ;; Parse lines in the template
       (when (or verilog-auto-inst-template-numbers
 		verilog-auto-template-warn-unused)
