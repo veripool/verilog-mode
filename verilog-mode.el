@@ -2077,7 +2077,7 @@ find the errors."
       "`resetall" "`timescale" "`unconnected_drive" "`undef" "`undefineall"
       ;; compiler directives not covered by IEEE 1800
       "`case" "`default" "`endfor" "`endprotect" "`endswitch" "`endwhile" "`for"
-      "`format" "`if" "`let" "`protect" "`switch" "`time_scale"
+      "`format" "`if" "`let" "`protect" "`switch" "`time_scale" "`uselib"
       "`while"
       ))
   "List of Verilog compiler directives.")
