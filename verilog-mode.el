@@ -4571,9 +4571,11 @@ More specifically, point @ in the line foo : @ begin"
       nil)))
 
 (defun verilog-backward-up-list (arg)
-  "Call `backward-up-list' ARG, ignoring comments."
+  "Call `backward-up-list' ARG, ignoring comments and errors."
   (let ((parse-sexp-ignore-comments t))
-    (backward-up-list arg)))
+    (condition-case nil
+        (backward-up-list arg)  ;; May throw Unbalanced parenthesis
+      (error nil))))
 
 (defun verilog-forward-sexp-cmt (arg)
   "Call `forward-sexp' ARG, inside comments."
