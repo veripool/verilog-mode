@@ -3129,7 +3129,7 @@ See also `verilog-font-lock-extra-types'.")
      (:foreground "DimGray" :italic t))
     (((class grayscale) (background dark))
      (:foreground "LightGray" :italic t))
-    (t (:italis t)))
+    (t (:italic t)))
   "Font lock mode face used to background highlight translate-off regions."
   :group 'font-lock-highlighting-faces)
 
