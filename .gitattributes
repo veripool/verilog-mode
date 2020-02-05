@@ -1,0 +1,6 @@
+*.v linguist-language=SystemVerilog
+*.vh linguist-language=SystemVerilog
+*.sv linguist-language=SystemVerilog
+*.svh linguist-language=SystemVerilog
+*.vs linguist-language=SystemVerilog
+nodist linguist-detectable=false
