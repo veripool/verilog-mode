@@ -1,0 +1,27 @@
+# DESCRIPTION: Travis-CI config
+
+version: ~> 1.0
+
+os: linux
+language: perl
+
+env:
+  global:
+    - VERILOGMODE_SKIP_MAKELOG=1
+    - VERILOGMODE_AUTHOR_SITE=1
+
+before_install:
+  - sudo apt-get install emacs xemacs21
+
+stages:
+  - "Build Verilator"
+  - test
+
+jobs:
+  include:
+    - stage: test
+      name: GNU Emacs test
+      script: make test_emacs
+    - stage: test
+      name: Xemacs test
+      script: make test_xemacs
