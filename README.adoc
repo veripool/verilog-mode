@@ -1,3 +1,10 @@
+:!toc:
+
+ifdef::env-github[]
+image:https://img.shields.io/badge/License-GPL%20v3-blue.svg[license GPLv3,link=https://www.gnu.org/licenses/gpl-3.0]
+image:https://api.travis-ci.org/veripool/verilog-mode.svg?branch=master[Build Status (Travis CI),link=https://travis-ci.com/veripool/verilog-mode]
+endif::[]
+
 == SUMMARY
 
 This is the source distribution repository for verilog-mode, the Verilog
@@ -51,7 +58,7 @@ individual test inside the `make test`.
 
 == LICENSE
 
-Verilog-mode itself is part of GNU Emacs, which is Copyright (C) 2001-2019
+Verilog-mode itself is part of GNU Emacs, which is Copyright (C) 2001-2020
 Free Software Foundation, Inc.  This package is free software; you can
 redistribute it and/or modify it under the terms of the GNU General Public
 License Version 3.
