@@ -42,7 +42,7 @@ module test();
    
    // mismatched keyword
    task t10;
-   endfunction // unmatched end(function|task|module|primitive|interface|package|class|clocking)
+   endfunction // unmatched end(function|task|module|connectmodule|primitive|interface|package|class|clocking)
 
 // make sure even the simplest test works after all the insanity
 task t11;
