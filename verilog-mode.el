@@ -2515,11 +2515,13 @@ find the errors."
 	  (eval-when-compile
 	    (verilog-regexp-words
 	     '( "begin"
+		"connectmodule"
 		"else"
 		"end"
 		"endcase"
 		"endclass"
 		"endclocking"
+		"endconnectmodule"
 		"endgroup"
 		"endfunction"
 		"endmodule"
@@ -2562,6 +2564,7 @@ find the errors."
           "\\(sequence\\)\\|"	   ; 14
 	  "\\(clocking\\)\\|"      ; 15
 	  "\\(property\\)\\|"      ; 16
+	  "\\(connectmodule\\)\\|" ; 17
 	  "\\)\\>\\)"))
 (defconst verilog-end-block-re
   (eval-when-compile
@@ -2722,6 +2725,7 @@ find the errors."
        "endclass"
        "endclocking"
        "endconfig"
+       "endconnectmodule"
        "endfunction"
        "endgenerate"
        "endgroup"
@@ -2740,7 +2744,7 @@ find the errors."
 (defconst verilog-declaration-opener
   (eval-when-compile
     (verilog-regexp-words
-     '("module" "begin" "task" "function"))))
+     '("connectmodule" "module" "begin" "task" "function"))))
 
 (defconst verilog-declaration-prefix-re
   (eval-when-compile
@@ -2802,9 +2806,9 @@ find the errors."
 (defconst verilog-declaration-re-1-no-macro (concat "^" verilog-declaration-re-2-no-macro))
 
 (defconst verilog-defun-re
-  (eval-when-compile (verilog-regexp-words '("macromodule" "module" "class" "program" "interface" "package" "primitive" "config"))))
+  (eval-when-compile (verilog-regexp-words '("macromodule" "connectmodule" "module" "class" "program" "interface" "package" "primitive" "config"))))
 (defconst verilog-end-defun-re
-  (eval-when-compile (verilog-regexp-words '("endmodule" "endclass" "endprogram" "endinterface" "endpackage" "endprimitive" "endconfig"))))
+  (eval-when-compile (verilog-regexp-words '("endconnectmodule" "endmodule" "endclass" "endprogram" "endinterface" "endpackage" "endprimitive" "endconfig"))))
 (defconst verilog-zero-indent-re
   (concat verilog-defun-re "\\|" verilog-end-defun-re))
 (defconst verilog-inst-comment-re
@@ -2836,7 +2840,7 @@ find the errors."
        "generate" "endgenerate"
        "initial"
        "interface" "endinterface"
-       "module" "macromodule" "endmodule"
+       "connectmodule" "module" "macromodule" "endconnectmodule" "endmodule"
        "package" "endpackage"
        "primitive" "endprimitive"
        "program" "endprogram"
@@ -2911,7 +2915,7 @@ find the errors."
   (eval-when-compile
     (verilog-regexp-words
      (append
-      '( "module" "macromodule" "primitive" "class" "program"
+      '( "connectmodule" "module" "macromodule" "primitive" "class" "program"
          "interface" "package" "config")
       '( "initial" "final" "always" "always_comb" "always_ff"
          "always_latch" "endtask" "endfunction" )))))
@@ -2926,7 +2930,7 @@ find the errors."
   (eval-when-compile
     (verilog-regexp-words
      '(
-       "endmodule" "endprimitive" "endinterface" "endpackage" "endprogram" "endclass"
+       "endconnectmodule" "endmodule" "endprimitive" "endinterface" "endpackage" "endprogram" "endclass"
        ))))
 
 (defconst verilog-dpi-import-export-re
@@ -2947,7 +2951,7 @@ find the errors."
   (eval-when-compile
     (verilog-regexp-words
      '(
-       "always" "assign" "always_latch" "always_ff" "always_comb" "constraint"
+       "always" "assign" "always_latch" "always_ff" "always_comb" "connectmodule" "constraint"
        "import" "initial" "final" "module" "macromodule" "repeat" "randcase" "while"
        "if" "for" "forever" "foreach" "else" "parameter" "do" "localparam" "assert"
        ))))
@@ -3028,10 +3032,10 @@ find the errors."
             "assert" "assign" "assume" "automatic" "before" "begin" "bind"
             "bins" "binsof" "bit" "break" "buf" "bufif0" "bufif1" "byte"
             "case" "casex" "casez" "cell" "chandle" "class" "clocking" "cmos"
-            "config" "const" "constraint" "context" "continue" "cover"
+            "config" "connectmodule" "const" "constraint" "context" "continue" "cover"
             "covergroup" "coverpoint" "cross" "deassign" "default" "defparam"
             "design" "disable" "dist" "do" "edge" "else" "end" "endcase"
-            "endclass" "endclocking" "endconfig" "endfunction" "endgenerate"
+            "endclass" "endclocking" "endconfig" "endconnectmodule" "endfunction" "endgenerate"
             "endgroup" "endinterface" "endmodule" "endpackage" "endprimitive"
             "endprogram" "endproperty" "endspecify" "endsequence" "endtable"
             "endtask" "enum" "event" "expect" "export" "extends" "extern"
@@ -3227,8 +3231,8 @@ See also `verilog-font-lock-extra-types'.")
         (eval-when-compile
           (verilog-regexp-opt
            '("always" "assign" "automatic" "case" "casex" "casez" "cell"
-             "config" "deassign" "default" "design" "disable" "edge" "else"
-             "endcase" "endconfig" "endfunction" "endgenerate" "endmodule"
+             "config" "connectmodule" "deassign" "default" "design" "disable" "edge" "else"
+             "endcase" "endconfig" "endconnectmodule" "endfunction" "endgenerate" "endmodule"
              "endprimitive" "endspecify" "endtable" "endtask" "for" "force"
              "forever" "fork" "function" "generate" "if" "ifnone" "incdir"
              "include" "initial" "instance" "join" "large" "liblist"
@@ -5078,6 +5082,8 @@ primitive or interface named NAME."
                       (setq reg "\\(\\<clocking\\>\\)\\|\\<endclocking\\>"))
                      ((match-end 16)  ; of verilog-end-block-ordered-re
                       (setq reg "\\(\\<property\\>\\)\\|\\<endproperty\\>"))
+                     ((match-end 17)  ; of verilog-end-block-ordered-re
+                      (setq reg "\\(\\<connectmodule\\>\\)\\|\\<endconnectmodule\\>"))
 
                      (t (error "Problem in verilog-set-auto-endcomments")))
                     (let (b e)
@@ -5103,7 +5109,7 @@ primitive or interface named NAME."
                           (setq string (buffer-substring b e)))
                          (t
                           (ding 't)
-                          (setq string "unmatched end(function|task|module|primitive|interface|package|class|clocking)")))))
+                          (setq string "unmatched end(function|task|module|connectmodule|primitive|interface|package|class|clocking)")))))
                     (end-of-line)
                     (insert (concat " // " string )))
                   ))))))))))
@@ -7286,7 +7292,7 @@ it displays a list of all possible completions.")
 \(integer, real, reg...)")
 
 (defvar verilog-cpp-keywords
-  '("module" "macromodule" "primitive" "timescale" "define" "ifdef" "ifndef" "else"
+  '("connectmodule" "module" "macromodule" "primitive" "timescale" "define" "ifdef" "ifndef" "else"
     "endif")
   "Keywords to complete when at first word of a line in declarative scope.
 \(initial, always, begin, assign...)
@@ -7297,7 +7303,7 @@ will be completed at runtime and should not be added to this list.")
   (append
    '(
      "always" "always_comb" "always_ff" "always_latch" "assign"
-     "begin" "end" "generate" "endgenerate" "module" "endmodule"
+     "begin" "end" "connectmodule" "endconnectmodule" "generate" "endgenerate" "module" "endmodule"
      "specify" "endspecify" "function" "endfunction" "initial" "final"
      "task" "endtask" "primitive" "endprimitive"
      )
