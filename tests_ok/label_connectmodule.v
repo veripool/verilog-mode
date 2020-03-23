@@ -11,13 +11,13 @@ connectmodule Wreal2L(input wreal w, output wire l);
       else if(w === `wrealZState) lval = 1'bz;
       else lval = 1'bx;
       @(w);
-   end
+   end // always
    
    assign l = lval;
 endconnectmodule // Wreal2L
 
 // Local Variables:
-// // verilog-minimum-comment-distance: 1
-// // verilog-auto-endcomments: t
-// // End:
+// verilog-minimum-comment-distance: 1
+// verilog-auto-endcomments: t
+// End:
 
