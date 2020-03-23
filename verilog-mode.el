@@ -3032,10 +3032,10 @@ find the errors."
             "assert" "assign" "assume" "automatic" "before" "begin" "bind"
             "bins" "binsof" "bit" "break" "buf" "bufif0" "bufif1" "byte"
             "case" "casex" "casez" "cell" "chandle" "class" "clocking" "cmos"
-            "config" "connectmodule" "const" "constraint" "context" "continue" "cover"
+            "config" "const" "constraint" "context" "continue" "cover"
             "covergroup" "coverpoint" "cross" "deassign" "default" "defparam"
             "design" "disable" "dist" "do" "edge" "else" "end" "endcase"
-            "endclass" "endclocking" "endconfig" "endconnectmodule" "endfunction" "endgenerate"
+            "endclass" "endclocking" "endconfig" "endfunction" "endgenerate"
             "endgroup" "endinterface" "endmodule" "endpackage" "endprimitive"
             "endprogram" "endproperty" "endspecify" "endsequence" "endtable"
             "endtask" "enum" "event" "expect" "export" "extends" "extern"
@@ -3069,6 +3069,8 @@ find the errors."
             "sync_reject_on" "unique0" "until" "until_with" "untyped" "weak"
             ;; 1800-2012
             "implements" "interconnect" "nettype" "soft"
+            ;; AMS
+            "connectmodule" "endconnectmodule"
             ))
   "List of Verilog keywords.")
 
