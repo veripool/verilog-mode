@@ -57,7 +57,7 @@ module test();
    
    // mismatched keyword
    function f10;
-   endtask // unmatched end(function|task|module|primitive|interface|package|class|clocking)
+   endtask // unmatched end(function|task|module|connectmodule|primitive|interface|package|class|clocking)
 
 // make sure previous screw-up doesn't affect future functions
 function f11;
