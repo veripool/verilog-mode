@@ -24,7 +24,39 @@ See https://www.veripool.org/verilog-mode for more information.
 
 == INSTALLATION
 
-See https://www.veripool.org/projects/verilog-mode/wiki/Installing
+You have several installation options
+
+=== Option 1: Sources
+
+The source tree including tests is available at
+https://github.com/veripool/verilog-mode. If using this distribution you
+will need to "make" then install e/verilog-mode.el, not the verilog-mode.el
+in the top of the directory (which does not have the version number in it).
+In detail:
+   
+   git checkout https://github.com/veripool/verilog-mode
+   make
+   # Copy to somewhere in your Emacs "M-x describe-variable load-path"
+   cp e/verilog-mode.el* /usr/share/emacs/site-lisp
+
+=== Option 2: ELPA
+
+Verilog Mode is part of the ELPA (Emacs Lisp Package Archive). Using a
+recent version of Emacs:
+
+   M-x list-packages RET
+
+then search for Verilog Mode:
+
+   C-s verilog-mode RET RET
+
+then click on "Install".
+
+=== Option 3: Emacs Native
+
+Verilog-mode.el also comes included as part of Emacs 21 and later. This
+version always lags the version here, often by years. Please consider using
+the sources method instead.
 
 == TESTS
 
