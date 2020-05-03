@@ -11,6 +11,13 @@ This is the source distribution repository for verilog-mode, the Verilog
 editing and AUTOs package which is part of GNU Emacs
 (lisp/progmodes/verilog-mode.el).
 
+Verilog-Mode supports syntax highlighting of SystemVerilog (IEEE
+1800-2017), Verilog (IEEE 1364-2005), and the Universal Verification
+Modeling language (UVM).  Verilog-Mode also has AUTOs which greatly
+accelerate maintaining interconnect, resets, and other boiler-plate code.
+
+image:https://www.veripool.org/img/verilogmode_post.gif[Example,412,470]
+
 == DOCUMENTATION
 
 See https://www.veripool.org/verilog-mode for more information.
