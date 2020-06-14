@@ -3308,7 +3308,16 @@ See also `verilog-font-lock-extra-types'.")
 		   (1 font-lock-keyword-face)
 		   (2 font-lock-constant-face append))
 		 '("\\<function\\>\\s-+\\(\\sw+\\)"
-		   1 'font-lock-constant-face append))))
+		   1 'font-lock-constant-face append)
+                 ;; Fontify variable names in declarations
+                 (list ;; Implemented as an anchored-matcher
+                  (concat verilog-declaration-re
+                          " *\\(" verilog-range-re "\\)?")
+                  (list ;; anchored-highlighter
+                   (concat "\\_<\\(" verilog-symbol-re "\\)"
+                           " *\\(" verilog-range-re "\\)?*")
+                   nil nil '(1 font-lock-variable-name-face))))))
+
 
   (setq verilog-font-lock-keywords-2
 	(append verilog-font-lock-keywords-1
