@@ -8483,7 +8483,8 @@ Optional NUM-PARAM and MAX-PARAM check for a specific number of parameters."
   (let ((olist))
     (save-excursion
       ;; /*AUTOPUNT("parameter", "parameter")*/
-      (backward-sexp 1)
+      (when (not (eq (char-before) ?\*))  ; Not .*
+        (backward-sexp 1))
       (while (looking-at "(?\\s *\"\\([^\"]*\\)\"\\s *,?")
         (setq olist (cons (match-string-no-properties 1) olist))
 	(goto-char (match-end 0))))
@@ -11607,6 +11608,9 @@ Replace the pin connections to an instantiation or interface
 declaration with ones automatically derived from the module or
 interface header of the instantiated item.
 
+You may also provide an optional regular expression, in which
+case only I/O matching the regular expression will be included.
+
 If `verilog-auto-star-expand' is set, also expand SystemVerilog .* ports,
 and delete them before saving unless `verilog-auto-star-save' is set.
 See `verilog-auto-star' for more information.
@@ -11925,7 +11929,9 @@ For more information see the \\[verilog-faq] and forums at URL
 `https://www.veripool.org'."
   (save-excursion
     ;; Find beginning
-    (let* ((pt (point))
+    (let* ((params (verilog-read-auto-params 0 1))
+           (regexp (nth 0 params))
+           (pt (point))
            (for-star (save-excursion (backward-char 2) (looking-at "\\.\\*")))
 	   (indent-pt (save-excursion (verilog-backward-open-paren)
 				      (1+ (current-column))))
@@ -11970,6 +11976,8 @@ For more information see the \\[verilog-faq] and forums at URL
 			      (verilog-decls-get-vars submoddecls)
 			      skip-pins)))
 	      (vl-dir "interfaced"))
+          (when regexp
+            (setq sig-list (verilog-signals-matching-regexp sig-list regexp)))
 	  (when (and sig-list
 		     verilog-auto-inst-interfaced-ports)
             ;; Note these are searched for in verilog-read-sub-decls.
@@ -11980,6 +11988,8 @@ For more information see the \\[verilog-faq] and forums at URL
 			 (verilog-decls-get-interfaces submoddecls)
 			 skip-pins))
 	      (vl-dir "interface"))
+          (when regexp
+            (setq sig-list (verilog-signals-matching-regexp sig-list regexp)))
 	  (when sig-list
             ;; Note these are searched for in verilog-read-sub-decls.
             (verilog-auto-inst-port-list "// Interfaces\n"
@@ -11989,6 +11999,8 @@ For more information see the \\[verilog-faq] and forums at URL
 			 (verilog-decls-get-outputs submoddecls)
 			 skip-pins))
 	      (vl-dir "output"))
+          (when regexp
+            (setq sig-list (verilog-signals-matching-regexp sig-list regexp)))
 	  (when sig-list
             (verilog-auto-inst-port-list "// Outputs\n"
                                          sig-list indent-pt moddecls
@@ -11997,6 +12009,8 @@ For more information see the \\[verilog-faq] and forums at URL
 			 (verilog-decls-get-inouts submoddecls)
 			 skip-pins))
 	      (vl-dir "inout"))
+          (when regexp
+            (setq sig-list (verilog-signals-matching-regexp sig-list regexp)))
 	  (when sig-list
             (verilog-auto-inst-port-list "// Inouts\n"
                                          sig-list indent-pt moddecls
@@ -12005,6 +12019,8 @@ For more information see the \\[verilog-faq] and forums at URL
 			 (verilog-decls-get-inputs submoddecls)
 			 skip-pins))
 	      (vl-dir "input"))
+          (when regexp
+            (setq sig-list (verilog-signals-matching-regexp sig-list regexp)))
 	  (when sig-list
             (verilog-auto-inst-port-list "// Inputs\n"
                                          sig-list indent-pt moddecls
