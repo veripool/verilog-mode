@@ -10463,28 +10463,34 @@ those clocking block's signals."
     (nreverse out-list)))
 
 (defun verilog-signals-matching-regexp (in-list regexp)
-  "Return all signals in IN-LIST matching the given REGEXP, if non-nil."
+  "Return all signals in IN-LIST matching the given REGEXP, if non-nil.
+Allow regexp inversion if REGEXP begins with ?!."
   (if (or (not regexp) (equal regexp ""))
       in-list
-    (let ((case-fold-search verilog-case-fold)
-	  out-list)
-      (while in-list
-	(if (string-match regexp (verilog-sig-name (car in-list)))
-	    (setq out-list (cons (car in-list) out-list)))
-	(setq in-list (cdr in-list)))
-      (nreverse out-list))))
+    (if (string-match "^\\?!" regexp)
+        (verilog-signals-not-matching-regexp in-list (substring regexp 2))
+      (let ((case-fold-search verilog-case-fold)
+            out-list)
+        (while in-list
+          (if (string-match regexp (verilog-sig-name (car in-list)))
+              (setq out-list (cons (car in-list) out-list)))
+          (setq in-list (cdr in-list)))
+        (nreverse out-list)))))
 
 (defun verilog-signals-not-matching-regexp (in-list regexp)
-  "Return all signals in IN-LIST not matching the given REGEXP, if non-nil."
+  "Return all signals in IN-LIST not matching the given REGEXP, if non-nil.
+Allow regexp inversion if REGEXP begins with ?!."
   (if (or (not regexp) (equal regexp ""))
       in-list
-    (let ((case-fold-search verilog-case-fold)
-	  out-list)
-      (while in-list
-	(if (not (string-match regexp (verilog-sig-name (car in-list))))
-	    (setq out-list (cons (car in-list) out-list)))
-	(setq in-list (cdr in-list)))
-      (nreverse out-list))))
+    (if (string-match "^\\?!" regexp)
+        (verilog-signals-matching-regexp in-list (substring regexp 2))
+      (let ((case-fold-search verilog-case-fold)
+            out-list)
+        (while in-list
+          (if (not (string-match regexp (verilog-sig-name (car in-list))))
+              (setq out-list (cons (car in-list) out-list)))
+          (setq in-list (cdr in-list)))
+        (nreverse out-list)))))
 
 (defun verilog-signals-matching-dir-re (in-list decl-type regexp)
   "Return all signals in IN-LIST matching the given DECL-TYPE and REGEXP,
@@ -11711,7 +11717,9 @@ declaration with ones automatically derived from the module or
 interface header of the instantiated item.
 
 You may also provide an optional regular expression, in which
-case only I/O matching the regular expression will be included.
+case only I/O matching the regular expression will be included,
+or excluded if the regexp begins with ?! (question-mark
+exclamation-mark).
 
 If `verilog-auto-star-expand' is set, also expand SystemVerilog .* ports,
 and delete them before saving unless `verilog-auto-star-save' is set.
@@ -12147,7 +12155,8 @@ automatically derived from the module header of the instantiated netlist.
 
 You may also provide an optional regular expression, in which
 case only parameters matching the regular expression will be
-included.
+included, or excluded if the regexp begins with ?! (question-mark
+exclamation-mark).
 
 See \\[verilog-auto-inst] for limitations, and templates to customize the
 output.
@@ -12566,9 +12575,11 @@ Typing \\[verilog-auto] will make this into:
            wire o = tempb;
         endmodule
 
-You may also provide an optional regular expression, in which case only
-signals matching the regular expression will be included.  For example the
-same expansion will result from only extracting outputs starting with ov:
+You may also provide an optional regular expression, in which
+case only signals matching the regular expression will be
+included,or excluded if the regexp begins with ?! (question-mark
+exclamation-mark).  For example the same expansion will result
+from only extracting outputs starting with ov:
 
            /*AUTOOUTPUTEVERY(\"^ov\")*/"
   (save-excursion
@@ -12644,9 +12655,12 @@ Typing \\[verilog-auto] will make this into:
               .i        (i));
         endmodule
 
-You may also provide an optional regular expression, in which case only
-signals matching the regular expression will be included.  For example the
-same expansion will result from only extracting inputs starting with i:
+You may also provide an optional regular expression, in which
+case only signals matching the regular expression will be
+included.  or excluded if the regexp begins with
+?! (question-mark exclamation-mark).  For example the same
+expansion will result from only extracting inputs starting with
+i:
 
 	   /*AUTOINPUT(\"^i\")*/"
   (save-excursion
@@ -12728,9 +12742,11 @@ Typing \\[verilog-auto] will make this into:
               .io       (io));
         endmodule
 
-You may also provide an optional regular expression, in which case only
-signals matching the regular expression will be included.  For example the
-same expansion will result from only extracting inouts starting with i:
+You may also provide an optional regular expression, in which
+case only signals matching the regular expression will be
+included, or excluded if the regexp begins with ?! (question-mark
+exclamation-mark).  For example the same expansion will result
+from only extracting inouts starting with i:
 
            /*AUTOINOUT(\"^i\")*/"
   (save-excursion
@@ -12811,9 +12827,11 @@ Typing \\[verilog-auto] will make this into:
            // End of automatics
         endmodule
 
-You may also provide an optional regular expression, in which case only
-signals matching the regular expression will be included.  For example the
-same expansion will result from only extracting signals starting with i:
+You may also provide an optional regular expression, in which
+case only signals matching the regular expression will be
+included, or excluded if the regexp begins with ?! (question-mark
+exclamation-mark).  For example the same expansion will result
+from only extracting signals starting with i:
 
            /*AUTOINOUTMODULE(\"ExampMain\",\"^i\")*/
 
@@ -13019,9 +13037,11 @@ Typing \\[verilog-auto] will make this into:
            // End of automatics
         endmodule
 
-You may also provide an optional regular expression, in which case only
-signals matching the regular expression will be included.  For example the
-same expansion will result from only extracting signals starting with i:
+You may also provide an optional regular expression, in which
+case only signals matching the regular expression will be
+included, or excluded if the regexp begins with ?! (question-mark
+exclamation-mark).  For example the same expansion will result
+from only extracting signals starting with i:
 
            /*AUTOINOUTIN(\"ExampMain\",\"^i\")*/"
   (verilog-auto-inout-module nil t))

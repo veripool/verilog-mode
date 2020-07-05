@@ -18,4 +18,8 @@ module autoinst_regexp_inst;
    sub1
      (/*AUTOINST("ia")*/);
 
+   sub
+   sub1
+     (/*AUTOINST("?!ia")*/);
+
 endmodule
