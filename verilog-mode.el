@@ -764,6 +764,16 @@ file referenced.  If false, this is not supported."
   :type 'boolean)
 (put 'verilog-highlight-includes 'safe-local-variable 'verilog-booleanp)
 
+(defcustom verilog-highlight-max-lookahead 10000
+  "Maximum size of declaration statement that undergoes highlighting.
+Highlighting is performed only on the first `verilog-highlight-max-lookahead'
+characters in a declaration statement.
+Setting this variable to zero would remove this limit.  Note that removing
+the limit can greatly slow down highlighting for very large files."
+  :group 'verilog-mode-indent
+  :type 'integer)
+(put 'verilog-highlight-max-lookahead 'safe-local-variable 'integerp)
+
 (defcustom verilog-auto-declare-nettype nil
   "Non-nil specifies the data type to use with `verilog-auto-input' etc.
 Set this to \"wire\" if the Verilog code uses \"\\=`default_nettype
@@ -3310,13 +3320,20 @@ See also `verilog-font-lock-extra-types'.")
 		 '("\\<function\\>\\s-+\\(\\sw+\\)"
 		   1 'font-lock-constant-face append)
                  ;; Fontify variable names in declarations
-                 (list ;; Implemented as an anchored-matcher
-                  (concat verilog-declaration-re
-                          " *\\(" verilog-range-re "\\)?")
-                  (list ;; anchored-highlighter
-                   (concat "\\_<\\(" verilog-symbol-re "\\)"
-                           " *\\(" verilog-range-re "\\)?*")
-                   nil nil '(1 font-lock-variable-name-face))))))
+                 (list
+                  verilog-declaration-re
+                  (list
+                   ;; Anchored matcher (lookup Search-Based Fontification)
+                   'verilog-declaration-varname-matcher
+                   ;; Pre-form for this anchored matcher:
+                   ;; First, avoid declaration keywords written in comments,
+                   ;; which can also trigger this anchor.
+                   '(if (not (verilog-in-comment-p))
+                        (verilog-single-declaration-end verilog-highlight-max-lookahead)
+                      (point)) ;; => current declaration statement is of 0 length
+                   nil ;; Post-form: nothing to be done
+                   '(0 font-lock-variable-name-face t t)))
+                )))
 
 
   (setq verilog-font-lock-keywords-2
@@ -3563,6 +3580,87 @@ inserted using a single call to `verilog-insert'."
 
 (defun verilog-declaration-end ()
   (search-forward ";"))
+
+(defun verilog-single-declaration-end (limit)
+  "Returns pos where current (single) declaration statement ends.
+Also, this function moves POINT forward to the start of a variable name
+(skipping the range-part and whitespace).
+Function expected to be called with POINT just after a declaration keyword.
+LIMIT sets the max POINT for searching and moving to. No such limit if LIMIT
+is 0.
+
+Meaning of *single* declaration:
+   Eg. In a module's port-list -
+           module test(input clk, rst, x, output [1:0] y);
+   Here 'input clk, rst, x' is 1 *single* declaration statement,
+and 'output [1:0] y' is the other single declaration.  In the 1st single
+declaration, POINT is moved to start of 'clk'. And in the 2nd declaration,
+POINT is moved to 'y'."
+
+
+  (let (maxpoint old-point)
+    ;; maxpoint = min(curr-point + limit, buffer-size)
+    (setq maxpoint (if (eq limit 0)
+                       (point-max) ;; no bounds if search-bound is zero
+                     (+ (point) limit)))
+    (if (> maxpoint (buffer-size)) (setq maxpoint (buffer-size)))
+
+    ;; Skip comment - range - comment
+    (verilog-forward-ws&directives maxpoint)
+    (when (eq (char-after) ?\[)
+      (re-search-forward verilog-range-re maxpoint t))
+    (verilog-forward-ws&directives maxpoint)
+
+    ;; Move forward until a delimiter is reached which marks end of current
+    ;; single declaration. Return point at found delimiter
+    (save-excursion
+      (while (and (< (point) maxpoint)
+                  (not (eq old-point (point)))
+                  (not (eq (char-after) ?\; ))
+                  (not (eq (char-after) ?\) ))
+                  (not (looking-at verilog-declaration-re)))
+        (setq old-point (point))
+        (ignore-errors
+          (forward-sexp)
+          (verilog-forward-ws&directives maxpoint)
+          (when (eq (char-after) ?,)
+            (forward-char)
+            (verilog-forward-ws&directives maxpoint))))
+    (point))))
+
+(defun verilog-declaration-varname-matcher (limit)
+  "Match first variable name b/w POINT & LIMIT, move POINT to next variable.
+Expected to be called within a declaration statement, with POINT already beyond
+the declaration keyword and range ([a:b])
+This function moves POINT to the next variable within the same declaration (if
+it exists).
+LIMIT is expected to be the pos at which current single-declaration ends,
+obtained using `verilog-single-declaration-end'."
+
+  (let (found-var old-point)
+
+    ;; Remove starting whitespace
+    (verilog-forward-ws&directives limit)
+
+    (when (< (point) limit) ;; no matching if this is violated
+
+      ;; Find the variable name (match-data is set here)
+      (setq found-var (re-search-forward verilog-symbol-re limit t))
+
+      ;; Walk to this variable's delimiter
+      (save-match-data
+        (verilog-forward-ws&directives limit)
+        (setq old-point nil)
+        (while (and (< (point) limit)
+                    (not (member (char-after) '(?, ?\) ?\;)))
+                    (not (eq old-point (point))))
+          (setq old-point (point))
+          (verilog-forward-ws&directives limit)
+          (forward-sexp)
+          (verilog-forward-ws&directives limit))
+        ;; Only a comma or semicolon expected at this point
+        (skip-syntax-forward "."))
+      found-var)))
 
 (defun verilog-point-text (&optional pointnum)
   "Return text describing where POINTNUM or current point is (for errors).
@@ -3973,6 +4071,10 @@ Key bindings specific to `verilog-mode-map' are:
               ;; verilog-beg-of-defun.
 	      nil
 	    'verilog-beg-of-defun)))
+
+  ;; Stuff for multiline font-lock
+  (set (make-local-variable 'font-lock-multiline) t)
+
   ;;------------------------------------------------------------
   ;; now hook in 'verilog-highlight-include-files (eldo-mode.el&spice-mode.el)
   ;; all buffer local:
