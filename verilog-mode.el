@@ -2785,6 +2785,8 @@ find the errors."
        "shortreal" "real" "realtime"
        ;; net_type
        "supply0" "supply1" "tri" "triand" "trior" "trireg" "tri0" "tri1" "uwire" "wire" "wand" "wor"
+       ;; parameters
+       "localparam" "parameter" "var"
        ;; misc
        "string" "event" "chandle" "virtual" "enum" "genvar"
        "struct" "union"
