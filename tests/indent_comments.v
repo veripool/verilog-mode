@@ -1,7 +1,5 @@
 module dummy (
 	      input wire xx,
 	      output wire yy, // comment with paren ) adsfasdf
-	      ouput wire zz); // oops - matched paren in comment!!
+	      output wire zz); // oops - matched paren in comment!!
 endmodule // dummy
-
-
