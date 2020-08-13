@@ -5,7 +5,7 @@ endmodule
 module ExampInoutParam ();
    /*AUTOINOUTPARAM("ExampMain")*/
    // Beginning of automatic parameters (from specific module)
-   parameter       PARAM;
+   parameter PARAM;
    // End of automatics
 endmodule
 

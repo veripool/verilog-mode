@@ -1,5 +1,5 @@
 module inject_inst_param;
-   parameter WIDTH = 8;
+   parameter         WIDTH = 8;
    logic [WIDTH-1:0] q;
    logic [WIDTH-1:0] d;
    logic             clk, rst_n;

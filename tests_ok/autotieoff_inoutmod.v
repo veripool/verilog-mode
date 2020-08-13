@@ -15,8 +15,8 @@ module my_module_stub
   #(
     /*AUTOINOUTPARAM("my_module")*/
     // Beginning of automatic parameters (from specific module)
-    parameter           p,
-    parameter           r
+    parameter p,
+    parameter r
     // End of automatics
     )
    (

@@ -8,11 +8,11 @@ module inst (/*AUTOARG*/
    parameter param1;
    parameter param2;
    
-   input  lower_inb;
-   input  lower_ina;
-   output lower_out;
+   input     lower_inb;
+   input     lower_ina;
+   output    lower_out;
    
-   wire   lower_out = lower_ina | lower_inb;
+   wire      lower_out = lower_ina | lower_inb;
    
 endmodule
 

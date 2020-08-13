@@ -1,6 +1,6 @@
 module sub;
    parameter AA, AB, AC;
-   output ia, ib, ic;
+   output    ia, ib, ic;
 endmodule
 
 module autoinst_regexp_inst;

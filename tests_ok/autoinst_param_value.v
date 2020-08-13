@@ -1,5 +1,5 @@
 module InstMod ( ins, outs );
-   parameter WIDTH;
+   parameter          WIDTH;
    output [WIDTH-1:0] ins;
 endmodule
 

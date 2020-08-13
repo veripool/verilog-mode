@@ -7,14 +7,14 @@ module autoasciienum_onehot (
                              );
    
    localparam // synopsys enum state_info
-     IDLE = 0,
-     S1   = 1,
-     S2   = 2,
-     S3   = 3,
-     DONE = 4;
+              IDLE = 0,
+              S1 = 1,
+              S2 = 2,
+              S3 = 3,
+              DONE = 4;
    
-   reg [4:0] // synopsys enum state_info
-             cur_state, nxt_state;
+   reg [4:0]  // synopsys enum state_info
+              cur_state, nxt_state;
    
    always @ (*) begin
       nxt_state = 5'h0;

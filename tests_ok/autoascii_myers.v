@@ -1,31 +1,31 @@
 module testit;
-   reg       clk;
-   reg       a_i;
-   reg       b_i;
+   reg             clk;
+   reg             a_i;
+   reg             b_i;
    
-   reg       a_o;
-   reg       b_o;
-   reg       rst_n;
+   reg             a_o;
+   reg             b_o;
+   reg             rst_n;
    
-   reg [7:0] shreg;
+   reg [7:0]       shreg;
    
    
    //== State enumeration
    parameter [2:0] // synopsys enum state_info
-     SM_IDLE  = 3'b000,
-     SM_SEND  = 3'b001,
-     SM_WAIT1 = 3'b010;
+                   SM_IDLE = 3'b000,
+                   SM_SEND = 3'b001,
+                   SM_WAIT1 = 3'b010;
    //== State variables
-   reg [2:0]  /* synopsys enum state_info */
-              state_r; /* synopsys state_vector state_r */
-   reg [2:0]  /* synopsys enum state_info */
-              state_e1;
+   reg [2:0]       /* synopsys enum state_info */
+                   state_r; /* synopsys state_vector state_r */
+   reg [2:0]       /* synopsys enum state_info */
+                   state_e1;
    
    //== ASCII state decoding
    
    /*AUTOASCIIENUM("state_r", "_stateascii_r", "sm_")*/
    // Beginning of automatic ASCII enum decoding
-   reg [39:0] _stateascii_r;            // Decode of state_r
+   reg [39:0]      _stateascii_r;               // Decode of state_r
    always @(state_r) begin
       case ({state_r})
         SM_IDLE:  _stateascii_r = "idle ";

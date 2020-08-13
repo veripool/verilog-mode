@@ -19,8 +19,8 @@ module submod (/*AUTOARG*/
                // Inputs
                vec
                );
-   parameter VEC_W = 32;
-   parameter IDX_W = $clog2(VEC_W);
+   parameter          VEC_W = 32;
+   parameter          IDX_W = $clog2(VEC_W);
    input [VEC_W-1:0]  vec;
    output [IDX_W-1:0] idx;
 endmodule
