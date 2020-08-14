@@ -1,8 +1,8 @@
 //bug889
 
 module leaf #(
-              parameter   DATA_WIDTH = 256,
-              localparam  STRB_WIDTH_SHOULD_BE_HIDDEN = DATA_WIDTH/8 )
+              parameter  DATA_WIDTH = 256,
+              localparam STRB_WIDTH_SHOULD_BE_HIDDEN = DATA_WIDTH/8 )
    ();
 endmodule
 

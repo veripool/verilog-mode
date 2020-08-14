@@ -1,7 +1,7 @@
 
 module top
   #(
-    parameter  NOF_TEST        = 6,
+    parameter         NOF_TEST = 6,
     parameter integer TEST [NOF_TEST] = '{10,20,30,40,50,60}
     )
    

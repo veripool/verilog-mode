@@ -107,8 +107,8 @@ module testmodule (/*AUTOARG*/
      endcase
    
    parameter READ = 3'b111,
-     //WRITE = 3'b111,
-     CFG = 3'b010;
+             //WRITE = 3'b111,
+             CFG = 3'b010;
    //supply1   one;
    
    always @(/*AUTOSENSE*/in1 or in2) begin
@@ -161,9 +161,9 @@ module darren_jones_2 (/*AUTOARG*/
    input [1:0]  WSTATE;
    output [1:0] next_WSTATE;
    reg [1:0]    next_WSTATE;
-   parameter
-     WIDLE = 0,         // No Manual Write Burst
-     WCB0  = 1;         // 1st of the 4 Manual Write Burst
+   parameter    
+                WIDLE = 0, // No Manual Write Burst
+                WCB0  = 1;              // 1st of the 4 Manual Write Burst
    
    always @ (/*AUTOSENSE*/WSTATE) begin
       next_WSTATE = 2'b0;
@@ -186,9 +186,9 @@ module darren_jones_3 (/*AUTOARG*/
    output      var1;
    reg         var1;
    
-   parameter
-     IDLE = 1,
-     CAS1 = 2;
+   parameter   
+               IDLE = 1,
+               CAS1 = 2;
    
    always @(/*AUTOSENSE*/state) begin
       case (1'b1)

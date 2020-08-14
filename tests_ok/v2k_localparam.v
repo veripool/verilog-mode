@@ -5,7 +5,7 @@ module v2k_localparam;
    localparam X = 10;
    parameter  Y = 10;
    
-   reg z;
+   reg        z;
    
    always @ (/*AS*/) begin
       z = X | Y;
