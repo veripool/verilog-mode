@@ -1004,12 +1004,28 @@ that is, `@` is short-hand for `\([0-9]+\)`.
 
 === How do I use AUTO_TEMPLATE to tie off inputs to zero?
 
-Use a Lisp format template, and the Lisp variable `vl-width`, which
-contains the width of the port.
+To tie off a single port:
+
+   /* InstModule AUTO_TEMPLATE (
+       .\(.*\)_test ('0),
+   ); */
+
+If you don't want to use SystemVerilog's '0 you can use a Lisp format
+template, and the Lisp variable `vl-width`, which contains the width of the
+port:
 
    /* InstModule AUTO_TEMPLATE (
        .\(.*\)_test ({@"vl-width"{1'b0}}),
    ); */
+
+If you want verilog-mode to only tie off input signals, not output port
+names that match the port regular expression, then use a Lisp format
+template to match inputs:
+
+   /* InstModule AUTO_TEMPLATE (
+       .\(.*\)_test (@"(if (equal vl-dir \\"input\\") \\"'0\\" \\"\\")"),
+   ); */
+
 
 === How do I use AUTO_TEMPLATE to lower case all signals?
 
@@ -1120,10 +1136,10 @@ endmodule
 
 module ModnameTest;
    InstModule #(/*AUTOINSTPARAM*/
-         // Parameters                                                              
+         // Parameters
          .PARAM1  (PARAM1),
          .PARAM2  (PARAM2))
-     instName 
+     instName
        (/*AUTOINST*/
         ...);
 ....
@@ -1146,13 +1162,13 @@ module ModnameTest;
    InstModule #(.WIDTH(16))
      instName
        (/*AUTOINST*/
-        // Outputs                                                                    
+        // Outputs
         .out   (out[15:0]));
 endmodule
 
-// Local Variables:                                                                 
-// verilog-auto-inst-param-value:t                                                  
-// End:                                                                             
+// Local Variables:
+// verilog-auto-inst-param-value:t
+// End:
 ....
 
 Contrast this with the default
@@ -1162,13 +1178,13 @@ module ModnameTest;
    InstModule #(.WIDTH(16))
      instName
        (/*AUTOINST*/
-        // Outputs                                                                    
+        // Outputs
         .out   (out[WIDTH-1:0]));
 endmodule
 
-// Local Variables:                                                                 
+// Local Variables:
 // verilog-auto-inst-param-value:nil
-// End:                                                                             
+// End:
 ....
 
 === How do I use AUTOINST with Interfaces?
@@ -1191,10 +1207,10 @@ endmodule
 module top;
    InstModule instName
      (/*AUTOINST*/
-      // Interfaces                                    
+      // Interfaces
       .svi_modport         (svi_modport.master),
       .svi_nomodport       (svi_nomodport),
-      // Inputs                                        
+      // Inputs
       .clk                 (clk));
 endmodule
 ....
@@ -1205,11 +1221,11 @@ ports:
 ....
 module autoinst_interface
   (/*AUTOINOUTMODULE("autoinst_interface_sub")*/
-   // Beginning of automatic in/out/inouts (from specific module)                   
+   // Beginning of automatic in/out/inouts (from specific module)
    input      clk,
    svi.master svi_modport,
    svi        svi_nomodport
-   // End of automatics                                                             
+   // End of automatics
    );
 endmodule
 ....
