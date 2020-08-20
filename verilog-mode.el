@@ -10505,7 +10505,7 @@ if non-nil."
 	(setq to-match (concat
 			decl-type
 			" " (verilog-sig-signed (car in-list))
-			" " (verilog-sig-multidim (car in-list))
+                        " " (verilog-sig-multidim-string (car in-list))
 			(verilog-sig-bits (car in-list))))
 	(if (string-match regexp to-match)
 	    (setq out-list (cons (car in-list) out-list)))
