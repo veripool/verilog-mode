@@ -13154,10 +13154,16 @@ An example:
            modport mp(clocking mon_clkblk);
         endinterface
 
+
         module ExampMain
         ( input clk,
           /*AUTOINOUTMODPORT(\"ExampIf\", \"mp\")*/
         );
+
+        ExampleIf i;
+
+        /*AUTOASSIGNMODPORT(\"ExampIf\", \"mp\", \"i\")*/
+
         endmodule
 
 Typing \\[verilog-auto] will make this into:
@@ -13170,6 +13176,15 @@ Typing \\[verilog-auto] will make this into:
           input [7:0]  req_dat
           // End of automatics
         );
+
+        ExampleIf i;
+
+        /*AUTOASSIGNMODPORT(\"ExampIf\", \"mp\", \"i\")*/
+        // Beginning of automatic assignments from modport
+        assign i.req_dat = req_dat;
+        assign i.req_val = req_val;
+        // End of automatics
+
         endmodule
 
 If the modport is part of a UVM monitor/driver class, this
