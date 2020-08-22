@@ -6556,6 +6556,7 @@ Return >0 for nested struct."
 	(let ((p (point)))
           (and
            (equal (char-after) ?\{)
+           (not (verilog-at-streaming-op-p))
            (ignore-errors (forward-list))
            (progn (backward-char 1)
                   (verilog-backward-ws&directives)
@@ -6592,6 +6593,18 @@ Return >0 for nested struct."
               (progn (goto-char pt) nil) 1)))
     ;; not
     nil))
+
+(defconst verilog-streaming-op-re
+  ;; Regexp to detect Streaming Operator expressions
+  (concat
+   "{" "\\s-*"
+   "\\(<<\\|>>\\)" ".*"
+   "{" ".*" "}" "\\s-*" "}"
+   ))
+
+(defun verilog-at-streaming-op-p ()
+  "If at the { of a streaming operator, return true"
+  (looking-at verilog-streaming-op-re))
 
 (defun verilog-at-struct-p ()
   "If at the { of a struct, return true, not moving point."
