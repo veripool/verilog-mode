@@ -8065,6 +8065,8 @@ See also `verilog-sk-header' for an alternative format."
 ;; Unfortunately we use 'assoc' on this, so can't be a vector
 (defsubst verilog-sig-new (name bits comment mem enum signed type multidim modport)
   (list name bits comment mem enum signed type multidim modport))
+(defsubst verilog-sig-new-renamed (name old-sig)
+  (cons name (cdr old-sig)))
 (defsubst verilog-sig-name (sig)
   (car sig))
 (defsubst verilog-sig-bits (sig)  ; First element of packed array (pre signal-name)
@@ -10519,6 +10521,20 @@ if non-nil."
 	      (verilog-sig-type-set sig nil))
 	    sig) in-list))
 
+(defun verilog-signals-add-prefix (in-list prefix)
+  "Return all signals in IN-LIST with PREFIX added."
+  (if (or (not prefix) (equal prefix ""))
+      in-list
+    (let (out-list)
+      (while in-list
+        (setq out-list (cons (verilog-sig-new-renamed
+                              (concat prefix (verilog-sig-name (car in-list)))
+                              (car in-list))
+                             out-list))
+        (setq in-list (cdr in-list)))
+      (nreverse out-list))))
+;(verilog-signals-add-prefix (list (list "foo" "...") (list "bar" "...")) "p_")
+
 ;; Combined
 (defun verilog-decls-get-signals (decls)
   "Return all declared signals in DECLS, excluding `assign' statements."
@@ -11444,6 +11460,8 @@ making verification modules that connect to UVM interfaces.
   The optional fourth parameter is a regular expression, and only
   signals matching the regular expression will be included.
 
+  The optional fifth parameter is a prefix to add to the signals.
+
 Limitations:
 
   Interface names must be resolvable to filenames.  See `verilog-auto-inst'.
@@ -11457,11 +11475,12 @@ Limitations:
 
 See the example in `verilog-auto-inout-modport'."
   (save-excursion
-    (let* ((params (verilog-read-auto-params 3 4))
+    (let* ((params (verilog-read-auto-params 3 5))
 	   (submod (nth 0 params))
 	   (modport-re (nth 1 params))
 	   (inst-name (nth 2 params))
 	   (regexp (nth 3 params))
+           (prefix (nth 4 params))
            direction-re submodi)  ; direction argument not supported until requested
       ;; Lookup position, etc of co-module
       ;; Note this may raise an error
@@ -11495,15 +11514,18 @@ See the example in `verilog-auto-inout-modport'."
 	    ;; Don't sort them so an upper AUTOINST will match the main module
 	    (let ((sigs sig-list-o))
 	      (while sigs
-		(verilog-insert-indent "assign " (verilog-sig-name (car sigs))
-				       " = " inst-name
-				       "." (verilog-sig-name (car sigs)) ";\n")
+                (verilog-insert-indent "assign "
+                                       (concat prefix (verilog-sig-name (car sigs)))
+                                       " = " inst-name
+                                       "." (verilog-sig-name (car sigs)) ";\n")
 		(setq sigs (cdr sigs))))
 	    (let ((sigs sig-list-i))
 	      (while sigs
-		(verilog-insert-indent "assign " inst-name
-				       "." (verilog-sig-name (car sigs))
-				       " = " (verilog-sig-name (car sigs)) ";\n")
+                (verilog-insert-indent "assign " inst-name
+                                       "." (verilog-sig-name (car sigs))
+                                       " = "
+                                       (concat prefix (verilog-sig-name (car sigs)))
+                                       ";\n")
 		(setq sigs (cdr sigs))))
 	    (verilog-insert-indent "// End of automatics\n")))))))
 
@@ -13131,6 +13153,8 @@ for making verification modules that connect to UVM interfaces.
   The optional third parameter is a regular expression, and only
   signals matching the regular expression will be included.
 
+  The optional fourth parameter is a prefix to add to the signals.
+
 Limitations:
   If placed inside the parenthesis of a module declaration, it creates
   Verilog 2001 style, else uses Verilog 1995 style.
@@ -13191,10 +13215,11 @@ If the modport is part of a UVM monitor/driver class, this
 creates a wrapper module that may be used to instantiate the
 driver/monitor using AUTOINST in the testbench."
   (save-excursion
-    (let* ((params (verilog-read-auto-params 2 3))
+    (let* ((params (verilog-read-auto-params 2 4))
 	   (submod (nth 0 params))
 	   (modport-re (nth 1 params))
 	   (regexp (nth 2 params))
+           (prefix (nth 3 params))
            direction-re submodi)  ; direction argument not supported until requested
       ;; Lookup position, etc of co-module
       ;; Note this may raise an error
@@ -13209,33 +13234,42 @@ driver/monitor using AUTOINST in the testbench."
 			    (verilog-decls-get-vars submoddecls)
 			    (verilog-signals-not-in
 			     (verilog-decls-get-inputs submodportdecls)
-			     (append (verilog-decls-get-ports submoddecls)
-				     (verilog-decls-get-ports moddecls)))))
+                             (verilog-decls-get-ports submoddecls))))
                (sig-list-o (verilog-signals-in  ; Decls doesn't have data types, must resolve
 			    (verilog-decls-get-vars submoddecls)
 			    (verilog-signals-not-in
 			     (verilog-decls-get-outputs submodportdecls)
-			     (append (verilog-decls-get-ports submoddecls)
-				     (verilog-decls-get-ports moddecls)))))
+                             (verilog-decls-get-ports submoddecls))))
                (sig-list-io (verilog-signals-in  ; Decls doesn't have data types, must resolve
 			     (verilog-decls-get-vars submoddecls)
 			     (verilog-signals-not-in
 			      (verilog-decls-get-inouts submodportdecls)
-			      (append (verilog-decls-get-ports submoddecls)
-				      (verilog-decls-get-ports moddecls))))))
+                              (verilog-decls-get-ports submoddecls)))))
 	  (forward-line 1)
 	  (setq sig-list-i  (verilog-signals-edit-wire-reg
-			     (verilog-signals-matching-dir-re
-			      (verilog-signals-matching-regexp sig-list-i regexp)
-			      "input" direction-re))
+                             (verilog-signals-not-in
+                              (verilog-signals-add-prefix
+                               (verilog-signals-matching-dir-re
+                                (verilog-signals-matching-regexp sig-list-i regexp)
+                                "input" direction-re)
+                               prefix)
+                              (verilog-decls-get-ports moddecls)))
 		sig-list-o  (verilog-signals-edit-wire-reg
-			     (verilog-signals-matching-dir-re
-			      (verilog-signals-matching-regexp sig-list-o regexp)
-			      "output" direction-re))
+                             (verilog-signals-not-in
+                              (verilog-signals-add-prefix
+                               (verilog-signals-matching-dir-re
+                                (verilog-signals-matching-regexp sig-list-o regexp)
+                                "output" direction-re)
+                               prefix)
+                              (verilog-decls-get-ports moddecls)))
 		sig-list-io (verilog-signals-edit-wire-reg
-			     (verilog-signals-matching-dir-re
-			      (verilog-signals-matching-regexp sig-list-io regexp)
-			      "inout" direction-re)))
+                             (verilog-signals-not-in
+                              (verilog-signals-add-prefix
+                               (verilog-signals-matching-dir-re
+                                (verilog-signals-matching-regexp sig-list-io regexp)
+                                "inout" direction-re)
+                               prefix)
+                              (verilog-decls-get-ports moddecls))))
 	  (when v2k (verilog-repair-open-comma))
 	  (when (or sig-list-i sig-list-o sig-list-io)
 	    (verilog-insert-indent "// Beginning of automatic in/out/inouts (from modport)\n")
