@@ -26,7 +26,7 @@ module top
           .BBB                          (BBB))
    sub1 (/*AUTOINST*/
          // Outputs
-         .out_signal                    (out_signal[AAA[BBB]-1:0]));
+         .out_signal                    (out_signal[(AAA)[BBB]-1:0]));
    
    
 endmodule
