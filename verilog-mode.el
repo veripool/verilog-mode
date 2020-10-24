@@ -6839,17 +6839,26 @@ Only look at a few lines to determine indent level."
 	 (t
 	  (goto-char here)
 	  (let ((val))
-	    (verilog-beg-of-statement-1)
-	    (if (and (< (point) here)
-		     (verilog-re-search-forward "=[ \t]*" here 'move)
-		     ;; not at a |=>, #=#, or [=n] operator
-		     (not (string-match "\\[=.\\|#=#\\||=>"
-                                        (or (buffer-substring (- (point) 2) (1+ (point)))
-                                            ""))))  ; don't let buffer over/under-run spoil the party
-		(setq val (current-column))
-	      (setq val (eval (cdr (assoc type verilog-indent-alist)))))
-	    (goto-char here)
-	    (indent-line-to val))))))
+            ;; #1163 - New Code Look if it is a generated instance.  The problem is the line which has the format like:
+            ;;  for(genvar i=0; i<2; i=i+1) begin
+            ;;    mod_1  inst_1
+            ;;      (/*AUTOINST*/); << this line will indent wrong with old code
+            (if (looking-at ".*#?(.*$")
+                (setq val (eval (cdr (assoc type verilog-indent-alist))))
+              (progn 
+                ;; end of new code
+                (verilog-beg-of-statement-1)
+                (if (and (< (point) here)
+                         (verilog-re-search-forward "=[ \t]*" here 'move)
+                         ;; not at a |=>, #=#, or [=n] operator
+                         (not (string-match "\\[=.\\|#=#\\||=>"
+                                            (or (buffer-substring (- (point) 2) (1+ (point)))
+                                                ""))))  ; don't let buffer over/under-run spoil the party
+                    (setq val (current-column))
+                  (setq val (eval (cdr (assoc type verilog-indent-alist)))))
+                )) ;; New Code
+            (goto-char here)
+            (indent-line-to val))))))
 
      (; handle inside parenthetical expressions
       (eq type 'cparenexp)
@@ -8073,7 +8082,6 @@ See also `verilog-sk-header' for an alternative format."
 
 ;;; Signal list parsing:
 ;;
-
 ;; Elements of a signal list
 ;; Unfortunately we use 'assoc' on this, so can't be a vector
 (defsubst verilog-sig-new (name bits comment mem enum signed type multidim modport)
