@@ -2045,32 +2045,39 @@ be substituted."
       (set (make-local-variable 'verilog-compile-command-post-mod)
            compile-command))))
 
-(if (featurep 'xemacs)
-    ;; Following code only gets called from compilation-mode-hook on XEmacs to add error handling.
-    (defun verilog-error-regexp-add-xemacs ()
-      "Teach XEmacs about verilog errors.
-Called by `compilation-mode-hook'.  This allows \\[next-error] to
-find the errors."
-      (interactive)
-      (if (boundp 'compilation-error-regexp-systems-alist)
-	  (if (and
-	       (not (equal compilation-error-regexp-systems-list 'all))
-	       (not (member compilation-error-regexp-systems-list 'verilog)))
-	      (push 'verilog compilation-error-regexp-systems-list)))
-      (if (boundp 'compilation-error-regexp-alist-alist)
-	  (if (not (assoc 'verilog compilation-error-regexp-alist-alist))
-	      (setcdr compilation-error-regexp-alist-alist
-		      (cons verilog-error-regexp-xemacs-alist
-			    (cdr compilation-error-regexp-alist-alist)))))
-      (if (boundp 'compilation-font-lock-keywords)
-	  (progn
-	    (set (make-local-variable 'compilation-font-lock-keywords)
-		 verilog-error-font-lock-keywords)
-	    (font-lock-set-defaults)))
-      ;; Need to re-run compilation-error-regexp builder
-      (if (fboundp 'compilation-build-compilation-error-regexp-alist)
-	  (compilation-build-compilation-error-regexp-alist))
-      ))
+;;; See issue 1700  Does not compile in XEmacs21.5
+;;; Error Messages during compile is:
+;;;    Compiling buffer verilog-mode.el at Thu Nov  5 16:15:29 2020
+;;;    While compiling toplevel forms:
+;;;      !! Wrong type argument ((sequencep verilog))
+;;;    >>Error occurred processing x/verilog-mode.el: Wrong type argument: sequencep, verilog
+;;;
+;;;(if (featurep 'xemacs)
+;;;    ;; Following code only gets called from compilation-mode-hook on XEmacs to add error handling.
+;;;    (defun verilog-error-regexp-add-xemacs ()
+;;;      "Teach XEmacs about verilog errors.
+;;;Called by `compilation-mode-hook'.  This allows \\[next-error] to
+;;;find the errors."
+;;;      (interactive)
+;;;      (if (boundp 'compilation-error-regexp-systems-alist)
+;;;	  (if (and
+;;;	       (not (equal compilation-error-regexp-systems-list 'all))
+;;;	       (not (member compilation-error-regexp-systems-list 'verilog)))
+;;;	      (push 'verilog compilation-error-regexp-systems-list)))
+;;;      (if (boundp 'compilation-error-regexp-alist-alist)
+;;;	  (if (not (assoc 'verilog compilation-error-regexp-alist-alist))
+;;;	      (setcdr compilation-error-regexp-alist-alist
+;;;		      (cons verilog-error-regexp-xemacs-alist
+;;;			    (cdr compilation-error-regexp-alist-alist)))))
+;;;      (if (boundp 'compilation-font-lock-keywords)
+;;;	  (progn
+;;;	    (set (make-local-variable 'compilation-font-lock-keywords)
+;;;		 verilog-error-font-lock-keywords)
+;;;	    (font-lock-set-defaults)))
+;;;      ;; Need to re-run compilation-error-regexp builder
+;;;      (if (fboundp 'compilation-build-compilation-error-regexp-alist)
+;;;	  (compilation-build-compilation-error-regexp-alist))
+;;;      ))
 
 ;; Following code only gets called from compilation-mode-hook on Emacs to add error handling.
 (defun verilog-error-regexp-add-emacs ()
