@@ -2045,17 +2045,25 @@ be substituted."
       (set (make-local-variable 'verilog-compile-command-post-mod)
            compile-command))))
 
-(if (featurep 'xemacs)
+(when (featurep 'xemacs)
+  (defvar compilation-error-regexp-systems-alist)
+  (if (not (and (= emacs-major-version 21) (<= emacs-minor-version 4)))
+      ;; XEmacs 21.5 and newer match GNU, see bug1700
+      (defun verilog-error-regexp-add-xemacs ()
+        (interactive)
+        (verilog-error-regexp-add-xemacs))
+    ;; XEmacs 21.4 and older
     ;; Following code only gets called from compilation-mode-hook on XEmacs to add error handling.
     (defun verilog-error-regexp-add-xemacs ()
-      "Teach XEmacs about verilog errors.
+      "Teach XEmacs about Verilog errors.
 Called by `compilation-mode-hook'.  This allows \\[next-error] to
 find the errors."
       (interactive)
       (if (boundp 'compilation-error-regexp-systems-alist)
 	  (if (and
 	       (not (equal compilation-error-regexp-systems-list 'all))
-	       (not (member compilation-error-regexp-systems-list 'verilog)))
+               ;; eval required due to bug1700, XEmacs otherwise errors on compile
+	       (not (eval "(member compilation-error-regexp-systems-list 'verilog)")))
 	      (push 'verilog compilation-error-regexp-systems-list)))
       (if (boundp 'compilation-error-regexp-alist-alist)
 	  (if (not (assoc 'verilog compilation-error-regexp-alist-alist))
@@ -2070,7 +2078,7 @@ find the errors."
       ;; Need to re-run compilation-error-regexp builder
       (if (fboundp 'compilation-build-compilation-error-regexp-alist)
 	  (compilation-build-compilation-error-regexp-alist))
-      ))
+      )))
 
 ;; Following code only gets called from compilation-mode-hook on Emacs to add error handling.
 (defun verilog-error-regexp-add-emacs ()
