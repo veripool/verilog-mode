@@ -8,8 +8,8 @@ on:
     - cron: '0 0 * * 0' # weekly
 
 env:
-  - VERILOGMODE_SKIP_MAKELOG=1
-  - VERILOGMODE_AUTHOR_SITE=1
+  VERILOGMODE_SKIP_MAKELOG: 1
+  VERILOGMODE_AUTHOR_SITE: 1
 
 jobs:
   build-e:
