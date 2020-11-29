@@ -2,7 +2,7 @@
 
 ifdef::env-github[]
 image:https://img.shields.io/badge/License-GPL%20v3-blue.svg[license GPLv3,link=https://www.gnu.org/licenses/gpl-3.0]
-image:https://api.travis-ci.org/veripool/verilog-mode.svg?branch=master[Build Status (Travis CI),link=https://travis-ci.com/veripool/verilog-mode]
+image:https://github.com/veripool/verilog-mode/workflows/build/badge.svg[Build Status (GitHub),link=https://github.com/veripool/verilog-mode/actions?query=workflow%3Abuild]
 endif::[]
 
 == SUMMARY

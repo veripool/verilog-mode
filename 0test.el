@@ -13,6 +13,8 @@
 ;;   VERILOG_MODE_PROFILE=1            # Profile - see batch_prof.el
 ;;   HARNESS_UPDATE_GOLDEN=1	       # Update golden reference files
 
+breaking-it-FIXME
+
 (defvar diff-flags "-u")
 (defvar vl-threading (and (not (getenv "VERILOG_MODE_TEST_FILE"))
 			  (getenv "VERILOG_MODE_THREAD")))
