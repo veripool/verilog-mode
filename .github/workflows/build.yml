@@ -12,7 +12,7 @@ env:
   VERILOGMODE_AUTHOR_SITE: 1
 
 jobs:
-  build-e:
+  emacs:
     runs-on: ubuntu-latest 
     steps:
       - name: Checkout
@@ -24,7 +24,7 @@ jobs:
       - name: Test Emacs
         run: make test_emacs
 
-  build-x:
+  xemacs:
     runs-on: ubuntu-latest 
     steps:
       - name: Checkout
