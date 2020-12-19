@@ -18,7 +18,7 @@ package common_pkg;
    parameter NUM_SLAVES = 2;
    // typedefs ...
 endpackage
-   
+
 module bus_mux
   import common_pkg::*;
    (// Interfaces

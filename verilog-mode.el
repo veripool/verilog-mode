@@ -3749,7 +3749,16 @@ Use filename, if current buffer being edited shorten to just buffer name."
 	      (setq found 't))))))
      ((looking-at verilog-end-block-re)
       (verilog-leap-to-head))
-     ((looking-at "\\(endmodule\\>\\)\\|\\(\\<endprimitive\\>\\)\\|\\(\\<endclass\\>\\)\\|\\(\\<endprogram\\>\\)\\|\\(\\<endinterface\\>\\)\\|\\(\\<endpackage\\>\\)\\|\\(\\<endconnectmodule\\>\\)")
+     ((looking-at (concat
+                   "\\(\\<endmodule\\>\\)\\|"        ; 1
+                   "\\(\\<endprimitive\\>\\)\\|"     ; 2
+                   "\\(\\<endclass\\>\\)\\|"         ; 3
+                   "\\(\\<endprogram\\>\\)\\|"       ; 4
+                   "\\(\\<endinterface\\>\\)\\|"     ; 5
+                   "\\(\\<endpackage\\>\\)\\|"       ; 6
+                   "\\(\\<endconnectmodule\\>\\)\\|" ; 7
+                   "\\(\\<endchecker\\>\\)\\|"       ; 8
+                   "\\(\\<endconfig\\>\\)"))         ; 9
       (cond
        ((match-end 1)
 	(verilog-re-search-backward "\\<\\(macro\\)?module\\>" nil 'move))
@@ -3764,7 +3773,11 @@ Use filename, if current buffer being edited shorten to just buffer name."
        ((match-end 6)
 	(verilog-re-search-backward "\\<package\\>" nil 'move))
        ((match-end 7)
-       (verilog-re-search-backward "\\<connectmodule\\>" nil 'move))
+        (verilog-re-search-backward "\\<connectmodule\\>" nil 'move))
+       ((match-end 8)
+        (verilog-re-search-backward "\\<checker\\>" nil 'move))
+       ((match-end 9)
+        (verilog-re-search-backward "\\<config\\>" nil 'move))
        (t
 	(goto-char st)
 	(backward-sexp 1))))
@@ -3838,16 +3851,16 @@ Use filename, if current buffer being edited shorten to just buffer name."
         ;; Search forward for matching endtask
         (setq reg "\\<endtask\\>" )
         (setq nest 'no))
-       ((match-end 12)
+       ((match-end 13)
         ;; Search forward for matching endgenerate
         (setq reg "\\(\\<generate\\>\\)\\|\\(\\<endgenerate\\>\\)" ))
-       ((match-end 13)
+       ((match-end 14)
         ;; Search forward for matching endgroup
         (setq reg "\\(\\<covergroup\\>\\)\\|\\(\\<endgroup\\>\\)" ))
-       ((match-end 14)
+       ((match-end 15)
         ;; Search forward for matching endproperty
         (setq reg "\\(\\<property\\>\\)\\|\\(\\<endproperty\\>\\)" ))
-       ((match-end 15)
+       ((match-end 16)
         ;; Search forward for matching endsequence
         (setq reg "\\(\\<\\(rand\\)?sequence\\>\\)\\|\\(\\<endsequence\\>\\)" )
         (setq md 3)) ; 3 to get to endsequence in the reg above
@@ -3885,28 +3898,37 @@ Use filename, if current buffer being edited shorten to just buffer name."
 		  (throw 'skip 1))))))
 
      ((looking-at (concat
-		   "\\(\\<\\(macro\\)?module\\>\\)\\|"
-		   "\\(\\<primitive\\>\\)\\|"
-		   "\\(\\<class\\>\\)\\|"
-		   "\\(\\<program\\>\\)\\|"
-		   "\\(\\<interface\\>\\)\\|"
-                  "\\(\\<package\\>\\)\\|"
-                  "\\(\\<connectmodule\\>\\)"))
+                   "\\(\\<\\(macro\\)?module\\>\\)\\|" ; 1,2
+                   "\\(\\<primitive\\>\\)\\|"          ; 3
+                   "\\(\\<class\\>\\)\\|"              ; 4
+                   "\\(\\<program\\>\\)\\|"            ; 5
+                   "\\(\\<interface\\>\\)\\|"          ; 6
+                   "\\(\\<package\\>\\)\\|"            ; 7
+                   "\\(\\<connectmodule\\>\\)\\|"      ; 8
+                   "\\(\\<generate\\>\\)\\|"           ; 9
+                   "\\(\\<checker\\>\\)\\|"            ; 10
+                   "\\(\\<config\\>\\)"))              ; 11
       (cond
        ((match-end 1)
 	(verilog-re-search-forward "\\<endmodule\\>" nil 'move))
-       ((match-end 2)
-	(verilog-re-search-forward "\\<endprimitive\\>" nil 'move))
        ((match-end 3)
-	(verilog-re-search-forward "\\<endclass\\>" nil 'move))
+	(verilog-re-search-forward "\\<endprimitive\\>" nil 'move))
        ((match-end 4)
-	(verilog-re-search-forward "\\<endprogram\\>" nil 'move))
+	(verilog-re-search-forward "\\<endclass\\>" nil 'move))
        ((match-end 5)
-	(verilog-re-search-forward "\\<endinterface\\>" nil 'move))
+	(verilog-re-search-forward "\\<endprogram\\>" nil 'move))
        ((match-end 6)
-	(verilog-re-search-forward "\\<endpackage\\>" nil 'move))
+	(verilog-re-search-forward "\\<endinterface\\>" nil 'move))
        ((match-end 7)
-       (verilog-re-search-forward "\\<endconnectmodule\\>" nil 'move))
+	(verilog-re-search-forward "\\<endpackage\\>" nil 'move))
+       ((match-end 8)
+        (verilog-re-search-forward "\\<endconnectmodule\\>" nil 'move))
+       ((match-end 9)
+        (verilog-re-search-forward "\\<endgenerate\\>" nil 'move))
+       ((match-end 10)
+        (verilog-re-search-forward "\\<endchecker\\>" nil 'move))
+       ((match-end 11)
+        (verilog-re-search-forward "\\<endconfig\\>" nil 'move))
        (t
 	(goto-char st)
 	(if (= (following-char) ?\) )
@@ -6168,7 +6190,13 @@ Jump from end to matching begin, from endcase to matching case, and so on."
       (setq reg "\\(\\<\\(rand\\)?sequence\\>\\)\\|\\(\\<endsequence\\>\\)" ))
      ((looking-at "\\<endclocking\\>")
       ;; 12: Search back for matching clocking
-      (setq reg "\\(\\<clocking\\)\\|\\(\\<endclocking\\>\\)" )))
+      (setq reg "\\(\\<clocking\\)\\|\\(\\<endclocking\\>\\)" ))
+     ;; Search back for matching package
+     ((looking-at "\\<endpackage\\>")
+      (setq reg "\\(\\<package\\>\\)" ))
+     ;; Search back for matching program
+     ((looking-at "\\<endprogram\\>")
+      (setq reg "\\(\\<program\\>\\)" )))
     (if reg
 	(catch 'skip
 	  (if (eq nesting 'yes)

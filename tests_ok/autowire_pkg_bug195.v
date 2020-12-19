@@ -9,7 +9,7 @@ package testcase_pkg;
    typedef enum         {ENUM1, ENUM2} enum_t;
    
 endpackage
-   
+
 module testcase_top
   (
    input                                 testcase_pkg::enum_t top_enum,
