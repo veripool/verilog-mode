@@ -2712,6 +2712,7 @@ find the errors."
            "\\|\\(\\<clocking\\>\\)"              ;17
            "\\|\\(\\<`[ou]vm_[a-z_]+_begin\\>\\)" ;18
            "\\|\\(\\<`vmm_[a-z_]+_member_begin\\>\\)"
+           "\\|\\(\\<`ifdef\\>\\)"                ;20
 	   ;;
 	   ))
 
@@ -3835,7 +3836,10 @@ Use filename, if current buffer being edited shorten to just buffer name."
         (setq md 3)) ; 3 to get to endsequence in the reg above
        ((match-end 17)
         ;; Search forward for matching endclocking
-        (setq reg "\\(\\<clocking\\>\\)\\|\\(\\<endclocking\\>\\)" )))
+        (setq reg "\\(\\<clocking\\>\\)\\|\\(\\<endclocking\\>\\)" ))
+       ((match-end 20)
+        ;; Search forward for matching `endif
+        (setq reg "\\(\\<`ifdef\\>\\)\\|\\(\\<`endif\\>\\)" )))
       (if (and reg
 	       (forward-word-strictly 1))
 	  (catch 'skip
@@ -4107,9 +4111,13 @@ Key bindings specific to `verilog-mode-map' are:
   (when (boundp 'hs-special-modes-alist)
     (unless (assq 'verilog-mode hs-special-modes-alist)
       (setq hs-special-modes-alist
-            (cons '(verilog-mode "\\<begin\\>" "\\<end\\>" nil
-                                 verilog-forward-sexp-function)
-                  hs-special-modes-alist))))
+            (cons '(verilog-mode
+                    "\\<begin\\>\\|\\<task\\>\\|\\<function\\>\\|\\<class\\>\\|\\<interface\\>\\|\\<fork\\>\\|(\\|`ifdef"
+                    "\\<end\\>\\|\\<endtask\\>\\|\\<endfunction\\>\\|\\<endclass\\>\\|\\<endinterface\\>\\|\\<join\\>\\|)\\|`endif"
+                    nil
+                    verilog-forward-sexp-function)
+                  hs-special-modes-alist))
+      ))
 
   (add-hook 'completion-at-point-functions
             #'verilog-completion-at-point nil 'local)
