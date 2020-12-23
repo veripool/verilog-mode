@@ -8626,7 +8626,7 @@ Optional NUM-PARAM and MAX-PARAM check for a specific number of parameters."
 
 (defun verilog-read-decls ()
   "Compute signal declaration information for the current module at point.
-Return an array of [outputs inouts inputs wire reg assign const]."
+Return an array of [outputs inouts inputs wire reg assign const gparam intf]."
   (let ((end-mod-point (or (verilog-get-end-of-defun) (point-max)))
 	(functask 0) (paren 0) (sig-paren 0) (v2kargs-ok t)
 	in-modport in-clocking in-ign-to-semi ptype ign-prop
