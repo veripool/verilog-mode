@@ -850,9 +850,9 @@ Do you really want to?  You really shouldn't be using delays on your
 assignments, as they aren't necessary to prevent races, and slows down
 simulation.  But if you must:
 
-// Local Variables:
-// verilog-assignment-delay: "#1 "
-// End:
+   // Local Variables:
+   // verilog-assignment-delay: "#1 "
+   // End:
 
 === Can AUTOASCIIENUM be changed to put translate_off pragmas around the code?
 
