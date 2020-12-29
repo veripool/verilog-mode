@@ -23,8 +23,8 @@ $display ($stime, " ERROR: CRN1V[%0d] to DP HM %0d CRN1V15 Connection Failed", d
 postError();
 
 end // else: !assert property
-end // block: VGen
 `endif //  `ifdef IO_DDR3
+end // block: VGen
 end // block: DPConnectGen
 endgenerate
 `endif

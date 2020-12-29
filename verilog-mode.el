@@ -2622,6 +2622,7 @@ find the errors."
        "`vmm_scenario_member_end"
        "`vmm_subenv_member_end"
        "`vmm_xactor_member_end"
+       "`endif"
        ))))
 
 
@@ -2712,6 +2713,8 @@ find the errors."
            "\\|\\(\\<clocking\\>\\)"              ;17
            "\\|\\(\\<`[ou]vm_[a-z_]+_begin\\>\\)" ;18
            "\\|\\(\\<`vmm_[a-z_]+_member_begin\\>\\)"
+           "\\|\\(\\<`ifdef\\>\\)"                ;20
+           "\\|\\(\\<`ifndef\\>\\)"                ;21
 	   ;;
 	   ))
 
@@ -3835,7 +3838,13 @@ Use filename, if current buffer being edited shorten to just buffer name."
         (setq md 3)) ; 3 to get to endsequence in the reg above
        ((match-end 17)
         ;; Search forward for matching endclocking
-        (setq reg "\\(\\<clocking\\>\\)\\|\\(\\<endclocking\\>\\)" )))
+        (setq reg "\\(\\<clocking\\>\\)\\|\\(\\<endclocking\\>\\)" ))
+       ((match-end 20)
+        ;; Search forward for matching `endif
+        (setq reg "\\(\\<`ifdef\\>\\)\\|\\(\\<`endif\\>\\)" ))
+       ((match-end 21)
+        ;; Search forward for matching `endif
+        (setq reg "\\(\\<`ifndef\\>\\)\\|\\(\\<`endif\\>\\)" )))
       (if (and reg
 	       (forward-word-strictly 1))
 	  (catch 'skip
@@ -4107,9 +4116,13 @@ Key bindings specific to `verilog-mode-map' are:
   (when (boundp 'hs-special-modes-alist)
     (unless (assq 'verilog-mode hs-special-modes-alist)
       (setq hs-special-modes-alist
-            (cons '(verilog-mode "\\<begin\\>" "\\<end\\>" nil
-                                 verilog-forward-sexp-function)
-                  hs-special-modes-alist))))
+            (cons '(verilog-mode
+                    "\\<begin\\>\\|\\<task\\>\\|\\<function\\>\\|\\<class\\>\\|\\<interface\\>\\|\\<fork\\>\\|(\\|\\<`ifdef\\>\\|\\<`ifndef\\>"
+                    "\\<end\\>\\|\\<endtask\\>\\|\\<endfunction\\>\\|\\<endclass\\>\\|\\<endinterface\\>\\|\\<join\\>\\|)\\|\\<`endif\\>"
+                    nil
+                    verilog-forward-sexp-function)
+                  hs-special-modes-alist))
+      ))
 
   (add-hook 'completion-at-point-functions
             #'verilog-completion-at-point nil 'local)
@@ -5705,12 +5718,13 @@ Set point to where line starts.  Limit search to point LIM."
 Examine previous lines.  Once a line is found that is definitive as to the
 type of the current line, return that lines' indent level and its type.
 Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
+  ;; TODO indent_ifdef_generate.v, (verilog-calc-1) search back to error place
   (save-excursion
     (let* ((starting_position (point))
 	   (case-fold-search nil)
 	   (par 0)
 	   (begin (looking-at "[ \t]*begin\\>"))
-          (lim (save-excursion (verilog-re-search-backward "\\(\\<begin\\>\\)\\|\\(\\<\\(connect\\)?module\\>\\)" nil t)))
+           (lim (save-excursion (verilog-re-search-backward "\\(\\<begin\\>\\)\\|\\(\\<\\(connect\\)?module\\>\\)" nil t)))
            (structres nil)
 	   (type (catch 'nesting
 		   ;; Keep working backwards until we can figure out
@@ -5859,6 +5873,7 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
       ;; Return type of block and indent level.
       (if (not type)
 	  (setq type 'cpp))
+      ;; (debug)
       (if (> par 0)			; Unclosed Parenthesis
 	  (list 'cparenexp par)
 	(cond
@@ -5961,6 +5976,11 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
                       (t
                        (goto-char here) ; or is clocking, starts a new block
                        (throw 'nesting 'block)))))
+
+             ;; if find "`ifdef"
+             ((or (match-end 20)
+                  (match-end 21))
+              (throw 'continue 'foo))
 
              ((looking-at "\\<class\\|struct\\|function\\|task\\>")
               ;; *sigh* These words have an optional prefix:
@@ -6141,7 +6161,10 @@ Jump from end to matching begin, from endcase to matching case, and so on."
       (setq reg "\\(\\<\\(rand\\)?sequence\\>\\)\\|\\(\\<endsequence\\>\\)" ))
      ((looking-at "\\<endclocking\\>")
       ;; 12: Search back for matching clocking
-      (setq reg "\\(\\<clocking\\)\\|\\(\\<endclocking\\>\\)" )))
+      (setq reg "\\(\\<clocking\\)\\|\\(\\<endclocking\\>\\)" ))
+     ((looking-at "\\<`endif\\>")
+      ;; 12: Search back for matching clocking, TODO: how about `ifndef
+      (setq reg "\\(\\<`ifdef\\>\\|\\<`ifndef\\>\\)\\|\\(\\<`endif\\>\\)" )))
     (if reg
 	(catch 'skip
 	  (if (eq nesting 'yes)
@@ -6882,7 +6905,8 @@ Only look at a few lines to determine indent level."
 
      (;-- Handle the ends
       (or
-       (looking-at verilog-end-block-re)
+       (and (looking-at verilog-end-block-re)
+            (not (string= (symbol-at-point) "`endif")))
        (verilog-at-close-constraint-p)
        (verilog-at-close-struct-p))
       (let ((val (if (eq type 'statement)

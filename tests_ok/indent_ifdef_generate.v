@@ -23,8 +23,8 @@ module m;
                  postError();
                  
               end // else: !assert property
-         end // block: VGen
  `endif //  `ifdef IO_DDR3
+         end // block: VGen
       end // block: DPConnectGen
    endgenerate
 `endif

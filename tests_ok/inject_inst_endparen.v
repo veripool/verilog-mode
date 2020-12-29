@@ -20,7 +20,7 @@ module inject_inst_endparen;
                 .rst_n(nreset)
                 /*AUTOINST*/);
 `endif
-   
+
 endmodule
 
 module register (
