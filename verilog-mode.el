@@ -5305,7 +5305,7 @@ Useful for creating tri's and other expanded fields."
   (verilog-expand-vector-internal "[" "]"))
 
 (defun verilog-expand-vector-internal (bra ket)
-  "Given BRA, the start brace and KET, the end brace, expand one line into many lines."
+  "Given start brace BRA, and end brace KET, expand one line into many lines."
   (save-excursion
     (forward-line 0)
     (let ((signal-string (buffer-substring (point)
@@ -10598,7 +10598,7 @@ if non-nil."
 ;;
 
 (defun verilog-auto-re-search-do (search-for func)
-  "Search for the given auto text regexp SEARCH-FOR, and perform FUNC where it occurs."
+  "Given start brace BRA, and end brace KET, expand one line into many lines."
   (goto-char (point-min))
   (while (verilog-re-search-forward-quick search-for nil t)
     (funcall func)))
@@ -11010,7 +11010,8 @@ removed."
 
 (defun verilog-delete-auto-buffer ()
   "Perform `verilog-delete-auto' on the current buffer.
-Intended for internal use inside a `verilog-save-font-no-change-functions' block."
+Intended for internal use inside a
+`verilog-save-font-no-change-functions' block."
   ;; Allow user to customize
   (verilog-run-hooks 'verilog-before-delete-auto-hook)
 
