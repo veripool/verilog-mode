@@ -2584,10 +2584,10 @@ find the errors."
 	  "\\(property\\)\\|"      ; 16
          "\\(connectmodule\\)\\|" ; 17
 	  "\\)\\>\\)"))
+
 (defconst verilog-end-block-re
   (eval-when-compile
     (verilog-regexp-words
-
      '("end"      ; closes begin
        "endcase"  ; closes any of case, casex casez or randcase
        "join" "join_any" "join_none"  ; closes fork
@@ -2623,7 +2623,6 @@ find the errors."
        "`vmm_subenv_member_end"
        "`vmm_xactor_member_end"
        ))))
-
 
 (defconst verilog-endcomment-reason-re
   ;; Parenthesis indicate type of keyword found
