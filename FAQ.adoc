@@ -3,7 +3,7 @@
 
 This is the Frequently Asked Questions (FAQ) for
 https://www.veripool.org/verilog-mode[Verilog Mode].  This FAQ is Copyright
-2006-2019 by Michael McNamara and Wilson Snyder.  You may redistribute this
+2006-2021 by Michael McNamara and Wilson Snyder.  You may redistribute this
 document in its entirety only.
 
 == Obtaining, and general information

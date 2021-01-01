@@ -1,6 +1,6 @@
 # DESCRIPTION: Run verilog-mode tests, as part of "make test"
 #
-# Copyright 2008-2013 by Michael McNamara and Wilson Snyder.  This package
+# Copyright 2008-2021 by Michael McNamara and Wilson Snyder.  This package
 # is free software; you can redistribute it and/or modify it under the
 # terms of either the GNU Lesser General Public License or the Perl
 # Artistic License.
