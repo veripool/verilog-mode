@@ -39,6 +39,9 @@ In detail:
    # Copy to somewhere in your Emacs "M-x describe-variable load-path"
    cp e/verilog-mode.el* /usr/share/emacs/site-lisp
 
+(Do not use the github ZIP download option as this will not build
+correctly, the version number will be unknown.)
+
 === Option 2: ELPA
 
 Verilog Mode is part of the ELPA (Emacs Lisp Package Archive). Using a
