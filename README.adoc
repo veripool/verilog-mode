@@ -34,7 +34,7 @@ will need to "make" then install e/verilog-mode.el, not the verilog-mode.el
 in the top of the directory (which does not have the version number in it).
 In detail:
    
-   git checkout https://github.com/veripool/verilog-mode
+   git clone https://github.com/veripool/verilog-mode
    make
    # Copy to somewhere in your Emacs "M-x describe-variable load-path"
    cp e/verilog-mode.el* /usr/share/emacs/site-lisp
