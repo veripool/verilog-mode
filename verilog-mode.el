@@ -10796,11 +10796,15 @@ This repairs those mis-inserted by an AUTOARG."
                         (match-string 3 out))
                        nil nil out)))
           ;; For precedence do *,/ before +,-,>>,<<
-          (while (string-match
-                  (concat "\\([[({:*/<>+-]\\)"
-                          "\\([0-9]+\\)\\s *\\([*/]\\)\\s *\\([0-9]+\\)"
-                          "\\([])}:*/<>+-]\\)")
-                  out)
+          (while (and
+                  (string-match
+                   (concat "\\([[({:*/<>+-]\\)"
+                           "\\([0-9]+\\)\\s *\\([*/]\\)\\s *\\([0-9]+\\)"
+                           "\\([])}:*/<>+-]\\)")
+                   out)
+                  (not (and (equal (match-string 3 out) "/")
+                            (not (equal 0 (% (string-to-number (match-string 2 out))
+                                             (string-to-number (match-string 4 out))))))))
             (setq out (replace-match
                        (concat (match-string 1 out)
                                (if (equal (match-string 3 out) "/")
@@ -10872,6 +10876,7 @@ This repairs those mis-inserted by an AUTOARG."
 ;;(verilog-simplify-range-expression "[(TEST[1])-1:0]")
 ;;(verilog-simplify-range-expression "[1<<2:8>>2]")  ; [4:2]
 ;;(verilog-simplify-range-expression "[2*4/(4-2) +2+4 <<4 >>2]")
+;;(verilog-simplify-range-expression "[WIDTH*2/8-1:0]")
 
 (defun verilog-clog2 (value)
   "Compute $clog2 - ceiling log2 of VALUE."
