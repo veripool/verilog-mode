@@ -8441,7 +8441,7 @@ Tieoff value uses `verilog-active-low-regexp' and
 	 (t
 	  (let* ((width (verilog-sig-width sig)))
 	    (cond ((not width)
-		   "`0/*NOWIDTH*/")
+		   "'0/*NOWIDTH*/")
 		  ((string-match "^[0-9]+$" width)
 		   (concat width (if (verilog-sig-signed sig) "'sh0" "'h0")))
 		  (t
@@ -13534,7 +13534,7 @@ them to a one.
 AUTORESET may try to reset arrays or structures that cannot be
 reset by a simple assignment, resulting in compile errors.  This
 is a feature to be taken as a hint that you need to reset these
-signals manually (or put them into a \"\\=`ifdef NEVER signal<=\\=`0;
+signals manually (or put them into a \"\\=`ifdef NEVER signal<=\\='0;
 \\=`endif\" so Verilog-Mode ignores them.)
 
 An example:

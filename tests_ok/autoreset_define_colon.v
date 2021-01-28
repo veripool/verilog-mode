@@ -21,8 +21,8 @@ module test (
       if (rst_l) begin
          /*AUTORESET*/
          // Beginning of autoreset for uninitialized flops
-         addrD1 <= `0/*NOWIDTH*/;
-         addrD2 <= `0/*NOWIDTH*/;
+         addrD1 <= '0/*NOWIDTH*/;
+         addrD2 <= '0/*NOWIDTH*/;
          // End of automatics
       end
       else begin
