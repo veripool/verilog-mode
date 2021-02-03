@@ -220,7 +220,7 @@ STRING should be given if the last search was by `string-match' on STRING."
       )
     (if (fboundp 'defface)
         nil				; great!
-      (defmacro defface (var values doc &rest _args)
+      (defmacro defface (var _values _doc &rest _args)
         `(make-face ,var))
       )
 
@@ -339,7 +339,7 @@ wherever possible, since it is slow."
    ((fboundp 'quit-window)
     (defalias 'verilog-quit-window 'quit-window))
    (t
-    (defun verilog-quit-window (kill-ignored window)
+    (defun verilog-quit-window (_kill-ignored window)
       "Quit WINDOW and bury its buffer. KILL-IGNORED is ignored."
       (delete-window window)))))
 
@@ -2305,7 +2305,8 @@ find the errors."
        "`ovm_update_sequence_lib_and_item"
        "`ovm_warning"
        "`static_dut_error"
-       "`static_message") nil )))
+       "`static_message")
+     nil )))
 
 (defconst verilog-uvm-statement-re
   (eval-when-compile
@@ -2444,7 +2445,8 @@ find the errors."
        "`uvm_update_sequence_lib"               ; Deprecated in 1.1
        "`uvm_update_sequence_lib_and_item"      ; Deprecated in 1.1
        "`uvm_warning"
-       "`uvm_warning_context") nil )))
+       "`uvm_warning_context")
+     nil )))
 
 
 ;;
@@ -10476,17 +10478,16 @@ those clocking block's signals."
 (defun verilog-signals-matching-enum (in-list enum)
   "Return all signals in IN-LIST matching the given ENUM."
   (let (out-list)
-    (while in-list
-      (if (equal (verilog-sig-enum (car in-list)) enum)
-	  (setq out-list (cons (car in-list) out-list)))
-      (setq in-list (cdr in-list)))
+    (dolist (sig in-list)
+      (if (equal (verilog-sig-enum sig) enum)
+          (push sig out-list)))
     ;; New scheme
     ;; Namespace intentionally short for AUTOs and compatibility
-    (let* ((enumvar (intern (concat "venum-" enum)))
-	   (enumlist (and (boundp enumvar) (eval enumvar))))
-      (while enumlist
-	(add-to-list 'out-list (list (car enumlist)))
-	(setq enumlist (cdr enumlist))))
+    (let* ((enumvar (intern (concat "venum-" enum))))
+      (dolist (en (and (boundp enumvar) (eval enumvar)))
+        (let ((sig (list en)))
+          (unless (member sig out-list)
+            (push sig out-list)))))
     (nreverse out-list)))
 
 (defun verilog-signals-matching-regexp (in-list regexp)
