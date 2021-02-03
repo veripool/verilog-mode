@@ -134,6 +134,16 @@
   (interactive)
   (message "Using verilog-mode version %s" verilog-mode-version))
 
+(defmacro verilog--supressed-warnings (warnings &rest body)
+  (declare (indent 1) (debug t))
+  (cond
+   ((fboundp 'with-suppressed-warnings)
+    `(with-suppressed-warnings ,warnings ,@body))
+   ((fboundp 'with-no-warnings)
+    `(with-no-warnings ,@body))
+   (t
+    `(progn ,@body))))
+
 ;; Insure we have certain packages, and deal with it if we don't
 ;; Be sure to note which Emacs flavor and version added each feature.
 (eval-when-compile
@@ -5539,8 +5549,10 @@ FILENAME to find directory to run in, or defaults to `buffer-file-name'."
           ;; We should use font-lock-ensure in preference to
           ;; font-lock-fontify-buffer, but IIUC the problem this is supposed to
           ;; solve only appears in Emacsen older than font-lock-ensure anyway.
-          ;; So avoid bytecomp's interactive-only by going through intern.
-          (when fontlocked (funcall (intern "font-lock-fontify-buffer"))))))))
+          (when fontlocked
+            (verilog--supressed-warnings
+                ((interactive-only font-lock-fontify-buffer))
+              (font-lock-fontify-buffer))))))))
 
 ;;; Batch:
 ;;
@@ -8626,6 +8638,22 @@ Optional NUM-PARAM and MAX-PARAM check for a specific number of parameters."
 	(error "%s: Expected <= %d parameters" (verilog-point-text) max-param))
     (nreverse olist)))
 
+;; Prevent compile warnings; these are let's, not globals.
+(defvar sigs-in)
+(defvar sigs-inout)
+(defvar sigs-intf)
+(defvar sigs-intfd)
+(defvar sigs-out)
+(defvar sigs-out-d)
+(defvar sigs-out-i)
+(defvar sigs-out-unk)
+(defvar sigs-temp)
+;; These are known to be from other packages and may not be defined
+(defvar diff-command)
+;; There are known to be from newer versions of Emacs
+(defvar create-lockfiles)
+(defvar which-func-modes)
+
 (defun verilog-read-decls ()
   "Compute signal declaration information for the current module at point.
 Return an array of [outputs inouts inputs wire reg assign const gparam intf]."
@@ -8905,25 +8933,6 @@ Return an array of [outputs inouts inputs wire reg assign const gparam intf]."
 
 (defvar verilog-read-sub-decls-gate-ios nil
   "For `verilog-read-sub-decls', gate IO pins remaining, nil if non-primitive.")
-
-(eval-when-compile
-  ;; Prevent compile warnings; these are let's, not globals
-  ;; Do not remove the eval-when-compile
-  ;; - we want an error when we are debugging this code if they are refed.
-  (defvar sigs-in)
-  (defvar sigs-inout)
-  (defvar sigs-intf)
-  (defvar sigs-intfd)
-  (defvar sigs-out)
-  (defvar sigs-out-d)
-  (defvar sigs-out-i)
-  (defvar sigs-out-unk)
-  (defvar sigs-temp)
-  ;; These are known to be from other packages and may not be defined
-  (defvar diff-command)
-  ;; There are known to be from newer versions of Emacs
-  (defvar create-lockfiles)
-  (defvar which-func-modes))
 
 (defun verilog-read-sub-decls-type (par-values portdata)
   "For `verilog-read-sub-decls-line', decode a signal type."
@@ -10689,9 +10698,7 @@ When MODI is non-null, also add to modi-cache, for tracking."
 	(verilog-insert "// " (verilog-sig-comment sig) "\n"))
       (setq sigs (cdr sigs)))))
 
-(eval-when-compile
-  (if (not (boundp 'indent-pt))
-      (defvar indent-pt nil "Local used by `verilog-insert-indent'.")))
+(defvar indent-pt) ;; Local used by `verilog-insert-indent'.
 
 (defun verilog-insert-indent (&rest stuff)
   "Indent to position stored in local `indent-pt' variable, then insert STUFF.
