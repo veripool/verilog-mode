@@ -6653,7 +6653,7 @@ Return >0 for nested struct."
        (verilog-in-struct-p))
       ;; true
       (save-excursion
-	(if (looking-at "}\\(?:\\s-*\\w+\\s-*\\)?;") 1))
+        (if (looking-at "}\\(?:\\s-*\\w+\\s-*\\(\\s-*\\,\\s-*\\w+\\)*\\)?;") 1))
     ;; false
     nil))
 
