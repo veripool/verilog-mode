@@ -1969,7 +1969,11 @@ To call on \\[verilog-auto], set `verilog-auto-delete-trailing-whitespace'."
     (unless (bolp) (insert "\n"))))
 
 (defvar compile-command)
+;; These are known to be from other packages and may not be defined
+(defvar diff-command)
+;; There are known to be from newer versions of Emacs
 (defvar create-lockfiles)  ; Emacs 24
+(defvar which-func-modes)
 
 ;; compilation program
 (defun verilog-set-compile-command ()
@@ -8648,11 +8652,6 @@ Optional NUM-PARAM and MAX-PARAM check for a specific number of parameters."
 (defvar sigs-out-i)
 (defvar sigs-out-unk)
 (defvar sigs-temp)
-;; These are known to be from other packages and may not be defined
-(defvar diff-command)
-;; There are known to be from newer versions of Emacs
-(defvar create-lockfiles)
-(defvar which-func-modes)
 
 (defun verilog-read-decls ()
   "Compute signal declaration information for the current module at point.
