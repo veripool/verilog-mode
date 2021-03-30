@@ -6650,14 +6650,9 @@ Return >0 for nested struct."
 
 (defun verilog-at-close-struct-p ()
   "If at the } that closes a struct, return true."
-  (if (and
-       (equal (char-after) ?\})
-       (verilog-in-struct-p))
-      ;; true
-      (save-excursion
-        (if (looking-at "}\\(?:\\s-*\\w+\\s-*\\(\\s-*\\,\\s-*\\w+\\)*\\)?;") 1))
-    ;; false
-    nil))
+  (and (equal (char-after) ?\})
+       (verilog-in-struct-p)
+       (looking-at "}\\(?:\\s-*\\w+\\s-*\\(?:,\\s-*\\w+\\s-*\\)*\\)?;")))
 
 (defun verilog-parenthesis-depth ()
   "Return non zero if in parenthetical-expression."
