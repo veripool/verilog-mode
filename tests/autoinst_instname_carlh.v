@@ -1,5 +1,7 @@
 module ex;
 
+   // Note "inst" below is not an official feature
+
    /* autoinst_paramover_sub AUTO_TEMPLATE (
     .a(@"vl-cell-name"_in[]),
     .b(@"(substring inst 2)"_out[]),

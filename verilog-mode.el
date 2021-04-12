@@ -11561,6 +11561,7 @@ See the example in `verilog-auto-inout-modport'."
 
 (defvar vl-cell-type nil "See `verilog-auto-inst'.") ; Prevent compile warning
 (defvar vl-cell-name nil "See `verilog-auto-inst'.") ; Prevent compile warning
+(defvar vl-memory    nil "See `verilog-auto-inst'.") ; Prevent compile warning
 (defvar vl-modport   nil "See `verilog-auto-inst'.") ; Prevent compile warning
 (defvar vl-name  nil "See `verilog-auto-inst'.") ; Prevent compile warning
 (defvar vl-width nil "See `verilog-auto-inst'.") ; Prevent compile warning
@@ -12063,6 +12064,7 @@ Lisp Templates:
         vl-width       Width of the input/output port (`3' for [2:0]).
                        May be a (...) expression if bits isn't a constant.
         vl-dir         Direction of the pin input/output/inout/interface.
+        vl-memory      The unpacked array part of the I/O port (`[5:0]').
         vl-modport     The modport, if an interface with a modport.
         vl-cell-type   Module name/type of the cell (`InstModule').
         vl-cell-name   Instance name of the cell (`instName').
