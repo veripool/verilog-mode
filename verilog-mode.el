@@ -2077,8 +2077,7 @@ find the errors."
       (if (boundp 'compilation-error-regexp-systems-alist)
 	  (if (and
 	       (not (equal compilation-error-regexp-systems-list 'all))
-               ;; eval required due to bug1700, XEmacs otherwise errors on compile
-	       (not (eval "(member compilation-error-regexp-systems-list 'verilog)")))
+	       (not (member 'verilog compilation-error-regexp-systems-list)))
 	      (push 'verilog compilation-error-regexp-systems-list)))
       (if (boundp 'compilation-error-regexp-alist-alist)
 	  (if (not (assoc 'verilog compilation-error-regexp-alist-alist))
