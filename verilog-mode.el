@@ -829,7 +829,7 @@ The name of the function or case will be set between the braces."
 (defcustom verilog-auto-ignore-concat nil
   "Non-nil means ignore signals in {...} concatenations for AUTOWIRE etc.
 This will exclude signals referenced as pin connections in {...}
-or (...) from AUTOWIRE, AUTOOUTPUT and friends."
+or (...) from AUTOWIRE, AUTOOUTPUT and friends. See also AUTONOHOOKUP."
   :group 'verilog-mode-actions
   :type 'boolean)
 (put 'verilog-auto-ignore-concat 'safe-local-variable #'verilog-booleanp)
@@ -9106,9 +9106,7 @@ Inserts the list of signals found, using submodi to look up each port."
 	;; We intentionally ignore (non-escaped) signals with .s in them
 	;; this prevents AUTOWIRE etc from noticing hierarchical sigs.
 	(when port
-          (cond ((and verilog-auto-ignore-concat
-                      (looking-at "[({]"))
-                 nil) ; {...} or (...) historically ignored with auto-ignore-concat
+          (cond ((looking-at "[^\n]*AUTONOHOOKUP"))
                 ((looking-at "\\([a-zA-Z_][a-zA-Z_0-9]*\\)\\s-*)")
 		 (verilog-read-sub-decls-sig
                   submoddecls par-values comment port
@@ -9555,7 +9553,10 @@ Returns REGEXP and list of ( (signal_name connection_name)... )."
 		     (cons (list
 			    (match-string-no-properties 1)
 			    (match-string-no-properties 2)
-			    templateno lineno)
+                            templateno lineno
+                            (save-excursion
+                              (goto-char (match-end 0))
+                              (looking-at "[^\n]*AUTONOHOOKUP")))
 			   tpl-sig-list))
 	       (goto-char (match-end 0)))
               ;; Regexp form??
@@ -9571,7 +9572,10 @@ Returns REGEXP and list of ( (signal_name connection_name)... )."
 								    (match-string 1))
 				    "$")
 			    rep
-			    templateno lineno)
+                            templateno lineno
+                            (save-excursion
+                              (goto-char (match-end 0))
+                              (looking-at "[^\n]*AUTONOHOOKUP")))
 			   tpl-wild-list)))
 	      ((looking-at "[ \t\f]+")
 	       (goto-char (match-end 0)))
@@ -11689,15 +11693,14 @@ If PAR-VALUES replace final strings with these parameter values."
              ;; verilog-insert requires the complete comment in one call - including the newline
              (cond ((equal verilog-auto-inst-template-numbers 'lhs)
                     (verilog-insert " // Templated"
-                                    " LHS: " (nth 0 tpl-ass)
-                                    "\n"))
+                                    " LHS: " (nth 0 tpl-ass)))
                    (verilog-auto-inst-template-numbers
                     (verilog-insert " // Templated"
                                     " T" (int-to-string (nth 2 tpl-ass))
-                                    " L" (int-to-string (nth 3 tpl-ass))
-                                    "\n"))
+                                    " L" (int-to-string (nth 3 tpl-ass))))
                    (t
-                    (verilog-insert " // Templated\n"))))
+                    (verilog-insert " // Templated")))
+             (verilog-insert (if (nth 4 tpl-ass) " AUTONOHOOKUP\n" "\n")))
             (for-star
              (indent-to (+ (if (< verilog-auto-inst-column 48) 24 16)
                            verilog-auto-inst-column))
@@ -12087,6 +12090,16 @@ Lisp Templates:
   After the evaluation is completed, @ substitution and [] substitution
   occur.
 
+
+Ignoring Hookup:
+
+  AUTOWIRE and related AUTOs will read the signals created by a template.
+  To specify that a signal should not be parsed to participate in this
+  hookup, add a AUTONOHOOKUP comment to the template.  For example:
+
+            .pci_req_l  (pci_req_not_to_wire),  //AUTONOHOOKUP
+
+
 For more information see the \\[verilog-faq] and forums at URL
 `https://www.veripool.org'."
   (save-excursion

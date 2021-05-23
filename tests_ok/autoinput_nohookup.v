@@ -1,29 +1,30 @@
 module xyz (/*AUTOARG*/
+            // Outputs
+            signal_f, signal_c,
             // Inputs
-            signal_e3, signal_e, signal_b
+            signal_e3, signal_b
             );
    
    /*AUTOINPUT*/
    // Beginning of automatic inputs (from unused autoinst inputs)
    input [2:0] signal_b; // To u_abc of abc.v
-   input       signal_e; // To u_def of def.v
    input       signal_e3; // To u_def of def.v
    // End of automatics
    
    /*AUTOOUTPUT*/
+   // Beginning of automatic outputs (from unused autoinst outputs)
+   output      signal_c; // From u_abc of abc.v
+   output      signal_f;                // From u_def of def.v
+   // End of automatics
    
    /*AUTOWIRE*/
-   // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire        signal_c; // From u_abc of abc.v
-   wire        signal_f;                // From u_def of def.v
-   // End of automatics
    
    /* abc AUTO_TEMPLATE
     (
     // Outputs
     .signal_c                           (signal_c),
     // Inputs
-    .signal_a                           ({1'b0, signal_f}),
+    .signal_a                           (signal_f),   // AUTONOHOOKUP
     .signal_b                           (signal_b[2:0]));
     */
    
@@ -32,17 +33,18 @@ module xyz (/*AUTOARG*/
       // Outputs
       .signal_c                         (signal_c),              // Templated
       // Inputs
-      .signal_a                         ({1'b0, signal_f}),      // Templated
+      .signal_a                         (signal_f),              // Templated AUTONOHOOKUP
       .signal_b                         (signal_b[2:0]));        // Templated
    
    /* def AUTO_TEMPLATE
     (// Outputs
     .signal_f                           (signal_f),
     // Inputs
-    .signal_d                           ({1'b1, signal_c}),
-    .signal_e                           ({2'b11, signal_e}),
-    .signal_e2                  (({2'b11, signal_e2})),
-    .signal_e3                  ((signal_e3)) );
+    .signal_d                           (signal_c),   // AUTONOHOOKUP
+    .signal_e                           (signal_e),   // AUTONOHOOKUP
+    .signal_e2                  (signal_e2),   // AUTONOHOOKUP
+    .signal_e3                  ((signal_e3)),
+    );
     */
    
    def u_def
@@ -50,9 +52,9 @@ module xyz (/*AUTOARG*/
       // Outputs
       .signal_f                         (signal_f),              // Templated
       // Inputs
-      .signal_d                         ({1'b1, signal_c}),      // Templated
-      .signal_e                         ({2'b11, signal_e}),     // Templated
-      .signal_e2                        (({2'b11, signal_e2})),  // Templated
+      .signal_d                         (signal_c),              // Templated AUTONOHOOKUP
+      .signal_e                         (signal_e),              // Templated AUTONOHOOKUP
+      .signal_e2                        (signal_e2),             // Templated AUTONOHOOKUP
       .signal_e3                        ((signal_e3)));          // Templated
    
 endmodule // xyz
@@ -84,7 +86,3 @@ module def (/*AUTOARG*/
    output      signal_f;
    
 endmodule // def
-
-// Local Variables:
-// verilog-auto-ignore-concat: t
-// End:
