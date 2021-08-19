@@ -11,7 +11,7 @@ module child1 (/*AUTOARG*/
                x
                );
    
-   input x;
+   input     x;
    parameter lengthM2;
    
 endmodule

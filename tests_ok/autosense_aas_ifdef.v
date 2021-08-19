@@ -1,14 +1,14 @@
 module dummy;
    
    parameter [TSTBITS-1:0] // synopsys enum tstate_info
-     TIDLE = 3'b000,
-     TCN1  = 3'b001,
-     TCN2  = TCN1+1, // must be numbered consecutively
-     TCN3  = TCN2+1,
-     TCN4  = TCN3+1,
-     TCN5  = TCN4+1,
-     IOCLR = TCN5+1,
-     TUNU1 = 3'b111;
+                           TIDLE = 3'b000,
+                           TCN1  = 3'b001,
+                           TCN2  = TCN1+1, // must be numbered consecutively
+                           TCN3  = TCN2+1,
+                           TCN4  = TCN3+1,
+                           TCN5  = TCN4+1,
+                           IOCLR = TCN5+1,
+                           TUNU1 = 3'b111;
    
    // state and output logic
    always @ (`ifdef SIMFSM

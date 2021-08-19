@@ -1,0 +1,37 @@
+# DESCRIPTION: Github actions config
+name: build
+
+on: 
+  push:
+  pull_request:
+  schedule:
+    - cron: '0 0 * * 0' # weekly
+
+env:
+  VERILOGMODE_SKIP_MAKELOG: 1
+  VERILOGMODE_AUTHOR_SITE: 1
+
+jobs:
+  emacs:
+    runs-on: ubuntu-latest 
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Install Emacs
+        run: sudo apt-get install emacs
+
+      - name: Test Emacs
+        run: make test_emacs
+
+  xemacs:
+    runs-on: ubuntu-latest 
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Install XEmacs
+        run: sudo apt-get install xemacs21
+
+      - name: Test XEmacs
+        run: make test_xemacs

@@ -6,7 +6,7 @@ module autoinst_lopaz_srpad (/*AUTOARG*/
                              // Inputs
                              clk, pin_out, pin_outen
                              );
-   parameter w = 1;
+   parameter        w = 1;
    input            clk;
    
    inout [w-1:0]    pin;

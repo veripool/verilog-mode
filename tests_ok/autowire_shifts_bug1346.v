@@ -6,9 +6,9 @@ module design(/*AUTOARG*/
               // Inputs
               i0, i1
               );
-   parameter w1 = 2;
-   parameter w2 = 4;
-   parameter w3 = 256;
+   parameter                                             w1 = 2;
+   parameter                                             w2 = 4;
+   parameter                                             w3 = 256;
    input [w1:0]                                          i0;
    input [w2:0]                                          i1;
    

@@ -1,10 +1,10 @@
 // bug981
 
 module a(
-         parameter AUM=80;
-         parameter BUM=70;
-         parameter VUM=1;
-         parameter V2=2;
+         parameter                AUM=80;
+         parameter                BUM=70;
+         parameter                VUM=1;
+         parameter                V2=2;
          input                    my_data_z;
          input                    my_data_v[VUM];
          input                    my_data_vv[VUM][V2];

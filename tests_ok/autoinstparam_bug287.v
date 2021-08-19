@@ -1,5 +1,5 @@
 module Ptest #(
-               parameter I_CONTROL     = 8'h 00, R_CONTROL     = 8'h00)
+               parameter I_CONTROL = 8'h 00, R_CONTROL = 8'h00)
    (
     input scanTest,
     input scanArst);

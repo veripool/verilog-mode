@@ -3,8 +3,8 @@ module batch_li_parent (/*AUTOARG*/
                         clk, rst
                         );
    
-   input rst;
-   input clk;
+   input     rst;
+   input     clk;
    
    parameter WIDTH_0 = 8;
    parameter WIDTH_1 = 16;

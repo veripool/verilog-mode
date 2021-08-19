@@ -30,8 +30,8 @@ module CmpEng (/*AUTOARG*/
    
 `define M 2
 `define L 1
-   parameter MS = 2;
-   parameter LS = 1;
+   parameter   MS = 2;
+   parameter   LS = 1;
    
    reg [MS:LS] m_param_r;
    reg [`M:`L] m_def2_r;

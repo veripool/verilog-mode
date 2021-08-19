@@ -2,7 +2,7 @@
 # DESCRIPTION: Query's git to get version number
 ######################################################################
 #
-# Copyright 2005-2013 by Wilson Snyder.  This is free software; you
+# Copyright 2005-2021 by Wilson Snyder.  This is free software; you
 # can redistribute it and/or modify it under the terms of either the GNU
 # Lesser General Public License Version 3 or the Perl Artistic License
 # Version 2.0.
