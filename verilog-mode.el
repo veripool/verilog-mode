@@ -3127,7 +3127,6 @@ find the errors."
     (modify-syntax-entry ?& "." table)
     (modify-syntax-entry ?| "." table)
     (modify-syntax-entry ?` "w" table)  ; ` is part of definition symbols in Verilog
-    (modify-syntax-entry ?_ "w" table)
     (modify-syntax-entry ?\' "." table)
 
     ;; Set up TABLE to handle block and line style comments.
@@ -4090,7 +4089,8 @@ Key bindings specific to `verilog-mode-map' are:
 	  verilog-font-lock-keywords-1
 	  verilog-font-lock-keywords-2
 	  verilog-font-lock-keywords-3)
-         nil nil nil
+         nil nil
+         ((?_ . "w"))
 	 ,(if (functionp 'syntax-ppss)
 	      ;; verilog-beg-of-defun uses syntax-ppss, and syntax-ppss uses
 	      ;; font-lock-beginning-of-syntax-function, so
