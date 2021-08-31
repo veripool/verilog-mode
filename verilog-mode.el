@@ -2504,7 +2504,7 @@ find the errors."
 (defconst verilog-no-indent-begin-re
   (eval-when-compile
     (verilog-regexp-words
-     '("always" "always_comb" "always_ff" "always_latch" "initial" "final"  ; procedural blocks
+     '("always" "always_comb" "always_ff" "always_latch" "analog" "initial" "final"  ; procedural blocks
        "if" "else"                                                          ; conditional statements
        "while" "for" "foreach" "repeat" "do" "forever" ))))                 ; loop statements
 
@@ -2650,6 +2650,7 @@ find the errors."
    "\\(\\<end\\>\\s-+\\<else\\>\\)\\|"	         ; 3
    "\\(\\<always\\(?:_ff\\)?\\>\\(?:[ \t]*@\\)\\)\\|"    ; 4 (matches always or always_ff w/ @...)
    "\\(\\<always\\(?:_comb\\|_latch\\)?\\>\\)\\|"  ; 5 (matches always, always_comb, always_latch w/o @...)
+   "\\(\\<analog\\>\\)\\|"		         ; 6
    "\\(\\<fork\\>\\)\\|"			 ; 7
    "\\(\\<if\\>\\)\\|"
    verilog-property-re "\\|"
@@ -2852,7 +2853,7 @@ find the errors."
   (eval-when-compile (verilog-regexp-words '("Outputs" "Inouts" "Inputs" "Interfaces" "Interfaced"))))
 
 (defconst verilog-behavioral-block-beg-re
-  (eval-when-compile (verilog-regexp-words '("initial" "final" "always" "always_comb" "always_latch" "always_ff"
+  (eval-when-compile (verilog-regexp-words '("initial" "final" "always" "always_comb" "always_latch" "always_ff" "analog"
                                              "function" "task"))))
 (defconst verilog-coverpoint-re "\\w+\\s-*:\\s-*\\(coverpoint\\|cross\\|constraint\\)")
 (defconst verilog-in-constraint-re  ; keywords legal in constraint blocks starting a statement/block
@@ -2863,7 +2864,7 @@ find the errors."
     (verilog-regexp-words
      '(
        "{"
-       "always" "always_latch" "always_ff" "always_comb"
+       "always" "always_latch" "always_ff" "always_comb" "analog"
        "begin" "end"
        ;; "unique" "priority"
        "case" "casex" "casez" "randcase" "endcase"
@@ -2955,13 +2956,13 @@ find the errors."
       '( "connectmodule" "module" "macromodule" "primitive" "class" "program"
          "interface" "package" "config")
       '( "initial" "final" "always" "always_comb" "always_ff"
-         "always_latch" "endtask" "endfunction" )))))
+         "always_latch" "analog" "endtask" "endfunction" )))))
 
 (defconst verilog-defun-level-generate-only-re
   (eval-when-compile
     (verilog-regexp-words
      '( "initial" "final" "always" "always_comb" "always_ff"
-        "always_latch" "endtask" "endfunction" ))))
+        "always_latch" "analog" "endtask" "endfunction" ))))
 
 (defconst verilog-cpp-level-re
   (eval-when-compile
@@ -2988,7 +2989,7 @@ find the errors."
   (eval-when-compile
     (verilog-regexp-words
      '(
-       "always" "assign" "always_latch" "always_ff" "always_comb" "connectmodule" "constraint"
+       "always" "assign" "always_latch" "always_ff" "always_comb" "analog" "connectmodule" "constraint"
        "import" "initial" "final" "module" "macromodule" "repeat" "randcase" "while"
        "if" "for" "forever" "foreach" "else" "parameter" "do" "localparam" "assert"
        ))))
@@ -3065,7 +3066,7 @@ find the errors."
 (defconst verilog-keywords
   (append verilog-compiler-directives
           '(
-            "after" "alias" "always" "always_comb" "always_ff" "always_latch" "and"
+            "after" "alias" "always" "always_comb" "always_ff" "always_latch" "analog" "and"
             "assert" "assign" "assume" "automatic" "before" "begin" "bind"
             "bins" "binsof" "bit" "break" "buf" "bufif0" "bufif1" "byte"
             "case" "casex" "casez" "cell" "chandle" "class" "clocking" "cmos"
@@ -3282,7 +3283,7 @@ See also `verilog-font-lock-extra-types'.")
              "use" "wait" "while"
              ;; 1800-2005
              "alias" "always_comb" "always_ff" "always_latch" "assert"
-             "assume" "before" "bind" "bins" "binsof" "break" "class"
+             "assume" "analog" "before" "bind" "bins" "binsof" "break" "class"
              "clocking" "constraint" "context" "continue" "cover"
              "covergroup" "coverpoint" "cross" "dist" "do" "endclass"
              "endclocking" "endgroup" "endinterface" "endpackage"
@@ -7452,7 +7453,7 @@ will be completed at runtime and should not be added to this list.")
 (defvar verilog-defun-keywords
   (append
    '(
-     "always" "always_comb" "always_ff" "always_latch" "assign"
+     "always" "always_comb" "always_ff" "always_latch" "analog" "assign"
      "begin" "end" "connectmodule" "endconnectmodule" "generate" "endgenerate" "module" "endmodule"
      "specify" "endspecify" "function" "endfunction" "initial" "final"
      "task" "endtask" "primitive" "endprimitive"
