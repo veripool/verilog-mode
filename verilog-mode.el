@@ -5104,7 +5104,7 @@ primitive or interface named NAME."
                                               (throw 'skip 1)))))))))
 
                                (; always, always_comb, always_latch w/o @...
-                                (match-end 5)
+                                (or (match-end 5) (match-end 6))
                                 (goto-char (match-end 0))
                                 (setq there (point))
                                 (setq err nil)

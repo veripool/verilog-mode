@@ -4,7 +4,7 @@ module mymodule();
    
    analog begin
       // contents of module here
-   end // analog begin
+   end // analog
    
 endmodule // mymodule
 
