@@ -4759,7 +4759,7 @@ More specifically, after a generate and before an endgenerate."
 	(while (and
 		(/= nest 0)
 		(verilog-re-search-backward
-                "\\<\\(module\\)\\|\\(connectmodule\\)\\|\\(generate\\)\\|\\(endgenerate\\)\\>" nil 'move)
+                "\\<\\(module\\)\\|\\(connectmodule\\)\\|\\(generate\\)\\|\\(endgenerate\\)\\|\\(if\\)\\|\\(case\\)\\|\\(for\\)\\>" nil 'move)
 		(cond
 		 ((match-end 1) ; module - we have crawled out
 		  (throw 'done 1))
@@ -4768,7 +4768,13 @@ More specifically, after a generate and before an endgenerate."
                 ((match-end 3) ; generate
 		  (setq nest (1- nest)))
                 ((match-end 4) ; endgenerate
-		  (setq nest (1+ nest))))))))
+		  (setq nest (1+ nest)))
+                ((match-end 5) ; if
+		  (setq nest (1- nest)))
+                ((match-end 6) ; case
+		  (setq nest (1- nest)))
+                ((match-end 7) ; for
+		  (setq nest (1- nest))))))))
     (= nest 0) )) ; return nest
 
 (defun verilog-in-fork-region-p ()
