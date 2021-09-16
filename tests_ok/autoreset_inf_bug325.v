@@ -6,4 +6,4 @@ module aaa();
       // note missing e-n-d
       always @(*) begin
       end
-      endmodule
+endmodule
