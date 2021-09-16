@@ -4,7 +4,7 @@
 
 ;; Author: Michael McNamara <mac@verilog.com>
 ;;    Wilson Snyder <wsnyder@wsnyder.org>
-;; X-URL: https://www.veripool.org
+;; URL: https://www.veripool.org
 ;; Created: 3 Jan 1996
 ;; Keywords: languages
 ;; The "Version" is the date followed by the decimal rendition of the Git
@@ -6811,6 +6811,8 @@ Only look at a few lines to determine indent level."
   (verilog-do-indent (verilog-calculate-indent)))
 
 (defun verilog-do-indent (indent-str)
+  ;; `ind' is used in expressions stored in `verilog-indent-alist'.
+  (verilog--suppressed-warnings ((lexical ind)) (defvar ind))
   (let ((type (car indent-str))
 	(ind (car (cdr indent-str))))
     (cond
@@ -7292,6 +7294,8 @@ If QUIET is non-nil, do not print messages showing the progress of line-up."
 Line up the variable names based on previous declaration's indentation.
 BASEIND is the base indent to offset everything."
   (interactive)
+  ;; `ind' is used in expressions stored in `verilog-indent-alist'.
+  (verilog--suppressed-warnings ((lexical ind)) (defvar ind))
   (let ((pos (point-marker))
 	(lim (save-excursion
 	       ;; (verilog-re-search-backward verilog-declaration-opener nil 'move)
@@ -8645,6 +8649,13 @@ Optional NUM-PARAM and MAX-PARAM check for a specific number of parameters."
 (defun verilog-read-decls ()
   "Compute signal declaration information for the current module at point.
 Return an array of [outputs inouts inputs wire reg assign const gparam intf]."
+  (verilog--suppressed-warnings
+      ((lexical sigs-intf sigs-var sigs-const sigs-assign sigs-var
+                sigs-gparam sigs-inout sigs-out sigs-in))
+    ;; The local variable below are accessed via (symbol-value expect-signal).
+    (defvar sigs-intf) (defvar sigs-var) (defvar sigs-const)
+    (defvar sigs-assign) (defvar sigs-var) (defvar sigs-gparam)
+    (defvar sigs-inout) (defvar sigs-out) (defvar sigs-in))
   (let ((end-mod-point (or (verilog-get-end-of-defun) (point-max)))
 	(functask 0) (paren 0) (sig-paren 0) (v2kargs-ok t)
 	in-modport in-clocking in-ign-to-semi ptype ign-prop
@@ -9325,6 +9336,9 @@ Must call `verilog-read-auto-lisp-present' before this function."
 EXIT-KEYWD is expression to stop at, nil if top level.
 RVALUE is true if at right hand side of equal.
 TEMP-NEXT is true to ignore next token, fake from inside case statement."
+  (verilog--suppressed-warnings ((lexical sigs-temp sigs-in sigs-out-unk))
+    ;; The local variable below are accessed via (symbol-value got-list).
+    (defvar sigs-temp) (defvar sigs-in) (defvar sigs-out-unk))
   (let* ((semi-rvalue (equal "endcase" exit-keywd))  ; true if after a ; we are looking for rvalue
 	 keywd last-keywd sig-tolk sig-last-tolk gotend got-sig got-list end-else-check
 	 ignore-next)
