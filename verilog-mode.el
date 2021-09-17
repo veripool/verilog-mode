@@ -11581,6 +11581,7 @@ See the example in `verilog-auto-inout-modport'."
 (defun verilog-auto-inst-port-map (_port-st)
   nil)
 
+;; These are used by user's AUTO_TEMPLATE Lisp expressions
 (defvar vl-cell-type nil "See `verilog-auto-inst'.") ; Prevent compile warning
 (defvar vl-cell-name nil "See `verilog-auto-inst'.") ; Prevent compile warning
 (defvar vl-memory    nil "See `verilog-auto-inst'.") ; Prevent compile warning
