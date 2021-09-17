@@ -6594,7 +6594,7 @@ Return >0 for nested struct."
                        (equal (char-before) ?\;)
                        (equal (char-before) ?\}))
                    ;; skip what looks like bus repetition operator {#{
-                   (not (string-match "^{\\s-*[0-9a-zA-Z_]+\\s-*{" (buffer-substring p (point)))))))))
+                   (not (string-match "^{\\s-*[\\(\\)0-9a-zA-Z_]*\\s-*{" (buffer-substring p (point)))))))))
       (progn
         (let ( (pt (point)) (pass 0))
           (verilog-backward-ws&directives)
