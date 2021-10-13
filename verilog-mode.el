@@ -1264,7 +1264,9 @@ See `verilog-auto-inst-param-value'."
 Also affects AUTOINSTPARAM.  Declaration order is the default for
 backward compatibility, and as some teams prefer signals that are
 declared together to remain together.  Sorted order reduces
-changes when declarations are moved around in a file.
+changes when declarations are moved around in a file. Sorting is
+within input/output/inout groupings, there is intentionally no
+option to intermix between input/output/inouts.
 
 See also `verilog-auto-arg-sort'."
   :version "24.1"  ; rev688
