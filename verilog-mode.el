@@ -8760,6 +8760,11 @@ Return an array of [outputs inouts inputs wire reg assign const gparam intf]."
                 (t  ; Bit width
 		 (setq vec (verilog-string-replace-matches
 			    "\\s-+" "" nil nil keywd)))))
+         ;; int'(a) is cast, not declaration of a
+         ((and (looking-at "'")
+               (not rvalue))
+          (forward-char 1)
+          (setq expect-signal nil rvalue nil))
 	 ;; Normal or escaped identifier -- note we remember the \ if escaped
 	 ((looking-at "\\s-*\\([a-zA-Z0-9`_$]+\\|\\\\[^ \t\n\f]+\\)")
 	  (goto-char (match-end 0))
