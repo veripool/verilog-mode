@@ -6603,7 +6603,7 @@ Also move point to constraint."
                        (equal (char-before) ?\;)
                        (equal (char-before) ?\}))
                    ;; skip what looks like bus repetition operator {#{
-                   (not (string-match "^{\\s-*[()0-9a-zA-Z_\\]*\\s-*{"
+                   (not (string-match "^{\\s-*[][()0-9a-zA-Z_,:\\]*\\s-*{"
                                       (buffer-substring p (point)))))))))
       (progn
         (let ( (pt (point)) (pass 0))
