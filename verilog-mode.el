@@ -2028,11 +2028,11 @@ Where __FLAGS__ appears in the string `verilog-current-flags'
 will be substituted.  Where __FILE__ appears in the string, the
 current buffer's file-name, without the directory portion, will
 be substituted."
-  (setq command	(verilog-string-replace-matches
+  (setq command (verilog-string-replace-matches
 		 ;; Note \\b only works if under verilog syntax table
 		 "\\b__FLAGS__\\b" (verilog-current-flags)
 		 t t command))
-  (setq command	(verilog-string-replace-matches
+  (setq command (verilog-string-replace-matches
 		 "\\b__FILE__\\b" (file-name-nondirectory
                                  (or (buffer-file-name) ""))
 		 t t command))
@@ -9702,9 +9702,9 @@ resolve it.  If optional RECURSE is non-nil, recurse through \\=`includes.
 Localparams must be simple assignments to constants, or have their own
 \"localparam\" label rather than a list of localparams.  Thus:
 
-    localparam X = 5, Y = 10;	// Ok
-    localparam X = {1\\='b1, 2\\='h2};	// Ok
-    localparam X = {1\\='b1, 2\\='h2}, Y = 10;	// Bad, make into 2 localparam lines
+    localparam X = 5, Y = 10;   // Ok
+    localparam X = {1\\='b1, 2\\='h2};  // Ok
+    localparam X = {1\\='b1, 2\\='h2}, Y = 10;  // Bad, make into 2 localparam lines
 
 Defines must be simple text substitutions, one on a line, starting
 at the beginning of the line.  Any ifdefs or multiline comments around the
@@ -10177,7 +10177,7 @@ Or, just the existing dirnames themselves if there are no wildcards."
   (unless dirnames
     (error "`verilog-library-directories' should include at least `.'"))
   (save-match-data
-    (setq dirnames (reverse dirnames))	; not nreverse
+    (setq dirnames (reverse dirnames))  ; not nreverse
     (let ((dirlist nil)
           pattern dirfile dirfiles dirname root filename rest basefile)
       (setq dirnames (mapcar #'substitute-in-file-name dirnames))
@@ -11678,7 +11678,7 @@ If PAR-VALUES replace final strings with these parameter values."
 			      (concat "." vl-modport) "")
 			  dflt-bits))
     ;; Find template
-    (cond (tpl-ass	    ; Template of exact port name
+    (cond (tpl-ass  ; Template of exact port name
 	   (setq tpl-net (nth 1 tpl-ass)))
 	  ((nth 1 tpl-list) ; Wildcards in template, search them
 	   (let ((wildcards (nth 1 tpl-list)))
