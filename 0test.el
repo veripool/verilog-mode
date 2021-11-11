@@ -46,11 +46,11 @@
       (message (concat file ": testing auto labeling of begin/end..."))
       (verilog-label-be))
 
-    (unless (getenv "VERILOG_MODE_NO_INDENTS")
+    (unless (or (string-match "^noindent_" file)
+		(getenv "VERILOG_MODE_NO_INDENTS"))
       (verilog-test-indent-buffer file)
+      (untabify (point-min) (point-max)))
 
-      (untabify (point-min) (point-max))
-      )
     (write-file (concat "../" temp-file))
     (kill-buffer nil))
   ;;

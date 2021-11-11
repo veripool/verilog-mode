@@ -12240,7 +12240,9 @@ For more information see the \\[verilog-faq] and forums at URL
           (cond ((not verilog-auto-inst-first-any)
 		 (re-search-backward "," pt t)
 		 (delete-char 1)
-		 (insert ");")
+                 (when (looking-at "  ")
+                   (delete-char 1))  ; so we can align // Templated comments
+                 (insert ");")
                  (search-forward "\n")  ; Added by inst-port
 		 (delete-char -1)
                  (if (search-forward ")" nil t)  ; From user, moved up a line
