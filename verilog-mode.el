@@ -10696,7 +10696,7 @@ When MODI is non-null, also add to modi-cache, for tracking."
                    (or (not (verilog-sig-type sig))
                        (equal "logic" (verilog-sig-type sig))))
               (if (member direction '("input" "output" "inout"))
-                  direction
+                  (concat direction " " verilog-auto-wire-type)
                 "wire"))
              ;;
              ((or (verilog-sig-type sig)
