@@ -9827,8 +9827,7 @@ variable over and over when many modules are compiled together, put a test
 around the inside each include file:
 
 foo.v (an include file):
-        \\=`ifdef _FOO_V        // include if not already included
-        \\=`else
+        \\=`ifndef _FOO_V        // include if not already included
         \\=`define _FOO_V
         ... contents of file
         \\=`endif // _FOO_V"
