@@ -1,7 +1,7 @@
 package pkg;
    typedef logic [1:0] my_type;
 endpackage
-   
+
 module top;
    import pkg::*;
    /*AUTOWIRE*/
