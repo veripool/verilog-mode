@@ -6646,7 +6646,7 @@ Also move point to constraint."
                        ))
             ;; if first word token not keyword, it maybe the instance name
             ;;   check next word token
-            (if (looking-at "\\<\\w+\\>\\|\\s-*(\\s-*\\S-+")
+            (if (looking-at "\\<\\w+\\>\\|\\s-*[\[(}]\\s-*\\S-+")
                 (progn (verilog-beg-of-statement)
                        (if (and
                             (not (string-match verilog-named-block-re (buffer-substring pt (point)))) ;; Abort if 'begin' keyword is found
