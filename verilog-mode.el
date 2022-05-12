@@ -4658,7 +4658,10 @@ Uses `verilog-scan' cache."
                 (= (preceding-char) ?\;)
 		(progn
 		  (verilog-backward-token)
-		  (looking-at verilog-ends-re)))
+		  (if verilog-indent-lists
+                      (looking-at verilog-ends-re)
+                    (or (looking-at verilog-ends-re)
+                        (looking-at "begin")))))
             (progn
               (goto-char pt)
               (throw 'done t)))))
@@ -5789,7 +5792,6 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
                    ;; if we are in a parenthesized list, and the user likes to indent these, return.
                    ;; unless we are in the newfangled coverpoint or constraint blocks
                    (if (and
-                        verilog-indent-lists
                         (verilog-in-paren)
                         (not (verilog-in-coverage-p))
                         )
@@ -6919,14 +6921,19 @@ Only look at a few lines to determine indent level."
      (; handle inside parenthetical expressions
       (eq type 'cparenexp)
       (let* ( here
+              (close-par (looking-at ")"))
 	      (val (save-excursion
 		     (verilog-backward-up-list 1)
-		     (forward-char 1)
                      (if verilog-indent-lists
-                         (skip-chars-forward " \t")
-                       (verilog-forward-syntactic-ws))
+                         (progn
+		           (forward-char 1)
+                           (skip-chars-forward " \t"))
+                       (verilog-beg-of-statement-1))
                      (setq here (point))
-                     (current-column)))
+                     (if (or verilog-indent-lists
+                             close-par)
+                         (current-column)
+                       (+ (current-column) verilog-indent-level))))
 
 	      (decl (save-excursion
 		      (goto-char here)
