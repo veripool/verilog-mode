@@ -723,6 +723,13 @@ Otherwise, line them up."
   :type 'boolean)
 (put 'verilog-indent-begin-after-if 'safe-local-variable #'verilog-booleanp)
 
+(defcustom verilog-indent-class-inside-pkg t
+  "Non-nil means indent classes inside packages.
+Otherwise, classes have zero indentation."
+  :group 'verilog-mode-indent
+  :type 'boolean)
+(put 'verilog-indent-class-inside-pkg 'safe-local-variable #'verilog-booleanp)
+
 (defcustom verilog-align-ifelse nil
   "Non-nil means align `else' under matching `if'.
 Otherwise else is lined up with first character on line holding matching if."
@@ -2849,8 +2856,14 @@ find the errors."
   (eval-when-compile (verilog-regexp-words '("macromodule" "connectmodule" "module" "class" "program" "interface" "package" "primitive" "config"))))
 (defconst verilog-end-defun-re
   (eval-when-compile (verilog-regexp-words '("endconnectmodule" "endmodule" "endclass" "endprogram" "endinterface" "endpackage" "endprimitive" "endconfig"))))
+(defconst verilog-defun-no-class-re
+  (eval-when-compile (verilog-regexp-words '("macromodule" "connectmodule" "module" "program" "interface" "package" "primitive" "config"))))
+(defconst verilog-end-defun-no-class-re
+  (eval-when-compile (verilog-regexp-words '("endconnectmodule" "endmodule" "endprogram" "endinterface" "endpackage" "endprimitive" "endconfig"))))
 (defconst verilog-zero-indent-re
   (concat verilog-defun-re "\\|" verilog-end-defun-re))
+(defconst verilog-zero-indent-no-class-re
+  (concat verilog-defun-no-class-re "\\|" verilog-end-defun-no-class-re))
 (defconst verilog-inst-comment-re
   (eval-when-compile (verilog-regexp-words '("Outputs" "Inouts" "Inputs" "Interfaces" "Interfaced"))))
 
@@ -4008,6 +4021,9 @@ Variables controlling indentation/edit style:
    otherwise you get:
       if (a)
       begin
+ `verilog-indent-class-inside-pkg'  (default t)
+   Non-nil means indent classes inside packages.
+   Otherwise, classes have zero indentation.
  `verilog-auto-endcomments'         (default t)
    Non-nil means a comment /* ... */ is set after the ends which ends
    cases, tasks, functions and modules.
@@ -6988,7 +7004,10 @@ Only look at a few lines to determine indent level."
 
      (;-- defun
       (and (eq type 'defun)
-	   (looking-at verilog-zero-indent-re))
+	   (or (and verilog-indent-class-inside-pkg
+                    (looking-at verilog-zero-indent-no-class-re))
+               (and (not verilog-indent-class-inside-pkg)
+                    (looking-at verilog-zero-indent-re))))
       (indent-line-to 0))
 
      (;-- declaration
@@ -15004,6 +15023,7 @@ Files are checked based on `verilog-library-flags'."
        verilog-highlight-modules
        verilog-highlight-translate-off
        verilog-indent-begin-after-if
+       verilog-indent-class-inside-pkg
        verilog-indent-declaration-macros
        verilog-indent-level
        verilog-indent-level-behavioral
