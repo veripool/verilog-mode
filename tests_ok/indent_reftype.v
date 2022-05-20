@@ -20,7 +20,7 @@ class test;
       
    endfunction
 endclass
-   
-   // Local Variables:
-   // verilog-typedef-regexp:"_t$"
-   // End:
+
+// Local Variables:
+// verilog-typedef-regexp:"_t$"
+// End:
