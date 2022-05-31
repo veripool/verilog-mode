@@ -2852,6 +2852,14 @@ find the errors."
 
 (defconst verilog-declaration-re-1-no-macro (concat "^" verilog-declaration-re-2-no-macro))
 
+(defconst verilog-interface-modport-re "\\(\\s-*\\([a-zA-Z0-9`_$]+\\.[a-zA-Z0-9`_$]+\\)[ \t\f]+\\)")
+(defconst verilog-declaration-or-iface-mp-re
+  (concat "\\(" verilog-declaration-re "\\|" verilog-interface-modport-re "\\)"))
+(defconst verilog-declaration-or-iface-mp-re-1-no-macro
+  (concat "\\(" verilog-declaration-re-1-no-macro "\\|" verilog-interface-modport-re "\\)"))
+(defconst verilog-declaration-or-iface-mp-re-2-no-macro
+  (concat "\\(" verilog-declaration-re-2-no-macro "\\)\\|\\(" verilog-interface-modport-re "\\)"))
+
 (defconst verilog-defun-re
   (eval-when-compile (verilog-regexp-words '("macromodule" "connectmodule" "module" "class" "program" "interface" "package" "primitive" "config"))))
 (defconst verilog-end-defun-re
@@ -7149,8 +7157,10 @@ Be verbose about progress unless optional QUIET set."
             ;; (verilog-beg-of-statement-1)
             (beginning-of-line)
             (verilog-forward-syntactic-ws)
-            (and (not (verilog-in-directive-p))  ; could have `define input foo
-                 (looking-at verilog-declaration-re)))
+            (or (and (not (verilog-in-directive-p))  ; could have `define input foo
+                     (looking-at verilog-declaration-re))
+                (and (verilog-parenthesis-depth)
+                     (looking-at verilog-interface-modport-re))))
 	  (progn
 	    (if (verilog-parenthesis-depth)
 		;; in an argument list or parameter block
@@ -7159,7 +7169,7 @@ Be verbose about progress unless optional QUIET set."
 			      (goto-char e)
 			      (verilog-backward-up-list 1)
                               (forward-line)  ; ignore ( input foo,
-			      (verilog-re-search-forward verilog-declaration-re el 'move)
+			      (verilog-re-search-forward verilog-declaration-or-iface-mp-re el 'move)
 			      (goto-char (match-beginning 0))
 			      (skip-chars-backward " \t")
 			      (point))
@@ -7241,7 +7251,7 @@ Be verbose about progress unless optional QUIET set."
 	      (cond
 	       ((or (and verilog-indent-declaration-macros
 			 (looking-at verilog-declaration-re-2-macro))
-		    (looking-at verilog-declaration-re-2-no-macro))
+		    (looking-at verilog-declaration-or-iface-mp-re-2-no-macro))
 		(let ((p (match-end 0)))
 		  (set-marker m1 p)
 		  (if (verilog-re-search-forward "[[#`]" p 'move)
@@ -7448,7 +7458,7 @@ Region is defined by B and EDPOS."
 	(if (verilog-re-search-forward
 	     (or (and verilog-indent-declaration-macros
 		      verilog-declaration-re-1-macro)
-		 verilog-declaration-re-1-no-macro) e 'move)
+                 verilog-declaration-or-iface-mp-re-1-no-macro) e 'move)
 	    (progn
 	      (goto-char (match-end 0))
 	      (verilog-backward-syntactic-ws)

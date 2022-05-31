@@ -3,13 +3,13 @@
 module InstModule
   (input      clk,
    svi.master svi_modport,
-   svi        svi_nomodport);
+   svi svi_nomodport);
 endmodule // InstModule
 
 module InstModule1 import mdp_pkg::*;
    (input      clk,
     svi.master svi_modport,
-    svi        svi_nomodport);
+    svi svi_nomodport);
 endmodule
 
 module top;

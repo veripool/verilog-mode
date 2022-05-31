@@ -9,8 +9,8 @@ module autoinst_mplist
    // Port Declarations
    // --------------------------------------------------------------------------
    
-   input clk,
-   input reset_n,
+   input         clk,
+   input         reset_n,
    
    // Top-level interfaces
    mbl_if.master msg_resp_if
