@@ -13,7 +13,7 @@ endinterface
 
 
 module ExampMain
-  ( input clk,
+  ( input       clk,
     
     // Manually declared, so make sure not redeclared
     // Note this is AFTER addition of the prefix

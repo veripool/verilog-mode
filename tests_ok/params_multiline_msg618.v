@@ -1,6 +1,6 @@
 module testMultiLineParams (/*AUTOARG*/) ;
 `include "params_multiline_msg618_inc.vh"
-   reg                    comboIn, comboOut;
+   reg comboIn, comboOut;
    
    // expect AUTOSENSE to be comboIn only, no params
    always @ ( /*AUTOSENSE*/comboIn) begin

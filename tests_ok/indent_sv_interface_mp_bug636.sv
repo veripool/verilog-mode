@@ -1,5 +1,5 @@
 // Bug 636
-module mymodule (input logic  reset_n,
+module mymodule (input logic      reset_n,
                  input logic      clock,
                  streambus.sink   sink,
                  streambus.source source,

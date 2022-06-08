@@ -9,7 +9,7 @@ interface my_svi;
 endinterface
 
 module autoinst_interface_sub
-  (input wire clk,
+  (input wire       clk,
    input wire       reset,
    input wire       start,
    output reg [7:0] count,

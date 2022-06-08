@@ -2,7 +2,7 @@
 module test;
    
    initial begin
-      string         in_str;
+      string in_str;
       
       if (in_str == "") begin : empty_string
          a_string = { 5 {" "}};  // all spaces

@@ -7,7 +7,7 @@ endmodule // foo
 
 module bar(input logic a);
    `protected
-     input            notreally;
+     input notreally;
    `endprotected
      
 `pragma protect begin_protected

@@ -4,7 +4,7 @@ typedef struct packed {
 } mystruct_s;
 
 module submod
-  (input logic a_port,
+  (input logic       a_port,
    input logic [4:0] b_bus,
    input             mystruct_s single_struct_is_fine,
    input             mystruct_s [2:0] array_of_struct_is_not,

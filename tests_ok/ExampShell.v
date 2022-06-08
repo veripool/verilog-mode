@@ -1,5 +1,5 @@
 module ExampMain
-  (input i,
+  (input  i,
    output o,
    inout  io);
 endmodule

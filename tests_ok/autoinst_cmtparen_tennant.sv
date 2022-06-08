@@ -3,7 +3,7 @@ typedef node logic;
 module top
   #(parameter COLS = 4
     )
-   ( input logic clk,
+   ( input logic                  clk,
      input logic                  rstb,
      input logic [COLS-1:0]       ival,
      input logic [COLS-1:0][1:0]  idata_some_extra_sig_length,
@@ -78,7 +78,7 @@ module top
 endmodule // top
 
 module sub1
-  ( input logic clk,
+  ( input logic        clk,
     input logic        rstb,
     input logic        ival,
     input logic [1:0]  idata_some_extra_sig_length,
@@ -90,7 +90,7 @@ module sub1
     );
 endmodule // sub
 module sub3
-  ( input logic clk,
+  ( input logic        clk,
     input logic        rstb,
     input logic        ival,
     input logic [1:0]  idata_some_extra_sig_length,
@@ -102,7 +102,7 @@ endmodule // sub
 module sub2
   #(parameter COLS = 4
     )
-   ( input logic clk,
+   ( input logic                   clk,
      input logic                   rstb,
      input logic [COLS-1:0]        ival,
      input logic [COLS-1:0][1:0]   idata_some_extra_sig_length,
