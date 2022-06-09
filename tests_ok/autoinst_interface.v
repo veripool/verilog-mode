@@ -7,7 +7,7 @@ module autoinst_interface
    input logic        clk,
    input logic        reset,
    input logic        start,
-   my_svi.master my_svi_port,
+   my_svi.master      my_svi_port,
    my_svi my_svi_noport,
    my_svi my_svi_noport_upper_decl
    // End of automatics
@@ -21,7 +21,7 @@ module autoinst_interface
    output logic      reset,
    output logic      start,
    input logic [7:0] count,
-   my_svi.master my_svi_port,
+   my_svi.master     my_svi_port,
    my_svi my_svi_noport,
    my_svi my_svi_noport_upper_decl
    // End of automatics
