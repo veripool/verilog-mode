@@ -1,4 +1,4 @@
-module test (input logic clk,
+module test (input logic  clk,
              input logic  a,
              output logic c,
              output byte  d[4]);

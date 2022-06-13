@@ -5,7 +5,7 @@ module autosense_venkataramanan_begin(/*AUTOARG*/);
    
    always @(/*AUTOSENSE*/b) // I didn't expect to get "i" in AUTOSENSE
      begin : label
-        integer       i, j;
+        integer i, j;
         for (i=0; i< = 3; i = i + 1)
           vec[i] = b;
      end

@@ -24,5 +24,5 @@ module autoreset_regin;
 endmodule
 
 module bar
-  input [7:0]    a;
+  input [7:0] a;
 endmodule

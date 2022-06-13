@@ -1,7 +1,7 @@
 module top
   #(parameter COLS = 4
     )
-   ( input logic clk,
+   ( input logic                 clk,
      input logic                 rstb,
      input logic [COLS-1:0]      ival,
      input logic [COLS-1:0][1:0] idata_some_extra_sig_length,
@@ -71,7 +71,7 @@ module top
 endmodule
 
 module sub1
-  ( input logic in1a,
+  ( input logic        in1a,
     input logic        in1b,
     output logic       out1a,
     output logic [1:0] out1b
@@ -79,7 +79,7 @@ module sub1
 endmodule
 
 module sub2
-  ( input logic in1a,
+  ( input logic        in1a,
     input logic        in2b,
     input logic        out1a,
     output logic [1:0] out2b

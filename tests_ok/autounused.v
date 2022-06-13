@@ -1,7 +1,7 @@
 module wbuf
   #(parameter width=1)
    (output [width-1:0] q,
-    input [width-1:0] d);
+    input [width-1:0]  d);
 endmodule
 
 module autounused

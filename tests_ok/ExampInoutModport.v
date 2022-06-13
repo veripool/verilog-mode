@@ -10,7 +10,7 @@ interface ExampIf
 endinterface
 
 module ExampMain
-  ( input clk,
+  ( input       clk,
     /*AUTOINOUTMODPORT("ExampIf", "mp")*/
     // Beginning of automatic in/out/inouts (from modport)
     input       req_val,

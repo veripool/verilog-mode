@@ -25,7 +25,7 @@ module top
 endmodule
 
 module xx
-  (input clk,
+  (input        clk,
    
    input        TWI_ia,
    input [15:0] TWI_iw,

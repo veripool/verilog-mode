@@ -25,7 +25,7 @@ module top;
 endmodule
 
 module sub2
-  ( input logic in1a,
+  ( input logic        in1a,
     input logic        in1b,
     output logic       out1a,
     output logic [1:0] out1b

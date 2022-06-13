@@ -24,7 +24,7 @@ module t_autoinst_def_clk
 endmodule // sdc_wombat
 
 module sub
-  (input clk,
+  (input  clk,
    
    input  a,
    input  b,

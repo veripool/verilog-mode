@@ -4,7 +4,7 @@ module top
   #(parameter X=4,
     parameter Y=1)
    
-   (input clk,
+   (input              clk,
     input              rstb,
     
     /*AUTOINPUT("^x.*\|v.*")*/
@@ -65,7 +65,7 @@ endmodule // top
 module xx
   #(parameter X=4,
     parameter Y=1)
-   (input clk,
+   (input              clk,
     input              rstb,
     
     input [X-1:0][1:0] xc,
@@ -85,7 +85,7 @@ endmodule // xx
 module yy
   #(parameter X=4,
     parameter Y=1)
-   (input clk,
+   (input               clk,
     input               rstb,
     
     output [X-1:0][1:0] xc,

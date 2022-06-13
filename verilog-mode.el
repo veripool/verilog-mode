@@ -7140,18 +7140,10 @@ _ARG is ignored, for `comment-indent-function' compatibility."
   "Line up declarations around point.
 Be verbose about progress unless optional QUIET set."
   (interactive)
-  (let* ((m1 (make-marker))
-         (e (point))
-	 el
-         r
-	 (here (point))
-         ind
-         start
-         startpos
-         end
-         endpos
-         base-ind
-         )
+  (let ((m1 (make-marker))
+        (e (point))
+	(here (point))
+	el r ind start startpos end endpos base-ind)
     (save-excursion
       (if (progn
             ;; (verilog-beg-of-statement-1)
@@ -7168,7 +7160,6 @@ Be verbose about progress unless optional QUIET set."
 		      start (progn
 			      (goto-char e)
 			      (verilog-backward-up-list 1)
-                              (forward-line)  ; ignore ( input foo,
 			      (verilog-re-search-forward verilog-declaration-or-iface-mp-re el 'move)
 			      (goto-char (match-beginning 0))
 			      (skip-chars-backward " \t")
@@ -7183,7 +7174,8 @@ Be verbose about progress unless optional QUIET set."
 		      endpos (set-marker (make-marker) end)
 		      base-ind (progn
 				 (goto-char start)
-				 (forward-char 1)
+                                 (unless (verilog-looking-back "(" (point-at-bol))
+                                   (forward-char 1))
 				 (skip-chars-forward " \t")
 				 (current-column)))
 	      ;; in a declaration block (not in argument list)
@@ -7194,7 +7186,6 @@ Be verbose about progress unless optional QUIET set."
 				   (not (bobp)))
 			 (skip-chars-backward " \t")
 			 (setq e (point))
-			 (beginning-of-line)
 			 (verilog-backward-syntactic-ws)
 			 (backward-char)
 			 (verilog-beg-of-statement-1))
@@ -7233,7 +7224,8 @@ Be verbose about progress unless optional QUIET set."
                 (if (< (point) e)
                     (verilog-re-search-forward "[ \t\n\f]" e 'move)))
 	       (t
-		(just-one-space)
+                (unless (verilog-looking-back "(" (point-at-bol))
+                  (just-one-space))
 		(verilog-re-search-forward "[ \t\n\f]" e 'move)))
 	      ;;(forward-line)
 	      )
@@ -7458,13 +7450,14 @@ Region is defined by B and EDPOS."
 	(if (verilog-re-search-forward
 	     (or (and verilog-indent-declaration-macros
 		      verilog-declaration-re-1-macro)
-                 verilog-declaration-or-iface-mp-re-1-no-macro) e 'move)
+                 verilog-declaration-or-iface-mp-re-2-no-macro) e 'move)
 	    (progn
 	      (goto-char (match-end 0))
 	      (verilog-backward-syntactic-ws)
 	      (if (> (current-column) ind)
 		  (setq ind (current-column)))
-	      (goto-char (match-end 0)))))
+              (goto-char (match-end 0))
+              (forward-line 1))))
       (if (> ind 0)
 	  (1+ ind)
 	;; No lineup-string found

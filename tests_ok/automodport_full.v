@@ -1,6 +1,6 @@
 
 module auto_module
-  ( input my_clk,
+  ( input         my_clk,
     input         my_rst_n,
     
     
