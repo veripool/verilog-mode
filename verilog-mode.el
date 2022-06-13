@@ -6974,7 +6974,9 @@ Only look at a few lines to determine indent level."
                          (progn
 		           (forward-char 1)
                            (skip-chars-forward " \t"))
-                       (verilog-beg-of-statement-1))
+                       (verilog-beg-of-statement-1)
+                       (when (looking-at "\\<\\(function\\|task\\)\\>")
+                         (verilog-beg-of-statement))) ; find virtual/protected/static
                      (setq here (point))
                      (if (or verilog-indent-lists
                              close-par)
