@@ -7260,7 +7260,9 @@ Be verbose about progress unless optional QUIET set."
                       (indent-to ind 1)))))
 	       ((verilog-continued-line-1 (marker-position startpos))
 		(goto-char e)
-		(indent-line-to ind))
+                (unless (and (verilog-in-parenthesis-p)
+                             (looking-at (concat "\\s-*" verilog-symbol-re "\\s-+" verilog-symbol-re "\\s-*")))
+                  (indent-line-to ind)))
 	       ((verilog-in-struct-p)
 		;; could have a declaration of a user defined item
 		(goto-char e)
