@@ -3359,12 +3359,12 @@ See also `verilog-font-lock-extra-types'.")
 		 (list
                  "\\<\\(\\(macro\\|connect\\)?module\\|primitive\\|class\\|program\\|interface\\|package\\|task\\)\\>\\s-*\\(\\sw+\\)"
 		  '(1 font-lock-keyword-face)
-		  '(3 font-lock-function-name-face prepend))
+		  '(3 font-lock-function-name-face))
 		 ;; Fontify function definitions
 		 (list
 		  (concat "\\<function\\>\\s-+\\(integer\\|real\\(time\\)?\\|time\\)\\s-+\\(\\sw+\\)" )
                   '(1 font-lock-keyword-face)
-                  '(3 font-lock-constant-face prepend))
+                  '(3 font-lock-constant-face))
 		 '("\\<function\\>\\s-+\\(\\[[^]]+\\]\\)\\s-+\\(\\sw+\\)"
 		   (1 font-lock-keyword-face)
 		   (2 font-lock-constant-face append))
