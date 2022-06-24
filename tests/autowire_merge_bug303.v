@@ -1,7 +1,7 @@
 module TOP (/*AUTOARG*/
    // Outputs
    SIG_NAMEB, SIG_NAMEA
-   )
+   );
    /*AUTOOUTPUT*/
    // Beginning of automatic outputs (from unused autoinst outputs)
    output [223:0]	SIG_NAMEA;		// From A of A.v, ...
