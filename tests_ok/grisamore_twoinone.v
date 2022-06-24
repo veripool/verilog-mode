@@ -11,7 +11,7 @@ module foo (/*AUTOARG*/
    // End of automatics
    /*AUTOOUTPUT*/
    // Beginning of automatic outputs (from unused autoinst outputs)
-   output d;                    // From foo2 of foo2.v
+   output d; // From foo2 of foo2.v
    // End of automatics
    /*AUTOWIRE*/
    /*AUTOREGINPUT*/

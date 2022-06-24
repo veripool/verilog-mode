@@ -1,7 +1,7 @@
 module autoreset_regin;
    /*AUTOREGINPUT*/
    // Beginning of automatic reg inputs (for undeclared instantiated-module inputs)
-   reg [7:0] a;                 // To bar of bar.v
+   reg [7:0] a; // To bar of bar.v
    // End of automatics
    
    bar bar

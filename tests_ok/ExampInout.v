@@ -4,7 +4,7 @@ endmodule
 module ExampInout (
                    /*AUTOINOUT*/
                    // Beginning of automatic inouts (from unused autoinst inouts)
-                   inout io                     // To/From instName of InstModule.v
+                   inout io // To/From instName of InstModule.v
                    // End of automatics
                    );
    InstModule instName

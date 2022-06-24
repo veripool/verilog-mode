@@ -7,14 +7,14 @@ module xyz (/*AUTOARG*/
    
    /*AUTOINPUT*/
    // Beginning of automatic inputs (from unused autoinst inputs)
-   input [2:0] signal_b; // To u_abc of abc.v
+   input [2:0] signal_b;  // To u_abc of abc.v
    input       signal_e3; // To u_def of def.v
    // End of automatics
    
    /*AUTOOUTPUT*/
    // Beginning of automatic outputs (from unused autoinst outputs)
-   output      signal_c; // From u_abc of abc.v
-   output      signal_f;                // From u_def of def.v
+   output      signal_c;  // From u_abc of abc.v
+   output      signal_f;  // From u_def of def.v
    // End of automatics
    
    /*AUTOWIRE*/

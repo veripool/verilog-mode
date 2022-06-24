@@ -4,7 +4,7 @@ endmodule
 module ExampRegInput ();
    /*AUTOREGINPUT*/
    // Beginning of automatic reg inputs (for undeclared instantiated-module inputs)
-   reg i;                      // To instName of InstModule.v
+   reg i; // To instName of InstModule.v
    // End of automatics
    InstModule instName
      (/*AUTOINST*/

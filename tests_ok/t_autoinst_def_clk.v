@@ -1,14 +1,14 @@
 module t_autoinst_def_clk
   (/*AUTOINPUT*/
    // Beginning of automatic inputs (from unused autoinst inputs)
-   input  a, // To sub of sub.v
-   input  b, // To sub of sub.v
+   input  a,   // To sub of sub.v
+   input  b,   // To sub of sub.v
    input  clk, // To sub of sub.v
    // End of automatics
    
    /*AUTOOUTPUT*/
    // Beginning of automatic outputs (from unused autoinst outputs)
-   output c                     // From sub of sub.v
+   output c    // From sub of sub.v
    // End of automatics
    );
    

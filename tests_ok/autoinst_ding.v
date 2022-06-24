@@ -34,21 +34,21 @@ endmodule
 module TOP(
            /*AUTOINPUT*/
            // Beginning of automatic inputs (from unused autoinst inputs)
-           input        afe_ctrl, // To AA_U of AA.v
-           input        clock, // To AA_U of AA.v, ...
-           input [4:0]  cpu_addr, // To AA_U of AA.v
-           input [7:0]  cpu_wdata, // To AA_U of AA.v
-           input        cpu_wr, // To AA_U of AA.v
-           input [8:0]  mbist_done, // To BB_U of BB.v
-           input [8:0]  mbist_fail, // To BB_U of BB.v
-           input        reset, // To AA_U of AA.v, ...
+           input        afe_ctrl,    // To AA_U of AA.v
+           input        clock,       // To AA_U of AA.v, ...
+           input [4:0]  cpu_addr,    // To AA_U of AA.v
+           input [7:0]  cpu_wdata,   // To AA_U of AA.v
+           input        cpu_wr,      // To AA_U of AA.v
+           input [8:0]  mbist_done,  // To BB_U of BB.v
+           input [8:0]  mbist_fail,  // To BB_U of BB.v
+           input        reset,       // To AA_U of AA.v, ...
            input        test_enable, // To AA_U of AA.v, ...
            // End of automatics
            /*AUTOOUTPUT*/
            // Beginning of automatic outputs (from unused autoinst outputs)
-           output [7:0] cpu_rdata, // From AA_U of AA.v
-           output       mbist_rst, // From BB_U of BB.v
-           output       mbist_test                 // From BB_U of BB.v
+           output [7:0] cpu_rdata,   // From AA_U of AA.v
+           output       mbist_rst,   // From BB_U of BB.v
+           output       mbist_test   // From BB_U of BB.v
            // End of automatics
            );
    

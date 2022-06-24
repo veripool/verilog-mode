@@ -5,7 +5,7 @@ module io1_sub(
                // End of automatics
                /*AUTOOUTPUT*/
                // Beginning of automatic outputs (from unused autoinst outputs)
-               output lower_out         // From inst of inst.v
+               output lower_out  // From inst of inst.v
                // End of automatics
                );
    

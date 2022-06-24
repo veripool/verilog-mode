@@ -7,7 +7,7 @@ module test
    
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire [WIDTH*2/8-1:0] signal;                 // From subtestout of subtestout.v
+   wire [WIDTH*2/8-1:0] signal; // From subtestout of subtestout.v
    // End of automatics
    
    subtestin #(.WIDTH(WIDTH)) subtestin

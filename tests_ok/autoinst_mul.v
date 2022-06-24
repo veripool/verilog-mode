@@ -18,14 +18,14 @@ module top_mod
   (
    /*AUTOINPUT*/
    // Beginning of automatic inputs (from unused autoinst inputs)
-   input [8+4-1:0] [7:0] add_left, // To sub_mod_i of sub_mod.v
-   input [7:0] [11:0]    add_right, // To sub_mod_i of sub_mod.v
-   input [8/4-1:0] [7:0] divide_left, // To sub_mod_i of sub_mod.v
-   input [7:0] [1:0]     divide_right, // To sub_mod_i of sub_mod.v
-   input [8*4-1:0] [7:0] multiply_left, // To sub_mod_i of sub_mod.v
+   input [8+4-1:0] [7:0] add_left,       // To sub_mod_i of sub_mod.v
+   input [7:0] [11:0]    add_right,      // To sub_mod_i of sub_mod.v
+   input [8/4-1:0] [7:0] divide_left,    // To sub_mod_i of sub_mod.v
+   input [7:0] [1:0]     divide_right,   // To sub_mod_i of sub_mod.v
+   input [8*4-1:0] [7:0] multiply_left,  // To sub_mod_i of sub_mod.v
    input [7:0] [31:0]    multiply_right, // To sub_mod_i of sub_mod.v
    input [8-4-1:0] [7:0] substract_left, // To sub_mod_i of sub_mod.v
-   input [7:0] [3:0]     substract_right        // To sub_mod_i of sub_mod.v
+   input [7:0] [3:0]     substract_right // To sub_mod_i of sub_mod.v
    // End of automatics
    );
    

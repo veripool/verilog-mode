@@ -31,7 +31,7 @@ endmodule
 module top;
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire [7:0] count;                    // From submod0 of autoinst_interface_sub.v
+   wire [7:0] count; // From submod0 of autoinst_interface_sub.v
    // End of automatics
    autoinst_interface_sub submod0 (.*);
 endmodule

@@ -5,16 +5,16 @@ module soft_rst
    input  rst_n,
    
    // Interface to software land
-   input  req_soft_rst, // Soft reset request
-   output soft_rst_dne, // Soft reset done
+   input  req_soft_rst,  // Soft reset request
+   output soft_rst_dne,  // Soft reset done
    
    // Interface to other modules
-   output dma_halt, // Reset pending, halt activity
-   input  tx_quiet, // TX side is dormant
-   input  rx_quiet, // RX side is dormant
+   output dma_halt,      // Reset pending, halt activity
+   input  tx_quiet,      // TX side is dormant
+   input  rx_quiet,      // RX side is dormant
    input  c,
-   output soft_rst, // Soft (sync) reset to VC3 side
-   output hs_async_rst_n  // Async reset to host side
+   output soft_rst,      // Soft (sync) reset to VC3 side
+   output hs_async_rst_n // Async reset to host side
    );
    
    reg [1:0] state;

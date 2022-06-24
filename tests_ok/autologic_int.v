@@ -13,7 +13,7 @@ endmodule
 module top;
    /*AUTOLOGIC*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   logic [7:0] a;                       // From bug of bug.v
+   logic [7:0] a; // From bug of bug.v
    // End of automatics
    
    bug bug(/*AUTOINST*/

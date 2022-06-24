@@ -18,7 +18,7 @@ module top
    
    /*AUTOLOGIC*/
    
-   logic [AAA[BBB] -1:0] out_signal;             // From sub1 of sub1.v
+   logic [AAA[BBB] -1:0] out_signal; // From sub1 of sub1.v
    
    sub1 #(/*AUTOINSTPARAM*/
           // Parameters

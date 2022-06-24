@@ -1,6 +1,6 @@
 module foo(reg_input_signal_name,a,b,c,d,e);
    // foo bar
-   output            c;//this is a comment
+   output            c; //this is a comment
    
    
    reg               foo;

@@ -4,7 +4,7 @@ endmodule
 module ExampInput (
                    /*AUTOINPUT*/
                    // Beginning of automatic inputs (from unused autoinst inputs)
-                   input i                      // To instName of InstModule.v
+                   input i // To instName of InstModule.v
                    // End of automatics
                    );
    InstModule instName

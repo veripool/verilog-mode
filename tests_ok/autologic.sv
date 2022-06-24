@@ -19,9 +19,9 @@ module top
    /*AUTOOUTPUTEVERY*/
    // Beginning of automatic outputs (every signal)
    output logic       COLS;
-   output logic       in1a; // To isub2 of sub2.v, ...
-   output logic       in1b; // To isub1 of sub1.v
-   output logic       in2b; // To isub2 of sub2.v
+   output logic       in1a;  // To isub2 of sub2.v, ...
+   output logic       in1b;  // To isub1 of sub1.v
+   output logic       in2b;  // To isub2 of sub2.v
    output logic       out1a; // From isub1 of sub1.v
    output logic [1:0] out1b; // From isub1 of sub1.v
    output logic [1:0] out2b; // From isub2 of sub2.v
@@ -31,16 +31,16 @@ module top
    
    /*AUTOREGINPUT*/
    // Beginning of automatic reg inputs (for undeclared instantiated-module inputs)
-   logic              in1a; // To isub2 of sub2.v, ...
-   logic              in1b; // To isub1 of sub1.v
-   logic              in2b; // To isub2 of sub2.v
+   logic              in1a;  // To isub2 of sub2.v, ...
+   logic              in1b;  // To isub1 of sub1.v
+   logic              in2b;  // To isub2 of sub2.v
    // End of automatics
    
    /*AUTOLOGIC*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    logic              out1a; // From isub1 of sub1.v
    logic [1:0]        out1b; // From isub1 of sub1.v
-   logic [1:0]        out2b;                    // From isub2 of sub2.v
+   logic [1:0]        out2b; // From isub2 of sub2.v
    // End of automatics
    
    /* sub2 AUTO_TEMPLATE(

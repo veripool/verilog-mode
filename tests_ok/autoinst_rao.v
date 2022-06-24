@@ -2,7 +2,7 @@ module temp2(/*AUTOARG*/);
    
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire [5:0] out;                      // From adc_3 of adc.v
+   wire [5:0] out; // From adc_3 of adc.v
    // End of automatics
    
    adc adc_3 (

@@ -25,9 +25,9 @@ module top;
    
    /*AUTOREGINPUT*/
    // Beginning of automatic reg inputs (for undeclared instantiated-module inputs)
-   logic a_port;                        // To submod0 of submod.v
+   logic a_port; // To submod0 of submod.v
    mystruct_s [2:0]     array_of_struct_is_not; // To submod0 of submod.v
-   logic [4:0] b_bus;                   // To submod0 of submod.v
+   logic [4:0] b_bus; // To submod0 of submod.v
    mystruct_s           single_struct_is_fine;  // To submod0 of submod.v
    // End of automatics
    

@@ -8,7 +8,7 @@ module test_top;
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire [3:0]  wireA; // From t1 of test1.v
-   wire [16:0] wireB;                   // From t1 of test1.v
+   wire [16:0] wireB; // From t1 of test1.v
    // End of automatics
    
    generate

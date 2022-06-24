@@ -10,7 +10,7 @@ module autoinst_wildcard_sub (/*AUTOARG*/
    // Inputs/Outputs
    //======================================================================
    
-   inout sd_ras_; // SDRAM Channel 0 Row Address Strobe
+   inout sd_ras_;    // SDRAM Channel 0 Row Address Strobe
    inout sd0_dqm7_l; // SDRAM Channel 0 DQM Mask Bits
    inout sd0_dqm6_l;
    inout sd0_dqm5_l;
@@ -33,7 +33,7 @@ module autoinst_wildcard_sub (/*AUTOARG*/
    inout sd0_adrs2;
    inout sd0_adrs1;
    inout sd0_adrs0;
-   inout sd0_clk;         // SDRAM Channel 0 Clocks
+   inout sd0_clk;    // SDRAM Channel 0 Clocks
    
 endmodule
 

@@ -40,7 +40,7 @@ module autoasciienum_onehot (
    
    /*AUTOASCIIENUM("cur_state", "cur_state_ascii")*/
    // Beginning of automatic ASCII enum decoding
-   reg [31:0] cur_state_ascii;  // Decode of cur_state
+   reg [31:0] cur_state_ascii; // Decode of cur_state
    always @(cur_state) begin
       case ({cur_state})
         (5'b1<<IDLE):     cur_state_ascii = "idle";

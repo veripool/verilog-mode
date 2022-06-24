@@ -11,7 +11,7 @@ module top
    // Beginning of automatic outputs (from unused autoinst outputs)
    /*AUTOINPUT*/
    // Beginning of automatic inputs (from unused autoinst inputs)
-   input wire  i                        // To sub of Sub.v
+   input wire  i  // To sub of Sub.v
    // End of automatics
    );
    

@@ -11,7 +11,7 @@ module foo
    
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire [1:0]   another_output2;        // From inst of autoinst_signed_fubar2.v
+   wire [1:0]   another_output2; // From inst of autoinst_signed_fubar2.v
    // End of automatics
    
    

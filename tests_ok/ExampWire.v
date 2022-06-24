@@ -8,7 +8,7 @@ module ExampWire (i);
    input       i;
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire [31:0] o;                      // From instName of InstModule.v
+   wire [31:0] o; // From instName of InstModule.v
    // End of automatics
    InstModule instName
      (/*AUTOINST*/

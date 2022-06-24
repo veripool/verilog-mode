@@ -26,7 +26,7 @@ module autoinst_mplist
    /*AUTOLOGIC*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    logic mem_rd_req; // From child of autoinst_mplist_child.v
-   logic msg_busy;              // From child of autoinst_mplist_child.v
+   logic msg_busy;   // From child of autoinst_mplist_child.v
    // End of automatics
    
    

@@ -1,21 +1,21 @@
 module top;
    /*AUTOLOGIC*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   logic                               sig1; // From u_x of x.v
-   logic [A-1:0]                       sig2; // From u_x of x.v
-   logic [A-1:0] [B-1:0]               sig3; // From u_x of x.v
-   logic [A-1:0][B-1:0] [C-1:0]        sig4; // From u_x of x.v
-   logic [A-1:0][B-1:0][C-1:0] [D-1:0] sig5; // From u_x of x.v
-   logic                               vsig1; // From u_x of x.v
-   logic                               vsig2 [W-1:0]; // From u_x of x.v
-   logic                               vsig3 [W-1:0][X-1:0]; // From u_x of x.v
-   logic                               vsig4 [W-1:0][X-1:0][Y-1:0];// From u_x of x.v
-   logic                               vsig5 [W-1:0][X-1:0][Y-1:0][Z-1:0];// From u_x of x.v
-   logic                               zsig1; // From u_x of x.v
-   logic [A-1:0]                       zsig2 [W-1:0]; // From u_x of x.v
-   logic [A-1:0] [B-1:0]               zsig3 [W-1:0][X-1:0]; // From u_x of x.v
-   logic [A-1:0][B-1:0] [C-1:0]        zsig4 [W-1:0][X-1:0][Y-1:0];// From u_x of x.v
-   logic [A-1:0][B-1:0][C-1:0] [D-1:0] zsig5 [W-1:0][X-1:0][Y-1:0][Z-1:0];// From u_x of x.v
+   logic                               sig1;                               // From u_x of x.v
+   logic [A-1:0]                       sig2;                               // From u_x of x.v
+   logic [A-1:0] [B-1:0]               sig3;                               // From u_x of x.v
+   logic [A-1:0][B-1:0] [C-1:0]        sig4;                               // From u_x of x.v
+   logic [A-1:0][B-1:0][C-1:0] [D-1:0] sig5;                               // From u_x of x.v
+   logic                               vsig1;                              // From u_x of x.v
+   logic                               vsig2 [W-1:0];                      // From u_x of x.v
+   logic                               vsig3 [W-1:0][X-1:0];               // From u_x of x.v
+   logic                               vsig4 [W-1:0][X-1:0][Y-1:0];        // From u_x of x.v
+   logic                               vsig5 [W-1:0][X-1:0][Y-1:0][Z-1:0]; // From u_x of x.v
+   logic                               zsig1;                              // From u_x of x.v
+   logic [A-1:0]                       zsig2 [W-1:0];                      // From u_x of x.v
+   logic [A-1:0] [B-1:0]               zsig3 [W-1:0][X-1:0];               // From u_x of x.v
+   logic [A-1:0][B-1:0] [C-1:0]        zsig4 [W-1:0][X-1:0][Y-1:0];        // From u_x of x.v
+   logic [A-1:0][B-1:0][C-1:0] [D-1:0] zsig5 [W-1:0][X-1:0][Y-1:0][Z-1:0]; // From u_x of x.v
    // End of automatics
    
    x u_x (/*AUTOINST*/

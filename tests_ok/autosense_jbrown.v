@@ -9,7 +9,7 @@ module autosense_jbrown(/*AUTOARG*/
                         );
    
    output [`LCH_GSWDATWID-1:0] lch_gswdata; // data to switch
-   input [`COM_CLDATWID-1:0]   com_cldata; // data bus to clusters
+   input [`COM_CLDATWID-1:0]   com_cldata;  // data bus to clusters
    
    /*autowire*/
    

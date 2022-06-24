@@ -18,19 +18,19 @@ endmodule
 module top (
             /*AUTOOUTPUT*/
             // Beginning of automatic outputs (from unused autoinst outputs)
-            output real Tx_vsc, // From sc_buf of sc_top.v
+            output real Tx_vsc,     // From sc_buf of sc_top.v
             // End of automatics
             /*AUTOINPUT*/
             // Beginning of automatic inputs (from unused autoinst inputs)
-            input real  i_DAC_in, // To sc_buf of sc_top.v
+            input real  i_DAC_in,   // To sc_buf of sc_top.v
             input       i_Tx_CM_en, // To cm_buf of cm_top.v
-            input       i_Tx_SC_en              // To sc_buf of sc_top.v
+            input       i_Tx_SC_en  // To sc_buf of sc_top.v
             // End of automatics
             );
    
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   real Tx_vcm;                 // From cm_buf of cm_top.v
+   real Tx_vcm; // From cm_buf of cm_top.v
    // End of automatics
    
    cm_top cm_buf (/*AUTOINST*/

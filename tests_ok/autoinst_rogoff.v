@@ -11,9 +11,9 @@ module  top_test();
    
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire [WIDTH-1:0] boo_out_symbolic; // From testmux_boo of testmux.v
-   wire [WIDTH-1:0] boo_out_value; // From testmux_boo of testmux.v, ...
-   wire [WIDTH-1:0] defaultwidth_out_symbolic;// From testmux_defaultwidth of testmux.v
+   wire [WIDTH-1:0] boo_out_symbolic;          // From testmux_boo of testmux.v
+   wire [WIDTH-1:0] boo_out_value;             // From testmux_boo of testmux.v, ...
+   wire [WIDTH-1:0] defaultwidth_out_symbolic; // From testmux_defaultwidth of testmux.v
    // End of automatics
    
    /*AUTO_LISP(setq verilog-auto-inst-param-value nil)*/

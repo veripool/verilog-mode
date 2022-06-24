@@ -1,12 +1,12 @@
 module src_frag (
-                 input logic        inp_signal_0, // Input Signal 0
-                 input logic        inp_signal_1, // Input Signal 1
-                 input logic        inp_signal_2, // Input Signal 2
-                 input logic [10:0] inp_signal_3; // Input Signal 3
-                 input logic        inp_signal_4, // Input Signal 4
+                 input logic        inp_signal_0,  // Input Signal 0
+                 input logic        inp_signal_1,  // Input Signal 1
+                 input logic        inp_signal_2,  // Input Signal 2
+                 input logic [10:0] inp_signal_3;  // Input Signal 3
+                 input logic        inp_signal_4,  // Input Signal 4
                  output logic       outp_signal_0, // Output Signal 0
                  inout logic        test,
-                 output logic       outp_signal_1 // Output Signal 1
+                 output logic       outp_signal_1  // Output Signal 1
                  );
    
    logic [7:0]        local_0; // Local Signal 0

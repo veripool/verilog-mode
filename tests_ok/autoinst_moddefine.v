@@ -5,7 +5,7 @@ module autoinst_moddefine (/*AUTOARG*/);
    
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire q;                      // From `SUBNAME_B of `SUBMOD_A.v, ...
+   wire q; // From `SUBNAME_B of `SUBMOD_A.v, ...
    // End of automatics
    
 `define SUBMOD_A submod_mod

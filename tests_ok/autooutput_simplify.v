@@ -4,7 +4,7 @@ module top
   (
    /*AUTOINPUT*/
    // Beginning of automatic inputs (from unused autoinst inputs)
-   input logic [2*2:1] x                        // To inst of submod.v
+   input logic [2*2:1] x // To inst of submod.v
    // End of automatics
    /*AUTOOUTPUT*/
    );

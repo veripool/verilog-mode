@@ -9,7 +9,7 @@ module top
     /*AUTOINPUT*/
     /*AUTOOUTPUT*/
     // Beginning of automatic outputs (from unused autoinst outputs)
-    output [(TEST[1] )-1:0] x                   // From inst of submod.v
+    output [(TEST[1] )-1:0] x // From inst of submod.v
     // End of automatics
     );
    

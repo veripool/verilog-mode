@@ -11,19 +11,19 @@ module io1_sub(
    /*AUTOINPUT*/
    // Beginning of automatic inputs (from unused autoinst inputs)
    input  lower_ina; // To instio of instio.v
-   input  sec_ina; // To instio of instio.v
+   input  sec_ina;   // To instio of instio.v
    // End of automatics
    
    /*AUTOINOUT*/
    // Beginning of automatic inouts (from unused autoinst inouts)
-   inout  lower_io; // To/From instio of instio.v
-   inout  sec_io; // To/From instio of instio.v
+   inout  lower_io;  // To/From instio of instio.v
+   inout  sec_io;    // To/From instio of instio.v
    // End of automatics
    
    /*AUTOOUTPUT*/
    // Beginning of automatic outputs (from unused autoinst outputs)
    output lower_out; // From instio of instio.v
-   output sec_out;              // From instio of instio.v
+   output sec_out;   // From instio of instio.v
    // End of automatics
    
    /* inst AUTO_TEMPLATE (

@@ -6,14 +6,14 @@ module ptype
   (
    /*AUTOINPUT*/
    // Beginning of automatic inputs (from unused autoinst inputs)
-   input              foo_t a, // To b0 of ptype_buf.v, ...
+   input              foo_t a,  // To b0 of ptype_buf.v, ...
    // End of automatics
    
    /*AUTOOUTPUT*/
    // Beginning of automatic outputs (from unused autoinst outputs)
    output             foo_t y0, // From b0 of ptype_buf.v
-   output logic [7:0] y1, // From b1 of ptype_buf.v
-   output             TYPE_T y2                 // From b2 of ptype_buf.v
+   output logic [7:0] y1,       // From b1 of ptype_buf.v
+   output             TYPE_T y2 // From b2 of ptype_buf.v
    // End of automatics
    );
    
@@ -62,12 +62,12 @@ endmodule
 module ExampInst;
    /*AUTOINPUT*/
    // Beginning of automatic inputs (from unused autoinst inputs)
-   input [9:0] i; // To instName of InstModule.v
+   input [9:0] i;         // To instName of InstModule.v
    // End of automatics
    
    /*AUTOOUTPUT*/
    // Beginning of automatic outputs (from unused autoinst outputs)
-   output      upper_t o;                          // From instName of InstModule.v
+   output      upper_t o; // From instName of InstModule.v
    // End of automatics
    
    InstModule

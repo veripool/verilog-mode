@@ -14,7 +14,7 @@ module flag_f_reeves
    
    /*AUTOINPUT*/
    // Beginning of automatic inputs (from unused autoinst inputs)
-   input  a;                    // To ibuf of flag_f_reeves_IBUF.v
+   input  a; // To ibuf of flag_f_reeves_IBUF.v
    // End of automatics
    
    flag_f_reeves_IBUF ibuf

@@ -6,17 +6,17 @@ module autoinst_signed
    
    /*AUTOOUTPUTEVERY*/
    // Beginning of automatic outputs (every signal)
-   output [1:0]        an_output2; // From u_fubar2 of autoinst_signed_fubar2.v
-   output signed [1:0] an_outputpre; // From u_fubar of autoinst_signed_fubar.v
-   output signed [1:0] another_output; // From u_fubar of autoinst_signed_fubar.v
+   output [1:0]        an_output2;      // From u_fubar2 of autoinst_signed_fubar2.v
+   output signed [1:0] an_outputpre;    // From u_fubar of autoinst_signed_fubar.v
+   output signed [1:0] another_output;  // From u_fubar of autoinst_signed_fubar.v
    output [1:0]        another_output2; // From u_fubar2 of autoinst_signed_fubar2.v
    // End of automatics
    
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire [1:0]          an_output2; // From u_fubar2 of autoinst_signed_fubar2.v
-   wire signed [1:0]   an_outputpre; // From u_fubar of autoinst_signed_fubar.v
-   wire signed [1:0]   another_output; // From u_fubar of autoinst_signed_fubar.v
+   wire [1:0]          an_output2;      // From u_fubar2 of autoinst_signed_fubar2.v
+   wire signed [1:0]   an_outputpre;    // From u_fubar of autoinst_signed_fubar.v
+   wire signed [1:0]   another_output;  // From u_fubar of autoinst_signed_fubar.v
    wire [1:0]          another_output2; // From u_fubar2 of autoinst_signed_fubar2.v
    // End of automatics
    

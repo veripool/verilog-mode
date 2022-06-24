@@ -62,34 +62,34 @@ module autoinst_bits_lba_gi
    /////////////////////////////////////////////////////////////////////
   // inputs
    
-   input         CLK; // LBA clk
+   input         CLK;       // LBA clk
    
    // inputs from lbsm.v
-   input         WWADoe; // FooBus Addr/Data OE
-   input         WWCoe; // FooBus Cmd OE
+   input         WWADoe;    // FooBus Addr/Data OE
+   input         WWCoe;     // FooBus Cmd OE
    input [8:0]   WWCmdIfOE; // FooBus Cmd if enabled
-   input         WWADHold; // FooBus Addr hold
+   input         WWADHold;  // FooBus Addr hold
    
    // inputs from li.v
-   input [31:0]  iWWADO; // FooBus Address/Data out next cycle
+   input [31:0]  iWWADO;    // FooBus Address/Data out next cycle
    
    
    /////////////////////////////////////////////////////////////////////
    // outputs
    
    // outputs to lbsm.v
-   output [8:0]  WWCmdI; // FooBus Command in
+   output [8:0]  WWCmdI;    // FooBus Command in
    
    // outputs to li.v
-   output [31:0] WWADI; // FooBus Address/Data in
+   output [31:0] WWADI;     // FooBus Address/Data in
    
    
    /////////////////////////////////////////////////////////////////////
    // bidirs
    
    // bidirs to/from off-chip
-   inout [31:0]  WWADB; // bidir FooBus addr/data
-   inout [8:0]   WWCmdB; // bidir FooBus command
+   inout [31:0]  WWADB;     // bidir FooBus addr/data
+   inout [8:0]   WWCmdB;    // bidir FooBus command
    
    /////////////////////////////////////////////////////////////////////
    // reg's for outputs (some flops, some not)
@@ -97,7 +97,7 @@ module autoinst_bits_lba_gi
    /////////////////////////////////////////////////////////////////////
    // other flops
    
-   reg [31:0]    WWADIfOE;      // FooBus Addr/Data Out if enabled
+   reg [31:0]    WWADIfOE;  // FooBus Addr/Data Out if enabled
    
    
    

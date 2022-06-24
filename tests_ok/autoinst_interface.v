@@ -31,7 +31,7 @@ endmodule
 module top;
    /*AUTOLOGIC*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   logic [7:0] count;                   // From submod0 of autoinst_interface_sub.v
+   logic [7:0] count; // From submod0 of autoinst_interface_sub.v
    // End of automatics
    
    my_svi               my_svi_noport_upper_decl ();

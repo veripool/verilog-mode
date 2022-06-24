@@ -5,7 +5,7 @@ module ex_output_every (/*AUTOARG*/
   
   /*AUTOOUTPUT*/
   // Beginning of automatic outputs (from unused autoinst outputs)
-  output pixel24_t sub1_out_pixel;              // From i1 of v2k_typedef_yee_sub1.v
+  output pixel24_t sub1_out_pixel; // From i1 of v2k_typedef_yee_sub1.v
    // End of automatics
    
    v2k_typedef_yee_sub1 i1

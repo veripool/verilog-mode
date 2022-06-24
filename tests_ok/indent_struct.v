@@ -11,9 +11,9 @@ module foo;
       bit        b;
       reg        r;
       ahb_thingy a;
-      bit [31:2] addr; // Starting address
-      bit [3:0]  byte_sel; // Byte lane select
-      int        len; // Length of transfer
+      bit [31:2] addr;      // Starting address
+      bit [3:0]  byte_sel;  // Byte lane select
+      int        len;       // Length of transfer
       bit [31:0] data[0:7]; // Write data
    } ahb_req_t;
    

@@ -11,6 +11,6 @@ module autoinst_paramover_sub (/*AUTOARG*/
    parameter       bitsb;
    
    inout [bitsa:0] a; // SDRAM Channel 0 Row Address Strobe
-   inout [bitsb:0] b;         // SDRAM Channel 0 Row Address Strobe
+   inout [bitsb:0] b; // SDRAM Channel 0 Row Address Strobe
    
 endmodule

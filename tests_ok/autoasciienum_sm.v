@@ -23,7 +23,7 @@ module sm (/*AUTOARG*/
    
    //==================== Input Signals ======================
    
-   input           clk; // System clock signal
+   input           clk;     // System clock signal
    input           rst_;
    
    //==================== Output Signals =====================
@@ -78,7 +78,7 @@ module sm (/*AUTOARG*/
    
    /*AUTOASCIIENUM("state_r", "_stateascii_r")*/
    // Beginning of automatic ASCII enum decoding
-   reg [55:0] _stateascii_r;            // Decode of state_r
+   reg [55:0] _stateascii_r; // Decode of state_r
    always @(state_r) begin
       case ({state_r})
         IDLE:     _stateascii_r = "idle   ";

@@ -137,7 +137,7 @@ module testmodule (/*AUTOARG*/
         endcase
      end
    
-   parameter WIDLE = 0;         // No Manual Write Burst
+   parameter WIDLE = 0; // No Manual Write Burst
    
    always @ (/*AUTOSENSE*/in1 or in2 or in3 or in4) begin
       case(1'b1)
