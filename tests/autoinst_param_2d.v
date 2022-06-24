@@ -19,7 +19,7 @@ module a(
 	 );
 endmodule
 
-module top (/*AUTOARG*/)
+module top (/*AUTOARG*/);
   /*AUTOINPUT*/
   /*AUTOOUTPUT*/
   /*AUTOWIRE*/

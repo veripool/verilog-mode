@@ -25,10 +25,10 @@ module top (/*AUTOARG*/
             TEST1_my_data_v, TEST1_my_data_av, TEST1_my_data_abv, TEST1_my_data_ab, TEST0_params1,
             TEST0_params0, TEST0_my_data_z, TEST0_my_data_xyz, TEST0_my_data_vv, TEST0_my_data_v,
             TEST0_my_data_av, TEST0_my_data_abv, TEST0_my_data_ab
-            )
-  /*AUTOINPUT*/
-  // Beginning of automatic inputs (from unused autoinst inputs)
-  input [TEST0_AUM-1:0] [TEST0_BUM-1:0] TEST0_my_data_ab;// To a_0 of a.v
+            );
+   /*AUTOINPUT*/
+   // Beginning of automatic inputs (from unused autoinst inputs)
+   input [TEST0_AUM-1:0] [TEST0_BUM-1:0] TEST0_my_data_ab;// To a_0 of a.v
    input [TEST0_AUM-1:0] [TEST0_BUM-1:0] TEST0_my_data_abv [TEST0_VUM];// To a_0 of a.v
    input [TEST0_AUM-1:0]                 TEST0_my_data_av [TEST0_VUM];// To a_0 of a.v
    input                                 TEST0_my_data_v [VUM]; // To a_0 of a.v
