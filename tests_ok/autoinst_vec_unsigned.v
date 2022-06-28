@@ -6,7 +6,7 @@ endmodule
 
 module t;
    wire signed [3:0] as; // From sub of sub.v
-   wire [3:0]        bs;                        // From sub of sub.v
+   wire [3:0]        bs; // From sub of sub.v
    
    sub sub (/*AUTOINST*/
             // Outputs

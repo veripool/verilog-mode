@@ -9,11 +9,11 @@ module try_top(/*autoarg*/
    
    /*autoinput*/
    // Beginning of automatic inputs (from unused autoinst inputs)
-   input [0] [127:0]  in_momo; // To try0 of try1.v, ...
+   input [0] [127:0]  in_momo;  // To try0 of try1.v, ...
    // End of automatics
    /*autooutput*/
    // Beginning of automatic outputs (from unused autoinst outputs)
-   output [0] [127:0] out_momo;         // From try0 of try1.v, ...
+   output [0] [127:0] out_momo; // From try0 of try1.v, ...
    // End of automatics
    
    

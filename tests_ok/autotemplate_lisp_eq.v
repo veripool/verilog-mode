@@ -9,9 +9,9 @@ module test_top;
    
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire        eq; // From test_rcv of test1.v
+   wire        eq;     // From test_rcv of test1.v
    wire        not_eq; // From test_foo of test1.v
-   wire [16:0] wire4;                   // From test_rcv of test1.v, ...
+   wire [16:0] wire4;  // From test_rcv of test1.v, ...
    // End of automatics
    
    /*

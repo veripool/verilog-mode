@@ -7,10 +7,10 @@ module test_top;
    
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire [n*INWIDTH +: INWIDTH]   ins; // From instName of InstMod.v
-   wire [n*INWIDTH +: INWIDTH]   ins2; // From instName2 of InstMod.v
-   wire [n*INWIDTH +: INWIDTH]   ins3; // From instName3 of InstMod.v, ..., Couldn't Merge
-   wire [n*OUTWIDTH +: OUTWIDTH] outs; // From instName of InstMod.v
+   wire [n*INWIDTH +: INWIDTH]   ins;   // From instName of InstMod.v
+   wire [n*INWIDTH +: INWIDTH]   ins2;  // From instName2 of InstMod.v
+   wire [n*INWIDTH +: INWIDTH]   ins3;  // From instName3 of InstMod.v, ..., Couldn't Merge
+   wire [n*OUTWIDTH +: OUTWIDTH] outs;  // From instName of InstMod.v
    wire [n*OUTWIDTH +: OUTWIDTH] outs2; // From instName2 of InstMod.v
    wire [4*OUTWIDTH-1 : 0]       outs3; // From instName3 of InstMod.v, ..., Couldn't Merge
    // End of automatics

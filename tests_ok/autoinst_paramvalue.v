@@ -11,7 +11,7 @@ module  top_test();
    
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire [WIDTH-1:0] out;                        // From testmuxpv_boo of testmuxpv.v, ..., Couldn't Merge
+   wire [WIDTH-1:0] out; // From testmuxpv_boo of testmuxpv.v, ..., Couldn't Merge
    // End of automatics
    
    //======================================================================

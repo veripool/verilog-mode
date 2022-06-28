@@ -5,7 +5,7 @@ module foo (/*AUTOARG*/
    /*AUTOINPUT("ab\(c\|d\)")*/
    // Beginning of automatic inputs (from unused autoinst inputs)
    input abc; // To i_bar of bar.v
-   input abd;                   // To i_bar of bar.v
+   input abd; // To i_bar of bar.v
    // End of automatics
    bar i_bar(/*AUTOINST*/
              // Outputs

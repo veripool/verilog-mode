@@ -8,18 +8,18 @@ module dut (
    
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   logic [1:-1]              b_oned; // From subb of sub.v
+   logic [1:-1]              b_oned;   // From subb of sub.v
    logic [3:-3]              b_threed; // From subb of sub.v
-   logic [2:-1]              b_twod; // From subb of sub.v
-   logic [1:-1]              c_oned; // From subc of sub.v
+   logic [2:-1]              b_twod;   // From subb of sub.v
+   logic [1:-1]              c_oned;   // From subc of sub.v
    logic [x][y] [3:-3]       c_threed; // From subc of sub.v
-   logic [x] [2:-1]          c_twod; // From subc of sub.v
-   logic [1:-1]              d_oned; // From subd of sub.v
+   logic [x] [2:-1]          c_twod;   // From subc of sub.v
+   logic [1:-1]              d_oned;   // From subd of sub.v
    logic [1:-1][2:-1] [3:-3] d_threed; // From subd of sub.v
-   logic [1:-1] [2:-1]       d_twod; // From subd of sub.v
-   logic [1:-1]              oned; // From sub1 of sub.v
-   logic [1:-1][2:-1] [3:-3] threed; // From sub1 of sub.v
-   logic [1:-1] [2:-1]       twod;                      // From sub1 of sub.v
+   logic [1:-1] [2:-1]       d_twod;   // From subd of sub.v
+   logic [1:-1]              oned;     // From sub1 of sub.v
+   logic [1:-1][2:-1] [3:-3] threed;   // From sub1 of sub.v
+   logic [1:-1] [2:-1]       twod;     // From sub1 of sub.v
    // End of automatics
    
    /* sub AUTO_TEMPLATE ();

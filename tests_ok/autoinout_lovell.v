@@ -9,20 +9,20 @@ module top_test(/*AUTOARG*/
    
    /*AUTOOUTPUT*/
    // Beginning of automatic outputs (from unused autoinst outputs)
-   output       aa; // From l1 of leaf.v
-   output       ba; // From l1 of leaf.v
+   output       aa;               // From l1 of leaf.v
+   output       ba;               // From l1 of leaf.v
    // End of automatics
    
    /*AUTOINPUT*/
    // Beginning of automatic inputs (from unused autoinst inputs)
-   input [7:0]  Z0_int; // To l1 of leaf.v
-   input [15:0] Z_int; // To l1 of leaf.v
+   input [7:0]  Z0_int;           // To l1 of leaf.v
+   input [15:0] Z_int;            // To l1 of leaf.v
    input        \c-escaped-nvec ; // To l1 of leaf.v
-   input [2:0]  \c-escaped-vec ; // To l1 of leaf.v
-   input        da; // To l1 of leaf.v
-   input [1:0]  db; // To l1 of leaf.v
-   input [2:0]  dc; // To l1 of leaf.v
-   input        z;                      // To l1 of leaf.v
+   input [2:0]  \c-escaped-vec ;  // To l1 of leaf.v
+   input        da;               // To l1 of leaf.v
+   input [1:0]  db;               // To l1 of leaf.v
+   input [2:0]  dc;               // To l1 of leaf.v
+   input        z;                // To l1 of leaf.v
    // End of automatics
    
    /* leaf AUTO_TEMPLATE (

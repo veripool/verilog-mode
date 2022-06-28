@@ -22,10 +22,10 @@ module test_top;
    
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire [3:0]  wireA; // From t4 of test4.v
-   wire [16:0] wireB; // From t4 of test4.v
-   wire [3:0]  wire_2_to_6; // From t1 of test1.v
-   wire [16:0] wire_4_to_12;            // From t1 of test1.v
+   wire [3:0]  wireA;        // From t4 of test4.v
+   wire [16:0] wireB;        // From t4 of test4.v
+   wire [3:0]  wire_2_to_6;  // From t1 of test1.v
+   wire [16:0] wire_4_to_12; // From t1 of test1.v
    // End of automatics
    
    /* test1 AUTO_TEMPLATE (

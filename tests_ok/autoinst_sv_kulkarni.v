@@ -8,7 +8,7 @@ module a_h
   #(parameter M=5, N=3)
    (
     // Outputs
-    output [N-1:0] [M-1:0] a_o1         // From Ia of autoinst_sv_kulkarni_base.v
+    output [N-1:0] [M-1:0] a_o1 // From Ia of autoinst_sv_kulkarni_base.v
     // End of automatics
     // AUTOINPUT*/
     );

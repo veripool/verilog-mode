@@ -58,8 +58,8 @@ module test(/*AUTOARG*/
    
    /*AUTOINPUT*/
    // Beginning of automatic inputs (from unused autoinst inputs)
-   input [2:0]      i0; // To i0_design of design.v
-   input [4:0]      i1; // To i0_design of design.v
+   input [2:0]      i0;  // To i0_design of design.v
+   input [4:0]      i1;  // To i0_design of design.v
    // End of automatics
    
    /*AUTOOUTPUT*/
@@ -94,7 +94,7 @@ module test(/*AUTOARG*/
    output [40:0]    y42; // From i0_design of design.v
    output [40:0]    y43; // From i0_design of design.v
    output [40:0]    y44; // From i0_design of design.v
-   output [40:0]    y45;                        // From i0_design of design.v
+   output [40:0]    y45; // From i0_design of design.v
    // End of automatics
    
    design #(.w1(2),.w2(4),.w3(256)) i0_design(/*AUTOINST*/

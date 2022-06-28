@@ -15,12 +15,12 @@ module io1_sub(
    
    /*AUTOINOUT("^s")*/
    // Beginning of automatic inouts (from unused autoinst inouts)
-   inout  sec_io; // To/From instio of instio.v
+   inout  sec_io;  // To/From instio of instio.v
    // End of automatics
    
    /*AUTOOUTPUT("^s")*/
    // Beginning of automatic outputs (from unused autoinst outputs)
-   output sec_out;              // From instio of instio.v
+   output sec_out; // From instio of instio.v
    // End of automatics
    
    /* inst AUTO_TEMPLATE (

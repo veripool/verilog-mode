@@ -17,7 +17,7 @@ module sm ();
    
    /*AUTOASCIIENUM("state_r","state_onehot,ascii_r","","onehot")*/
    // Beginning of automatic ASCII enum decoding
-   reg [87:0]       state_onehot,ascii_r;       // Decode of state_r
+   reg [87:0]       state_onehot,ascii_r; // Decode of state_r
    always @(state_r) begin
       case ({state_r})
         (7'b1<<IDLE):        state_onehot,ascii_r = "idle       ";
@@ -34,7 +34,7 @@ module sm ();
    
    /*AUTOASCIIENUM("state_r","state_notonehot_ascii_r")*/
    // Beginning of automatic ASCII enum decoding
-   reg [87:0] state_notonehot_ascii_r;// Decode of state_r
+   reg [87:0] state_notonehot_ascii_r; // Decode of state_r
    always @(state_r) begin
       case ({state_r})
         IDLE:        state_notonehot_ascii_r = "idle       ";

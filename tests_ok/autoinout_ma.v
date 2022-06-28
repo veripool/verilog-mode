@@ -9,7 +9,7 @@ module foo
    // End of automatics
    /*AUTOOUTPUT*/
    // Beginning of automatic outputs (from unused autoinst outputs)
-   output souta                 // From i_bar of bar.v
+   output souta // From i_bar of bar.v
    // End of automatics
    ) ;
    bar i_bar(/*AUTOINST*/

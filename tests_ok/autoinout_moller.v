@@ -9,17 +9,17 @@ module a ( /*AUTOARG*/
    
    /*AUTOINPUT*/
    // Beginning of automatic inputs (from unused autoinst inputs)
-   input  i1; // To b of b.v
+   input  i1;  // To b of b.v
    // End of automatics
    
    /*AUTOOUTPUT*/
    // Beginning of automatic outputs (from unused autoinst outputs)
-   output o1; // From b of b.v
+   output o1;  // From b of b.v
    // End of automatics
    
    /*AUTOINOUT*/
    // Beginning of automatic inouts (from unused autoinst inouts)
-   inout  io1;                  // To/From b of b.v
+   inout  io1; // To/From b of b.v
    // End of automatics
    
    b b

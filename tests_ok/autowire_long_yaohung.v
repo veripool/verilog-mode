@@ -5,7 +5,7 @@ module autowire_long_yaohung(/*AUTOARG*/
    
    /*AUTOOUTPUT*/
    // Beginning of automatic outputs (from unused autoinst outputs)
-   output [`LONGNAMELONGNAMELONGNAMELONGNAMELONGNAMELONGNAME] data_out;// From top of top.v
+   output [`LONGNAMELONGNAMELONGNAMELONGNAMELONGNAMELONGNAME] data_out; // From top of top.v
    // End of automatics
    /*AUTOWIRE*/
    /*AUTOREG*/

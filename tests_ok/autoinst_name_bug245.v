@@ -4,17 +4,17 @@ module autoinst_name_bug245 (
    /*AUTOINPUT*/
    // Beginning of automatic inputs (from unused autoinst inputs)
    input        \escaped*dot*named ; // To sub of Sub.v
-   input logic  clk; // To sub of Sub.v
+   input logic  clk;                 // To sub of Sub.v
    // End of automatics
    
    /*AUTOOUTPUT*/
    // Beginning of automatic outputs (from unused autoinst outputs)
-   output [2:0] a_NO; // From sub of Sub.v
-   output [1:0] bign2_dotnamed; // From sub of Sub.v
-   output       c_dotnamed; // From sub of Sub.v
-   output       d_NO; // From sub of Sub.v
-   output       etmp_dotnamed; // From sub of Sub.v
-   output [3:0] f4_dotnamed; // From sub of Sub.v
+   output [2:0] a_NO;                // From sub of Sub.v
+   output [1:0] bign2_dotnamed;      // From sub of Sub.v
+   output       c_dotnamed;          // From sub of Sub.v
+   output       d_NO;                // From sub of Sub.v
+   output       etmp_dotnamed;       // From sub of Sub.v
+   output [3:0] f4_dotnamed;         // From sub of Sub.v
    // End of automatics
    
    /*AUTOWIRE*/
@@ -67,17 +67,17 @@ module autoinst_name_bug245 (
    /*AUTOINPUT*/
    // Beginning of automatic inputs (from unused autoinst inputs)
    input        \escaped*dot*named ; // To sub of Sub.v
-   input logic  clk; // To sub of Sub.v
+   input logic  clk;                 // To sub of Sub.v
    // End of automatics
    
    /*AUTOOUTPUT*/
    // Beginning of automatic outputs (from unused autoinst outputs)
-   output [2:0] a_NO; // From sub of Sub.v
-   output [1:0] bign2_dotnamed; // From sub of Sub.v
-   output       c_dotnamed; // From sub of Sub.v
-   output       d_NO; // From sub of Sub.v
-   output       etmp_dotnamed; // From sub of Sub.v
-   output [3:0] f4_dotnamed; // From sub of Sub.v
+   output [2:0] a_NO;                // From sub of Sub.v
+   output [1:0] bign2_dotnamed;      // From sub of Sub.v
+   output       c_dotnamed;          // From sub of Sub.v
+   output       d_NO;                // From sub of Sub.v
+   output       etmp_dotnamed;       // From sub of Sub.v
+   output [3:0] f4_dotnamed;         // From sub of Sub.v
    // End of automatics
    
    /*AUTOWIRE*/
@@ -130,17 +130,17 @@ module autoinst_name_bug245 (
    /*AUTOINPUT*/
    // Beginning of automatic inputs (from unused autoinst inputs)
    input        \escaped*dot*named ; // To sub of Sub.v
-   input logic  clk; // To sub of Sub.v
+   input logic  clk;                 // To sub of Sub.v
    // End of automatics
    
    /*AUTOOUTPUT*/
    // Beginning of automatic outputs (from unused autoinst outputs)
-   output [2:0] a_NO; // From sub of Sub.v
-   output [1:0] bign2_dotnamed; // From sub of Sub.v
-   output       c_dotnamed; // From sub of Sub.v
-   output       d_NO; // From sub of Sub.v
-   output       etmp_dotnamed; // From sub of Sub.v
-   output [3:0] f4_dotnamed; // From sub of Sub.v
+   output [2:0] a_NO;                // From sub of Sub.v
+   output [1:0] bign2_dotnamed;      // From sub of Sub.v
+   output       c_dotnamed;          // From sub of Sub.v
+   output       d_NO;                // From sub of Sub.v
+   output       etmp_dotnamed;       // From sub of Sub.v
+   output [3:0] f4_dotnamed;         // From sub of Sub.v
    // End of automatics
    
    /*AUTOWIRE*/

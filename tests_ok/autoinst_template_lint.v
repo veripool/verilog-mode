@@ -9,8 +9,8 @@ module autoinst_multitemplate ();
    // Beginning of automatic inputs (from unused autoinst inputs)
    input      Boo2; // To suba2 of SubB.v
    input      Boo3; // To suba3 of SubB.v
-   input      a; // To suba2 of SubB.v
-   input      b; // To suba3 of SubB.v
+   input      a;    // To suba2 of SubB.v
+   input      b;    // To suba3 of SubB.v
    // End of automatics
    
    /*AUTOOUTPUT*/

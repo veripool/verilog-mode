@@ -14,9 +14,9 @@ module tss_max32 (/*AUTOARG*/
    // Inputs/Outputs
    //======================================================================
    
-   input [31:0]  a; // Time a
-   input [31:0]  b; // Time b
-   output [31:0] max; // MAX (a,b)
+   input [31:0]  a;      // Time a
+   input [31:0]  b;      // Time b
+   output [31:0] max;    // MAX (a,b)
    
    //======================================================================
    // Automatic Wire/Register Declarations
@@ -28,7 +28,7 @@ module tss_max32 (/*AUTOARG*/
    // Comparison
    //======================================================================
    
-   wire          alessb;        // a<b or carry
+   wire          alessb; // a<b or carry
    //Verilint 110 off // WARNING: Incompatible width
    DW01_cmp2 #(31) cmp (.LT_LE(alessb), .GE_GT(unused_ok),
                         .A(a[30:0]),

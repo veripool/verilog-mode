@@ -737,6 +737,12 @@ Otherwise else is lined up with first character on line holding matching if."
   :type 'boolean)
 (put 'verilog-align-ifelse 'safe-local-variable #'verilog-booleanp)
 
+(defcustom verilog-align-declaration-comments t
+  "Non-nil means align declaration comments."
+  :group 'verilog-mode-indent
+  :type 'boolean)
+(put 'verilog-align-declaration-comments 'safe-local-variable #'verilog-booleanp)
+
 (defcustom verilog-minimum-comment-distance 10
   "Minimum distance (in lines) between begin and end required before a comment.
 Setting this variable to zero results in every end acquiring a comment; the
@@ -2860,6 +2866,12 @@ find the errors."
 (defconst verilog-declaration-or-iface-mp-re-2-no-macro
   (concat "\\(" verilog-declaration-re-2-no-macro "\\)\\|\\(" verilog-interface-modport-re "\\)"))
 
+(defconst verilog-comment-start-regexp "//\\|/\\*"
+  "Dual comment value for `comment-start-regexp'.")
+(defconst verilog-declaration-with-embedded-comments-re
+  (concat "\\( " verilog-declaration-or-iface-mp-re-2-no-macro "\\) ""\\s-*" "\\(" verilog-comment-start-regexp "\\)")
+  "e.g: input logic [7:0] /* auto enum sm_psm */ sm_psm;")
+
 (defconst verilog-defun-re
   (eval-when-compile (verilog-regexp-words '("macromodule" "connectmodule" "module" "class" "program" "interface" "package" "primitive" "config"))))
 (defconst verilog-end-defun-re
@@ -3134,9 +3146,6 @@ find the errors."
             "connectmodule" "endconnectmodule"
             ))
   "List of Verilog keywords.")
-
-(defconst verilog-comment-start-regexp "//\\|/\\*"
-  "Dual comment value for `comment-start-regexp'.")
 
 (defvar verilog-mode-syntax-table
   (let ((table (make-syntax-table)))
@@ -4041,6 +4050,8 @@ Variables controlling indentation/edit style:
    will be inserted.  Setting this variable to zero results in every
    end acquiring a comment; the default avoids too many redundant
    comments in tight quarters.
+ `verilog-align-declaration-comments' (default t)
+   Non-nil means align declaration comments.
  `verilog-auto-lineup'              (default `declarations')
    List of contexts where auto lineup of code should be done.
 
@@ -7145,7 +7156,7 @@ Be verbose about progress unless optional QUIET set."
   (let ((m1 (make-marker))
         (e (point))
 	(here (point))
-	el r ind start startpos end endpos base-ind)
+	el r ind start startpos end endpos base-ind comm-ind)
     (save-excursion
       (if (progn
             ;; (verilog-beg-of-statement-1)
@@ -7245,19 +7256,20 @@ Be verbose about progress unless optional QUIET set."
 	      (cond
 	       ((or (and verilog-indent-declaration-macros
 			 (looking-at verilog-declaration-re-2-macro))
-		    (looking-at verilog-declaration-or-iface-mp-re-2-no-macro))
-		(let ((p (match-end 0)))
-		  (set-marker m1 p)
-		  (if (verilog-re-search-forward "[[#`]" p 'move)
-		      (progn
-			(forward-char -1)
-			(just-one-space)
-			(goto-char (marker-position m1))
+                    (looking-at verilog-declaration-or-iface-mp-re-2-no-macro))
+                (unless (looking-at verilog-declaration-with-embedded-comments-re)
+                  (let ((p (match-end 0)))
+                    (set-marker m1 p)
+                    (if (verilog-re-search-forward "[[#`]" p 'move)
+                        (progn
+                          (forward-char -1)
+                          (just-one-space)
+                          (goto-char (marker-position m1))
+                          (delete-horizontal-space)
+                          (indent-to ind 1))
+                      (progn
                         (delete-horizontal-space)
-                        (indent-to ind 1))
-		    (progn
-                      (delete-horizontal-space)
-                      (indent-to ind 1)))))
+                        (indent-to ind 1))))))
 	       ((verilog-continued-line-1 (marker-position startpos))
 		(goto-char e)
                 (unless (and (verilog-in-parenthesis-p)
@@ -7272,7 +7284,19 @@ Be verbose about progress unless optional QUIET set."
 		(verilog-forward-ws&directives)
 		(forward-line -1)))
 	      (forward-line 1))
-	    (unless quiet (message "")))))))
+            ;; Align comments
+            (when verilog-align-declaration-comments
+              (setq comm-ind (verilog-get-comment-align-indent (marker-position startpos) endpos))
+              (save-excursion
+                (goto-char (marker-position startpos))
+                (while (progn (setq e (marker-position endpos))
+                              (< (point) e))
+                  (when (verilog-search-comment-in-declaration e)
+                    (goto-char (match-beginning 0))
+                    (delete-horizontal-space)
+                    (indent-to comm-ind 1))))))
+        ;; Exit
+	(unless quiet (message ""))))))
 
 (defun verilog-pretty-expr (&optional quiet)
   "Line up expressions around point.
@@ -7494,6 +7518,35 @@ BEG and END."
 	          (end-of-line)
 	          (skip-chars-backward " \t")
 	          (1+ (current-column))))
+      ind)))
+
+(defun verilog-search-comment-in-declaration (bound)
+  "Move cursor to position of comment in declaration and return point.
+BOUND is a buffer position that bounds the search."
+  (and (verilog-re-search-forward
+        (or (and verilog-indent-declaration-macros
+                 verilog-declaration-re-1-macro)
+            verilog-declaration-or-iface-mp-re-2-no-macro) bound 'move)
+       (not (looking-at (concat "\\s-*" verilog-comment-start-regexp)))
+       (re-search-forward verilog-comment-start-regexp (point-at-eol) :noerror)))
+
+(defun verilog-get-comment-align-indent (b endpos)
+  "Return the indent level that will line up comments within the region.
+Region is defined by B and ENDPOS."
+  (save-excursion
+    (let ((ind 0)
+          e comm-ind)
+      (goto-char b)
+      ;; Get rightmost position
+      (while (progn (setq e (marker-position endpos))
+                    (< (point) e))
+        (when (verilog-search-comment-in-declaration e)
+          (end-of-line)
+          (verilog-backward-syntactic-ws)
+          (setq comm-ind (1+ (current-column)))
+          (when (> comm-ind ind)
+            (setq ind comm-ind)))
+        (forward-line 1))
       ind)))
 
 (defun verilog-comment-depth (type val)
@@ -14979,6 +15032,7 @@ Files are checked based on `verilog-library-flags'."
      '(
        verilog-active-low-regexp
        verilog-after-save-font-hook
+       verilog-align-declaration-comments
        verilog-align-ifelse
        verilog-assignment-delay
        verilog-auto-arg-sort

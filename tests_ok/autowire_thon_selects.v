@@ -11,7 +11,7 @@ module foo
    
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire [Y:X]   aa;                     // From inst of autoinst_signed_fubar2.v, ..., Couldn't Merge
+   wire [Y:X]   aa; // From inst of autoinst_signed_fubar2.v, ..., Couldn't Merge
    // End of automatics
    
    

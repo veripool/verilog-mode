@@ -5,7 +5,7 @@ module TOP (/*AUTOARG*/
    /*AUTOOUTPUT*/
    // Beginning of automatic outputs (from unused autoinst outputs)
    output [223:0]     SIG_NAMEA; // From A of A.v, ...
-   output [FOO*4-2:0] SIG_NAMEB;                // From C of C.v
+   output [FOO*4-2:0] SIG_NAMEB; // From C of C.v
    // End of automatics
    /*AUTOINPUT*/
    /*AUTOWIRE*/

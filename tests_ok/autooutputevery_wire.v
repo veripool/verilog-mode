@@ -20,7 +20,7 @@ module test (/*AUTOARG*/
    
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   logic [7:0]        stage2_bus;               // From i_first of sub_module.v
+   logic [7:0]        stage2_bus; // From i_first of sub_module.v
    // End of automatics
    /*AUTOREG*/
    

@@ -10,8 +10,8 @@ module autoinst_multitemplate ();
    input      Boo_ba1; // To suba1 of SubA.v
    input      Boo_ba2; // To suba2 of SubB.v
    input      Boo_ba3; // To suba3 of SubC.v
-   input      b; // To suba2 of SubB.v
-   input      c; // To suba3 of SubC.v
+   input      b;       // To suba2 of SubB.v
+   input      c;       // To suba3 of SubC.v
    // End of automatics
    
    /*AUTOOUTPUT*/

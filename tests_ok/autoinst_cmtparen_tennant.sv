@@ -23,7 +23,7 @@ module top
    
    
    logic [COLS-1:0][1:0] s1_odata; // From isub1 of sub1.v
-   logic [COLS-1:0]      s1_oval;                // From isub1 of sub1.v
+   logic [COLS-1:0]      s1_oval;  // From isub1 of sub1.v
    /*AUTOWIRE*/
    
    /* sub2 AUTO_TEMPLATE(

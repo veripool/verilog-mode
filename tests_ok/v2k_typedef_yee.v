@@ -15,8 +15,8 @@ module v2k_typedef_yee
    
    /*AUTOOUTPUT*/
    // Beginning of automatic outputs (from unused autoinst outputs)
-   output logic_t ready; // From itest_sub2 of v2k_typedef_yee_sub2.v
-   output pixel24_t sub2_out_pixel; // From itest_sub2 of v2k_typedef_yee_sub2.v
+   output logic_t ready;                // From itest_sub2 of v2k_typedef_yee_sub2.v
+   output pixel24_t sub2_out_pixel;     // From itest_sub2 of v2k_typedef_yee_sub2.v
    // End of automatics
    
    
@@ -25,10 +25,10 @@ module v2k_typedef_yee
    //
    /*AUTOINPUT*/
    // Beginning of automatic inputs (from unused autoinst inputs)
-   input  logic_t cp; // To itest_sub1 of v2k_typedef_yee_sub1.v, ...
-   input  logic_t pixel24_t pixel_ff; // To itest_sub2 of v2k_typedef_yee_sub2.v
-   input  logic_t reset; // To itest_sub1 of v2k_typedef_yee_sub1.v, ...
-   input  pixel24_t sub1_in_pixel;              // To itest_sub1 of v2k_typedef_yee_sub1.v
+   input  logic_t cp;                   // To itest_sub1 of v2k_typedef_yee_sub1.v, ...
+   input  logic_t pixel24_t pixel_ff;   // To itest_sub2 of v2k_typedef_yee_sub2.v
+   input  logic_t reset;                // To itest_sub1 of v2k_typedef_yee_sub1.v, ...
+   input  pixel24_t sub1_in_pixel;      // To itest_sub1 of v2k_typedef_yee_sub1.v
    // End of automatics
    
    

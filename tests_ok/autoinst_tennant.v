@@ -9,7 +9,7 @@ module top
     
     /*AUTOINPUT("^x.*\|v.*")*/
     // Beginning of automatic inputs (from unused autoinst inputs)
-    input [X-1:0]      xb, // To XX of xx.v, ...
+    input [X-1:0]      xb,     // To XX of xx.v, ...
     // End of automatics
     /*AUTOOUTPUT("^c.*\|k.*")*/
     
@@ -17,12 +17,12 @@ module top
     
     /*AUTOINPUT*/
     // Beginning of automatic inputs (from unused autoinst inputs)
-    input [X-1:0]      cb, // To XX of xx.v, ...
+    input [X-1:0]      cb,     // To XX of xx.v, ...
     // End of automatics
     /*AUTOOUTPUT*/
     // Beginning of automatic outputs (from unused autoinst outputs)
     output             foobar, // From XX of xx.v
-    output [4:0] [2:0] foobar2          // From YY of yy.v
+    output [4:0] [2:0] foobar2 // From YY of yy.v
     // End of automatics
     );
    

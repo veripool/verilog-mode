@@ -12,7 +12,7 @@ module sm (/*AUTOARG*/);
    
    /*AUTOASCIIENUM("chip_r", "chip_r__ascii","Ep_C14ChipNum_")*/
    // Beginning of automatic ASCII enum decoding
-   reg [31:0] chip_r__ascii;            // Decode of chip_r
+   reg [31:0] chip_r__ascii; // Decode of chip_r
    always @(chip_r) begin
       case ({chip_r})
         EP_C14ChipNum_RNP:  chip_r__ascii = "rnp ";

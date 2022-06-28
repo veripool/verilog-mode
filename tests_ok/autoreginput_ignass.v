@@ -7,7 +7,7 @@ module autoreginput;
    // End of automatics
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire lower_out;              // From inst of inst.v
+   wire lower_out; // From inst of inst.v
    // End of automatics
    
    assign lower_ina = 1;

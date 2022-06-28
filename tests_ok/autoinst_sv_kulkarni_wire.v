@@ -6,7 +6,7 @@ module a_h
    
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   logic [N-1:0] [M-1:0] a_o1;                  // From Ia of autoinst_sv_kulkarni_base.v
+   logic [N-1:0] [M-1:0] a_o1; // From Ia of autoinst_sv_kulkarni_base.v
    // End of automatics
    
    autoinst_sv_kulkarni_base

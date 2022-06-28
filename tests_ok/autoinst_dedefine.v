@@ -8,8 +8,8 @@ module autoinst_dedefine;
    /*AUTOOUTPUT*/
    // Beginning of automatic outputs (from unused autoinst outputs)
    output [3:1] fourwide; // From sub of bar.v
-   output       onewide; // From sub of bar.v
-   output [5:0] varwide;                // From sub of bar.v
+   output       onewide;  // From sub of bar.v
+   output [5:0] varwide;  // From sub of bar.v
    // End of automatics
    /*AUTOWIRE*/
    

@@ -25,7 +25,7 @@ module testit;
    
    /*AUTOASCIIENUM("state_r", "_stateascii_r", "sm_")*/
    // Beginning of automatic ASCII enum decoding
-   reg [39:0]      _stateascii_r;               // Decode of state_r
+   reg [39:0]      _stateascii_r; // Decode of state_r
    always @(state_r) begin
       case ({state_r})
         SM_IDLE:  _stateascii_r = "idle ";

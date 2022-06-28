@@ -15,16 +15,16 @@ module autounused
    
    /*AUTOOUTPUT*/
    // Beginning of automatic outputs (from unused autoinst outputs)
-   output [width-1:0] q; // From wbuf of wbuf.v
+   output [width-1:0] q;              // From wbuf of wbuf.v
    // End of automatics
    input              da, db, dc, dd;
    /*AUTOINPUT*/
    
-   wire               _unused_ok = &{/*AUTOUNUSED*/
-                                     // Beginning of automatic unused inputs
-                                     dd,
-                                     // End of automatics
-                                     1'b0};
+   wire               _unused_ok = &{ /*AUTOUNUSED*/
+                                      // Beginning of automatic unused inputs
+                                      dd,
+                                      // End of automatics
+                                      1'b0};
    
    defparam partbuf.width = width;
    wbuf wbuf

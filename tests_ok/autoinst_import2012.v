@@ -22,7 +22,7 @@ endpackage
 module bus_mux
   import common_pkg::*;
    (// Interfaces
-    bus.slave    bus_master, // bus from master
+    bus.slave    bus_master,            // bus from master
     bus.master   bus_slave[NUM_SLAVES], // bus to slave
     // Outputs
     output logic addr_fault_strb

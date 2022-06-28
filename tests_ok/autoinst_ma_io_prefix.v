@@ -11,9 +11,9 @@ module test (
    
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire A_internal; // From u0 of moduleA.v
-   wire A_outsideo; // From u0 of moduleA.v
-   wire o_B_internal;           // From u1 of moduleB.v
+   wire A_internal;   // From u0 of moduleA.v
+   wire A_outsideo;   // From u0 of moduleA.v
+   wire o_B_internal; // From u1 of moduleB.v
    // End of automatics
    
    //-----------------------------------------------------------------------------

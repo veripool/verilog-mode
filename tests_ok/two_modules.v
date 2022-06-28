@@ -35,7 +35,7 @@ module appendix2 (/*AUTOARG*/
    
    /*AUTOOUTPUT*/
    // Beginning of automatic outputs (from unused autoinst outputs)
-   output [11:10] z;                    // From apx10 of appendix1.v, ...
+   output [11:10] z; // From apx10 of appendix1.v, ...
    // End of automatics
    
    /*AUTOREG*/

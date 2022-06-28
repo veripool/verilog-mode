@@ -8,7 +8,7 @@ endmodule
 module vm_example1;
    /*AUTOOUTPUT*/
    // Beginning of automatic outputs (from unused autoinst outputs)
-   output upper_t o;                       // From instName of InstModule.v
+   output upper_t o; // From instName of InstModule.v
    // End of automatics
    
    InstModule

@@ -34,7 +34,7 @@ module FswArbiter (/*AUTOARG*/
    //  Physical Pins
    // ===============
    
-   input         sclk; // Fabric switch clock
+   input         sclk;                    // Fabric switch clock
    input         lreset_l;
    
    input         csr_insert_idle;
@@ -146,68 +146,68 @@ module FswArbiter (/*AUTOARG*/
    
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire          bp1_grant0; // From bp1 of FswBypassArbiter.v
-   wire          bp1_grant1; // From bp1 of FswBypassArbiter.v
-   wire          bp1_grant2; // From bp1 of FswBypassArbiter.v
-   wire          bp1_grant3; // From bp1 of FswBypassArbiter.v
-   wire          bp1_grant_cycle_d1; // From bp1 of FswBypassArbiter.v
-   wire          bp1_grant_cycle_d2; // From bp1 of FswBypassArbiter.v
-   wire          bp1_header; // From bp1 of FswBypassArbiter.v
-   wire          bp1_header_d1; // From bp1 of FswBypassArbiter.v
-   wire          bp1_header_d2; // From bp1 of FswBypassArbiter.v
-   wire [5:0]    bp1_hold_wait_vector; // From bp1 of FswBypassArbiter.v
-   wire [5:0]    bp1_hold_wait_vector_d1;// From bp1 of FswBypassArbiter.v
-   wire [1:0]    bp1_next_winner; // From bp1 of FswBypassArbiter.v
-   wire [1:0]    bp1_next_winner_d1; // From bp1 of FswBypassArbiter.v
-   wire [1:0]    bp1_next_winner_d2; // From bp1 of FswBypassArbiter.v
-   wire [3:0]    bp1_nextxbe; // From bp1 of FswBypassArbiter.v
-   wire [3:0]    bp1_nextxbe_d1; // From bp1 of FswBypassArbiter.v
-   wire [3:0]    bp1_nextxbe_d2; // From bp1 of FswBypassArbiter.v
-   wire          bp1_select; // From bp1 of FswBypassArbiter.v
-   wire          bp1_select_d1; // From bp1 of FswBypassArbiter.v
-   wire          bp1_select_d2; // From bp1 of FswBypassArbiter.v
-   wire          bp2_grant0; // From bp2 of FswBypassArbiter.v
-   wire          bp2_grant1; // From bp2 of FswBypassArbiter.v
-   wire          bp2_grant2; // From bp2 of FswBypassArbiter.v
-   wire          bp2_grant3; // From bp2 of FswBypassArbiter.v
-   wire          bp2_grant_cycle; // From bp2 of FswBypassArbiter.v
-   wire          bp2_grant_cycle_d1; // From bp2 of FswBypassArbiter.v
-   wire          bp2_grant_cycle_d2; // From bp2 of FswBypassArbiter.v
-   wire          bp2_header; // From bp2 of FswBypassArbiter.v
-   wire          bp2_header_d1; // From bp2 of FswBypassArbiter.v
-   wire          bp2_header_d2; // From bp2 of FswBypassArbiter.v
-   wire [5:0]    bp2_hold_wait_vector; // From bp2 of FswBypassArbiter.v
-   wire [5:0]    bp2_hold_wait_vector_d1;// From bp2 of FswBypassArbiter.v
-   wire [1:0]    bp2_next_winner; // From bp2 of FswBypassArbiter.v
-   wire [1:0]    bp2_next_winner_d1; // From bp2 of FswBypassArbiter.v
-   wire [1:0]    bp2_next_winner_d2; // From bp2 of FswBypassArbiter.v
-   wire [3:0]    bp2_nextxbe; // From bp2 of FswBypassArbiter.v
-   wire [3:0]    bp2_nextxbe_d1; // From bp2 of FswBypassArbiter.v
-   wire [3:0]    bp2_nextxbe_d2; // From bp2 of FswBypassArbiter.v
-   wire          bp2_select; // From bp2 of FswBypassArbiter.v
-   wire          bp2_select_d1; // From bp2 of FswBypassArbiter.v
-   wire          bp2_select_d2; // From bp2 of FswBypassArbiter.v
-   wire          bp3_grant0; // From bp3 of FswBypassArbiter.v
-   wire          bp3_grant1; // From bp3 of FswBypassArbiter.v
-   wire          bp3_grant2; // From bp3 of FswBypassArbiter.v
-   wire          bp3_grant3; // From bp3 of FswBypassArbiter.v
-   wire          bp3_grant_cycle; // From bp3 of FswBypassArbiter.v
-   wire          bp3_grant_cycle_d1; // From bp3 of FswBypassArbiter.v
-   wire          bp3_grant_cycle_d2; // From bp3 of FswBypassArbiter.v
-   wire          bp3_header; // From bp3 of FswBypassArbiter.v
-   wire          bp3_header_d1; // From bp3 of FswBypassArbiter.v
-   wire          bp3_header_d2; // From bp3 of FswBypassArbiter.v
-   wire [5:0]    bp3_hold_wait_vector; // From bp3 of FswBypassArbiter.v
-   wire [5:0]    bp3_hold_wait_vector_d1;// From bp3 of FswBypassArbiter.v
-   wire [1:0]    bp3_next_winner; // From bp3 of FswBypassArbiter.v
-   wire [1:0]    bp3_next_winner_d1; // From bp3 of FswBypassArbiter.v
-   wire [1:0]    bp3_next_winner_d2; // From bp3 of FswBypassArbiter.v
-   wire [3:0]    bp3_nextxbe; // From bp3 of FswBypassArbiter.v
-   wire [3:0]    bp3_nextxbe_d1; // From bp3 of FswBypassArbiter.v
-   wire [3:0]    bp3_nextxbe_d2; // From bp3 of FswBypassArbiter.v
-   wire          bp3_select; // From bp3 of FswBypassArbiter.v
-   wire          bp3_select_d1; // From bp3 of FswBypassArbiter.v
-   wire          bp3_select_d2; // From bp3 of FswBypassArbiter.v
+   wire          bp1_grant0;              // From bp1 of FswBypassArbiter.v
+   wire          bp1_grant1;              // From bp1 of FswBypassArbiter.v
+   wire          bp1_grant2;              // From bp1 of FswBypassArbiter.v
+   wire          bp1_grant3;              // From bp1 of FswBypassArbiter.v
+   wire          bp1_grant_cycle_d1;      // From bp1 of FswBypassArbiter.v
+   wire          bp1_grant_cycle_d2;      // From bp1 of FswBypassArbiter.v
+   wire          bp1_header;              // From bp1 of FswBypassArbiter.v
+   wire          bp1_header_d1;           // From bp1 of FswBypassArbiter.v
+   wire          bp1_header_d2;           // From bp1 of FswBypassArbiter.v
+   wire [5:0]    bp1_hold_wait_vector;    // From bp1 of FswBypassArbiter.v
+   wire [5:0]    bp1_hold_wait_vector_d1; // From bp1 of FswBypassArbiter.v
+   wire [1:0]    bp1_next_winner;         // From bp1 of FswBypassArbiter.v
+   wire [1:0]    bp1_next_winner_d1;      // From bp1 of FswBypassArbiter.v
+   wire [1:0]    bp1_next_winner_d2;      // From bp1 of FswBypassArbiter.v
+   wire [3:0]    bp1_nextxbe;             // From bp1 of FswBypassArbiter.v
+   wire [3:0]    bp1_nextxbe_d1;          // From bp1 of FswBypassArbiter.v
+   wire [3:0]    bp1_nextxbe_d2;          // From bp1 of FswBypassArbiter.v
+   wire          bp1_select;              // From bp1 of FswBypassArbiter.v
+   wire          bp1_select_d1;           // From bp1 of FswBypassArbiter.v
+   wire          bp1_select_d2;           // From bp1 of FswBypassArbiter.v
+   wire          bp2_grant0;              // From bp2 of FswBypassArbiter.v
+   wire          bp2_grant1;              // From bp2 of FswBypassArbiter.v
+   wire          bp2_grant2;              // From bp2 of FswBypassArbiter.v
+   wire          bp2_grant3;              // From bp2 of FswBypassArbiter.v
+   wire          bp2_grant_cycle;         // From bp2 of FswBypassArbiter.v
+   wire          bp2_grant_cycle_d1;      // From bp2 of FswBypassArbiter.v
+   wire          bp2_grant_cycle_d2;      // From bp2 of FswBypassArbiter.v
+   wire          bp2_header;              // From bp2 of FswBypassArbiter.v
+   wire          bp2_header_d1;           // From bp2 of FswBypassArbiter.v
+   wire          bp2_header_d2;           // From bp2 of FswBypassArbiter.v
+   wire [5:0]    bp2_hold_wait_vector;    // From bp2 of FswBypassArbiter.v
+   wire [5:0]    bp2_hold_wait_vector_d1; // From bp2 of FswBypassArbiter.v
+   wire [1:0]    bp2_next_winner;         // From bp2 of FswBypassArbiter.v
+   wire [1:0]    bp2_next_winner_d1;      // From bp2 of FswBypassArbiter.v
+   wire [1:0]    bp2_next_winner_d2;      // From bp2 of FswBypassArbiter.v
+   wire [3:0]    bp2_nextxbe;             // From bp2 of FswBypassArbiter.v
+   wire [3:0]    bp2_nextxbe_d1;          // From bp2 of FswBypassArbiter.v
+   wire [3:0]    bp2_nextxbe_d2;          // From bp2 of FswBypassArbiter.v
+   wire          bp2_select;              // From bp2 of FswBypassArbiter.v
+   wire          bp2_select_d1;           // From bp2 of FswBypassArbiter.v
+   wire          bp2_select_d2;           // From bp2 of FswBypassArbiter.v
+   wire          bp3_grant0;              // From bp3 of FswBypassArbiter.v
+   wire          bp3_grant1;              // From bp3 of FswBypassArbiter.v
+   wire          bp3_grant2;              // From bp3 of FswBypassArbiter.v
+   wire          bp3_grant3;              // From bp3 of FswBypassArbiter.v
+   wire          bp3_grant_cycle;         // From bp3 of FswBypassArbiter.v
+   wire          bp3_grant_cycle_d1;      // From bp3 of FswBypassArbiter.v
+   wire          bp3_grant_cycle_d2;      // From bp3 of FswBypassArbiter.v
+   wire          bp3_header;              // From bp3 of FswBypassArbiter.v
+   wire          bp3_header_d1;           // From bp3 of FswBypassArbiter.v
+   wire          bp3_header_d2;           // From bp3 of FswBypassArbiter.v
+   wire [5:0]    bp3_hold_wait_vector;    // From bp3 of FswBypassArbiter.v
+   wire [5:0]    bp3_hold_wait_vector_d1; // From bp3 of FswBypassArbiter.v
+   wire [1:0]    bp3_next_winner;         // From bp3 of FswBypassArbiter.v
+   wire [1:0]    bp3_next_winner_d1;      // From bp3 of FswBypassArbiter.v
+   wire [1:0]    bp3_next_winner_d2;      // From bp3 of FswBypassArbiter.v
+   wire [3:0]    bp3_nextxbe;             // From bp3 of FswBypassArbiter.v
+   wire [3:0]    bp3_nextxbe_d1;          // From bp3 of FswBypassArbiter.v
+   wire [3:0]    bp3_nextxbe_d2;          // From bp3 of FswBypassArbiter.v
+   wire          bp3_select;              // From bp3 of FswBypassArbiter.v
+   wire          bp3_select_d1;           // From bp3 of FswBypassArbiter.v
+   wire          bp3_select_d2;           // From bp3 of FswBypassArbiter.v
    // End of automatics
    /*AUTOREG*/
    // Beginning of automatic regs (for this module's undeclared outputs)

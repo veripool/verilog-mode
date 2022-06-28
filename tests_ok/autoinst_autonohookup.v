@@ -2,7 +2,7 @@ module autoinst_autonohookup (
                               /*AUTOINPUT*/
                               /*AUTOOUTPUT*/
                               // Beginning of automatic outputs (from unused autoinst outputs)
-                              output o1               // From a2 of a2.v
+                              output o1 // From a2 of a2.v
                               // End of automatics
                               );
    /* a2 AUTO_TEMPLATE (

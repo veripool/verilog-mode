@@ -3,7 +3,7 @@ module top
    /*AUTOOUTPUT*/
    /*AUTOINPUT*/
    // Beginning of automatic inputs (from unused autoinst inputs)
-   input              b                 // To child of child.v
+   input              b  // To child of child.v
    // End of automatics
    );
    
@@ -16,7 +16,7 @@ module nocomma
   (/*AUTOOUTPUT*/
    /*AUTOINPUT*/
    // Beginning of automatic inputs (from unused autoinst inputs)
-   input b                      // To child of child.v
+   input b // To child of child.v
    // End of automatics
    );
    child child(/*AUTOINST*/
@@ -32,7 +32,7 @@ module ifdefcomma
    /*AUTOOUTPUT*/
    /*AUTOINPUT*/
    // Beginning of automatic inputs (from unused autoinst inputs)
-   input b                      // To child of child.v
+   input b // To child of child.v
    // End of automatics
    );
    child child(/*AUTOINST*/

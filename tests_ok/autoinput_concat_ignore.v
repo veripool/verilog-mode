@@ -5,8 +5,8 @@ module xyz (/*AUTOARG*/
    
    /*AUTOINPUT*/
    // Beginning of automatic inputs (from unused autoinst inputs)
-   input [2:0] signal_b; // To u_abc of abc.v
-   input       signal_e; // To u_def of def.v
+   input [2:0] signal_b;  // To u_abc of abc.v
+   input       signal_e;  // To u_def of def.v
    input       signal_e3; // To u_def of def.v
    // End of automatics
    
@@ -14,8 +14,8 @@ module xyz (/*AUTOARG*/
    
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire        signal_c; // From u_abc of abc.v
-   wire        signal_f;                // From u_def of def.v
+   wire        signal_c;  // From u_abc of abc.v
+   wire        signal_f;  // From u_def of def.v
    // End of automatics
    
    /* abc AUTO_TEMPLATE
