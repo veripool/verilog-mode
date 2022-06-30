@@ -679,6 +679,18 @@ Set to 0 to have all directives start at the left side of the screen."
   :type 'integer)
 (put 'verilog-indent-level-directive 'safe-local-variable #'integerp)
 
+(defcustom verilog-indent-ignore-multiline-defines t
+  "Non-nil means ignore indentation on lines that are part of a multiline define."
+  :group 'verilog-mode-indent
+  :type 'boolean)
+(put 'verilog-indent-ignore-multiline-defines 'safe-local-variable #'verilog-booleanp)
+
+(defcustom verilog-indent-ignore-regexp nil
+  "Regexp that matches lines that should be ignored for indentation."
+  :group 'verilog-mode-indent
+  :type 'boolean)
+(put 'verilog-indent-ignore-regexp 'safe-local-variable #'stringp)
+
 (defcustom verilog-cexp-indent 2
   "Indentation of Verilog statements split across lines."
   :group 'verilog-mode-indent
@@ -4015,6 +4027,10 @@ Variables controlling indentation/edit style:
    function keyword.
  `verilog-indent-level-directive'     (default 1)
    Indentation of \\=`ifdef/\\=`endif blocks.
+ `verilog-indent-ignore-multiline-defines' (default t)
+   Non-nil means ignore indentation on lines that are part of a multiline define.
+ `verilog-indent-ignore-regexp'     (default nil
+   Regexp that matches lines that should be ignored for indentation.
  `verilog-cexp-indent'              (default 1)
    Indentation of Verilog statements broken across lines i.e.:
       if (a)
@@ -6911,6 +6927,9 @@ Only look at a few lines to determine indent level."
   (let ((type (car indent-str))
 	(ind (car (cdr indent-str))))
     (cond
+     (; handle indentation ignoring
+      (verilog-indent-ignore-p)
+      nil)
      (; handle continued exp
       (eq type 'cexp)
       (let ((here (point)))
@@ -7567,6 +7586,18 @@ Region is defined by B and ENDPOS."
     (backward-char 6)
     (insert
      (format "%s %d" type val))))
+
+(defun verilog-indent-ignore-p ()
+  "Return non-nil if current line should ignore indentation."
+  (or (and verilog-indent-ignore-multiline-defines ; Ignore multiline defines
+           (or (looking-at ".*\\\\\\s-*$")         ; Line with multiline define, ends with "\" or "\" plus trailing whitespace
+               (save-excursion                     ; Last line after multiline define
+                 (verilog-backward-syntactic-ws)
+                 (unless (bobp)
+                   (backward-char))
+                 (looking-at "\\\\"))))
+      (and verilog-indent-ignore-regexp ; Ignore lines according to specified regexp
+           (looking-at verilog-indent-ignore-regexp))))
 
 
 ;;; Completion:
@@ -15086,6 +15117,8 @@ Files are checked based on `verilog-library-flags'."
        verilog-indent-begin-after-if
        verilog-indent-class-inside-pkg
        verilog-indent-declaration-macros
+       verilog-indent-ignore-multiline-defines
+       verilog-indent-ignore-regexp
        verilog-indent-level
        verilog-indent-level-behavioral
        verilog-indent-level-declaration

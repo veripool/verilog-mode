@@ -20,4 +20,5 @@ endclass
 // Local Variables:
 // verilog-minimum-comment-distance: 1
 // verilog-auto-endcomments: t
+// verilog-indent-ignore-multiline-defines: nil
 // End:
