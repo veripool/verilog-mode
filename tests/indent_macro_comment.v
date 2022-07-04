@@ -39,3 +39,7 @@
                            // the indentation this time; but the indentation
                            // returned to (v2) as set by that sign in `define TEMPB
 `endif
+
+// Local Variables:
+// verilog-indent-ignore-multiline-defines: nil
+// End:
