@@ -7589,9 +7589,10 @@ Region is defined by B and ENDPOS."
 
 (defun verilog-indent-ignore-p ()
   "Return non-nil if current line should ignore indentation."
-  (or (and verilog-indent-ignore-multiline-defines ; Ignore multiline defines
-           (or (looking-at ".*\\\\\\s-*$")         ; Line with multiline define, ends with "\" or "\" plus trailing whitespace
-               (save-excursion                     ; Last line after multiline define
+  (or (and verilog-indent-ignore-multiline-defines
+           ;; Line with multiline define, ends with "\" or "\" plus trailing whitespace
+           (or (looking-at ".*\\\\\\s-*$")
+               (save-excursion  ; Last line after multiline define
                  (verilog-backward-syntactic-ws)
                  (unless (bobp)
                    (backward-char))
