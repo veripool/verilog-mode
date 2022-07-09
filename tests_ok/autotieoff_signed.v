@@ -63,7 +63,7 @@ module autotieoff_signed (/*AUTOARG*/
                        // Beginning of automatic unused inputs
                        ExtraIn,
                        // End of automatics
-                       1'b0 } ;
+                       1'b0};
    // lint_checking SCX_UNUSED OFF
    
 endmodule

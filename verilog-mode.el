@@ -7264,7 +7264,7 @@ Be verbose about progress unless optional QUIET set."
                 (indent-line-to base-ind)
                 (verilog-forward-ws&directives)
                 (if (< (point) e)
-                    (verilog-re-search-forward "[ \t\n\f]" e 'move)))
+                    (verilog-re-search-forward "[ \t\n\f]" (marker-position endpos) 'move)))
 	       (t
                 (unless (verilog-looking-back "(" (point-at-bol))
                   (just-one-space))

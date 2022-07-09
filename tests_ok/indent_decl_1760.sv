@@ -1,6 +1,6 @@
 module test (
-             input logic   a,
-             o utput logic b
+             input logic  a,
+             output logic b
              );
    
    for (genvar i=0; i<2; i++) begin : g_slice
