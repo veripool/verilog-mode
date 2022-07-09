@@ -9,6 +9,6 @@ module escape_a (/*AUTOARG*/
    input  \i&e; ;
    
    wire \o[10] = \i&e; ;
-   wire \o[2] = \i&e; ;
+   wire \o[2]  = \i&e; ;
    
 endmodule

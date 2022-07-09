@@ -58,7 +58,7 @@ module instio (/*AUTOARG*/
    output sec_out;
    
    wire   lower_out = lower_ina | lower_io;
-   wire   sec_out = sec_ina | sec_io;
+   wire   sec_out   = sec_ina | sec_io;
    
 endmodule
 
