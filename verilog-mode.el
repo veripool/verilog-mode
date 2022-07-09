@@ -7064,10 +7064,10 @@ Only look at a few lines to determine indent level."
       (and (or
 	    (eq type 'defun)
 	    (eq type 'block))
-	   (looking-at verilog-declaration-re)
+           (looking-at verilog-declaration-re-2-no-macro)
            ;; Do not consider "virtual function", "virtual task", "virtual class"
            ;; as declarations
-           (not (looking-at (concat verilog-declaration-re
+           (not (looking-at (concat verilog-declaration-re-2-no-macro
                                     "\\s-+\\(function\\|task\\|class\\)\\b"))))
       (verilog-indent-declaration ind))
 
@@ -7442,57 +7442,71 @@ BASEIND is the base indent to offset everything."
   (let ((pos (point-marker))
 	(lim (save-excursion
 	       ;; (verilog-re-search-backward verilog-declaration-opener nil 'move)
-              (verilog-re-search-backward "\\(\\<begin\\>\\)\\|\\(\\<\\(connect\\)?module\\>\\)\\|\\(\\<task\\>\\)" nil 'move)
+               (verilog-re-search-backward "\\(\\<begin\\>\\)\\|\\(\\<\\(connect\\)?module\\>\\)\\|\\(\\<task\\>\\)" nil 'move)
 	       (point)))
 	(ind)
 	(val)
-	(m1 (make-marker)))
+	(m1 (make-marker))
+        (in-paren (verilog-parenthesis-depth)))
     (setq val
 	  (+ baseind (eval (cdr (assoc 'declaration verilog-indent-alist)))))
     (indent-line-to val)
 
     ;; Use previous declaration (in this module) as template.
-    (if (or (eq 'all verilog-auto-lineup)
-	    (eq 'declarations verilog-auto-lineup))
-	(if (verilog-re-search-backward
-	     (or (and verilog-indent-declaration-macros
-		      verilog-declaration-re-1-macro)
-                verilog-declaration-re-1-no-macro)
-            lim t)
-	    (progn
-	      (goto-char (match-end 0))
-	      (skip-chars-forward " \t")
-	      (setq ind (current-column))
-	      (goto-char pos)
-	      (setq val
-		    (+ baseind
-		       (eval (cdr (assoc 'declaration verilog-indent-alist)))))
-	      (indent-line-to val)
-	      (if (and verilog-indent-declaration-macros
-		       (looking-at verilog-declaration-re-2-macro))
-		  (let ((p (match-end 0)))
-		    (set-marker m1 p)
-		    (if (verilog-re-search-forward "[[#`]" p 'move)
-			(progn
-			  (forward-char -1)
-			  (just-one-space)
-			  (goto-char (marker-position m1))
-                          (delete-horizontal-space)
-                          (indent-to ind 1))
-                      (delete-horizontal-space)
-                      (indent-to ind 1)))
-		(if (looking-at verilog-declaration-re-2-no-macro)
-		    (let ((p (match-end 0)))
-		      (set-marker m1 p)
-		      (if (verilog-re-search-forward "[[`#]" p 'move)
-			  (progn
-			    (forward-char -1)
-			    (just-one-space)
-			    (goto-char (marker-position m1))
-                            (delete-horizontal-space)
-                            (indent-to ind 1))
-                        (delete-horizontal-space)
-                        (indent-to ind 1))))))))
+    (when (and (or (eq 'all verilog-auto-lineup)
+                   (eq 'declarations verilog-auto-lineup))
+               ;; Limit alignment to consecutive statements
+               (progn
+                 (verilog-backward-syntactic-ws)
+                 (backward-char)
+                 (looking-at ";"))
+               (progn
+                 (verilog-beg-of-statement)
+                 (looking-at (if verilog-indent-declaration-macros
+                                 verilog-declaration-re-1-macro
+                               verilog-declaration-re-2-no-macro)))
+               ;; Make sure that we don't jump to an argument list or parameter block if
+               ;; we were in a declaration block (not in argument list)
+               (or (and in-paren
+                        (verilog-parenthesis-depth))
+                   (and (not in-paren)
+                        (not (verilog-parenthesis-depth))))
+               ;; Skip variable declarations inside functions/tasks
+               (skip-chars-backward " \t\f")
+               (bolp))
+      (goto-char (match-end 0))
+      (skip-chars-forward " \t")
+      (setq ind (current-column))
+      (goto-char pos)
+      (setq val
+            (+ baseind
+               (eval (cdr (assoc 'declaration verilog-indent-alist)))))
+      (indent-line-to val)
+      (if (and verilog-indent-declaration-macros
+               (looking-at verilog-declaration-re-2-macro))
+          (let ((p (match-end 0)))
+            (set-marker m1 p)
+            (if (verilog-re-search-forward "[[#`]" p 'move)
+                (progn
+                  (forward-char -1)
+                  (just-one-space)
+                  (goto-char (marker-position m1))
+                  (delete-horizontal-space)
+                  (indent-to ind 1))
+              (delete-horizontal-space)
+              (indent-to ind 1)))
+        (when (looking-at verilog-declaration-re-2-no-macro)
+          (let ((p (match-end 0)))
+            (set-marker m1 p)
+            (if (verilog-re-search-forward "[[`#]" p 'move)
+                (progn
+                  (forward-char -1)
+                  (just-one-space)
+                  (goto-char (marker-position m1))
+                  (delete-horizontal-space)
+                  (indent-to ind 1))
+              (delete-horizontal-space)
+              (indent-to ind 1))))))
     (goto-char pos)))
 
 (defun verilog-get-lineup-indent (b edpos)
