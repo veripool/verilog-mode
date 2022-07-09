@@ -37,11 +37,11 @@ module autotieoff_signed (/*AUTOARG*/
    
    /*AUTOTIEOFF*/
    // Beginning of automatic tieoffs (for this module's unterminated outputs)
-   wire [2:0]          ExtraOut = 3'h0;
-   wire [3:0]          active_low_l = ~4'h0;
-   wire [1:0]          an_output2 = 2'h0;
-   wire signed [1:0]   an_outputpre = 2'sh0;
-   wire signed [1:0]   another_output = 2'sh0;
+   wire [2:0]          ExtraOut        = 3'h0;
+   wire [3:0]          active_low_l    = ~4'h0;
+   wire [1:0]          an_output2      = 2'h0;
+   wire signed [1:0]   an_outputpre    = 2'sh0;
+   wire signed [1:0]   another_output  = 2'sh0;
    wire [1:0]          another_output2 = 2'h0;
    // End of automatics
    

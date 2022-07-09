@@ -24,7 +24,7 @@ module ExampStub (/*AUTOARG*/
    
    /*AUTOTIEOFF*/
    // Beginning of automatic tieoffs (for this module's unterminated outputs)
-   wire      o = 1'h0;
+   wire      o          = 1'h0;
    // End of automatics
    
    // verilator lint_off UNUSED

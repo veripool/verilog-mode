@@ -10,6 +10,6 @@ module ex_output_every (o,i,tempa,tempb)
    
    wire   tempa = i;
    wire   tempb = tempa;
-   wire   o = tempb;
+   wire   o     = tempb;
    
 endmodule

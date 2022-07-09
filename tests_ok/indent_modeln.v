@@ -16,7 +16,7 @@ class i_sb_c extends base_sb_c;
    } ncbi_err_rsp_t;
    
    //------------
-   int duax = 5;
+   int duax  = 5;
    
    int trwed = 0;
    

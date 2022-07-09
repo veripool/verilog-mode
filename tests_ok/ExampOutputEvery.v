@@ -9,7 +9,7 @@ module ExampOutputEvery (
                          );
    wire tempa = i;
    wire tempb = tempa;
-   wire o = tempb;
+   wire o     = tempb;
 endmodule
 
 // Local Variables:
