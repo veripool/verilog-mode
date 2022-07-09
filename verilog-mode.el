@@ -4722,10 +4722,8 @@ Uses `verilog-scan' cache."
                 (= (preceding-char) ?\;)
 		(progn
 		  (verilog-backward-token)
-		  (if verilog-indent-lists
-                      (looking-at verilog-ends-re)
-                    (or (looking-at verilog-ends-re)
-                        (looking-at "begin")))))
+                  (or (looking-at verilog-ends-re)
+                      (looking-at "begin"))))
             (progn
               (goto-char pt)
               (throw 'done t)))))

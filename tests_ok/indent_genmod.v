@@ -6,11 +6,11 @@ module indent;
       // Here, AUTOINST line indents incorrectly indents way too far the the right
       // ( below indents after = above, which is incorrect
       subindent s
-                          (/*AUTOINST*/
-                           // Outputs
-                           .y                   (y),
-                           // Inputs
-                           .a                   (a));
+        (/*AUTOINST*/
+         // Outputs
+         .y                     (y),
+         // Inputs
+         .a                     (a));
    end endgenerate
    
    // Without the '=0', the AUTOINST line indents properly

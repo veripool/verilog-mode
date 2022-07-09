@@ -11,7 +11,7 @@ module test;
    
    initial begin
       string in_str;
-      int width   = 5;
+      int    width = 5;
       
       if (in_str == "") begin : empty_string
          a_string = { width {" "}};  // all spaces
