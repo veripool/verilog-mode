@@ -4,7 +4,7 @@ module unsort(
               input  z,
               
               output o,
-              outp ut b);
+              output b);
 endmodule
 
 module t;
