@@ -60,7 +60,7 @@ module autoinst_bits_lba_gi
    );
    
    /////////////////////////////////////////////////////////////////////
-  // inputs
+   // inputs
    
    input         CLK;       // LBA clk
    

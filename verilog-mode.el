@@ -6498,10 +6498,10 @@ Optional BOUND limits search."
 	    (let ((state (save-excursion (verilog-syntax-ppss))))
 	      (cond
                ((nth 7 state)  ; in // comment
-		(verilog-re-search-backward "//" nil 'move)
+		(re-search-backward "//" nil 'move)
                 (skip-chars-backward "/"))
                ((nth 4 state)  ; in /* */ comment
-		(verilog-re-search-backward "/\\*" nil 'move))))
+		(re-search-backward "/\\*" nil 'move))))
 	    (narrow-to-region bound (point))
 	    (while (/= here (point))
 	      (setq here (point))

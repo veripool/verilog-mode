@@ -9,7 +9,7 @@ module cdl_io (/*AUTOARG*/
    output topsig;
    
    //Verilint 113 off // WARNING: in macro RSV_CDLBASE_RDWR, Multiple drivers to a flipflop
-          
+   
    reg    topsig;
 `define TOPSIG  {topsig}
    
