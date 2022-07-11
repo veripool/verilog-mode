@@ -3032,7 +3032,7 @@ find the errors."
        "import" "initial" "final" "module" "macromodule" "repeat" "randcase" "while"
        "if" "for" "forever" "foreach" "else" "parameter" "do" "localparam" "assert"
        ))))
-(defconst verilog-complete-reg
+(defconst verilog-complete-re
   (concat
    verilog-extended-complete-re "\\|\\(" verilog-basic-complete-re "\\)"))
 
@@ -4682,7 +4682,7 @@ Uses `verilog-scan' cache."
 		 (goto-char h)))
 	      ;; stop if we see an extended complete reg, perhaps a complete one
 	      (and
-	       (looking-at verilog-complete-reg)
+	       (looking-at verilog-complete-re)
 	       (let* ((p (point)))
 		 (while (and (looking-at verilog-extended-complete-re)
 			     (progn (setq p (point))
@@ -4711,7 +4711,7 @@ Uses `verilog-scan' cache."
       (verilog-backward-syntactic-ws))
   (let ((pt (point)))
     (catch 'done
-      (while (not (looking-at verilog-complete-reg))
+      (while (not (looking-at verilog-complete-re))
         (setq pt (point))
         (verilog-backward-syntactic-ws)
         (if (or (bolp)
@@ -4726,7 +4726,7 @@ Uses `verilog-scan' cache."
     (verilog-forward-syntactic-ws)))
 ;;
 ;;      (while (and
-;;              (not (looking-at verilog-complete-reg))
+;;              (not (looking-at verilog-complete-re))
 ;;              (not (bolp))
 ;;              (not (= (preceding-char) ?\;)))
 ;;        (verilog-backward-token)
@@ -5866,7 +5866,7 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
                                   (looking-at verilog-in-constraint-re) ))  ; may still get hosed if concat in constraint
                          (let ((sp (point)))
                            (if (and
-                                (not (looking-at verilog-complete-reg))
+                                (not (looking-at verilog-complete-re))
                                 (verilog-continued-line-1 lim))
                                (progn (goto-char sp)
                                       (throw 'nesting 'cexp))
@@ -7208,7 +7208,6 @@ Be verbose about progress unless optional QUIET set."
 	el r ind start startpos end endpos base-ind comm-ind)
     (save-excursion
       (if (progn
-            ;; (verilog-beg-of-statement-1)
             (beginning-of-line)
             (verilog-forward-syntactic-ws)
             (or (and (not (verilog-in-directive-p))  ; could have `define input foo
@@ -7288,9 +7287,7 @@ Be verbose about progress unless optional QUIET set."
 	       (t
                 (unless (verilog-looking-back "(" (point-at-bol))
                   (just-one-space))
-		(verilog-re-search-forward "[ \t\n\f]" e 'move)))
-	      ;;(forward-line)
-	      )
+		(verilog-re-search-forward "[ \t\n\f]" e 'move))))
 	    ;; Now find biggest prefix
 	    (setq ind (verilog-get-lineup-indent (marker-position startpos) endpos))
 	    ;; Now indent each line.
@@ -7300,7 +7297,6 @@ Be verbose about progress unless optional QUIET set."
 			  (> r 0))
 	      (setq e (point))
 	      (unless quiet (message "%d" r))
-              ;; (verilog-do-indent (verilog-calculate-indent)))
 	      (verilog-forward-ws&directives)
 	      (cond
 	       ((looking-at (verilog-get-declaration-re 'iface-mp))
@@ -7351,7 +7347,7 @@ If QUIET is non-nil, do not print messages showing the progress of line-up."
   (interactive)
   (unless (verilog-in-comment-or-string-p)
     (save-excursion
-      (let ((regexp (concat "^\\s-*" verilog-complete-reg))
+      (let ((regexp (concat "^\\s-*" verilog-complete-re))
             (regexp1 (concat "^\\s-*" verilog-basic-complete-re)))
         (beginning-of-line)
         (when (and (not (looking-at regexp))
@@ -7440,7 +7436,7 @@ If QUIET is non-nil, do not print messages showing the progress of line-up."
 (defun verilog-just-one-space (myre)
   "Remove extra spaces around regular expression MYRE."
   (interactive)
-  (if (and (not(looking-at verilog-complete-reg))
+  (if (and (not(looking-at verilog-complete-re))
 	   (looking-at myre))
       (let ((p1 (match-end 1))
 	    (p2 (match-end 2)))
@@ -7459,7 +7455,6 @@ BASEIND is the base indent to offset everything."
   (verilog--suppressed-warnings ((lexical ind)) (defvar ind))
   (let ((pos (point-marker))
 	(lim (save-excursion
-	       ;; (verilog-re-search-backward verilog-declaration-opener nil 'move)
                (verilog-re-search-backward "\\(\\<begin\\>\\)\\|\\(\\<\\(connect\\)?module\\>\\)\\|\\(\\<task\\>\\)" nil 'move)
 	       (point)))
 	(ind)
