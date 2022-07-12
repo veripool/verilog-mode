@@ -6976,9 +6976,9 @@ Only look at a few lines to determine indent level."
 			 (+ (current-column) verilog-cexp-indent))))))
 	    (goto-char here)
 	    (indent-line-to val)
-	    (if (and (not verilog-indent-lists)
-		     (verilog-in-paren))
-		(verilog-pretty-declarations-auto))
+            (when (and (not verilog-indent-lists)
+                       (verilog-in-paren))
+              (verilog-pretty-declarations-auto))
 	    ))
 	 ((= (preceding-char) ?\) )
 	  (goto-char here)
@@ -7004,28 +7004,17 @@ Only look at a few lines to determine indent level."
 
      (; handle inside parenthetical expressions
       (eq type 'cparenexp)
-      (let* ( here
-              (close-par (looking-at ")"))
-	      (val (save-excursion
-		     (verilog-backward-up-list 1)
-                     (if verilog-indent-lists
-                         (progn
-		           (forward-char 1)
-                           (skip-chars-forward " \t"))
-                       (verilog-beg-of-statement-1)
-                       (when (looking-at "\\<\\(function\\|task\\)\\>")
-                         (verilog-beg-of-statement))) ; find virtual/protected/static
+      (let* ((val (verilog-cparenexp-indent-level))
+             (here (save-excursion
+                     (verilog-backward-up-list 1)
+                     (forward-char 1)
+                     (skip-chars-forward " \t")
+                     (point)))
+             (decl (save-excursion
+                     (goto-char here)
+                     (verilog-forward-syntactic-ws)
                      (setq here (point))
-                     (if (or verilog-indent-lists
-                             close-par)
-                         (current-column)
-                       (+ (current-column) verilog-indent-level))))
-
-	      (decl (save-excursion
-		      (goto-char here)
-		      (verilog-forward-syntactic-ws)
-		      (setq here (point))
-		      (looking-at verilog-declaration-re))))
+                     (looking-at verilog-declaration-re))))
         (indent-line-to val)
         (if decl
             (verilog-pretty-declarations-auto))))
@@ -7110,6 +7099,43 @@ Do not count named blocks or case-statements."
       (current-column))
      (t
       (current-column)))))
+
+(defun verilog-cparenexp-indent-level ()
+  "Return indent level for current line inside a parenthetical expression."
+  (let ((close-par (looking-at ")"))
+        pos-arg-paren)
+    (save-excursion
+      (verilog-backward-up-list 1)
+      (if verilog-indent-lists
+          (progn
+            (forward-char 1)
+            (skip-chars-forward " \t")
+            (current-column))
+        ;; Indentation with `verilog-indent-lists' set to nil
+        (verilog-beg-of-statement-1)
+        (when (looking-at "\\<\\(function\\|task\\)\\>")
+          (verilog-beg-of-statement)) ; find virtual/protected/static
+        (cond (;; 1) Closing ); of a module/function/task
+               close-par
+               (current-column))
+              (;; 2) if (condition)
+               (looking-at "(")
+               (forward-char 1)
+               (skip-chars-forward " \t\n\f" (point-at-eol))
+               (current-column))
+              (;; 3) Inside a function/task argument list
+               (looking-at "\\(\\<\\(virtual\\|protected\\|static\\)\\>\\s-+\\)?\\(\\<task\\>\\|\\<function\\>\\)")
+               (setq pos-arg-paren (save-excursion
+                                     (when (and (verilog-re-search-forward "(" (point-at-eol) 'move)
+                                                (skip-chars-forward " \t")
+                                                (not (eolp)))
+                                       (current-column))))
+               (or pos-arg-paren
+                   ;; arg in next line after (
+                   (+ (current-column) verilog-indent-level)))
+              (;; 4) Default: module parameter/port list
+               t
+               (+ (current-column) verilog-indent-level)))))))
 
 (defun verilog-indent-comment ()
   "Indent current line as comment."
