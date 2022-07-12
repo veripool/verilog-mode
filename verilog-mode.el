@@ -3396,7 +3396,7 @@ See also `verilog-font-lock-extra-types'.")
                         (verilog-single-declaration-end verilog-highlight-max-lookahead)
                       (point)) ;; => current declaration statement is of 0 length
                    nil ;; Post-form: nothing to be done
-                   '(0 font-lock-variable-name-face t t)))
+                   '(0 font-lock-variable-name-face nil t)))
                 )))
 
 
@@ -3714,7 +3714,7 @@ obtained using `verilog-single-declaration-end'."
         (verilog-forward-ws&directives limit)
         (setq old-point nil)
         (while (and (< (point) limit)
-                    (not (member (char-after) '(?, ?\) ?\;)))
+                    (not (member (char-after) '(?, ?\) ?\] ?\} ?\;)))
                     (not (eq old-point (point))))
           (setq old-point (point))
           (verilog-forward-ws&directives limit)
