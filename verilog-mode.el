@@ -3757,9 +3757,14 @@ Use filename, if current buffer being edited shorten to just buffer name."
 	(elsec 1)
 	(found nil)
 	(st (point)))
-    (if (not (looking-at "\\<"))
-	(forward-word-strictly -1))
+    (unless (looking-at "\\<")
+      (forward-word-strictly -1))
     (cond
+     ((save-excursion
+        (goto-char st)
+        (member (preceding-char) '(?\) ?\} ?\])))
+      (goto-char st)
+      (backward-sexp 1))
      ((verilog-skip-backward-comment-or-string))
      ((looking-at "\\<else\\>")
       (setq reg (concat
@@ -3825,9 +3830,14 @@ Use filename, if current buffer being edited shorten to just buffer name."
 	(md 2)
 	(st (point))
 	(nest 'yes))
-    (if (not (looking-at "\\<"))
-	(forward-word-strictly -1))
+    (unless (looking-at "\\<")
+      (forward-word-strictly -1))
     (cond
+     ((save-excursion
+        (goto-char st)
+        (member (following-char) '(?\( ?\{ ?\[)))
+      (goto-char st)
+      (forward-sexp 1))
      ((verilog-skip-forward-comment-or-string)
       (verilog-forward-syntactic-ws))
      ((looking-at verilog-beg-block-re-ordered)
