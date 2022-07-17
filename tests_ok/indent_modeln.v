@@ -6,12 +6,12 @@ class i_sb_c extends base_sb_c;
    `uvm_register_cb(i_sb_c, sb_i_cb_c)
    
    //------------
-   int            drain_time_ns = 5000;
+   int drain_time_ns = 5000;
    
    //------------
    
    typedef struct {
-      pem_intf_defs::pem_ncb_err_rsp_t err_rsp;
+      pem_intf_defs::pem_ncb_err_rsp_t  err_rsp;
       int rcv_time;
    } ncbi_err_rsp_t;
    

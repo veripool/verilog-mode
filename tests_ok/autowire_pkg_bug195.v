@@ -6,7 +6,7 @@ package testcase_pkg;
    
    localparam           uint SIZE = 8;
    
-   typedef enum         {ENUM1, ENUM2} enum_t;
+   typedef enum {ENUM1, ENUM2} enum_t;
    
 endpackage
 
