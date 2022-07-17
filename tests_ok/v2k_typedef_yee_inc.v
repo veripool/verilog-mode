@@ -10,8 +10,8 @@ typedef bit logic_t; // Use two-state logic
 typedef logic logic_t; // Use four-state logic
  `endif
 
-typedef reg   ff_t;  // Default F/F type
-typedef reg   lat_t; // Default latch type
+typedef reg ff_t;  // Default F/F type
+typedef reg lat_t; // Default latch type
 
 //----------------------------
 // 24 bit wide pixel types

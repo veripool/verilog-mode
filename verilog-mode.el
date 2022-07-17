@@ -2861,6 +2861,8 @@ find the errors."
 (defconst verilog-delay-re "#\\s-*\\(\\([0-9_]+\\('s?[hdxbo][0-9a-fA-F_xz]+\\)?\\)\\|\\(([^()]*)\\)\\|\\(\\sw+\\)\\)")
 (defconst verilog-interface-modport-re "\\(\\s-*\\([a-zA-Z0-9`_$]+\\.[a-zA-Z0-9`_$]+\\)[ \t\f]+\\)")
 (defconst verilog-comment-start-regexp "//\\|/\\*" "Dual comment value for `comment-start-regexp'.")
+(defconst verilog-typedef-enum-re
+  (concat "^\\s-*\\(typedef\\s-+\\)?enum\\s-+" "\\(" verilog-declaration-core-re "\\s-*" verilog-optional-signed-range-re "\\)?"))
 
 (defconst verilog-declaration-simple-re
   (concat "\\(" verilog-declaration-prefix-re "\\s-*\\)?" verilog-declaration-core-re))
@@ -4000,6 +4002,12 @@ Use filename, if current buffer being edited shorten to just buffer name."
          verilog-declaration-re-macro)
         (t
          verilog-declaration-re)))
+
+(defun verilog-looking-at-decl-to-align ()
+  "Return non-nil if pointing at a Verilog variable declaration that must be aligned."
+  (and (looking-at (verilog-get-declaration-re))
+       (not (verilog-at-struct-decl-p))
+       (not (verilog-at-enum-decl-p))))
 
 ;;
 ;;
@@ -6784,6 +6792,33 @@ Also move point to constraint."
        (verilog-in-struct-p)
        (looking-at "}\\(?:\\s-*\\w+\\s-*\\(?:,\\s-*\\w+\\s-*\\)*\\)?;")))
 
+(defun verilog-at-struct-decl-p ()
+  "Return non-nil if at a struct declaration."
+  (interactive)
+  (save-excursion
+    (verilog-re-search-forward "{" (point-at-eol) t)
+    (unless (bobp)
+      (backward-char))
+    (verilog-at-struct-p)))
+
+(defun verilog-at-enum-p ()
+  "If at the { of a enum, return true, not moving point."
+  (save-excursion
+    (when (equal (char-after) ?\{)
+      (verilog-beg-of-statement)
+      (beginning-of-line)
+      (when (verilog-re-search-forward verilog-typedef-enum-re (point-at-eol) t)
+        t))))
+
+(defun verilog-at-enum-decl-p ()
+  "Return non-nil if at a enum declaration."
+  (interactive)
+  (save-excursion
+    (verilog-re-search-forward "{" (save-excursion (verilog-end-of-statement)) t)
+    (unless (bobp)
+      (backward-char))
+    (verilog-at-enum-p)))
+
 (defun verilog-parenthesis-depth ()
   "Return non zero if in parenthetical-expression."
   (save-excursion (nth 1 (verilog-syntax-ppss))))
@@ -6953,7 +6988,7 @@ Only look at a few lines to determine indent level."
 	   (= (preceding-char) ?\,)
 	   (save-excursion
 	     (verilog-beg-of-statement-1)
-	     (looking-at (verilog-get-declaration-re))))
+	     (verilog-looking-at-decl-to-align)))
 	  (let* ( fst
 		  (val
 		   (save-excursion
@@ -7057,7 +7092,7 @@ Only look at a few lines to determine indent level."
       (and (or
 	    (eq type 'defun)
 	    (eq type 'block))
-	   (looking-at (verilog-get-declaration-re))
+           (verilog-looking-at-decl-to-align)
            ;; Do not consider "virtual function", "virtual task", "virtual class"
            ;; as declarations
            (not (looking-at (concat (verilog-get-declaration-re)
@@ -7221,7 +7256,7 @@ Be verbose about progress unless optional QUIET set."
             (beginning-of-line)
             (verilog-forward-syntactic-ws)
             (or (and (not (verilog-in-directive-p))  ; could have `define input foo
-                     (looking-at (verilog-get-declaration-re)))
+                     (verilog-looking-at-decl-to-align))
                 (and (verilog-parenthesis-depth)
                      (looking-at verilog-interface-modport-re))))
 	  (progn
@@ -7253,7 +7288,7 @@ Be verbose about progress unless optional QUIET set."
 	      (setq
 	       start (progn
 		       (verilog-beg-of-statement-1)
-		       (while (and (looking-at (verilog-get-declaration-re))
+		       (while (and (verilog-looking-at-decl-to-align)
 				   (not (bobp)))
 			 (skip-chars-backward " \t")
 			 (setq e (point))
@@ -7267,7 +7302,7 @@ Be verbose about progress unless optional QUIET set."
 		     (verilog-end-of-statement)
 		     (setq e (point))	;Might be on last line
 		     (verilog-forward-syntactic-ws)
-		     (while (looking-at (verilog-get-declaration-re))
+		     (while (verilog-looking-at-decl-to-align)
 		       (verilog-end-of-statement)
 		       (setq e (point))
 		       (verilog-forward-syntactic-ws))
