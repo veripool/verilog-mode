@@ -9,11 +9,11 @@ module x;
          // End of automatics
       end
       else begin
-         foo                <= idx_adr_1a[1:0];
-         bar                <= (idx_sel_2a == 2'h0 ? idx_rd_dat0_2a[12:0] :
+         foo <= idx_adr_1a[1:0];
+         bar <= (idx_sel_2a == 2'h0 ? idx_rd_dat0_2a[12:0] :
                  idx_sel_2a == 2'h1 ? idx_rd_dat1_2a[12:0] :
                  idx_sel_2a == 2'h2 ? idx_rd_dat2_2a[12:0] :
-                                /**/                 idx_rd_dat3_2a[12:0]);
+                 /**/                 idx_rd_dat3_2a[12:0]);
       end
    end
    
