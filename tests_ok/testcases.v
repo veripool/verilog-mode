@@ -125,7 +125,7 @@ module testmodule (/*AUTOARG*/
      begin: label_no_sense
         casex (outw1) // synopsys full_case parallel_case
           {`shift_instr,3'bxxx}:
-            outb3            = in3[0];
+            outb3 = in3[0];
           8'b00001x10: outb3 = in4[0];
           8'b00110011:
             if (in5[0])

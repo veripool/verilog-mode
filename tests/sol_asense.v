@@ -67,7 +67,7 @@ module x (/*AUTOARG*/
       {MBOOTH_P[i*4+3],
        MBOOTH_P[i*4+2],
        MBOOTH_P[i*4+1],
-       MBOOTH_P[i*4+0]}     = MTEMP2[3:0];
+       MBOOTH_P[i*4+0]} = MTEMP2[3:0];
 
    end
 

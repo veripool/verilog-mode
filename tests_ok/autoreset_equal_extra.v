@@ -12,10 +12,10 @@ module autoreset_equal_extra ();
       end
       else begin
          if (fifo.sot) begin
-            csi.src                               <= fifo.src;
-            csi.wr                                <= (fifo.data.cb_req.req.cmd == ncb_defs::NCBO_RSVD_LMTST
-                       | fifo.data.cb_req.req.cmd == ncb_defs::NCBO_IOBST
-                                                      );
+            csi.src <= fifo.src;
+            csi.wr  <= (fifo.data.cb_req.req.cmd == ncb_defs::NCBO_RSVD_LMTST
+                        | fifo.data.cb_req.req.cmd == ncb_defs::NCBO_IOBST
+                        );
             csi.cmd <= fifo.data.cb_req.req.cmd;
          end
       end

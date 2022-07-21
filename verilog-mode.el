@@ -3032,7 +3032,7 @@ find the errors."
      '(
        "always" "assign" "always_latch" "always_ff" "always_comb" "analog" "connectmodule" "constraint"
        "import" "initial" "final" "module" "macromodule" "repeat" "randcase" "while"
-       "if" "for" "forever" "foreach" "else" "parameter" "do" "localparam" "assert"
+       "if" "for" "forever" "foreach" "else" "parameter" "do" "localparam" "assert" "default"
        ))))
 (defconst verilog-complete-re
   (concat
@@ -7451,17 +7451,34 @@ Be verbose about progress unless optional QUIET set."
         ;; Exit
 	(unless quiet (message ""))))))
 
+(defun verilog--pretty-expr-assignment-found (discard-re)
+  "Return non-nil if point is at a valid assignment operation to be aligned.
+Ensure cursor is not over DISCARD-RE (e.g. Verilog keywords).
+If returned non-nil, update match data according to `verilog-assignment-operation-re'."
+  ;; Not looking at a verilog keyword sentence (i.e looking at a potential assignment)
+  (and (not (looking-at discard-re))
+       ;; Don't work on multiline assignments unless they are continued lines
+       ;; e.g, multiple parameters or variable declarations in the same statement
+       (if (save-excursion
+             (and (verilog-continued-line)
+                  (not (looking-at verilog-basic-complete-re))))
+           (save-excursion
+             (verilog-beg-of-statement-1)
+             (looking-at (verilog-get-declaration-re)))
+         t)
+       ;; Looking at an assignment (last check, provides match data)
+       (looking-at verilog-assignment-operation-re)))
+
 (defun verilog-pretty-expr (&optional quiet)
   "Line up expressions around point.
 If QUIET is non-nil, do not print messages showing the progress of line-up."
   (interactive)
-  (unless (verilog-in-comment-or-string-p)
-    (save-excursion
-      (let ((regexp (concat "^\\s-*" verilog-complete-re))
-            (regexp1 (concat "^\\s-*" verilog-basic-complete-re)))
+  (let ((discard-re-complete (concat "^\\s-*" verilog-complete-re))
+        (discard-re-basic (concat "^\\s-*" verilog-basic-complete-re)))
+    (unless (verilog-in-comment-or-string-p)
+      (save-excursion
         (beginning-of-line)
-        (when (and (not (looking-at regexp))
-                   (looking-at verilog-assignment-operation-re)
+        (when (and (verilog--pretty-expr-assignment-found discard-re-complete)
                    (save-excursion
                      (goto-char (match-end 2))
                      (and (not (verilog-in-attribute-p))
@@ -7472,8 +7489,7 @@ If QUIET is non-nil, do not print messages showing the progress of line-up."
                           (let ((pt (point)))
                             (verilog-backward-syntactic-ws)
                             (beginning-of-line)
-                            (while (and (not (looking-at regexp1))
-                                        (looking-at verilog-assignment-operation-re)
+                            (while (and (verilog--pretty-expr-assignment-found discard-re-basic)
                                         (not (bobp)))
                               (setq pt (point))
                               (verilog-backward-syntactic-ws)
@@ -7484,12 +7500,10 @@ If QUIET is non-nil, do not print messages showing the progress of line-up."
                         (let ((pt (point))) ; Might be on last line
                           (verilog-forward-syntactic-ws)
                           (beginning-of-line)
-                          (while (and
-                                  (not (looking-at regexp1))
-                                  (looking-at verilog-assignment-operation-re)
-                                  (progn
-                                    (end-of-line)
-                                    (not (eq pt (point)))))
+                          (while (and (verilog--pretty-expr-assignment-found discard-re-basic)
+                                      (progn
+                                        (end-of-line)
+                                        (not (eq pt (point)))))
                             (setq pt (point))
                             (verilog-forward-syntactic-ws)
                             (beginning-of-line))
@@ -7501,7 +7515,6 @@ If QUIET is non-nil, do not print messages showing the progress of line-up."
             (when (and (not quiet)
                        (> (- end start) 100))
               (message "Lining up expressions.. (please stand by)"))
-
             ;; Set indent to minimum throughout region
             ;; Rely on mark rather than on point as the indentation changes can
             ;; make the older point reference obsolete
