@@ -149,7 +149,7 @@ module  xxx_xxxxxx  (input wire clk, input wire reset);
            
            
            BB_CMLLL : begin
-              lll_start     <= 1'b1;
+              lll_start <= 1'b1;
               
               if (jjjj_left <= 4) begin
                  lll_wcnt <= jjjj_left[2:0];
@@ -220,8 +220,8 @@ module  xxx_xxxxxx  (input wire clk, input wire reset);
               end
               else begin
                  
-                 rd_rrrr            <= rd_rrrr + ttttt_cur;
-                 lll_rrrr           <= lll_rrrr + oooo_cur;
+                 rd_rrrr  <= rd_rrrr + ttttt_cur;
+                 lll_rrrr <= lll_rrrr + oooo_cur;
                  
                  
                  if (jjjj_left_oooo <= oooo_cur) begin
@@ -250,7 +250,7 @@ module  xxx_xxxxxx  (input wire clk, input wire reset);
            
            
            DD_CMRD : begin
-              uuuuu         <= 1'b1;
+              uuuuu <= 1'b1;
               
               if (jjjj_left <= 4) begin
                  qwerty <= 1'b1;
