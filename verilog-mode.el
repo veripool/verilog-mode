@@ -3037,6 +3037,17 @@ find the errors."
 (defconst verilog-complete-re
   (concat
    verilog-extended-complete-re "\\|\\(" verilog-basic-complete-re "\\)"))
+(defconst verilog-basic-complete-no-default-re
+  (eval-when-compile
+    (verilog-regexp-words
+     '(
+       "always" "assign" "always_latch" "always_ff" "always_comb" "analog" "connectmodule" "constraint"
+       "import" "initial" "final" "module" "macromodule" "repeat" "randcase" "while"
+       "if" "for" "forever" "foreach" "else" "parameter" "do" "localparam" "assert"
+       ))))
+(defconst verilog-complete-no-default-re
+  (concat
+   verilog-extended-complete-re "\\|\\(" verilog-basic-complete-no-default-re "\\)"))
 
 (defconst verilog-end-statement-re
   (concat "\\(" verilog-beg-block-re "\\)\\|\\("
@@ -7451,12 +7462,14 @@ Be verbose about progress unless optional QUIET set."
         ;; Exit
 	(unless quiet (message ""))))))
 
-(defun verilog--pretty-expr-assignment-found (discard-re)
+(defun verilog--pretty-expr-assignment-found (&optional discard-re)
   "Return non-nil if point is at a valid assignment operation to be aligned.
 Ensure cursor is not over DISCARD-RE (e.g. Verilog keywords).
 If returned non-nil, update match data according to `verilog-assignment-operation-re'."
   ;; Not looking at a verilog keyword sentence (i.e looking at a potential assignment)
-  (and (not (looking-at discard-re))
+  (and (if discard-re
+           (not (looking-at discard-re))
+         t)
        ;; Don't work on multiline assignments unless they are continued lines
        ;; e.g, multiple parameters or variable declarations in the same statement
        (if (save-excursion
@@ -7473,41 +7486,48 @@ If returned non-nil, update match data according to `verilog-assignment-operatio
   "Line up expressions around point.
 If QUIET is non-nil, do not print messages showing the progress of line-up."
   (interactive)
-  (let ((discard-re-complete (concat "^\\s-*" verilog-complete-re))
-        (discard-re-basic (concat "^\\s-*" verilog-basic-complete-re)))
+  (let* ((discard-re verilog-complete-no-default-re)
+         (discard-re-line (concat "^\\s-*\\(" discard-re "\\)")))
     (unless (verilog-in-comment-or-string-p)
       (save-excursion
         (beginning-of-line)
-        (when (and (verilog--pretty-expr-assignment-found discard-re-complete)
+        (when (and (verilog--pretty-expr-assignment-found)
                    (save-excursion
                      (goto-char (match-end 2))
                      (and (not (verilog-in-attribute-p))
                           (not (verilog-in-parameter-p))
                           (not (verilog-in-comment-or-string-p)))))
-          (let* ((start (save-excursion ; BOL of the first line of the assignment block
-                          (beginning-of-line)
-                          (let ((pt (point)))
-                            (verilog-backward-syntactic-ws)
+          (let* ((start (if (and (looking-at discard-re-line)
+                                 (looking-at verilog-assignment-operation-re))
+                            (point-at-bol)
+                          ;; Else
+                          (save-excursion ; BOL of the first line of the assignment block
                             (beginning-of-line)
-                            (while (and (verilog--pretty-expr-assignment-found discard-re-basic)
-                                        (not (bobp)))
-                              (setq pt (point))
+                            (let ((pt (point)))
                               (verilog-backward-syntactic-ws)
-                              (beginning-of-line)) ; Ack, need to grok `define
-                            pt)))
-                 (end (save-excursion ; EOL of the last line of the assignment block
-                        (end-of-line)
-                        (let ((pt (point))) ; Might be on last line
-                          (verilog-forward-syntactic-ws)
-                          (beginning-of-line)
-                          (while (and (verilog--pretty-expr-assignment-found discard-re-basic)
-                                      (progn
-                                        (end-of-line)
-                                        (not (eq pt (point)))))
-                            (setq pt (point))
+                              (beginning-of-line)
+                              (while (and (verilog--pretty-expr-assignment-found discard-re-line)
+                                          (not (bobp)))
+                                (setq pt (point))
+                                (verilog-backward-syntactic-ws)
+                                (beginning-of-line)) ; Ack, need to grok `define
+                              pt))))
+                 (end (if (and (looking-at discard-re-line)
+                               (looking-at verilog-assignment-operation-re))
+                          (point-at-eol)
+                        (save-excursion ; EOL of the last line of the assignment block
+                          (end-of-line)
+                          (let ((pt (point))) ; Might be on last line
                             (verilog-forward-syntactic-ws)
-                            (beginning-of-line))
-                          pt)))
+                            (beginning-of-line)
+                            (while (and (verilog--pretty-expr-assignment-found discard-re-line)
+                                        (progn
+                                          (end-of-line)
+                                          (not (eq pt (point)))))
+                              (setq pt (point))
+                              (verilog-forward-syntactic-ws)
+                              (beginning-of-line))
+                            pt))))
                  (contains-2-char-operator (string-match "<=" (buffer-substring-no-properties start end)))
                  (endmark (set-marker (make-marker) end)))
             (goto-char start)
