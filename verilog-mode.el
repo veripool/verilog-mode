@@ -762,6 +762,12 @@ Only works if `verilog-align-declaration-comments' is non-nil."
   :type 'integer)
 (put 'verilog-align-comment-distance 'safe-local-variable #'integerp)
 
+(defcustom verilog-align-assign-expr nil
+  "Non-nil means align expressions of continuous assignments."
+  :group 'verilog-mode-indent
+  :type 'boolean)
+(put 'verilog-align-assign-expr 'safe-local-variable #'verilog-booleanp)
+
 (defcustom verilog-minimum-comment-distance 10
   "Minimum distance (in lines) between begin and end required before a comment.
 Setting this variable to zero results in every end acquiring a comment; the
@@ -3049,6 +3055,18 @@ find the errors."
   (concat
    verilog-extended-complete-re "\\|\\(" verilog-basic-complete-no-default-re "\\)"))
 
+(defconst verilog-basic-complete-no-assign-re
+  (eval-when-compile
+    (verilog-regexp-words
+     '(
+       "always" "always_latch" "always_ff" "always_comb" "analog" "connectmodule" "constraint"
+       "import" "initial" "final" "module" "macromodule" "repeat" "randcase" "while"
+       "if" "for" "forever" "foreach" "else" "parameter" "do" "localparam" "assert"
+       ))))
+(defconst verilog-complete-no-assign-re
+  (concat
+   verilog-extended-complete-re "\\|\\(" verilog-basic-complete-no-assign-re "\\)"))
+
 (defconst verilog-end-statement-re
   (concat "\\(" verilog-beg-block-re "\\)\\|\\("
 	  verilog-end-block-re "\\)"))
@@ -4103,6 +4121,8 @@ Variables controlling indentation/edit style:
  `verilog-align-comment-distance' (default 1)
    Distance (in spaces) between longest declaration and comments.
    Only works if `verilog-align-declaration-comments' is non-nil.
+ `verilog-align-assign-expr'        (default nil)
+   Non-nil means align expressions of continuous assignments.
  `verilog-auto-lineup'              (default `declarations')
    List of contexts where auto lineup of code should be done.
 
@@ -7486,7 +7506,9 @@ If returned non-nil, update match data according to `verilog-assignment-operatio
   "Line up expressions around point.
 If QUIET is non-nil, do not print messages showing the progress of line-up."
   (interactive)
-  (let* ((discard-re verilog-complete-no-default-re)
+  (let* ((discard-re (if verilog-align-assign-expr
+                         verilog-complete-no-assign-re
+                       verilog-complete-no-default-re))
          (discard-re-line (concat "^\\s-*\\(" discard-re "\\)")))
     (unless (verilog-in-comment-or-string-p)
       (save-excursion
@@ -15232,6 +15254,7 @@ Files are checked based on `verilog-library-flags'."
      '(
        verilog-active-low-regexp
        verilog-after-save-font-hook
+       verilog-align-assign-expr
        verilog-align-comment-distance
        verilog-align-declaration-comments
        verilog-align-ifelse
