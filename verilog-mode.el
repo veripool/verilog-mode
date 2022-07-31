@@ -7223,7 +7223,8 @@ Do not count named blocks or case-statements."
 
 (defun verilog-cparenexp-indent-level ()
   "Return indent level for current line inside a parenthetical expression."
-  (let ((close-par (looking-at "[)}]"))
+  (let ((pos (point))
+        (close-par (looking-at "[)}]"))
         pos-arg-paren)
     (save-excursion
       (verilog-backward-up-list 1)
@@ -7248,12 +7249,15 @@ Do not count named blocks or case-statements."
                (forward-char 1)
                (skip-chars-forward " \t\f" (point-at-eol))
                (current-column))
-              (;; 3) Inside a function/task argument list
-               (looking-at "\\(\\<\\(virtual\\|protected\\|static\\)\\>\\s-+\\)?\\(\\<task\\>\\|\\<function\\>\\)")
+              (;; 3) Inside a module/defun param list or function/task argument list
+               (or (looking-at verilog-defun-level-re)
+                   (looking-at "\\(\\<\\(virtual\\|protected\\|static\\)\\>\\s-+\\)?\\(\\<task\\>\\|\\<function\\>\\)"))
                (setq pos-arg-paren (save-excursion
-                                     (when (and (verilog-re-search-forward "(" (point-at-eol) 'move)
-                                                (skip-chars-forward " \t")
-                                                (not (eolp)))
+                                     (goto-char pos)
+                                     (verilog-backward-up-list 1)
+                                     (forward-char)
+                                     (skip-chars-forward " \t")
+                                     (when (not (eolp))
                                        (current-column))))
                (or pos-arg-paren
                    ;; arg in next line after (
@@ -7273,7 +7277,7 @@ Do not count named blocks or case-statements."
                (if (> (verilog-pos-at-forward-syntactic-ws) (point-at-eol))
                    (+ (verilog-col-at-beg-of-statement) verilog-indent-level)
                  (verilog-col-at-forward-syntactic-ws)))
-              (t ;; 6) Default: module parameter/port list
+              (t ;; 6) Default
                (+ (current-column) verilog-indent-level)))))))
 
 (defun verilog-indent-comment ()
