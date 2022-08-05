@@ -6,7 +6,7 @@ module foo
    output [63:0] data_out,
    output        ctl_out);
    
-   assign data_out = data_in[1] ? data_in[63:0]
-                     :            64'h0;
+   assign data_out  = data_in[1] ? data_in[63:0]
+                      :            64'h0;
    
 endmodule

@@ -29,8 +29,8 @@ module my_module_stub
    
    /*AUTOTIEOFF*/
    // Beginning of automatic tieoffs (for this module's unterminated outputs)
-   assign a = 1'h0;
-   assign b = 1'h0;
+   assign a                                     = 1'h0;
+   assign b                                     = 1'h0;
    // End of automatics
    
 endmodule : my_module_stub

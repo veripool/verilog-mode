@@ -10,10 +10,10 @@ module autotieoff_signed (/*AUTOARG*/
    
    /*AUTOTIEOFF*/
    // Beginning of automatic tieoffs (for this module's unterminated outputs)
-   assign ExtraOut = 3'h0;
-   assign SubOut = 3'h0;
-   assign active_low_l = 4'h0;
-   assign ignored_by_regexp = 4'h0;
+   assign ExtraOut                              = 3'h0;
+   assign SubOut                                = 3'h0;
+   assign active_low_l                          = 4'h0;
+   assign ignored_by_regexp                     = 4'h0;
    // End of automatics
    
 endmodule

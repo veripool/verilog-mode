@@ -27,7 +27,7 @@ module register2 (
    
    always_ff @(posedge ck or negedge rst_n)
      if (!rst_n) q2 <= '0;
-   else        q2 <= q1;
+     else        q2 <= q1;
 endmodule
 
 module register1 (
@@ -38,5 +38,5 @@ module register1 (
    
    always_ff @(posedge ck or negedge rst_n)
      if (!rst_n) q1 <= '0;
-   else        q1 <= d;
+     else        q1 <= d;
 endmodule
