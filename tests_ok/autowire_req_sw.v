@@ -7,7 +7,7 @@ module autowire_req_sw
    /*AUTOINPUT*/
    );
    
-   assign Bnk0Req = Cpu0Req;
+   assign Bnk0Req =  Cpu0Req;
    
    
 endmodule

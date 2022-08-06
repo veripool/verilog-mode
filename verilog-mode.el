@@ -7519,7 +7519,7 @@ If QUIET is non-nil, do not print messages showing the progress of line-up."
     (unless (verilog-in-comment-or-string-p)
       (save-excursion
         (beginning-of-line)
-        (when (and (verilog--pretty-expr-assignment-found)
+        (when (and (verilog--pretty-expr-assignment-found discard-re-line)
                    (save-excursion
                      (goto-char (match-end 2))
                      (and (not (verilog-in-attribute-p))
