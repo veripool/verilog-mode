@@ -24,13 +24,13 @@ module test
 endmodule
 
 module subtestin
-  #(parameter WIDTH=0)
+  #(parameter WIDTH = 0)
    (input wire [WIDTH*2/8-1:0] signal
     /*AUTOARG*/);
 endmodule
 
 module subtestout
-  #(parameter WIDTH=0)
+  #(parameter WIDTH = 0)
    (output wire [WIDTH*2/8-1:0] signal
     /*AUTOARG*/);
    assign signal = 0;

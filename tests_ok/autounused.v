@@ -1,11 +1,11 @@
 module wbuf
-  #(parameter width=1)
+  #(parameter width = 1)
    (output [width-1:0] q,
     input [width-1:0]  d);
 endmodule
 
 module autounused
-  #(parameter width=3)
+  #(parameter width = 3)
    (/*AUTOARG*/
     // Outputs
     q,

@@ -1,7 +1,7 @@
 `timescale 1ns/100ps
 
 module a_h
-  #(parameter M=5, N=3)
+  #(parameter M = 5, N=3)
    ();
    
    /*AUTOWIRE*/

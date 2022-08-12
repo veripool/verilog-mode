@@ -86,6 +86,6 @@ module foo
 endmodule
 
 // Local Variables:
-// verilog-align-declaration-comments: nil
+// verilog-align-decl-expr-comments: nil
 // End:
 

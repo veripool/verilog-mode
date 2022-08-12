@@ -8,8 +8,8 @@ module test;
          c = {par_a{1'b0}};
       end
       else begin
-         b=i_blc+I_cdef;
-         c=b;
+         b = i_blc+I_cdef;
+         c = b;
       end
    end
 endmodule // test

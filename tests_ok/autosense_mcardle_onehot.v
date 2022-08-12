@@ -5,9 +5,9 @@ module x;
    
    parameter    CYCLEA = 1;
    parameter    CYCLEC = 2;
-   parameter    MSTRA = 3;
-   parameter    MSTRB = 4;
-   parameter    MSTRC = 5;
+   parameter    MSTRA  = 3;
+   parameter    MSTRB  = 4;
+   parameter    MSTRC  = 5;
    
    // make sure 'state' is listed
    always @ (/*AUTOSENSE*/done or nREQA or nREQB or nREQC or state) begin

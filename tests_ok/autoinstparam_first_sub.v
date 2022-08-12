@@ -9,7 +9,7 @@ module autoinstparam_first_sub (/*AUTOARG*/
    
    localparam      IGNORED;
    parameter       BITSA;
-   parameter       type BITSB_t = bit; // See bug340
+   parameter type  BITSB_t = bit; // See bug340
    
    inout [BITSA:0] a;
    inout           BITSB_t b;
