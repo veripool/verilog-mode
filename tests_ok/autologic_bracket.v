@@ -1,7 +1,7 @@
 module sub1
   #(
-    parameter integer AAA= {32'd4,32'd8},
-    parameter integer BBB= 1
+    parameter integer AAA = {32'd4,32'd8},
+    parameter integer BBB = 1
     )
    (
     output [AAA[BBB] -1:0] out_signal

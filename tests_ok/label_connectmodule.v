@@ -2,7 +2,7 @@
 connectmodule Wreal2L(input wreal w, output wire l);
    logic          lval;
    
-   parameter real vsup = 1.8;
+   parameter real vsup   = 1.8;
    parameter real vth_hi = 0.7*vsup;
    parameter real vth_lo = 0.3*vsup;
    always begin

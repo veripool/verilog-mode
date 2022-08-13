@@ -15,8 +15,8 @@ module foo;
         // End of automatics
      end
      else begin
-        a<=b;
-        b<=a;
+        a <= b;
+        b <= a;
      end
    
 endmodule

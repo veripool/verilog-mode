@@ -3,11 +3,11 @@ parameter integer PARAMETER_1 = 0,
 parameter integer PARAMETER_2 = 1,
 parameter integer PARAMETER_3 = 2,
 parameter integer PARAMETER_4 = 3,
-parameter integer PARAMETER_5 = 4,
+parameter integer PARAMETER_5 = 4, // Some other comment
 parameter integer PARAM_6 = 5,
 parameter integer PARAMETER7 = 6,
 parameter integer PARAM_LONGER = 7,
-parameter integer PARAM_EVEN_LONGER = 8,
+parameter integer PARAM_EVEN_LONGER = 8, // Maybe more comments
 parameter integer PARAMETER_10 = 9,
 parameter integer PARAMETER_11 = 10,
 parameter integer PARAMETER_12 = 11,
@@ -40,26 +40,45 @@ logic name_4;
 endmodule
 
 
+
+module param_port_list # (
+parameter PARAMETER_0 = 0,
+parameter integer PARAMETER_11 = 1,
+parameter logic [3:0] PARAMETER_222 = 4'h0
+)(
+input logic clk,
+input logic rst_n,
+input logic [3:0] inputs, // Random comment
+output logic [15:0] outputs
+);
+
+
+assign outputs[3:0] = inputs;
+
+endmodule
+
+
+
 class parameterized_class #(
 type T1=int,
-type T2=int,
-type T3=int
+type T22=int,
+type T333=int
 ) extends base_class;
 
 T1 val;
-T2 val2;
-T3 val3;
+T22 val2;
+T333 val3;
 
 endclass
 
 
 class parameterized_class2 #(type T1=int,
-type T2=int,
-type T3=int) extends base_class;
+type T22=int,
+type T333=int) extends base_class;
 
 T1 val;
-T2 val2;
-T3 val3;
+T22 val2;
+T333 val3;
 
 endclass
 

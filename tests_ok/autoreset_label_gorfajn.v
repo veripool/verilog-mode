@@ -8,9 +8,9 @@ module autoreset_label_gorfajn;
         z <= 1'h0;
         // End of automatics
      end else begin
-        a<=b;
+        a <= b;
         foo: assert (b==4);
-        bar: z<=1;
+        bar: z <= 1;
      end
    
 endmodule

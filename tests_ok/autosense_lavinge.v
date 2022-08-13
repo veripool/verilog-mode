@@ -1,5 +1,5 @@
 module test
-  #(parameter FOO=1)
+  #(parameter FOO = 1)
    ( a, b );
    input a;
    input b;
@@ -9,7 +9,7 @@ module test
    
    always @(/*AUTOSENSE*/b or d)
      begin
-        c=0;
+        c = 0;
         if (d) c = b;
      end
 endmodule

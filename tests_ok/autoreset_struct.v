@@ -35,7 +35,7 @@ module gminstdecode
    end
    
    always_comb begin
-      instClass.iFunc  = IFUNC_ADD;  // #2
+      instClass.iFunc  = IFUNC_ADD; // #2
       /*AUTORESET*/
       // Beginning of autoreset for uninitialized flops
       instClass.isBool = '0;

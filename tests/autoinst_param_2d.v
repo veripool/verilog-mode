@@ -1,6 +1,6 @@
 // bug981
 
-module a(
+module a();
 	 parameter AUM=80;
 	 parameter BUM=70;
 	 parameter VUM=1;
@@ -16,7 +16,6 @@ module a(
 
 	 input PARAMS0__t params0 [1:0];
 	 input PARAMS1__t params1 [1:0];
-	 );
 endmodule
 
 module top (/*AUTOARG*/);

@@ -3,7 +3,7 @@ module InstMod ( ins, outs );
 endmodule
 
 module test (/*AUTOARG*/) ;
-   parameter foo=1;
+   parameter foo = 1;
    /*
     parameter foo=2;
     */

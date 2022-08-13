@@ -4,12 +4,12 @@ covergroup CB;
      {
       bins a0 = {0};
       bins a1 = {1};
-      option.weight=0;
+      option.weight = 0;
    }
    b: coverpoint tr.b {
       bins b0 = {0};
       bins b1 = {1};
-      option.weight=0;
+      option.weight = 0;
    }
    ab: cross a,b {
       bins a0b0 = binsof(a.a0) && binsof(b.b0);

@@ -1,7 +1,7 @@
 module batch_li_child
   #(parameter
     
-    WIDTH_0= 'h8,
+    WIDTH_0 = 'h8,
     WIDTH_1 = 'h4
     )
    (

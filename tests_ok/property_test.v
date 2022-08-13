@@ -24,7 +24,7 @@ module test();
    //**********************************************************************
    
    initial begin
-      count=0;
+      count = 0;
    end
    
    always @(posedge test_clk) begin

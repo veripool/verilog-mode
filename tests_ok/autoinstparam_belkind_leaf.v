@@ -3,7 +3,7 @@ module autoinstparam_belkind_leaf (/*AUTOARG*/
                                    a
                                    ) ;
    
-   parameter     P =3D 4;
+   parameter     P = 3'd4;
    input [P-1:0] a;
    
 endmodule // leaf

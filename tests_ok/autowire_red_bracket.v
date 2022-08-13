@@ -1,7 +1,7 @@
 
 module top
   #(
-    parameter         NOF_TEST = 6,
+    parameter         NOF_TEST        = 6,
     parameter integer TEST [NOF_TEST] = '{10,20,30,40,50,60}
     )
    
@@ -30,7 +30,7 @@ module top
 endmodule
 
 module submod
-  #(parameter  NUM_MEM        = 6
+  #(parameter  NUM_MEM = 6
     )
    (output [NUM_MEM-1:0] x);
 endmodule

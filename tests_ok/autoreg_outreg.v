@@ -1,6 +1,6 @@
 module foo
   #(parameter
-    PARAM3_P=99)
+    PARAM3_P = 99)
    (
     output                     sig3,   // Here, I've hit "tab" twice and this line is correct
     output reg [PARAM2_P-1:0]  s4,     // Comment here which should be at "comment-column"

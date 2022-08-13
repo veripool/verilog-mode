@@ -1,8 +1,8 @@
 typedef logic [3:0][1:0] sometype_t;
 
 module top
-  #(parameter X=4,
-    parameter Y=1)
+  #(parameter X = 4,
+    parameter Y = 1)
    
    (input              clk,
     input              rstb,
@@ -63,8 +63,8 @@ module top
 endmodule // top
 
 module xx
-  #(parameter X=4,
-    parameter Y=1)
+  #(parameter X = 4,
+    parameter Y = 1)
    (input              clk,
     input              rstb,
     
@@ -83,8 +83,8 @@ module xx
 endmodule // xx
 
 module yy
-  #(parameter X=4,
-    parameter Y=1)
+  #(parameter X = 4,
+    parameter Y = 1)
    (input               clk,
     input               rstb,
     

@@ -13,7 +13,7 @@ endmodule
 module sub0
   #(
     parameter string testit2 = 0,
-    int              TESTIT = 0
+    int              TESTIT  = 0
     ) (
        // clk and resets
        input logic side_clk,

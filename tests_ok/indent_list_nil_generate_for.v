@@ -4,7 +4,7 @@ module foo (
    output reg z
 );
    
-   localparam CONST=1;
+   localparam CONST = 1;
    
    generate
       for (genvar i=0; i<CONST; i++) begin : label

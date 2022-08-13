@@ -1,7 +1,7 @@
 module autoinstparam_first ();
    
-   parameter BITSCHANGED;
-   parameter BITSA;
+   parameter      BITSCHANGED;
+   parameter      BITSA;
    parameter type BITSB_t;
    typedef [2:0] my_bitsb_t;
    

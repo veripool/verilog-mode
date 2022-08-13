@@ -1,6 +1,6 @@
 // bug1253
 
-interface iface #(D  = 64) (input bit clk);
+interface iface #(D = 64) (input bit clk);
    logic clk;
 endinterface: iface
 
