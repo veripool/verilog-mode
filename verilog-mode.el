@@ -505,8 +505,14 @@ Set `verilog-in-hooks' during this time, to assist AUTO caches."
 (defvar verilog-debug nil
   "Non-nil means enable debug messages for `verilog-mode' internals.")
 
-(defvar verilog-warn-fatal nil
-  "Non-nil means `verilog-warn-error' warnings are fatal `error's.")
+(defcustom verilog-warn-fatal nil
+  "Non-nil means `verilog-warn-error' warnings are fatal `error's."
+  :group 'verilog-mode-auto
+  :type 'boolean)
+(put 'verilog-warn-fatal 'safe-local-variable #'verilog-booleanp)
+
+;; Internal use similar to `verilog-warn-fatal'
+(defvar verilog-warn-fatal-internal t)
 
 (defcustom verilog-linter
   "echo 'No verilog-linter set, see \"M-x describe-variable verilog-linter\"'"
@@ -5707,13 +5713,14 @@ FILENAME to find directory to run in, or defaults to `buffer-file-name'."
 (defun verilog-warn-error (string &rest args)
   "Call `error' using STRING and optional ARGS.
 If `verilog-warn-fatal' is non-nil, call `verilog-warn' instead."
-  (apply (if verilog-warn-fatal #'error #'verilog-warn)
+  (apply (if (and verilog-warn-fatal verilog-warn-fatal-internal)
+             #'error #'verilog-warn)
          string args))
 
 (defmacro verilog-batch-error-wrapper (&rest body)
   "Execute BODY and add error prefix to any errors found.
 This lets programs calling batch mode to easily extract error messages."
-  `(let ((verilog-warn-fatal nil))
+  `(let ((verilog-warn-fatal-internal nil))
      (condition-case err
 	 (progn ,@body)
        (error
