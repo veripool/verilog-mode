@@ -7679,17 +7679,11 @@ BASEIND is the base indent to offset everything."
   ;; `ind' is used in expressions stored in `verilog-indent-alist'.
   (verilog--suppressed-warnings ((lexical ind)) (defvar ind))
   (let ((pos (point-marker))
-	(lim (save-excursion
-               (verilog-re-search-backward "\\(\\<begin\\>\\)\\|\\(\\<\\(connect\\)?module\\>\\)\\|\\(\\<task\\>\\)" nil 'move)
-	       (point)))
-	(ind)
-	(val)
-	(m1 (make-marker))
-        (in-paren (verilog-parenthesis-depth)))
-    (setq val
-	  (+ baseind (eval (cdr (assoc 'declaration verilog-indent-alist)))))
+        (m1 (make-marker))
+        (in-paren (verilog-parenthesis-depth))
+        (val (+ baseind (eval (cdr (assoc 'declaration verilog-indent-alist)))))
+        ind)
     (indent-line-to val)
-
     ;; Use previous declaration (in this module) as template.
     (when (and (or (eq 'all verilog-auto-lineup)
                    (eq 'declarations verilog-auto-lineup))
