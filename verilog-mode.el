@@ -2873,7 +2873,7 @@ find the errors."
 (defconst verilog-interface-modport-re "\\(\\s-*\\([a-zA-Z0-9`_$]+\\.[a-zA-Z0-9`_$]+\\)[ \t\f]+\\)")
 (defconst verilog-comment-start-regexp "//\\|/\\*" "Dual comment value for `comment-start-regexp'.")
 (defconst verilog-typedef-enum-re
-  (concat "^\\s-*\\(typedef\\s-+\\)?enum\\s-+" "\\(" verilog-declaration-core-re "\\s-*" verilog-optional-signed-range-re "\\)?"))
+  (concat "^\\s-*\\(typedef\\s-+\\)?enum\\(\\s-+" verilog-declaration-core-re "\\s-*" verilog-optional-signed-range-re "\\)?"))
 
 (defconst verilog-declaration-simple-re
   (concat "\\(" verilog-declaration-prefix-re "\\s-*\\)?" verilog-declaration-core-re))
@@ -6888,7 +6888,7 @@ Also move point to constraint."
     (when (equal (char-after) ?\{)
       (verilog-beg-of-statement)
       (beginning-of-line)
-      (when (verilog-re-search-forward verilog-typedef-enum-re (point-at-eol) t)
+      (when (verilog-re-search-forward verilog-typedef-enum-re (verilog-pos-at-end-of-statement) t)
         t))))
 
 (defun verilog-at-enum-decl-p ()

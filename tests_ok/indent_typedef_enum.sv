@@ -77,14 +77,14 @@ module typedef_enum_indent;
                  STATE_2,
                  STATE_3} enum_t;
    
-   typedef enum 
+   typedef enum
      {STATE_0,
       STATE_1,
       STATE_2,
       STATE_3
       } enum_t;
    
-   typedef enum 
+   typedef enum
      {
       STATE_0,
       STATE_1,
@@ -92,7 +92,7 @@ module typedef_enum_indent;
       STATE_3
       } enum_t;
    
-   typedef enum 
+   typedef enum
      {
       STATE_0,
       STATE_1,
