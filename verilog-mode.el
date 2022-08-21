@@ -4766,6 +4766,10 @@ Uses `verilog-scan' cache."
         (verilog-backward-syntactic-ws)
         (if (or (bolp)
                 (= (preceding-char) ?\;)
+                (and (= (preceding-char) ?\{)
+                     (save-excursion
+                       (backward-char)
+                       (verilog-at-struct-p)))
 		(progn
 		  (verilog-backward-token)
                   (or (looking-at verilog-ends-re)
@@ -7380,7 +7384,8 @@ Be verbose about progress unless optional QUIET set."
                 (and (verilog-parenthesis-depth)
                      (looking-at verilog-interface-modport-re))))
 	  (progn
-	    (if (verilog-parenthesis-depth)
+	    (if (and (verilog-parenthesis-depth)
+                     (not (verilog-in-struct-p)))
 		;; in an argument list or parameter block
 		(setq el (verilog-backward-up-list -1)
 		      start (progn
@@ -7452,7 +7457,9 @@ Be verbose about progress unless optional QUIET set."
 	       (t
                 (unless (verilog-looking-back "(" (point-at-bol))
                   (just-one-space))
-		(verilog-re-search-forward "[ \t\n\f]" e 'move))))
+                (if (looking-at verilog-comment-start-regexp)
+                    (verilog-forward-syntactic-ws)
+		  (verilog-re-search-forward "[ \t\n\f]" e 'move)))))
 	    ;; Now find biggest prefix
 	    (setq ind (verilog-get-lineup-indent (marker-position startpos) endpos))
 	    ;; Now indent each line.
