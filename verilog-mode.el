@@ -2512,13 +2512,14 @@ find the errors."
 ;;
 ;; Regular expressions used to calculate indent, etc.
 ;;
-(defconst verilog-symbol-re      "\\<[a-zA-Z_][a-zA-Z_0-9.]*\\>")
 ;; Want to match
 ;; aa :
 ;; aa,bb :
 ;; a[34:32] :
 ;; a,
 ;;   b :
+(defconst verilog-identifier-re "[a-zA-Z_][a-zA-Z_0-9]*")
+(defconst verilog-identifier-sym-re (concat "\\<" verilog-identifier-re "\\>"))
 (defconst verilog-assignment-operator-re
   (eval-when-compile
     (verilog-regexp-opt
@@ -2540,7 +2541,7 @@ find the errors."
 (defconst verilog-assignment-operation-re-2
   (concat "\\(.*?\\)" verilog-assignment-operator-re))
 
-(defconst verilog-label-re (concat verilog-symbol-re "\\s-*:\\s-*"))
+(defconst verilog-label-re (concat verilog-identifier-sym-re "\\s-*:\\s-*"))
 (defconst verilog-property-re
   (concat "\\(" verilog-label-re "\\)?"
           ;; "\\(assert\\|assume\\|cover\\)\\s-+property\\>"
@@ -3739,7 +3740,7 @@ obtained using `verilog-single-declaration-end'."
     (when (< (point) limit) ;; no matching if this is violated
 
       ;; Find the variable name (match-data is set here)
-      (setq found-var (re-search-forward verilog-symbol-re limit t))
+      (setq found-var (re-search-forward verilog-identifier-sym-re limit t))
 
       ;; Walk to this variable's delimiter
       (save-match-data
@@ -7488,7 +7489,7 @@ Be verbose about progress unless optional QUIET set."
 	       ((verilog-continued-line-1 (marker-position startpos))
 		(goto-char e)
                 (unless (and (verilog-in-parenthesis-p)
-                             (looking-at (concat "\\s-*" verilog-symbol-re "\\s-+" verilog-symbol-re "\\s-*")))
+                             (looking-at (concat "\\s-*" verilog-identifier-sym-re "\\s-+" verilog-identifier-sym-re "\\s-*")))
                   (indent-line-to ind)))
 	       ((verilog-in-struct-p)
 		;; could have a declaration of a user defined item
@@ -8020,7 +8021,7 @@ for matches of `str' and adding the occurrence tp `all' through point END."
 		(verilog-re-search-forward re end t))
       ;; Traverse current line
       (setq decl-end (save-excursion (verilog-declaration-end)))
-      (while (and (verilog-re-search-forward verilog-symbol-re decl-end t)
+      (while (and (verilog-re-search-forward verilog-identifier-sym-re decl-end t)
 		  (not (match-end 1)))
 	(setq match (buffer-substring (match-beginning 0) (match-end 0)))
 	(if (string-match (concat "\\<" verilog-str) match)
