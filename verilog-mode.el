@@ -2512,12 +2512,6 @@ find the errors."
 ;;
 ;; Regular expressions used to calculate indent, etc.
 ;;
-;; Want to match
-;; aa :
-;; aa,bb :
-;; a[34:32] :
-;; a,
-;;   b :
 (defconst verilog-identifier-re "[a-zA-Z_][a-zA-Z_0-9]*")
 (defconst verilog-identifier-sym-re (concat "\\<" verilog-identifier-re "\\>"))
 (defconst verilog-assignment-operator-re
@@ -4040,9 +4034,7 @@ Use filename, if current buffer being edited shorten to just buffer name."
        (not (verilog-at-struct-decl-p))
        (not (verilog-at-enum-decl-p))))
 
-;;
-;;
-;;  Mode
+;;; Mode:
 ;;
 (defvar verilog-which-tool 1)
 ;;;###autoload
@@ -4120,7 +4112,7 @@ Variables controlling indentation/edit style:
    comments in tight quarters.
  `verilog-align-decl-expr-comments' (default t)
    Non-nil means align declaration and expressions comments.
- `verilog-align-comment-distance' (default 1)
+ `verilog-align-comment-distance'   (default 1)
    Distance (in spaces) between longest declaration and comments.
    Only works if `verilog-align-decl-expr-comments' is non-nil.
  `verilog-align-assign-expr'        (default nil)
@@ -4275,7 +4267,7 @@ Key bindings specific to `verilog-mode-map' are:
   ;; verilog-mode-hook call added by define-derived-mode
   )
 
-;;; Integration with the speedbar
+;;; Integration with the speedbar:
 ;;
 
 ;; Avoid problems with XEmacs byte-compiles.
@@ -4779,16 +4771,6 @@ Uses `verilog-scan' cache."
               (goto-char pt)
               (throw 'done t)))))
     (verilog-forward-syntactic-ws)))
-;;
-;;      (while (and
-;;              (not (looking-at verilog-complete-re))
-;;              (not (bolp))
-;;              (not (= (preceding-char) ?\;)))
-;;        (verilog-backward-token)
-;;        (verilog-backward-syntactic-ws)
-;;        (setq pt (point)))
-;;      (goto-char pt)
-;;   ;(verilog-forward-syntactic-ws)
 
 (defun verilog-end-of-statement ()
   "Move forward to end of current statement."
@@ -6908,7 +6890,6 @@ Also move point to constraint."
 (defun verilog-parenthesis-depth ()
   "Return non zero if in parenthetical-expression."
   (save-excursion (nth 1 (verilog-syntax-ppss))))
-
 
 (defun verilog-skip-forward-comment-or-string ()
   "Return true if in a string or comment."
