@@ -4,11 +4,11 @@ typedef struct packed {
 } mystruct_s;
 
 module submod
-  (input logic       a_port,
-   input logic [4:0] b_bus,
-   input             mystruct_s single_struct_is_fine,
-   input             mystruct_s [2:0] array_of_struct_is_not,
-   output logic      status);
+  (input logic            a_port,
+   input logic [4:0]      b_bus,
+   input mystruct_s       single_struct_is_fine,
+   input mystruct_s [2:0] array_of_struct_is_not,
+   output logic           status);
    
    /*AUTOTIEOFF*/
    // Beginning of automatic tieoffs (for this module's unterminated outputs)
@@ -20,15 +20,15 @@ endmodule // submod
 module top;
    /*AUTOLOGIC*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   logic status; // From submod0 of submod.v
+   logic            status;                 // From submod0 of submod.v
    // End of automatics
    
    /*AUTOREGINPUT*/
    // Beginning of automatic reg inputs (for undeclared instantiated-module inputs)
-   logic a_port; // To submod0 of submod.v
-   mystruct_s [2:0]     array_of_struct_is_not; // To submod0 of submod.v
-   logic [4:0] b_bus; // To submod0 of submod.v
-   mystruct_s           single_struct_is_fine;  // To submod0 of submod.v
+   logic            a_port;                 // To submod0 of submod.v
+   mystruct_s [2:0] array_of_struct_is_not; // To submod0 of submod.v
+   logic [4:0]      b_bus;                  // To submod0 of submod.v
+   mystruct_s       single_struct_is_fine;  // To submod0 of submod.v
    // End of automatics
    
    submod submod0
@@ -44,4 +44,5 @@ endmodule // top
 
 // Local Variables:
 // verilog-typedef-regexp: "_s$"
+// verilog-align-typedef-regexp: "\\<[a-zA-Z_][a-zA-Z_0-9]*_s\\>"
 // End:

@@ -364,3 +364,6 @@ endmodule // xxx_xxxxxx
 
 
 
+// Local Variables:
+// verilog-align-typedef-regexp: "\\<[a-zA-Z_][a-zA-Z_0-9]*_e\\>"
+// End:

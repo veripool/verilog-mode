@@ -6,17 +6,17 @@ class my_xactor extends vmm_xactor;
    typedef class t_mydata;
    typedef class t_myclass;
    
-   int    myint;
-   int    myintarr[10];
-   int    myintda[];
-   int    myintaa_int[int];
-   int    myintaa_str[string];
+   int          myint;
+   int          myintarr[10];
+   int          myintda[];
+   int          myintaa_int[int];
+   int          myintaa_str[string];
    
-   string mystr;
-   string mystrarr[10];
-   string mystrda[];
-   string mystraa_int[int];
-   string mystraa_str[string];
+   string       mystr;
+   string       mystrarr[10];
+   string       mystrda[];
+   string       mystraa_int[int];
+   string       mystraa_str[string];
    
    e_myenum     myenum;
    e_myenum     myenumarr[10];
@@ -249,3 +249,9 @@ class my_xactor extends vmm_xactor;
    `vmm_xactor_member_end(my_xactor)
    
 endclass: my_xactor
+
+
+// Local Variables:
+// verilog-align-typedef-regexp: "\\<\\(e\\|t\\|vmm\\)_[a-zA-Z_][a-zA-Z_0-9]*\\>"
+// End:
+

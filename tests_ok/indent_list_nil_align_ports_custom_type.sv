@@ -1,9 +1,9 @@
 module foo (
    input logic [7:0] in1,
    input logic       in2,
-   custom_type type1,
+   custom_type       type1,
    output logic      out,
-   custom_type type2
+   custom_type       type2
 );
    
    logic [7:0] signal1;
@@ -14,4 +14,5 @@ endmodule
 
 // Local Variables:
 // verilog-indent-lists: nil
+// verilog-align-typedef-words: ("custom_type")
 // End:

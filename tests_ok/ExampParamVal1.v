@@ -2,7 +2,7 @@ module InstModule (o,i);
    parameter         WIDTH;
    input [WIDTH-1:0] i;
    parameter type    OUT_t;
-   output            OUT_t o;
+   output OUT_t      o;
 endmodule
 
 module vm_example1;
@@ -24,4 +24,5 @@ endmodule
 
 // Local Variables:
 // verilog-typedef-regexp: "_t$"
+// verilog-align-typedef-regexp: "\\<[a-zA-Z_][a-zA-Z_0-9]*_t\\>"
 // End:

@@ -180,4 +180,5 @@ endclass
 
 // Local Variables:
 // verilog-indent-lists: nil
+// verilog-align-typedef-regexp: "\\<[a-zA-Z_][a-zA-Z_0-9]*_t\\>"
 // End:

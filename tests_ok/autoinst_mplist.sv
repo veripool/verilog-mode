@@ -17,7 +17,7 @@ module autoinst_mplist
    
    );
    
-   mbl_if                    msg_req_if;   // Some internal interface
+   mbl_if msg_req_if; // Some internal interface
    
    // --------------------------------------------------------------------------
    // Packages and Local Declarations
@@ -25,8 +25,8 @@ module autoinst_mplist
    
    /*AUTOLOGIC*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   logic mem_rd_req; // From child of autoinst_mplist_child.v
-   logic msg_busy;   // From child of autoinst_mplist_child.v
+   logic  mem_rd_req; // From child of autoinst_mplist_child.v
+   logic  msg_busy;   // From child of autoinst_mplist_child.v
    // End of automatics
    
    
@@ -62,5 +62,6 @@ endmodule
  verilog-typedef-regexp:"_t$"
  verilog-library-directories:(".")
  verilog-library-extensions:(".sv")
+ verilog-align-typedef-regexp: "\\<[a-zA-Z_][a-zA-Z_0-9]*_if\\>"
  End:
  */

@@ -87,5 +87,6 @@ endmodule
 
 // Local Variables:
 // verilog-align-comment-distance: 10
+// verilog-align-typedef-words: ("user_type")
 // End:
 

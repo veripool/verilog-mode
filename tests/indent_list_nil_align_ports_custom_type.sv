@@ -14,4 +14,5 @@ endmodule
 
 // Local Variables:
 // verilog-indent-lists: nil
+// verilog-align-typedef-words: ("custom_type")
 // End:

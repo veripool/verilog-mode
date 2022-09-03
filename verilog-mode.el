@@ -774,6 +774,18 @@ Only works if `verilog-align-decl-expr-comments' is non-nil."
   :type 'boolean)
 (put 'verilog-align-assign-expr 'safe-local-variable #'verilog-booleanp)
 
+(defcustom verilog-align-typedef-regexp nil
+  "Regexp that matches user typedefs for declaration alignment."
+  :group 'verilog-mode-indent
+  :type 'string)
+(put 'verilog-align-typedef-regexp 'safe-local-variable #'stringp)
+
+(defcustom verilog-align-typedef-words nil
+  "List of words that match user typedefs for declaration alignment."
+  :group 'verilog-mode-indent
+  :type '(repeat string))
+(put 'verilog-align-typedef-words 'safe-local-variable #'listp)
+
 (defcustom verilog-minimum-comment-distance 10
   "Minimum distance (in lines) between begin and end required before a comment.
 Setting this variable to zero results in every end acquiring a comment; the
@@ -4017,22 +4029,65 @@ Use filename, if current buffer being edited shorten to just buffer name."
 (defun verilog-declaration-beg ()
   (verilog-re-search-backward (verilog-get-declaration-re) (bobp) t))
 
+(defun verilog-align-typedef-enabled-p ()
+  "Return non-nil if alignment of user typedefs is enabled.
+This will be automatically set when either `verilog-align-typedef-regexp'
+or `verilog-align-typedef-words' are non-nil."
+  (when (or verilog-align-typedef-regexp
+            verilog-align-typedef-words)
+    t))
+
+(defun verilog-get-declaration-typedef-re ()
+  "Return regexp of a user defined typedef.
+See `verilog-align-typedef-regexp' and `verilog-align-typedef-words'."
+  (let (typedef-re words words-re re)
+    (when (verilog-align-typedef-enabled-p)
+      (setq typedef-re verilog-align-typedef-regexp)
+      (setq words verilog-align-typedef-words)
+      (setq words-re (verilog-regexp-words verilog-align-typedef-words))
+      (cond ((and typedef-re (not words))
+             (setq re typedef-re))
+            ((and (not typedef-re) words)
+             (setq re words-re))
+            ((and typedef-re words)
+             (setq re (concat verilog-align-typedef-regexp "\\|" words-re))))
+      (concat "\\s-*" "\\(" verilog-declaration-prefix-re "\\s-*\\(" verilog-range-re "\\)?" "\\s-*\\)?"
+              (concat "\\(" re "\\)")
+              "\\(\\s-*" verilog-range-re "\\)?\\s-+"))))
+
 (defun verilog-get-declaration-re (&optional type)
   "Return declaration regexp depending on customizable variables and TYPE."
-  (cond ((equal type 'iface-mp)
-         verilog-declaration-or-iface-mp-re)
-        ((equal type 'embedded-comments)
-         verilog-declaration-embedded-comments-re)
-        (verilog-indent-declaration-macros
-         verilog-declaration-re-macro)
-        (t
-         verilog-declaration-re)))
+  (let ((re (cond ((equal type 'iface-mp)
+                   verilog-declaration-or-iface-mp-re)
+                  ((equal type 'embedded-comments)
+                   verilog-declaration-embedded-comments-re)
+                  (verilog-indent-declaration-macros
+                   verilog-declaration-re-macro)
+                  (t
+                   verilog-declaration-re))))
+    (when (and (verilog-align-typedef-enabled-p)
+               (or (string= re verilog-declaration-or-iface-mp-re)
+                   (string= re verilog-declaration-re)))
+      (setq re (concat "\\(" (verilog-get-declaration-typedef-re) "\\)\\|\\(" re "\\)")))
+    re))
 
 (defun verilog-looking-at-decl-to-align ()
   "Return non-nil if pointing at a Verilog variable declaration that must be aligned."
-  (and (looking-at (verilog-get-declaration-re))
-       (not (verilog-at-struct-decl-p))
-       (not (verilog-at-enum-decl-p))))
+  (let* ((re (verilog-get-declaration-re))
+         (valid-re (looking-at re))
+         (id-pos (match-end 0)))
+    (and valid-re
+         (not (verilog-at-struct-decl-p))
+         (not (verilog-at-enum-decl-p))
+         (save-excursion
+           (goto-char id-pos)
+           (verilog-forward-syntactic-ws)
+           (and (not (looking-at ";"))
+                (not (member (thing-at-point 'symbol) verilog-keywords))
+                (progn ; Avoid alignment of instances whose name match user defined types
+                  (forward-word)
+                  (verilog-forward-syntactic-ws)
+                  (not (looking-at "("))))))))
 
 ;;; Mode:
 ;;
@@ -4117,6 +4172,10 @@ Variables controlling indentation/edit style:
    Only works if `verilog-align-decl-expr-comments' is non-nil.
  `verilog-align-assign-expr'        (default nil)
    Non-nil means align expressions of continuous assignments.
+ `verilog-align-typedef-regexp'     (default nil)
+   Regexp that matches user typedefs for declaration alignment.
+ `verilog-align-typedef-words'      (default nil)
+   List of words that match user typedefs for declaration alignment.
  `verilog-auto-lineup'              (default `declarations')
    List of contexts where auto lineup of code should be done.
 
@@ -15302,6 +15361,8 @@ Files are checked based on `verilog-library-flags'."
        verilog-align-comment-distance
        verilog-align-decl-expr-comments
        verilog-align-ifelse
+       verilog-align-typedef-regexp
+       verilog-align-typedef-words
        verilog-assignment-delay
        verilog-auto-arg-sort
        verilog-auto-declare-nettype

@@ -81,8 +81,8 @@ module TOP(
            .mbist_done                  (mbist_done[8:0]),
            .mbist_fail                  (mbist_fail[8:0]));
    
-   // Local Variables:
-   // verilog-library-directories:(".")
-   // End:
-   
 endmodule
+
+// Local Variables:
+// verilog-library-directories:(".")
+// End:

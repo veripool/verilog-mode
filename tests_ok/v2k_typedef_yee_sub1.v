@@ -3,11 +3,11 @@
 module v2k_typedef_yee_sub1
   (
    output pixel24_t sub1_out_pixel,
-   input  pixel24_t sub1_in_pixel,
-   input  logic_t cp,
-   input  logic_t reset,
-   output logic_t sub1_to_sub2,
-   output logic_t sub1_to_sub2_and_top
+   input pixel24_t  sub1_in_pixel,
+   input logic_t    cp,
+   input logic_t    reset,
+   output logic_t   sub1_to_sub2,
+   output logic_t   sub1_to_sub2_and_top
    );
    
    
@@ -26,4 +26,5 @@ endmodule
 
 // Local Variables:
 // verilog-typedef-regexp: "_t$"
+// verilog-align-typedef-regexp: "\\<[a-zA-Z_][a-zA-Z_0-9]*_t\\>"
 // End:

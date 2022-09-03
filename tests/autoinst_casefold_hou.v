@@ -42,4 +42,5 @@ endmodule
 // verilog-case-fold:nil
 // verilog-library-directories:(".")
 // verilog-typedef-regexp:"^t[A-Z]"
+// verilog-align-typedef-words: ("tTest")
 // End:

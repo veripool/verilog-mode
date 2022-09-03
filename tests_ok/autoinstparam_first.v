@@ -1,9 +1,9 @@
 module autoinstparam_first ();
    
-   parameter      BITSCHANGED;
-   parameter      BITSA;
-   parameter type BITSB_t;
-   typedef [2:0] my_bitsb_t;
+   parameter         BITSCHANGED;
+   parameter         BITSA;
+   parameter type    BITSB_t;
+   typedef reg [2:0] my_bitsb_t;
    
    /* autoinstparam_first_sub AUTO_TEMPLATE (
     .BITSA              (BITSCHANGED),

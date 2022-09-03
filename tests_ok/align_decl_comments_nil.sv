@@ -29,8 +29,8 @@ module foo
    output logic done); // Added with respect to #922 to test alignment
    
    import my_pkg::*; // Added with respect to #922 to test alignment
-   logic [7:0] city_bus; // Added with respect to #922 to test alignment
-   var         user_type keep_type_also_way_left; //.  <==Keep-indent marker
+   logic [7:0]   city_bus; // Added with respect to #922 to test alignment
+   var user_type keep_type_also_way_left; //.  <==Keep-indent marker
 endmodule
 
 
@@ -87,5 +87,6 @@ endmodule
 
 // Local Variables:
 // verilog-align-decl-expr-comments: nil
+// verilog-align-typedef-words: ("user_type")
 // End:
 

@@ -249,3 +249,9 @@ class my_xactor extends vmm_xactor;
    `vmm_xactor_member_end(my_xactor)
    
 endclass: my_xactor
+
+
+// Local Variables:
+// verilog-align-typedef-regexp: "\\<\\(e\\|t\\|vmm\\)_[a-zA-Z_][a-zA-Z_0-9]*\\>"
+// End:
+
