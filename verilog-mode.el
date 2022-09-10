@@ -3437,12 +3437,12 @@ See also `verilog-font-lock-extra-types'.")
                    ;; Pre-form for this anchored matcher:
                    ;; First, avoid declaration keywords written in comments,
                    ;; which can also trigger this anchor.
-                   '(if (not (verilog-in-comment-p))
+                   '(if (and (not (verilog-in-comment-p))
+                             (not (member (thing-at-point 'symbol) verilog-keywords)))
                         (verilog-single-declaration-end verilog-highlight-max-lookahead)
                       (point)) ;; => current declaration statement is of 0 length
                    nil ;; Post-form: nothing to be done
-                   '(0 font-lock-variable-name-face nil t)))
-                )))
+                   '(0 font-lock-variable-name-face))))))
 
 
   (setq verilog-font-lock-keywords-2
@@ -3743,31 +3743,27 @@ This function moves POINT to the next variable within the same declaration (if
 it exists).
 LIMIT is expected to be the pos at which current single-declaration ends,
 obtained using `verilog-single-declaration-end'."
-
-  (let (found-var old-point)
-
-    ;; Remove starting whitespace
-    (verilog-forward-ws&directives limit)
-
-    (when (< (point) limit) ;; no matching if this is violated
-
-      ;; Find the variable name (match-data is set here)
-      (setq found-var (re-search-forward verilog-identifier-sym-re limit t))
-
-      ;; Walk to this variable's delimiter
-      (save-match-data
-        (verilog-forward-ws&directives limit)
-        (setq old-point nil)
-        (while (and (< (point) limit)
-                    (not (member (char-after) '(?, ?\) ?\] ?\} ?\;)))
-                    (not (eq old-point (point))))
-          (setq old-point (point))
+  (when (not (member (thing-at-point 'symbol) verilog-keywords))
+    (let (found-var old-point)
+      ;; Remove starting whitespace
+      (verilog-forward-ws&directives limit)
+      (when (< (point) limit) ;; no matching if this is violated
+        ;; Find the variable name (match-data is set here)
+        (setq found-var (re-search-forward verilog-identifier-sym-re limit t))
+        ;; Walk to this variable's delimiter
+        (save-match-data
           (verilog-forward-ws&directives limit)
-          (forward-sexp)
-          (verilog-forward-ws&directives limit))
-        ;; Only a comma or semicolon expected at this point
-        (skip-syntax-forward "."))
-      found-var)))
+          (setq old-point nil)
+          (while (and (< (point) limit)
+                      (not (member (char-after) '(?, ?\) ?\] ?\} ?\;)))
+                      (not (eq old-point (point))))
+            (setq old-point (point))
+            (verilog-forward-ws&directives limit)
+            (forward-sexp)
+            (verilog-forward-ws&directives limit))
+          ;; Only a comma or semicolon expected at this point
+          (skip-syntax-forward "."))
+        found-var))))
 
 (defun verilog-point-text (&optional pointnum)
   "Return text describing where POINTNUM or current point is (for errors).
