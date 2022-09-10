@@ -11,3 +11,6 @@ custom_type type3;
 
 endmodule
 
+// Local Variables:
+// verilog-align-typedef-words: ("custom_type")
+// End:

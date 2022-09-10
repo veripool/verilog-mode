@@ -85,4 +85,5 @@ endmodule
 // verilog-typedef-regexp: "_[tT]$"
 // verilog-auto-inst-param-value:t
 // verilog-auto-inst-param-value-type:t
+// verilog-align-typedef-regexp: "\\<[a-zA-Z_][a-zA-Z_0-9]*_[tT]\\>"
 // End:

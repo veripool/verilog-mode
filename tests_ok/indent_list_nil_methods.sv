@@ -3,10 +3,10 @@ class test;
    virtual function void func1 (
       input bit [8:0]   in1,
       input bit         in2,
-      ref example_t ref1,
+      ref example_t     ref1,
       ref bit [17:0]    ref2 [],
       ref bit [15:0]    ref3 [],
-      example_t ex1,
+      example_t         ex1,
       input bit         in3 = 1'b0,
       output bit [17:0] out1
    );
@@ -16,10 +16,10 @@ class test;
    virtual task task1 (
       input bit [8:0]   in1,
       input bit         in2,
-      ref example_t ref1,
+      ref example_t     ref1,
       ref bit [17:0]    ref2 [],
       ref bit [15:0]    ref3 [],
-      example_t ex1,
+      example_t         ex1,
       input bit         in3 = 1'b0,
       output bit [17:0] out1
    );
@@ -28,10 +28,10 @@ class test;
    
    virtual task task1 (input bit [8:0]   in1,
                        input bit         in2,
-                       ref example_t ref1,
+                       ref example_t     ref1,
                        ref bit [17:0]    ref2 [],
                        ref bit [15:0]    ref3 [],
-                       example_t ex1,
+                       example_t         ex1,
                        input bit         in3 = 1'b0,
                        output bit [17:0] out1
    );
@@ -41,7 +41,7 @@ class test;
    virtual task task1 (input bit [8:0]   in1, input bit in2, ref example_t ref1,
                        ref bit [17:0]    ref2 [],
                        ref bit [15:0]    ref3 [],
-                       example_t ex1,
+                       example_t         ex1,
                        input bit         in3 = 1'b0,
                        output bit [17:0] out1
    );
@@ -51,7 +51,7 @@ class test;
    virtual task task1 ( input bit [8:0]   in1, input bit in2, ref example_t ref1,
                         ref bit [17:0]    ref2 [],
                         ref bit [15:0]    ref3 [],
-                        example_t ex1,
+                        example_t         ex1,
                         input bit         in3 = 1'b0,
                         output bit [17:0] out1
    );
@@ -61,7 +61,7 @@ class test;
    virtual task task1 ( input bit [8:0]   in1, input bit in2, ref example_t ref1,
                         ref bit [17:0]    ref2 [],
                         ref bit [15:0]    ref3 [],
-                        example_t ex1,
+                        example_t         ex1,
                         input bit         in3 = 1'b0,
                         output bit [17:0] out1);
       out1 = {in1[7:0], in1[7:0]};
@@ -180,4 +180,5 @@ endclass
 
 // Local Variables:
 // verilog-indent-lists: nil
+// verilog-align-typedef-regexp: "\\<[a-zA-Z_][a-zA-Z_0-9]*_t\\>"
 // End:

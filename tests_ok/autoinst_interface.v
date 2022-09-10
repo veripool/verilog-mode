@@ -8,8 +8,8 @@ module autoinst_interface
    input logic        reset,
    input logic        start,
    my_svi.master      my_svi_port,
-   my_svi my_svi_noport,
-   my_svi my_svi_noport_upper_decl
+   my_svi             my_svi_noport,
+   my_svi             my_svi_noport_upper_decl
    // End of automatics
    );
 endmodule
@@ -22,8 +22,8 @@ module autoinst_interface
    output logic      start,
    input logic [7:0] count,
    my_svi.master     my_svi_port,
-   my_svi my_svi_noport,
-   my_svi my_svi_noport_upper_decl
+   my_svi            my_svi_noport,
+   my_svi            my_svi_noport_upper_decl
    // End of automatics
    );
 endmodule
@@ -48,3 +48,8 @@ module top;
                                    .reset               (reset),
                                    .start               (start));
 endmodule
+
+
+// Local Variables:
+// verilog-align-typedef-words: ("my_svi")
+// End:

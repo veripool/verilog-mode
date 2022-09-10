@@ -2,7 +2,7 @@
 
 module autowire_req_sw
   (
-   input  reqcmd_t AReq,
+   input reqcmd_t  AReq,
    output reqcmd_t BReq
    /*AUTOINPUT*/
    );
@@ -16,4 +16,5 @@ endmodule
 // Local Variables:
 // verilog-library-directories:(".")
 // verilog-typedef-regexp:"_t$"
+// verilog-align-typedef-regexp: "\\<[a-zA-Z_][a-zA-Z_0-9]*_t\\>"
 // End:

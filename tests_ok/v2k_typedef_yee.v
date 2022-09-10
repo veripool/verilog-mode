@@ -11,12 +11,12 @@ module v2k_typedef_yee
    //-----------------------
    // Output definitions
    //
-   output logic_t sub1_to_sub2_and_top; // Explicit output port
+   output logic_t   sub1_to_sub2_and_top; // Explicit output port
    
    /*AUTOOUTPUT*/
    // Beginning of automatic outputs (from unused autoinst outputs)
-   output logic_t ready;                // From itest_sub2 of v2k_typedef_yee_sub2.v
-   output pixel24_t sub2_out_pixel;     // From itest_sub2 of v2k_typedef_yee_sub2.v
+   output logic_t   ready;                // From itest_sub2 of v2k_typedef_yee_sub2.v
+   output pixel24_t sub2_out_pixel;       // From itest_sub2 of v2k_typedef_yee_sub2.v
    // End of automatics
    
    
@@ -25,10 +25,10 @@ module v2k_typedef_yee
    //
    /*AUTOINPUT*/
    // Beginning of automatic inputs (from unused autoinst inputs)
-   input  logic_t cp;                   // To itest_sub1 of v2k_typedef_yee_sub1.v, ...
-   input  logic_t pixel24_t pixel_ff;   // To itest_sub2 of v2k_typedef_yee_sub2.v
-   input  logic_t reset;                // To itest_sub1 of v2k_typedef_yee_sub1.v, ...
-   input  pixel24_t sub1_in_pixel;      // To itest_sub1 of v2k_typedef_yee_sub1.v
+   input logic_t    cp;                   // To itest_sub1 of v2k_typedef_yee_sub1.v, ...
+   input logic_t    pixel24_t pixel_ff;   // To itest_sub2 of v2k_typedef_yee_sub2.v
+   input logic_t    reset;                // To itest_sub1 of v2k_typedef_yee_sub1.v, ...
+   input pixel24_t  sub1_in_pixel;        // To itest_sub1 of v2k_typedef_yee_sub1.v
    // End of automatics
    
    
@@ -37,8 +37,8 @@ module v2k_typedef_yee
    //
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   pixel24_t            sub1_out_pixel;         // From itest_sub1 of v2k_typedef_yee_sub1.v
-   logic_t              sub1_to_sub2;           // From itest_sub1 of v2k_typedef_yee_sub1.v
+   pixel24_t        sub1_out_pixel;       // From itest_sub1 of v2k_typedef_yee_sub1.v
+   logic_t          sub1_to_sub2;         // From itest_sub1 of v2k_typedef_yee_sub1.v
    // End of automatics
    
    
@@ -79,4 +79,5 @@ endmodule
 
 // Local Variables:
 // verilog-typedef-regexp: "_t$"
+// verilog-align-typedef-regexp: "\\<[a-zA-Z_][a-zA-Z_0-9]*_t\\>"
 // End:

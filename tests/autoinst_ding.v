@@ -40,8 +40,8 @@ AA AA_U(/*AUTOINST*/);
 
 BB BB_U(/*AUTOINST*/);
 
+endmodule
+
 // Local Variables:
 // verilog-library-directories:(".")
 // End:
-
-endmodule

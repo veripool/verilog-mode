@@ -3,9 +3,9 @@
 module apl2c_connect(autoinoutmodport_type_intf ctl_i,
                      /*AUTOINOUTMODPORT("autoinoutmodport_type_intf",  "ctl_cb")*/
                      // Beginning of automatic in/out/inouts (from modport)
-                     input [4:0] inst,
-                     input       isel_t isel,
-                     input       replay
+                     input [4:0]  inst,
+                     input isel_t isel,
+                     input        replay
                      // End of automatics
                      );
    
@@ -23,8 +23,8 @@ interface autoinoutmodport_type_intf(input logic clk, input logic rst_n);
    import ap_defines::*;
    
    logic [4:0] inst;
-   isel_t       isel;
-   logic replay;
+   isel_t      isel;
+   logic       replay;
    
    clocking ctl_cb @(posedge clk);
       input inst;
@@ -37,5 +37,6 @@ interface autoinoutmodport_type_intf(input logic clk, input logic rst_n);
 endinterface
 
 // Local Variables:
-// verilog-typedef-regexp:"_t"
+// verilog-typedef-regexp:"_t$"
+// verilog-align-typedef-regexp: "\\<[a-zA-Z_][a-zA-Z_0-9]*_t\\>"
 // End:

@@ -3,14 +3,14 @@
 module InstModule
   (svi.master svi_modport,
    input      clk,
-   svi svi_nomodport);
+   svi        svi_nomodport);
 endmodule
 
 module InstModule1 #
   (parameter TCQ = 100)
    (svi.master svi_modport,
     input      clk,
-    svi svi_nomodport);
+    svi        svi_nomodport);
 endmodule
 
 module top;
@@ -35,4 +35,5 @@ endmodule
 // Local Variables:
 // verilog-library-directories:(".")
 // verilog-library-extensions:(".v" ".sv")
+// verilog-align-typedef-words: ("svi")
 // End:

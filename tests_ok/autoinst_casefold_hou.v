@@ -11,7 +11,7 @@ module test
    
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   tTest                q;                      // From foo of foo.v
+   tTest      q; // From foo of foo.v
    // End of automatics
    
    /* foo AUTO_TEMPLATE (
@@ -31,10 +31,10 @@ endmodule
 
 module foo
   (
-   input       clk,
-   input       rst,
-   input [7:0] tm,
-   output      tTest q
+   input        clk,
+   input        rst,
+   input [7:0]  tm,
+   output tTest q
    );
 endmodule
 
@@ -42,4 +42,5 @@ endmodule
 // verilog-case-fold:nil
 // verilog-library-directories:(".")
 // verilog-typedef-regexp:"^t[A-Z]"
+// verilog-align-typedef-words: ("tTest")
 // End:

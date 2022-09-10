@@ -29,5 +29,6 @@ endmodule
  verilog-typedef-regexp:"_t$"
  verilog-library-directories:(".")
  verilog-library-extensions:(".sv")
+ verilog-align-typedef-regexp: "\\<[a-zA-Z_][a-zA-Z_0-9]*_if\\>"
  End:
  */
