@@ -932,6 +932,12 @@ always be saved."
   :type 'boolean)
 (put 'verilog-auto-star-save 'safe-local-variable #'verilog-booleanp)
 
+(defcustom verilog-fontify-variables t
+  "Non-nil means fontify declaration variables."
+  :group 'verilog-mode-actions
+  :type 'boolean)
+(put 'verilog-fontify-variables 'safe-local-variable #'verilog-booleanp)
+
 (defvar verilog-auto-update-tick nil
   "Modification tick at which autos were last performed.")
 
@@ -3743,7 +3749,8 @@ This function moves POINT to the next variable within the same declaration (if
 it exists).
 LIMIT is expected to be the pos at which current single-declaration ends,
 obtained using `verilog-single-declaration-end'."
-  (when (not (member (thing-at-point 'symbol) verilog-keywords))
+  (when (and verilog-fontify-variables
+             (not (member (thing-at-point 'symbol) verilog-keywords)))
     (let (found-var old-point)
       ;; Remove starting whitespace
       (verilog-forward-ws&directives limit)
@@ -15501,6 +15508,7 @@ Files are checked based on `verilog-library-flags'."
        verilog-compiler
        verilog-coverage
        verilog-delete-auto-hook
+       verilog-fontify-variables
        verilog-getopt-flags-hook
        verilog-highlight-grouping-keywords
        verilog-highlight-includes
