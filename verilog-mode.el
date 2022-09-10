@@ -1571,10 +1571,9 @@ If set will become buffer local.")
     (define-key map "\C-c/"    #'verilog-star-comment)
     (define-key map "\C-c\C-c" #'verilog-comment-region)
     (define-key map "\C-c\C-u" #'verilog-uncomment-region)
-    (when (featurep 'xemacs)
-      (define-key map [(meta control h)] #'verilog-mark-defun)
-      (define-key map "\M-\C-a"  #'verilog-beg-of-defun)
-      (define-key map "\M-\C-e"  #'verilog-end-of-defun))
+    (define-key map "\M-\C-h"  #'verilog-mark-defun)
+    (define-key map "\M-\C-a"  #'verilog-beg-of-defun)
+    (define-key map "\M-\C-e"  #'verilog-end-of-defun)
     (define-key map "\C-c\C-d" #'verilog-goto-defun)
     (define-key map "\C-c\C-k" #'verilog-delete-auto)
     (define-key map "\C-c\C-a" #'verilog-auto)
@@ -2900,6 +2899,13 @@ find the errors."
   (eval-when-compile (verilog-regexp-words '("macromodule" "connectmodule" "module" "class" "program" "interface" "package" "primitive" "config"))))
 (defconst verilog-end-defun-re
   (eval-when-compile (verilog-regexp-words '("endconnectmodule" "endmodule" "endclass" "endprogram" "endinterface" "endpackage" "endprimitive" "endconfig"))))
+(defconst verilog-defun-tf-re-beg
+  (eval-when-compile (verilog-regexp-words '("macromodule" "connectmodule" "module" "class" "program" "interface" "package" "primitive" "config" "function" "task"))))
+(defconst verilog-defun-tf-re-end
+  (eval-when-compile (verilog-regexp-words '("endconnectmodule" "endmodule" "endclass" "endprogram" "endinterface" "endpackage" "endprimitive" "endconfig" "endfunction" "endtask"))))
+(defconst verilog-defun-tf-re-all
+  (eval-when-compile (verilog-regexp-words '("macromodule" "connectmodule" "module" "class" "program" "interface" "package" "primitive" "config" "function" "task"
+                                             "endconnectmodule" "endmodule" "endclass" "endprogram" "endinterface" "endpackage" "endprimitive" "endconfig" "endfunction" "endtask"))))
 (defconst verilog-defun-no-class-re
   (eval-when-compile (verilog-regexp-words '("macromodule" "connectmodule" "module" "program" "interface" "package" "primitive" "config"))))
 (defconst verilog-end-defun-no-class-re
@@ -4606,15 +4612,24 @@ following code fragment:
   "Mark the current Verilog function (or procedure).
 This puts the mark at the end, and point at the beginning."
   (interactive)
-  (if (featurep 'xemacs)
-      (progn
-	(push-mark)
-	(verilog-end-of-defun)
-	(push-mark)
-	(verilog-beg-of-defun)
-	(if (fboundp 'zmacs-activate-region)
-	    (zmacs-activate-region)))
-    (mark-defun)))
+  (let (found)
+    (if (featurep 'xemacs)
+        (progn
+          (push-mark)
+          (verilog-end-of-defun)
+          (push-mark)
+          (verilog-beg-of-defun)
+          (if (fboundp 'zmacs-activate-region)
+              (zmacs-activate-region)))
+      ;; GNU Emacs
+      (when (verilog-beg-of-defun)
+        (setq found (point))
+        (verilog-end-of-defun)
+        (end-of-line)
+        (push-mark)
+        (goto-char found)
+        (beginning-of-line)
+        (setq mark-active t)))))
 
 (defun verilog-comment-region (start end)
   ;; checkdoc-params: (start end)
@@ -4690,10 +4705,24 @@ area.  See also `verilog-comment-region'."
 	    (end-of-line)
 	    (delete-region pos (1+ (point)))))))))
 
-(defun verilog-beg-of-defun ()
+(defun verilog-beg-of-defun (&optional arg)
   "Move backward to the beginning of the current function or procedure."
-  (interactive)
-  (verilog-re-search-backward verilog-defun-re nil 'move))
+  (interactive "p")
+  (let (found)
+    (save-excursion
+      (when (verilog-looking-back verilog-defun-tf-re-end (point-at-bol))
+        (verilog-backward-sexp)
+        (setq found (point)))
+      (while (and (not found)
+                  (verilog-re-search-backward verilog-defun-tf-re-all nil t))
+        (cond ((verilog-looking-back "\\(\\<typedef\\>\\s-+\\)" (point-at-bol)) ; corner case, e.g. 'typedef class <id>;'
+               (backward-word))
+              ((looking-at verilog-defun-tf-re-end)
+               (verilog-backward-sexp))
+              ((looking-at verilog-defun-tf-re-beg)
+               (setq found (point))))))
+    (when found
+      (goto-char found))))
 
 (defun verilog-beg-of-defun-quick ()
   "Move backward to the beginning of the current function or procedure.
@@ -4701,10 +4730,13 @@ Uses `verilog-scan' cache."
   (interactive)
   (verilog-re-search-backward-quick verilog-defun-re nil 'move))
 
-(defun verilog-end-of-defun ()
+(defun verilog-end-of-defun (&optional arg)
   "Move forward to the end of the current function or procedure."
-  (interactive)
-  (verilog-re-search-forward verilog-end-defun-re nil 'move))
+  (interactive "p")
+  (when (or (looking-at verilog-defun-tf-re-beg)
+            (verilog-beg-of-defun))
+    (verilog-forward-sexp)
+    (point)))
 
 (defun verilog-get-end-of-defun ()
   (save-excursion
@@ -4721,10 +4753,10 @@ Uses `verilog-scan' cache."
 	(case-fold-search nil)
 	(oldpos (point))
 	(b (progn
-	     (verilog-beg-of-defun)
+	     (verilog-re-search-backward verilog-defun-re nil 'move)
 	     (point-marker)))
 	(e (progn
-	     (verilog-end-of-defun)
+	     (verilog-re-search-forward verilog-end-defun-re nil 'move)
 	     (point-marker))))
     (goto-char (marker-position b))
     (if (> (- e b) 200)
@@ -4962,7 +4994,7 @@ More specifically, after a generate and before an endgenerate."
 (defun verilog-in-fork-region-p ()
   "Return true if between a fork and join."
   (interactive)
-  (let ((lim (save-excursion (verilog-beg-of-defun)  (point)))
+  (let ((lim (save-excursion (verilog-re-search-backward verilog-defun-re nil 'move)  (point)))
 	(nest 1))
     (save-excursion
       (while (and
@@ -5187,7 +5219,7 @@ primitive or interface named NAME."
                             (insert str)
                             (ding 't))
                         (let ((lim
-                               (save-excursion (verilog-beg-of-defun) (point)))
+                               (save-excursion (verilog-re-search-backward verilog-defun-re nil 'move) (point)))
                               (here (point)))
                           (cond
                            (;-- handle named block differently
@@ -8139,7 +8171,7 @@ for matches of `str' and adding the occurrence tp `all' through point END."
   "Calculate all possible completions for variables (or constants)."
   (let ((start (point)))
     ;; Search for all reachable var declarations
-    (verilog-beg-of-defun)
+    (verilog-re-search-backward verilog-defun-re nil 'move)
     (save-excursion
       ;; Check var declarations
       (verilog-get-completion-decl start))))
@@ -15171,7 +15203,7 @@ and the case items."
     (if (not (member v1 verilog-keywords))
 	(save-excursion
 	  (setq verilog-sk-signal v1)
-	  (verilog-beg-of-defun)
+	  (verilog-re-search-backward verilog-defun-re nil 'move)
 	  (verilog-end-of-statement)
 	  (verilog-forward-syntactic-ws)
 	  (verilog-sk-def-reg)
