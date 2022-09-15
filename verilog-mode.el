@@ -7408,6 +7408,49 @@ _ARG is ignored, for `comment-indent-function' compatibility."
 	    (eq 'declarations verilog-auto-lineup))
     (verilog-pretty-declarations quiet)))
 
+(defun verilog--pretty-declarations-find-end (&optional reg-end)
+  "Find end position for current alignment of declarations.
+If region is active, use arg REG-END to set a limit on the alignment."
+  (let (e)
+    (if (and (verilog-parenthesis-depth)
+             (not (verilog-in-struct-p)))
+        ;; In an argument list or parameter block
+        (progn
+          (verilog-backward-up-list -1)
+          (forward-char -1)
+          (verilog-backward-syntactic-ws)
+          (if (region-active-p)
+              (min reg-end (point))
+            (point)))
+      ;; In a declaration block (not in argument list)
+      (verilog-end-of-statement)
+      (setq e (point)) ; Might be on last line
+      (verilog-forward-syntactic-ws)
+      (while (verilog-looking-at-decl-to-align)
+        (verilog-end-of-statement)
+        (setq e (point))
+        (verilog-forward-syntactic-ws))
+      (if (region-active-p)
+          (min reg-end e)
+        e))))
+
+(defun verilog--pretty-declarations-find-base-ind ()
+  "Find base indentation for current alignment of declarations."
+  (if (and (verilog-parenthesis-depth)
+           (not (verilog-in-struct-p)))
+      ;; In an argument list or parameter block
+      (progn
+        (unless (or (verilog-looking-back "(" (point-at-bol))
+                    (bolp))
+          (forward-char 1))
+	(skip-chars-forward " \t")
+	(current-column))
+    ;; In a declaration block (not in argument list)
+    (progn
+      (verilog-do-indent (verilog-calculate-indent))
+      (verilog-forward-ws&directives)
+      (current-column))))
+
 (defun verilog-pretty-declarations (&optional quiet)
   "Line up declarations around point.
 Be verbose about progress unless optional QUIET set."
@@ -7415,70 +7458,67 @@ Be verbose about progress unless optional QUIET set."
   (let ((m1 (make-marker))
         (e (point))
 	(here (point))
-	el r ind start startpos end endpos base-ind)
+	el r ind start startpos end endpos base-ind rstart rend)
     (save-excursion
+      (when (region-active-p)
+        (setq rstart (region-beginning))
+        (setq rend (region-end))
+        (goto-char rstart)) ; Shrinks the region but ensures that start is a valid declaration
       (if (progn
+            ;; Check if alignment can be performed
             (beginning-of-line)
             (verilog-forward-syntactic-ws)
             (or (and (not (verilog-in-directive-p))  ; could have `define input foo
                      (verilog-looking-at-decl-to-align))
                 (and (verilog-parenthesis-depth)
                      (looking-at verilog-interface-modport-re))))
-	  (progn
-	    (if (and (verilog-parenthesis-depth)
-                     (not (verilog-in-struct-p)))
-		;; in an argument list or parameter block
-		(setq el (verilog-backward-up-list -1)
-		      start (progn
-			      (goto-char e)
-			      (verilog-backward-up-list 1)
-			      (verilog-re-search-forward (verilog-get-declaration-re 'iface-mp) el 'move)
-			      (goto-char (match-beginning 0))
+          ;; Find boundaries of alignment
+          (progn
+            (cond (;; Using region
+                   (region-active-p)
+                   (setq start rstart
+                         startpos (set-marker (make-marker) start)
+                         end (progn (goto-char start)
+                                    (verilog--pretty-declarations-find-end rend))
+                         endpos (set-marker (make-marker) end)
+                         base-ind (progn (goto-char start)
+                                         (verilog--pretty-declarations-find-base-ind))))
+                  (;; In an argument list or parameter block
+                   (and (verilog-parenthesis-depth)
+                        (not (verilog-in-struct-p)))
+                   (setq el (verilog-backward-up-list -1)
+		         start (progn
+			         (goto-char e)
+			         (verilog-backward-up-list 1)
+			         (verilog-re-search-forward (verilog-get-declaration-re 'iface-mp) el 'move)
+			         (goto-char (match-beginning 0))
+			         (skip-chars-backward " \t")
+			         (point))
+		         startpos (set-marker (make-marker) start)
+		         end (progn (goto-char start)
+                                    (verilog--pretty-declarations-find-end))
+		         endpos (set-marker (make-marker) end)
+		         base-ind (progn (goto-char start)
+                                         (verilog--pretty-declarations-find-base-ind))))
+                  (;; In a declaration block (not in argument list)
+                   t
+                   (setq
+	            start (progn
+		            (verilog-beg-of-statement-1)
+		            (while (and (verilog-looking-at-decl-to-align)
+				        (not (bobp)))
 			      (skip-chars-backward " \t")
-			      (point))
-		      startpos (set-marker (make-marker) start)
-		      end (progn
-			    (goto-char start)
-			    (verilog-backward-up-list -1)
-			    (forward-char -1)
-			    (verilog-backward-syntactic-ws)
-			    (point))
-		      endpos (set-marker (make-marker) end)
-		      base-ind (progn
-				 (goto-char start)
-                                 (unless (verilog-looking-back "(" (point-at-bol))
-                                   (forward-char 1))
-				 (skip-chars-forward " \t")
-				 (current-column)))
-	      ;; in a declaration block (not in argument list)
-	      (setq
-	       start (progn
-		       (verilog-beg-of-statement-1)
-		       (while (and (verilog-looking-at-decl-to-align)
-				   (not (bobp)))
-			 (skip-chars-backward " \t")
-			 (setq e (point))
-			 (verilog-backward-syntactic-ws)
-			 (backward-char)
-			 (verilog-beg-of-statement-1))
-		       e)
-	       startpos (set-marker (make-marker) start)
-	       end (progn
-		     (goto-char here)
-		     (verilog-end-of-statement)
-		     (setq e (point))	;Might be on last line
-		     (verilog-forward-syntactic-ws)
-		     (while (verilog-looking-at-decl-to-align)
-		       (verilog-end-of-statement)
-		       (setq e (point))
-		       (verilog-forward-syntactic-ws))
-		     e)
-	       endpos (set-marker (make-marker) end)
-	       base-ind (progn
-			  (goto-char start)
-			  (verilog-do-indent (verilog-calculate-indent))
-			  (verilog-forward-ws&directives)
-			  (current-column))))
+			      (setq e (point))
+			      (verilog-backward-syntactic-ws)
+			      (backward-char)
+			      (verilog-beg-of-statement-1))
+		            e)
+	            startpos (set-marker (make-marker) start)
+	            end (progn (goto-char here)
+                               (verilog--pretty-declarations-find-end))
+	            endpos (set-marker (make-marker) end)
+	            base-ind (progn (goto-char start)
+                                    (verilog--pretty-declarations-find-base-ind)))))
 	    ;; OK, start and end are set
 	    (goto-char (marker-position startpos))
 	    (if (and (not quiet)
@@ -7580,6 +7620,37 @@ If returned non-nil, update match data according to `verilog-assignment-operatio
        ;; Looking at an assignment (last check, provides match data)
        (looking-at verilog-assignment-operation-re)))
 
+(defun verilog--pretty-expr-find-end (&optional discard-re reg-end)
+  "Find end position for current alignment of expressions.
+Use optional arg DISCARD-RE when aligning expressions outside of an
+argument list and REG-END to set a limit on the alignment when the
+region is active."
+  (if (verilog-in-parenthesis-p)
+      ;; Limit end in argument list
+      (progn
+        (verilog-backward-up-list -1)
+        (forward-char -1)
+        (verilog-backward-syntactic-ws)
+        (if (region-active-p)
+            (min reg-end (point))
+          (point)))
+    ;; Limit end in non-argument list
+    (save-excursion ; EOL of the last line of the assignment block
+      (end-of-line)
+      (let ((pt (point))) ; Might be on last line
+        (verilog-forward-syntactic-ws)
+        (beginning-of-line)
+        (while (and (verilog--pretty-expr-assignment-found discard-re)
+                    (progn
+                      (end-of-line)
+                      (not (eq pt (point)))))
+          (setq pt (point))
+          (verilog-forward-syntactic-ws)
+          (beginning-of-line))
+        (if (region-active-p)
+            (min reg-end pt)
+          pt)))))
+
 (defun verilog-pretty-expr (&optional quiet)
   "Line up expressions around point.
 If QUIET is non-nil, do not print messages showing the progress of line-up."
@@ -7588,57 +7659,52 @@ If QUIET is non-nil, do not print messages showing the progress of line-up."
                                             verilog-basic-complete-expr-no-assign-re
                                           verilog-basic-complete-expr-re))
          (complete-pretty-expr-re (concat verilog-extended-complete-re "\\|\\(" basic-complete-pretty-expr-re "\\)"))
-         (discard-re (concat "^\\s-*\\(" complete-pretty-expr-re "\\)")))
-    (unless (verilog-in-comment-or-string-p)
-      (save-excursion
+         (discard-re (concat "^\\s-*\\(" complete-pretty-expr-re "\\)"))
+         rstart rend)
+    (save-excursion
+      (when (region-active-p)
+        (setq rstart (region-beginning))
+        (setq rend (region-end))
+        (goto-char rstart))
+      (unless (verilog-in-comment-or-string-p)
         (beginning-of-line)
         (when (and (verilog--pretty-expr-assignment-found discard-re)
                    (save-excursion
                      (goto-char (match-end 2))
                      (and (not (verilog-in-attribute-p))
                           (not (verilog-in-comment-or-string-p)))))
-          (let* ((start (if (verilog-in-parenthesis-p)
-                            ;; Parameter list
-                            (progn
-                              (verilog-backward-up-list 1)
-                              (forward-char)
-                              (verilog-re-search-forward verilog-assignment-operation-re-2 nil 'move)
-                              (goto-char (match-beginning 0))
-                              (point))
-                          ;; Declarations
-                          (save-excursion ; BOL of the first line of the assignment block
-                            (beginning-of-line)
-                            (let ((pt (point)))
-                              (verilog-backward-syntactic-ws)
-                              (beginning-of-line)
-                              (while (and (verilog--pretty-expr-assignment-found discard-re)
-                                          (not (bobp)))
-                                (setq pt (point))
-                                (verilog-backward-syntactic-ws)
-                                (beginning-of-line)) ; Ack, need to grok `define
-                              pt))))
+          (let* ((start (cond (;; Using region
+                               (region-active-p)
+                               rstart)
+                              (;; Parameter list
+                               (verilog-in-parenthesis-p)
+                               (progn
+                                 (verilog-backward-up-list 1)
+                                 (forward-char)
+                                 (verilog-re-search-forward verilog-assignment-operation-re-2 nil 'move)
+                                 (goto-char (match-beginning 0))
+                                 (point)))
+                              (t ;; Declarations
+                               (save-excursion ; BOL of the first line of the assignment block
+                                 (beginning-of-line)
+                                 (let ((pt (point)))
+                                   (verilog-backward-syntactic-ws)
+                                   (beginning-of-line)
+                                   (while (and (verilog--pretty-expr-assignment-found discard-re)
+                                               (not (bobp)))
+                                     (setq pt (point))
+                                     (verilog-backward-syntactic-ws)
+                                     (beginning-of-line)) ; Ack, need to grok `define
+                                   pt)))))
                  (startpos (set-marker (make-marker) start))
-                 (end (if (verilog-in-parenthesis-p)
-                          ;; Parameter list
-                          (progn
-                            (verilog-backward-up-list -1)
-                            (forward-char -1)
-                            (verilog-backward-syntactic-ws)
-                            (point))
-                        ;; Declarations
-                        (save-excursion ; EOL of the last line of the assignment block
-                          (end-of-line)
-                          (let ((pt (point))) ; Might be on last line
-                            (verilog-forward-syntactic-ws)
-                            (beginning-of-line)
-                            (while (and (verilog--pretty-expr-assignment-found discard-re)
-                                        (progn
-                                          (end-of-line)
-                                          (not (eq pt (point)))))
-                              (setq pt (point))
-                              (verilog-forward-syntactic-ws)
-                              (beginning-of-line))
-                            pt))))
+                 (end (cond (;; Using region
+                             (region-active-p)
+                             (verilog--pretty-expr-find-end discard-re rend))
+                            (;; Parameter list
+                             (verilog-in-parenthesis-p)
+                             (verilog--pretty-expr-find-end))
+                            (t ;; Declarations
+                             (verilog--pretty-expr-find-end discard-re))))
 		 (endpos (set-marker (make-marker) end))
                  (contains-2-char-operator (string-match "<=" (buffer-substring-no-properties start end))))
             ;; Start with alignment
