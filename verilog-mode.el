@@ -4708,9 +4708,9 @@ area.  See also `verilog-comment-region'."
 	    (end-of-line)
 	    (delete-region pos (1+ (point)))))))))
 
-(defun verilog-beg-of-defun (&optional arg)
+(defun verilog-beg-of-defun ()
   "Move backward to the beginning of the current function or procedure."
-  (interactive "p")
+  (interactive)
   (let (found)
     (save-excursion
       (when (verilog-looking-back verilog-defun-tf-re-end (point-at-bol))
@@ -4733,9 +4733,9 @@ Uses `verilog-scan' cache."
   (interactive)
   (verilog-re-search-backward-quick verilog-defun-re nil 'move))
 
-(defun verilog-end-of-defun (&optional arg)
+(defun verilog-end-of-defun ()
   "Move forward to the end of the current function or procedure."
-  (interactive "p")
+  (interactive)
   (when (or (looking-at verilog-defun-tf-re-beg)
             (verilog-beg-of-defun))
     (verilog-forward-sexp)
