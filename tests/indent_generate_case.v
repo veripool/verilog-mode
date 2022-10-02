@@ -1,6 +1,7 @@
 module indent_gen_case #(parameter P = 0)
 (input d, output reg q);
 
+generate
 case (P)
 0: always @(*)
 q = d;
@@ -20,5 +21,6 @@ q = d;
 end
 end
 endcase
+endgenerate
 
 endmodule
