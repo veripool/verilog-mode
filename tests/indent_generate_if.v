@@ -1,6 +1,7 @@
 module indent_gen_if #(parameter P = 0)
 (input d, output reg q);
 
+generate
 if (P == 0) begin
 always @(*)
 q = d;
@@ -20,5 +21,6 @@ else begin
 always @(*)
 q = d + 1'b1;
 end
+endgenerate
 
 endmodule
