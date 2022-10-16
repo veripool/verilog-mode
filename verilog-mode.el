@@ -4826,8 +4826,6 @@ Uses `verilog-scan' cache."
 				    (verilog-backward-token)
 				    (/= p (point)))))
 		 (goto-char p)))
-	      ;; stop if we see a complete reg (previous found extended ones)
-	      (looking-at verilog-basic-complete-re)
 	      ;; stop if previous token is an ender
 	      (save-excursion
 		(verilog-backward-token)
@@ -6227,7 +6225,7 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
               ;;    {assert|assume|cover} property (); are complete
               ;;   and could also be labeled: - foo: assert property
               ;; but
-              ;;    property ID () ... needs end_property
+              ;;    property ID () ... needs endproperty
               (verilog-beg-of-statement)
               (if (looking-at verilog-property-re)
                   (throw 'continue 'statement) ; We don't need an endproperty for these
