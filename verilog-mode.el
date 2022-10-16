@@ -4831,7 +4831,8 @@ Uses `verilog-scan' cache."
 	      ;; stop if previous token is an ender
 	      (save-excursion
 		(verilog-backward-token)
-		(looking-at verilog-end-block-re))))
+		(or (looking-at verilog-end-block-re)
+                    (verilog-in-directive-p)))))
       (verilog-backward-syntactic-ws)
       (verilog-backward-token))
     ;; Now point is where the previous line ended.
