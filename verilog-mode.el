@@ -3052,7 +3052,7 @@ find the errors."
 (defconst verilog-extended-case-re "\\(\\(unique0?\\s-+\\|priority\\s-+\\)?case[xz]?\\|randcase\\)")
 (defconst verilog-extended-complete-re
   ;; verilog-beg-of-statement also looks backward one token to extend this match
-  (concat "\\(\\(\\<extern\\s-+\\|\\<\\(\\<\\(pure\\|context\\)\\>\\s-+\\)?virtual\\s-+\\|\\<protected\\s-+\\|\\<static\\s-+\\)*\\(\\<function\\>\\|\\<task\\>\\)\\)"
+  (concat "\\(\\(\\<extern\\s-+\\|\\<\\(\\<\\(pure\\|context\\)\\>\\s-+\\)?virtual\\s-+\\|\\<local\\s-+\\|\\<protected\\s-+\\|\\<static\\s-+\\)*\\(\\<function\\>\\|\\<task\\>\\)\\)"
 	  "\\|\\(\\(\\<typedef\\>\\s-+\\)*\\(\\<struct\\>\\|\\<union\\>\\|\\<class\\>\\)\\)"
 	  "\\|\\(\\(\\<\\(import\\|export\\)\\>\\s-+\\)?\\(\"DPI\\(-C\\)?\"\\s-+\\)?\\(\\<\\(pure\\|context\\)\\>\\s-+\\)?\\([A-Za-z_][A-Za-z0-9_]*\\s-*=\\s-*\\)?\\(function\\>\\|task\\>\\)\\)"
 	  "\\|" verilog-extended-case-re ))
