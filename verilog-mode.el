@@ -7295,9 +7295,9 @@ Do not count named blocks or case-statements."
 
 (defun verilog-cparenexp-indent-level ()
   "Return indent level for current line inside a parenthetical expression."
-  (let ((pos (point))
+  (let ((start-pos (point))
         (close-par (looking-at "[)}]"))
-        pos-arg-paren)
+        pos pos-arg-paren)
     (save-excursion
       (verilog-backward-up-list 1)
       (if verilog-indent-lists
@@ -7326,7 +7326,7 @@ Do not count named blocks or case-statements."
                (or (looking-at verilog-defun-level-re)
                    (looking-at "\\(\\<\\(virtual\\|protected\\|static\\)\\>\\s-+\\)?\\(\\<task\\>\\|\\<function\\>\\)"))
                (setq pos-arg-paren (save-excursion
-                                     (goto-char pos)
+                                     (goto-char start-pos)
                                      (verilog-backward-up-list 1)
                                      (forward-char)
                                      (skip-chars-forward " \t")
@@ -7339,6 +7339,9 @@ Do not count named blocks or case-statements."
                (save-excursion
                  (beginning-of-line)
                  (and (looking-at verilog-assignment-operation-re)
+                      (save-excursion
+                        (goto-char (match-beginning 2))
+                        (not (verilog-within-string)))
                       (progn (verilog-forward-syntactic-ws)
                              (not (looking-at verilog-complete-re)))))
                (goto-char (match-end 2))
@@ -7352,7 +7355,17 @@ Do not count named blocks or case-statements."
                (if (> (verilog-pos-at-forward-syntactic-ws) (point-at-eol))
                    (+ (verilog-col-at-beg-of-statement) verilog-indent-level)
                  (verilog-col-at-forward-syntactic-ws)))
-              (t ;; 6) Default
+              (;; 6) Long reporting strings (e.g. $display or $sformatf inside `uvm_info)
+               (save-excursion
+                 (goto-char start-pos)
+                 (verilog-backward-up-list 1)
+                 (setq pos (1+ (point)))
+                 (backward-word)
+                 (or (looking-at (concat "$" verilog-identifier-re)) ; System function/task
+                     (looking-at verilog-uvm-statement-re)))         ; `uvm_* macros
+               (goto-char pos)
+               (current-column))
+              (t ;; 7) Default
                (+ (current-column) verilog-indent-level)))))))
 
 (defun verilog-indent-comment ()
