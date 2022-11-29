@@ -2787,6 +2787,8 @@ find the errors."
            "\\|\\(\\<clocking\\>\\)"              ;17
            "\\|\\(\\<`[ou]vm_[a-z_]+_begin\\>\\)" ;18
            "\\|\\(\\<`vmm_[a-z_]+_member_begin\\>\\)"
+           "\\|\\(\\<`ifdef\\>\\)"                ;20
+           "\\|\\(\\<`ifndef\\>\\)"                ;21
 	   ;;
 	   ))
 
@@ -3959,7 +3961,13 @@ Use filename, if current buffer being edited shorten to just buffer name."
         (setq md 3)) ; 3 to get to endsequence in the reg above
        ((match-end 17)
         ;; Search forward for matching endclocking
-        (setq reg "\\(\\<clocking\\>\\)\\|\\(\\<endclocking\\>\\)" )))
+        (setq reg "\\(\\<clocking\\>\\)\\|\\(\\<endclocking\\>\\)" ))
+       ((match-end 20)
+        ;; Search forward for matching `endif
+        (setq reg "\\(\\<`ifdef\\>\\|\\<`ifndef\\>\\)\\|\\(\\<`endif\\>\\)" ))
+       ((match-end 21)
+        ;; Search forward for matching `endif
+        (setq reg "\\(\\<`ifndef\\>\\|\\<`ifdef\\>\\)\\|\\(\\<`endif\\>\\)" )))
       (if (and reg
 	       (forward-word-strictly 1))
 	  (catch 'skip
@@ -6196,6 +6204,11 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
                        (goto-char here) ; or is clocking, starts a new block
                        (throw 'nesting 'block)))))
 
+             ;; if find "`ifdef" or "`ifndef'"
+             ((or (match-end 20)
+                  (match-end 21))
+              (throw 'continue 'foo))
+
              ((looking-at "\\<class\\|struct\\|function\\|task\\>")
               ;; *sigh* These words have an optional prefix:
               ;; extern {virtual|protected}? function a();
@@ -6400,7 +6413,10 @@ Jump from end to matching begin, from endcase to matching case, and so on."
       (setq reg "\\(\\<package\\>\\)" ))
      ;; Search back for matching program
      ((looking-at "\\<endprogram\\>")
-      (setq reg "\\(\\<program\\>\\)" )))
+      (setq reg "\\(\\<program\\>\\)" ))
+     ((looking-at "\\<`endif\\>")
+      ;; Search back for matching `ifndef
+      (setq reg "\\(\\<`ifdef\\>\\|\\<`ifndef\\>\\)\\|\\(\\<`endif\\>\\)" )))
     (if reg
 	(catch 'skip
 	  (if (eq nesting 'yes)
