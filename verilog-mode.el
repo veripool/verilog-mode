@@ -2787,8 +2787,9 @@ find the errors."
            "\\|\\(\\<clocking\\>\\)"              ;17
            "\\|\\(\\<`[ou]vm_[a-z_]+_begin\\>\\)" ;18
            "\\|\\(\\<`vmm_[a-z_]+_member_begin\\>\\)"
-           "\\|\\(\\<`ifdef\\>\\)"                ;20
-           "\\|\\(\\<`ifndef\\>\\)"                ;21
+           "\\|\\(\\<`ifn?def\\>\\)"              ;20, matched end can be: `else `elsif `endif
+           "\\|\\(\\<`else\\>\\)"                 ;21, matched end can be: `endif
+           "\\|\\(\\<`elsif\\>\\)"                ;22, matched end can be: `else `endif
 	   ;;
 	   ))
 
@@ -3963,11 +3964,14 @@ Use filename, if current buffer being edited shorten to just buffer name."
         ;; Search forward for matching endclocking
         (setq reg "\\(\\<clocking\\>\\)\\|\\(\\<endclocking\\>\\)" ))
        ((match-end 20)
-        ;; Search forward for matching `endif
-        (setq reg "\\(\\<`ifdef\\>\\|\\<`ifndef\\>\\)\\|\\(\\<`endif\\>\\)" ))
+        ;; Search forward for matching `ifn?def, can be `else `elseif or `endif
+        (setq reg "\\(\\<`ifn?def\\>\\)\\|\\(\\<`endif\\>\\|\\<`else\\>\\|\\<`elsif\\>\\)" ))
        ((match-end 21)
-        ;; Search forward for matching `endif
-        (setq reg "\\(\\<`ifndef\\>\\|\\<`ifdef\\>\\)\\|\\(\\<`endif\\>\\)" )))
+        ;; Search forward for matching `else, can be `endif
+        (setq reg "\\(\\<`else\\>\\)\\|\\(\\<`endif\\>\\)" ))
+       ((match-end 22)
+        ;; Search forward for matching `elsif, can be `else or `endif, DONT support `elsif 
+        (setq reg "\\(\\<`elsif\\>\\|\\<`ifn?def\\>\\)\\|\\(\\<`endif\\>\\|\\<`else\\>\\)" )))
       (if (and reg
 	       (forward-word-strictly 1))
 	  (catch 'skip
@@ -3976,11 +3980,17 @@ Use filename, if current buffer being edited shorten to just buffer name."
 		      here)
 		  (while (verilog-re-search-forward reg nil 'move)
 		    (cond
-		     ((match-end md) ; a closer in regular expression, so we are climbing out
+		     ((and (or (match-end md)
+                               (and (string= (match-string-no-properties 1) "`elsif")
+                                    (= 1 depth)))
+                           (or (and (member (match-string-no-properties 2) '("`else" "`elsif"))
+                                    (= 1 depth)) ;; stop at `else/`elsif which matching ifn?def (or `elsif with same depth)
+                               (not (member (match-string-no-properties 2) '("`else" "`elsif"))))) ; a closer in regular expression, so we are climbing out
 		      (setq depth (1- depth))
 		      (if (= 0 depth) ; we are out!
 			  (throw 'skip 1)))
-		     ((match-end 1) ; an opener in the r-e, so we are in deeper now
+		     ((and (match-end 1)
+                           (not (string= (match-string-no-properties 1) "`elsif"))) ; an opener in the r-e, so we are in deeper now
 		      (setq here (point)) ; remember where we started
 		      (goto-char (match-beginning 1))
 		      (cond
@@ -6204,9 +6214,10 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
                        (goto-char here) ; or is clocking, starts a new block
                        (throw 'nesting 'block)))))
 
-             ;; if find "`ifdef" or "`ifndef'"
+             ;; if find `ifn?def `else `elsif
              ((or (match-end 20)
-                  (match-end 21))
+                  (match-end 21)
+                  (match-end 22))
               (throw 'continue 'foo))
 
              ((looking-at "\\<class\\|struct\\|function\\|task\\>")
@@ -6415,8 +6426,11 @@ Jump from end to matching begin, from endcase to matching case, and so on."
      ((looking-at "\\<endprogram\\>")
       (setq reg "\\(\\<program\\>\\)" ))
      ((looking-at "\\<`endif\\>")
-      ;; Search back for matching `ifndef
-      (setq reg "\\(\\<`ifdef\\>\\|\\<`ifndef\\>\\)\\|\\(\\<`endif\\>\\)" )))
+      ;; Search back for matching `endif `else `elsif
+      (setq reg "\\(\\<`ifn?def\\>\\)\\|\\(\\<`endif\\>\\)" ))
+     ((looking-at "\\<`else\\>")
+      ;; Search back for matching `else `else `elsif
+      (setq reg "\\(\\<`ifn?def\\>\\|\\<`elsif\\>\\)\\|\\(\\<`else\\>\\)" )))
     (if reg
 	(catch 'skip
 	  (if (eq nesting 'yes)
