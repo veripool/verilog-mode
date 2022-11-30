@@ -3968,7 +3968,7 @@ Use filename, if current buffer being edited shorten to just buffer name."
         (setq reg "\\(\\<`ifn?def\\>\\)\\|\\(\\<`endif\\>\\|\\<`else\\>\\|\\<`elsif\\>\\)" ))
        ((match-end 21)
         ;; Search forward for matching `else, can be `endif
-        (setq reg "\\(\\<`else\\>\\)\\|\\(\\<`endif\\>\\)" ))
+        (setq reg "\\(\\<`else\\>\\|\\<`ifn?def\\>\\)\\|\\(\\<`endif\\>\\)" ))
        ((match-end 22)
         ;; Search forward for matching `elsif, can be `else or `endif, DONT support `elsif 
         (setq reg "\\(\\<`elsif\\>\\|\\<`ifn?def\\>\\)\\|\\(\\<`endif\\>\\|\\<`else\\>\\)" )))
@@ -3981,7 +3981,7 @@ Use filename, if current buffer being edited shorten to just buffer name."
 		  (while (verilog-re-search-forward reg nil 'move)
 		    (cond
 		     ((and (or (match-end md)
-                               (and (string= (match-string-no-properties 1) "`elsif")
+                               (and (member (match-string-no-properties 1) '("`else" "`elsif"))
                                     (= 1 depth)))
                            (or (and (member (match-string-no-properties 2) '("`else" "`elsif"))
                                     (= 1 depth)) ;; stop at `else/`elsif which matching ifn?def (or `elsif with same depth)
@@ -3989,8 +3989,8 @@ Use filename, if current buffer being edited shorten to just buffer name."
 		      (setq depth (1- depth))
 		      (if (= 0 depth) ; we are out!
 			  (throw 'skip 1)))
-		     ((and (match-end 1)
-                           (not (string= (match-string-no-properties 1) "`elsif"))) ; an opener in the r-e, so we are in deeper now
+		     ((and (match-end 1) ; an opener in the r-e, so we are in deeper now
+                           (not (member (match-string-no-properties 1) '("`else" "`elsif"))))
 		      (setq here (point)) ; remember where we started
 		      (goto-char (match-beginning 1))
 		      (cond
