@@ -455,11 +455,11 @@ This function may be removed when Emacs 21 is no longer supported."
 	    last-command-event)))
 
 (defvar verilog-no-change-functions nil
-  "True if `after-change-functions' is disabled.
+  "Non-nil if `after-change-functions' is disabled.
 Use of `syntax-ppss' may break, as ppss's cache may get corrupted.")
 
 (defvar verilog-in-hooks nil
-  "True when within a `verilog-run-hooks' block.")
+  "Non-nil when within a `verilog-run-hooks' block.")
 
 (defmacro verilog-run-hooks (&rest hooks)
   "Run each hook in HOOKS using `run-hooks'.
@@ -1114,7 +1114,7 @@ You might want these defined in each file; put at the *END* of your file
 something like:
 
     // Local Variables:
-    // verilog-library-files:(\"/some/path/technology.v\" \"/some/path/tech2.v\")
+    // verilog-library-files:(\"/path/technology.v\" \"/path2/tech2.v\")
     // End:
 
 Verilog-mode attempts to detect changes to this local variable, but they
@@ -1186,7 +1186,7 @@ those temporaries reset.  See example in `verilog-auto-reset'."
 (put 'verilog-auto-reset-blocking-in-non 'safe-local-variable #'verilog-booleanp)
 
 (defcustom verilog-auto-reset-widths t
-  "True means AUTORESET should determine the width of signals.
+  "Non-nil means AUTORESET should determine the width of signals.
 This is then used to set the width of the zero (32'h0 for example).  This
 is required by some lint tools that aren't smart enough to ignore widths of
 the constant zero.  This may result in ugly code when parameters determine
@@ -1326,7 +1326,7 @@ See `verilog-auto-inst-param-value'."
 Also affects AUTOINSTPARAM.  Declaration order is the default for
 backward compatibility, and as some teams prefer signals that are
 declared together to remain together.  Sorted order reduces
-changes when declarations are moved around in a file. Sorting is
+changes when declarations are moved around in a file.  Sorting is
 within input/output/inout groupings, there is intentionally no
 option to intermix between input/output/inouts.
 
@@ -1337,7 +1337,7 @@ See also `verilog-auto-arg-sort'."
 (put 'verilog-auto-inst-sort 'safe-local-variable #'verilog-booleanp)
 
 (defcustom verilog-auto-inst-vector t
-  "True means when creating default ports with AUTOINST, use bus subscripts.
+  "Non-nil means when creating default ports with AUTOINST, use bus subscripts.
 If nil, skip the subscript when it matches the entire bus as declared in
 the module (AUTOWIRE signals always are subscripted, you must manually
 declare the wire to have the subscripts removed.)  Setting this to nil may
@@ -2902,7 +2902,7 @@ find the errors."
   (concat "\\(" verilog-declaration-re "\\)\\|\\(" verilog-interface-modport-re "\\)"))
 (defconst verilog-declaration-embedded-comments-re
   (concat "\\( " verilog-declaration-re "\\) ""\\s-*" "\\(" verilog-comment-start-regexp "\\)")
-  "Match expressions such as: input logic [7:0] /* auto enum sm_psm */ sm_psm;")
+  "Match expressions such as: input logic [7:0] /* auto enum sm_psm */ sm_psm;.")
 
 (defconst verilog-defun-re
   (eval-when-compile (verilog-regexp-words '("macromodule" "connectmodule" "module" "class" "program" "interface" "package" "primitive" "config"))))
@@ -3705,7 +3705,7 @@ inserted using a single call to `verilog-insert'."
 (defun verilog-single-declaration-end (limit)
   "Return pos where current (single) declaration statement ends.
 Also, this function moves POINT forward to the start of a variable name
-(skipping the range-part and whitespace).
+\(skipping the range-part and whitespace).
 Function expected to be called with POINT just after a declaration keyword.
 LIMIT sets the max POINT for searching and moving to.  No such limit if LIMIT
 is 0.
@@ -4945,7 +4945,7 @@ Uses `verilog-scan' cache."
         pos)))))
 
 (defun verilog-in-case-region-p ()
-  "Return true if in a case region.
+  "Return non-nil if in a case region.
 More specifically, point @ in the line foo : @ begin"
   (interactive)
   (save-excursion
@@ -4990,7 +4990,7 @@ More specifically, point @ in the line foo : @ begin"
     (forward-sexp arg)))
 
 (defun verilog-in-generate-region-p ()
-  "Return true if in a generate region.
+  "Return non-nil if in a generate region.
 More specifically, after a generate and before an endgenerate."
   (interactive)
   (let ((pos (point))
@@ -5010,7 +5010,7 @@ More specifically, after a generate and before an endgenerate."
       nil)))
 
 (defun verilog-in-fork-region-p ()
-  "Return true if between a fork and join."
+  "Return non-nil if between a fork and join."
   (interactive)
   (let ((lim (save-excursion (verilog-re-search-backward verilog-defun-re nil 'move)  (point)))
 	(nest 1))
@@ -5026,7 +5026,7 @@ More specifically, after a generate and before an endgenerate."
     (= nest 0) )) ; return nest
 
 (defun verilog-in-deferred-immediate-final-p ()
-  "Return true if inside an `assert/assume/cover final' statement."
+  "Return non-nil if inside an `assert/assume/cover final' statement."
   (interactive)
   (and (looking-at "final")
        (verilog-looking-back "\\<\\(?:assert\\|assume\\|cover\\)\\>\\s-+" nil))
@@ -5946,7 +5946,7 @@ This sets up the appropriate Verilog mode environment, calls
     (string      . 0)))
 
 (defun verilog-continued-line-1 (lim)
-  "Return true if this is a continued line.
+  "Return non-nil if this is a continued line.
 Set point to where line starts.  Limit search to point LIM."
   (let ((continued 't))
     (if (eq 0 (forward-line -1))
@@ -6482,7 +6482,7 @@ Jump from end to matching begin, from endcase to matching case, and so on."
 	      (throw 'skip 1)))))))
 
 (defun verilog-continued-line ()
-  "Return true if this is a continued line.
+  "Return non-nil if this is a continued line.
 Set point to where line starts."
   (let ((continued 't))
     (if (eq 0 (forward-line -1))
@@ -6759,12 +6759,12 @@ Optional BOUND limits search."
     (current-column)))
 
 (defun verilog-in-comment-p ()
-  "Return true if in a star or // comment."
+  "Return non-nil if in a star or // comment."
   (let ((state (save-excursion (verilog-syntax-ppss))))
     (or (nth 4 state) (nth 7 state))))
 
 (defun verilog-in-star-comment-p ()
-  "Return true if in a star comment."
+  "Return non-nil if in a star comment."
   (let ((state (save-excursion (verilog-syntax-ppss))))
     (and
      (nth 4 state)			; t if in a comment of style a // or b /**/
@@ -6773,17 +6773,17 @@ Optional BOUND limits search."
       ))))
 
 (defun verilog-in-slash-comment-p ()
-  "Return true if in a slash comment."
+  "Return non-nil if in a slash comment."
   (let ((state (save-excursion (verilog-syntax-ppss))))
     (nth 7 state)))
 
 (defun verilog-in-comment-or-string-p ()
-  "Return true if in a string or comment."
+  "Return non-nil if in a string or comment."
   (let ((state (save-excursion (verilog-syntax-ppss))))
     (or (nth 3 state) (nth 4 state) (nth 7 state)))) ; Inside string or comment)
 
 (defun verilog-in-attribute-p ()
-  "Return true if point is in an attribute (* [] attribute *)."
+  "Return non-nil if point is in an attribute (* [] attribute *)."
   (let ((pos (point)))
     (save-match-data
       (save-excursion
@@ -6793,7 +6793,7 @@ Optional BOUND limits search."
              (< pos (point)))))))
 
 (defun verilog-in-parameter-p ()
-  "Return true if point is in a parameter assignment #( p1=1, p2=5)."
+  "Return non-nil if point is in a parameter assignment #( p1=1, p2=5)."
   (save-match-data
     (save-excursion
       (and (progn
@@ -6805,7 +6805,7 @@ Optional BOUND limits search."
              (looking-at verilog-defun-re))))))
 
 (defun verilog-in-escaped-name-p ()
-  "Return true if in an escaped name."
+  "Return non-nil if in an escaped name."
   (save-excursion
     (backward-char)
     (skip-chars-backward "^ \t\n\f")
@@ -6814,20 +6814,20 @@ Optional BOUND limits search."
       nil)))
 
 (defun verilog-in-directive-p ()
-  "Return true if in a directive."
+  "Return non-nil if in a directive."
   (save-excursion
     (beginning-of-line)
     (looking-at verilog-directive-re-1)))
 
 (defun verilog-in-parenthesis-p ()
-  "Return true if in a ( ) expression (but not { } or [ ])."
+  "Return non-nil if in a ( ) expression (but not { } or [ ])."
   (save-match-data
     (save-excursion
       (verilog-re-search-backward "\\((\\)\\|\\()\\)" nil 'move)
       (numberp (match-beginning 1)))))
 
 (defun verilog-in-paren ()
-  "Return true if in a parenthetical expression.
+  "Return non-nil if in a parenthetical expression.
 May cache result using `verilog-syntax-ppss'."
   (let ((state (save-excursion (verilog-syntax-ppss))))
     (> (nth 0 state) 0 )))
@@ -6841,7 +6841,7 @@ May cache result using `verilog-syntax-ppss'."
       0 )))
 
 (defun verilog-in-paren-quick ()
-  "Return true if in a parenthetical expression.
+  "Return non-nil if in a parenthetical expression.
 Always starts from `point-min', to allow inserts with hooks disabled."
   ;; The -quick refers to its use alongside the other -quick functions,
   ;; not that it's likely to be faster than verilog-in-paren.
@@ -6849,7 +6849,7 @@ Always starts from `point-min', to allow inserts with hooks disabled."
     (> (nth 0 state) 0 )))
 
 (defun verilog-in-struct-p ()
-  "Return true if in a struct declaration."
+  "Return non-nil if in a struct declaration."
   (interactive)
   (save-excursion
     (if (verilog-in-paren)
@@ -6875,7 +6875,7 @@ Return >0 for nested struct."
         nil))))
 
 (defun verilog-in-coverage-p ()
-  "Return true if in a constraint or coverpoint expression."
+  "Return non-nil if in a constraint or coverpoint expression."
   (interactive)
   (save-excursion
     (if (verilog-in-paren)
@@ -7013,7 +7013,7 @@ Also move point to constraint."
   (save-excursion (nth 1 (verilog-syntax-ppss))))
 
 (defun verilog-skip-forward-comment-or-string ()
-  "Return true if in a string or comment."
+  "Return non-nil if in a string or comment."
   (let ((state (save-excursion (verilog-syntax-ppss))))
     (cond
      ((nth 3 state)			;Inside string
@@ -7028,7 +7028,7 @@ Also move point to constraint."
       nil))))
 
 (defun verilog-skip-backward-comment-or-string ()
-  "Return true if in a string or comment."
+  "Return non-nil if in a string or comment."
   (let ((state (save-excursion (verilog-syntax-ppss))))
     (cond
      ((nth 3 state)			;Inside string
@@ -7045,7 +7045,7 @@ Also move point to constraint."
       nil))))
 
 (defun verilog-skip-backward-comments ()
-  "Return true if a comment was skipped."
+  "Return non-nil if a comment was skipped."
   (let ((more t))
     (while more
       (setq more
@@ -8043,7 +8043,7 @@ Region is defined by B and ENDPOS."
 (defvar verilog-all nil)
 (defvar verilog-buffer-to-use nil)
 (defvar verilog-toggle-completions nil
-  "True means \\<verilog-mode-map>\\[verilog-complete-word] should try all possible completions one by one.
+  "Non-nil means \\<verilog-mode-map>\\[verilog-complete-word] should try all possible completions one by one.
 Repeated use of \\[verilog-complete-word] will show you all of them.
 Normally, when there is more than one possible completion,
 it displays a list of all possible completions.")
@@ -10665,7 +10665,7 @@ Results are cached if inside `verilog-preserve-dir-cache'."
 ;; (prin1 (verilog-dir-files ".")) nil)
 
 (defun verilog-dir-file-exists-p (filename)
-  "Return true if FILENAME exists.
+  "Return non-nil if FILENAME exists.
 Like `file-exists-p' but results are cached if inside
 `verilog-preserve-dir-cache'."
   (let* ((dirname (file-name-directory filename))
@@ -10704,7 +10704,7 @@ Allows version control to check out the file if need be."
 	     modi)))))
 
 (defun verilog-is-number (symbol)
-  "Return true if SYMBOL is number-like."
+  "Return non-nil if SYMBOL is number-like."
   (or (string-match "^[0-9 \t:]+$" symbol)
       (string-match "^[---]*[0-9]+$" symbol)
       (string-match "^[0-9 \t]+'s?[hdxbo][0-9a-fA-F_xz? \t]*$" symbol)))
@@ -11519,7 +11519,7 @@ This repairs those mis-inserted by an AUTOARG."
     (ceiling (/ (log value) (log 2)))))
 
 (defun verilog-typedef-name-p (variable-name)
-  "Return true if the VARIABLE-NAME is a type definition."
+  "Return non-nil if the VARIABLE-NAME is a type definition."
   (when verilog-typedef-regexp
     (verilog-string-match-fold verilog-typedef-regexp variable-name)))
 
