@@ -69,19 +69,19 @@ for Emacs.
 @node New Versions
 @chapter Getting New Versions
 
-Check the web at @file{http://www.veripool.org/verilog-mode} to see if
+Check the web at @file{https://www.veripool.org/verilog-mode} to see if
 there are newer versions of this mode.
 
 @node Installing
 @chapter Installing the Verilog-Mode
 
-See http://www.veripool.org/projects/verilog-mode/wiki/Installing
+See https://www.veripool.org/projects/verilog-mode/wiki/Installing
 and the instructions at the top of verilog-mode.el.
 
 @node Getting Started
 @chapter Getting Started Using the Verilog-Mode
 
-See http://www.veripool.org/projects/verilog-mode/wiki/Documentation
+See https://www.veripool.org/projects/verilog-mode/wiki/Documentation
 including the papers and presentations therein.
 
 If you visit any Verilog or SystemVerilog file (.v, .vh, .sv, .svh
@@ -105,7 +105,7 @@ all three.
 @node FAQ
 @chapter Frequently asked questions
 
-See http://www.veripool.org/projects/verilog-mode/wiki/FAQ
+See https://www.veripool.org/projects/verilog-mode/wiki/FAQ
 
 @contents
 @bye

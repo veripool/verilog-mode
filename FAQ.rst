@@ -5,7 +5,7 @@ Verilog-Mode FAQ
 .. contents::
 
 This is the Frequently Asked Questions (FAQ) for `Verilog Mode
-<https://www.veripool.org/verilog-mode>`__. This FAQ is Copyright 2006-2021
+<https://www.veripool.org/verilog-mode>`__. This FAQ is Copyright 2006-2023
 by Michael McNamara and Wilson Snyder. You may redistribute this document
 in its entirety only.
 
@@ -18,8 +18,8 @@ Where is the most up to date version of this FAQ?
 -------------------------------------------------
 
 The official released version of this document is the `Verilog-Mode
-FAQ <http://www.veripool.org/verilog-mode/faq>`__: from
-http://www.veripool.org/verilog-mode/faq.
+FAQ <https://www.veripool.org/verilog-mode/faq>`__: from
+https://www.veripool.org/verilog-mode/faq.
 
 
 Where do I get Verilog-Mode?
@@ -30,7 +30,7 @@ Verilog-mode is a standard part of GNU Emacs as of 22.2.
 You may wish to still upgrade to the most recent Verilog-Mode, especially
 as the GNU Emacs version lags by months to years and as the SystemVerilog
 features are under continual improvement. The most recent version is always
-available from `Verilog Mode <http://www.veripool.org/verilog-mode>`__.
+available from `Verilog Mode <https://www.veripool.org/verilog-mode>`__.
 
 
 How do I install Verilog-Mode?

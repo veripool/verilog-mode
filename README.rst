@@ -124,7 +124,7 @@ individual test inside the ``make test``.
 License
 =======
 
-Verilog-mode itself is part of GNU Emacs, which is Copyright 2001-2021 Free
+Verilog-mode itself is part of GNU Emacs, which is Copyright 2001-2023 Free
 Software Foundation, Inc. This package is free software; you can
 redistribute it and/or modify it under the terms of the GNU General Public
 License Version 3.
