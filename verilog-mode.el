@@ -5001,21 +5001,31 @@ More specifically, point @ in the line foo : @ begin"
   "Return non-nil if in a generate region.
 More specifically, after a generate and before an endgenerate."
   (interactive)
-  (let ((pos (point))
-        gen-beg-point gen-end-point)
-    (save-match-data
-      (save-excursion
-        (and (verilog-re-search-backward "\\<\\(generate\\)\\>" nil t)
-             (forward-word)
-             (setq gen-beg-point (point))
-             (verilog-forward-sexp)
-             (backward-word)
-             (setq gen-end-point (point)))))
-    (if (and gen-beg-point gen-end-point
-             (>= pos gen-beg-point)
-             (<= pos gen-end-point))
-        t
-      nil)))
+  (let ((nest 1))
+    (save-excursion
+      (catch 'done
+	(while (and
+		(/= nest 0)
+		(verilog-re-search-backward
+                 "\\<\\(module\\)\\|\\(connectmodule\\)\\|\\(endmodule\\)\\|\\(generate\\)\\|\\(endgenerate\\)\\|\\(if\\)\\|\\(case\\)\\|\\(for\\)\\>" nil 'move)
+		(cond
+		 ((match-end 1) ; module - we have crawled out
+		  (throw 'done 1))
+                 ((match-end 2) ; connectmodule - we have crawled out
+                  (throw 'done 1))
+                 ((match-end 3) ; endmodule - we were outside of module block
+                  (throw 'done -1))
+                 ((match-end 4) ; generate
+		  (setq nest (1- nest)))
+                 ((match-end 5) ; endgenerate
+                  (setq nest (1+ nest)))
+                 ((match-end 6) ; if
+                  (setq nest (1- nest)))
+                 ((match-end 7) ; case
+                  (setq nest (1- nest)))
+                 ((match-end 8) ; for
+                  (setq nest (1- nest))))))))
+    (= nest 0) )) ; return nest
 
 (defun verilog-in-fork-region-p ()
   "Return non-nil if between a fork and join."

@@ -6,7 +6,6 @@ module test
     (input logic y,z;
     );
 
-generate
     if (OPT = 1) begin
        always_comb begin
           y = 1'b1;
@@ -22,6 +21,5 @@ end
     end else begin
        assign z = 1'b0;
     end
-endgenerate
 
 endmodule // test
