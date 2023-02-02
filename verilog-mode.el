@@ -6744,7 +6744,8 @@ Optional BOUND limits search."
 (defun verilog-pos-at-end-of-statement ()
   "Return point position at the end of current statement."
   (save-excursion
-    (verilog-end-of-statement)))
+    (verilog-end-of-statement)
+    (point)))
 
 (defun verilog-col-at-end-of-statement ()
   "Return current column at the end of current statement."
