@@ -8046,7 +8046,8 @@ Region is defined by B and ENDPOS."
   "Return non-nil if current line should ignore indentation."
   (or (and verilog-indent-ignore-multiline-defines
            ;; Line with multiline define, ends with "\" or "\" plus trailing whitespace
-           (or (looking-at ".*\\\\\\s-*$")
+           (or (save-excursion
+                 (verilog-re-search-forward ".*\\\\\\s-*$" (line-end-position) t))
                (save-excursion  ; Last line after multiline define
                  (verilog-backward-syntactic-ws)
                  (unless (bobp)
