@@ -9323,7 +9323,8 @@ Return an array of [outputs inouts inputs wire reg assign const gparam intf]."
 	 ((looking-at "(\\*")
 	  ;; To advance past either "(*)" or "(* ... *)" don't forward past first *
 	  (forward-char 1)
-	  (or (search-forward "*)")
+	  (or (looking-at "\\*\\s-*)")  ; (* )
+              (search-forward "*)")  ; end attribute
 	      (error "%s: Unmatched (* *), at char %d" (verilog-point-text) (point))))
 	 ((eq ?\" (following-char))
           (or (re-search-forward "[^\\]\"" nil t)  ; don't forward-char first, since we look for a non backslash first
