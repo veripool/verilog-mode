@@ -11439,7 +11439,7 @@ This repairs those mis-inserted by an AUTOARG."
           (while (string-match
                   (concat "\\([[({:*/<>+-]\\)"  ; - must be last
                           "(\\<\\([0-9A-Za-z_]+\\))"
-                          "\\([])}:*/<>+-]\\)")
+                          "\\([])}:*/<>.+-]\\)")
                   out)
             (setq out (replace-match "\\1\\2\\3" nil nil out)))
           (while (string-match
@@ -11534,7 +11534,8 @@ This repairs those mis-inserted by an AUTOARG."
 ;;(verilog-simplify-range-expression "[(TEST[1])-1:0]")
 ;;(verilog-simplify-range-expression "[1<<2:8>>2]")  ; [4:2]
 ;;(verilog-simplify-range-expression "[2*4/(4-2) +2+4 <<4 >>2]")
-;;(verilog-simplify-range-expression "[WIDTH*2/8-1:0]")
+;;(verilog-simplify-range-expression "[WIDTH*2/8-1:0]")  ; "[WIDTH*2/8-1:0]"
+;;(verilog-simplify-range-expression "[(FOO).size:0]")  ; "[FOO.size:0]"
 
 (defun verilog-clog2 (value)
   "Compute $clog2 - ceiling log2 of VALUE."
