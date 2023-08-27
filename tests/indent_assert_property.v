@@ -23,3 +23,17 @@ end
    always @(posedge clk) begin
    end
 endmodule
+
+// https://github.com/veripool/verilog-mode/issues/1836
+module tb1;
+ a: restrict property (1);
+   b: assume property (1);
+     c: assume property (1);
+       endmodule
+
+// https://github.com/veripool/verilog-mode/issues/1837
+module tb2;
+         a: cover sequence (1);
+     b: cover property (1);
+  c: cover property (1);
+endmodule

@@ -2556,11 +2556,13 @@ find the errors."
 (defconst verilog-assignment-operation-re-2
   (concat "\\(.*?\\)" verilog-assignment-operator-re))
 
+;; Loosely related to IEEE 1800's concurrent_assertion_statement
+(defconst verilog-concurrent-assertion-statement-re
+  "\\(\\<\\(assert\\|assume\\|cover\\|restrict\\)\\>\\s-+\\<\\(property\\|sequence\\)\\>\\)\\|\\(\\<assert\\>\\)")
+
 (defconst verilog-label-re (concat verilog-identifier-sym-re "\\s-*:\\s-*"))
 (defconst verilog-property-re
-  (concat "\\(" verilog-label-re "\\)?"
-          ;; "\\(assert\\|assume\\|cover\\)\\s-+property\\>"
-	  "\\(\\(assert\\|assume\\|cover\\)\\>\\s-+\\<property\\>\\)\\|\\(assert\\)"))
+  (concat "\\(" verilog-label-re "\\)?" verilog-concurrent-assertion-statement-re))
 
 (defconst verilog-no-indent-begin-re
   (eval-when-compile
@@ -2715,7 +2717,6 @@ find the errors."
    "\\(\\<fork\\>\\)\\|"			 ; 7
    "\\(\\<if\\>\\)\\|"
    verilog-property-re "\\|"
-   "\\(\\(" verilog-label-re "\\)?\\<assert\\>\\)\\|"
    "\\(\\<clocking\\>\\)\\|"
    "\\(\\<task\\>\\)\\|"
    "\\(\\<function\\>\\)\\|"
@@ -4843,7 +4844,7 @@ Uses `verilog-scan' cache."
 	      (not (or (looking-at "\\<") (forward-word-strictly -1)))
 	      ;; stop if we see an assertion (perhaps labeled)
 	      (and
-	       (looking-at "\\(\\w+\\W*:\\W*\\)?\\(\\<\\(assert\\|assume\\|cover\\)\\>\\s-+\\<property\\>\\)\\|\\(\\<assert\\>\\)")
+	       (looking-at (concat "\\(\\w+\\W*:\\W*\\)?" verilog-concurrent-assertion-statement-re))
 	       (progn
 		 (setq h (point))
 		 (save-excursion
@@ -6271,12 +6272,16 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
                 (throw 'nesting 'defun))))
 
              ;;
-             ((looking-at "\\<property\\>")
+             ((looking-at "\\<\\(property\\|sequence\\)\\>")
               ;; *sigh*
-              ;;    {assert|assume|cover} property (); are complete
-              ;;   and could also be labeled: - foo: assert property
-              ;; but
-              ;;    property ID () ... needs endproperty
+              ;;    - {assert|assume|cover|restrict} property (); are complete
+              ;;    - cover sequence (); is complete
+              ;; and could also be labeled:
+              ;;    - foo: assert property
+              ;;    - bar: cover sequence
+              ;; but:
+              ;;    - property ID () ... needs endproperty
+              ;;    - sequence ID () ... needs endsequence
               (verilog-beg-of-statement)
               (if (looking-at verilog-property-re)
                   (throw 'continue 'statement) ; We don't need an endproperty for these
