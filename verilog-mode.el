@@ -3608,38 +3608,46 @@ This creates v-cmts properties where comments are in force."
     (save-match-data
       (verilog-save-buffer-state
        (let (pt)
-	 (goto-char beg)
-	 (while (< (point) end)
-	   (cond ((looking-at "//")
-		  (setq pt (point))
-		  (or (search-forward "\n" end t)
-		      (goto-char end))
-		  ;; "1+": The leading // or /* itself isn't considered as
-		  ;; being "inside" the comment, so that a (search-backward)
-		  ;; that lands at the start of the // won't mis-indicate
-		  ;; it's inside a comment.  Also otherwise it would be
-		  ;; hard to find a commented out /*AS*/ vs one that isn't
-		  (put-text-property (1+ pt) (point) 'v-cmts t))
-		 ((looking-at "/\\*")
-		  (setq pt (point))
-		  (or (search-forward "*/" end t)
-		      ;; No error - let later code indicate it so we can
-		      ;; use inside functions on-the-fly
-		      ;;(error "%s: Unmatched /* */, at char %d"
-		      ;;       (verilog-point-text) (point))
-		      (goto-char end))
-		  (put-text-property (1+ pt) (point) 'v-cmts t))
-		 ((looking-at "\"")
-		  (setq pt (point))
-                  (or (re-search-forward "[^\\]\"" end t)  ; don't forward-char first, since we look for a non backslash first
-		      ;; No error - let later code indicate it so we can
-		      (goto-char end))
-		  (put-text-property (1+ pt) (point) 'v-cmts t))
-		 (t
-		  (forward-char 1)
-		  (if (re-search-forward "[/\"]" end t)
-		      (backward-char 1)
-		    (goto-char end))))))))))
+         (goto-char beg)
+         (while (< (point) end)
+           (cond ((looking-at "//")
+                  (setq pt (point))
+                  (or (search-forward "\n" end t)
+                     (goto-char end))
+                  ;; "1+": The leading // or /* itself isn't considered as
+                  ;; being "inside" the comment, so that a (search-backward)
+                  ;; that lands at the start of the // won't mis-indicate
+                  ;; it's inside a comment.  Also otherwise it would be
+                  ;; hard to find a commented out /*AS*/ vs one that isn't
+                  (put-text-property (1+ pt) (point) 'v-cmts t))
+                 ((looking-at "/\\*")
+                  (setq pt (point))
+                  (or (search-forward "*/" end t)
+                     ;; No error - let later code indicate it so we can
+                     ;; use inside functions on-the-fly
+                     ;;(error "%s: Unmatched /* */, at char %d"
+                     ;;       (verilog-point-text) (point))
+                     (goto-char end))
+                  (put-text-property (1+ pt) (point) 'v-cmts t))
+                 ((looking-at "\"")
+                  (setq pt (point))
+                  (setq pt2 nil)
+                  ;; Move forward to the first non-escaped (backslashed) double-quote ("). That closes this string.
+                  ;;   skip: \" (an escaped double-quote)
+                  ;;   match: \\" (a backslash as the last character of a string)
+                  (while (not pt2)
+                    (or (re-search-forward "\\\\" end t)
+                       (re-search-forward "[^\\]\"" end t)
+                       (goto-char end))
+                    (if (looking-at "\\\\")
+                        (forward-char 2)
+                      (setq pt2 (point))))
+                  (put-text-property (1+ pt) (point) 'v-cmts t))
+                 (t
+                  (forward-char 1)
+                  (if (re-search-forward "[/\"]" end t)
+                      (backward-char 1)
+                    (goto-char end))))))))))
 
 (defun verilog-scan ()
   "Parse the buffer, marking all comments with properties.
