@@ -12256,15 +12256,7 @@ If PAR-VALUES replace final strings with these parameter values."
 	 (vl-memory (verilog-sig-memory port-st))
 	 (vl-mbits (if (verilog-sig-multidim port-st)
                        (verilog-sig-multidim-string port-st) ""))
-         (vl-bits (if (or (eq verilog-auto-inst-vector t)
-                          (and (eq verilog-auto-inst-vector `unsigned)
-                               (not (verilog-sig-signed port-st)))
-			  (not (assoc port (verilog-decls-get-signals moddecls)))
-			  (not (equal (verilog-sig-bits port-st)
-				      (verilog-sig-bits
-				       (assoc port (verilog-decls-get-signals moddecls))))))
-		      (or (verilog-sig-bits port-st) "")
-		    ""))
+   (vl-bits (or (verilog-sig-bits port-st) ""))
 	 (case-fold-search nil)
 	 (check-values par-values)
 	 tpl-net dflt-bits)
@@ -12290,8 +12282,18 @@ If PAR-VALUES replace final strings with these parameter values."
 	    vl-mbits (verilog-simplify-range-expression vl-mbits)
 	    vl-memory (when vl-memory (verilog-simplify-range-expression vl-memory))
 	    vl-width (verilog-make-width-expression vl-bits))) ; Not in the loop for speed
+    (setq auto-inst-vector
+      (if (or (eq verilog-auto-inst-vector t)
+              (and (eq verilog-auto-inst-vector `unsigned)
+                   (not (verilog-sig-signed port-st)))
+              (not (assoc port (verilog-decls-get-signals moddecls)))
+              (not (equal (verilog-sig-bits port-st)
+                          (verilog-sig-bits (assoc port (verilog-decls-get-signals moddecls))))))
+          vl-bits
+          ""))
     ;; Default net value if not found
-    (setq dflt-bits (if (or (and (verilog-sig-bits port-st)
+    (setq
+      dflt-bits (if (or (and (verilog-sig-bits port-st)
                                  (verilog-sig-multidim port-st))
                             (verilog-sig-memory port-st))
 			(concat "/*" vl-mbits vl-bits
@@ -12299,7 +12301,7 @@ If PAR-VALUES replace final strings with these parameter values."
                                 (if vl-memory "." "")
                                 (if vl-memory vl-memory "")
                                 "*/")
-		      (concat vl-bits))
+		      (concat auto-inst-vector))
 	  tpl-net (concat port
 			  (if (and vl-modport
 				   ;; .modport cannot be added if attachment is
@@ -12338,10 +12340,20 @@ If PAR-VALUES replace final strings with these parameter values."
 		     (if (numberp value) (setq value (number-to-string value)))
 		     value))
 		 (substring tpl-net (match-end 0))))))
+      ;; Get range based off template net
+      (setq auto-inst-vector-tpl
+        (if (or (eq verilog-auto-inst-vector t)
+                (and (eq verilog-auto-inst-vector `unsigned)
+                     (not (verilog-sig-signed port-st)))
+                (not (assoc tpl-net (verilog-decls-get-signals moddecls)))
+                (not (equal (verilog-sig-bits port-st)
+                            (verilog-sig-bits (assoc tpl-net (verilog-decls-get-signals moddecls))))))
+            vl-bits
+            ""))
       ;; Replace @ and [] magic variables in final output
       (setq tpl-net (verilog-string-replace-matches "@" tpl-num nil nil tpl-net))
       (setq tpl-net (verilog-string-replace-matches "\\[\\]\\[\\]" dflt-bits nil nil tpl-net))
-      (setq tpl-net (verilog-string-replace-matches "\\[\\]" vl-bits nil nil tpl-net)))
+      (setq tpl-net (verilog-string-replace-matches "\\[\\]" auto-inst-vector-tpl nil nil tpl-net)))
     ;; Insert it
     (when (or tpl-ass (not verilog-auto-inst-template-required))
       (verilog--auto-inst-first indent-pt section)
