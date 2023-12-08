@@ -12257,6 +12257,8 @@ If PAR-VALUES replace final strings with these parameter values."
 	 (vl-mbits (if (verilog-sig-multidim port-st)
                        (verilog-sig-multidim-string port-st) ""))
    (vl-bits (or (verilog-sig-bits port-st) ""))
+   (auto-inst-vector nil)
+   (auto-inst-vector-tpl nil)
 	 (case-fold-search nil)
 	 (check-values par-values)
 	 tpl-net dflt-bits)
