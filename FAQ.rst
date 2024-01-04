@@ -5,7 +5,7 @@ Verilog-Mode FAQ
 .. contents::
 
 This is the Frequently Asked Questions (FAQ) for `Verilog Mode
-<https://www.veripool.org/verilog-mode>`__. This FAQ is Copyright 2006-2023
+<https://www.veripool.org/verilog-mode>`__. This FAQ is Copyright 2006-2024
 by Michael McNamara and Wilson Snyder. You may redistribute this document
 in its entirety only.
 
