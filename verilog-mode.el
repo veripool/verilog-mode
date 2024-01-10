@@ -9680,7 +9680,7 @@ Return an array of [outputs inouts inputs wire reg assign const gparam intf]."
   (cond
    ;; {..., a, b} requires us to recurse on a,b
    ;; To support {#{},{#{a,b}} we'll just split everything on [{},]
-   ((string-match "^\\s-*{\\(.*\\)}\\s-*$" expr)
+   ((string-match "^\\s-*'?{\\(.*\\)}\\s-*$" expr)
     (let ((mlst (split-string (match-string 1 expr) "[{},]"))
           mstr)
       (while (setq mstr (pop mlst))
