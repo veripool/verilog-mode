@@ -951,6 +951,9 @@ common. Then add to your files:
    // verilog-typedef-regexp:"_t$"
    // End:
 
+Note in addition to the file using the AUTOs, any files which that file
+uses as submodules also need this.
+
 
 Why do the AUTOS ignore my ifdefs?
 ----------------------------------
