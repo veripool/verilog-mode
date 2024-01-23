@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Install Emacs
         run: sudo apt-get install emacs
@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Install XEmacs
         run: sudo apt-get install xemacs21
