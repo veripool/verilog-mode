@@ -7,9 +7,11 @@
 # 
 ######################################################################
 # Common targets:
-#	make		# Compile source for GNU and Xemacs
-#	make test	# Run self tests
-#	# See x/verilog-mode.el for version to install
+#   make             # Compile source for GNU and Xemacs
+#   make emacs       # Compile source for GNU only (no Xemacs)
+#   make test        # Run self tests for GNU and Xemacs
+#   make test_emacs  # Run self tests for GNU only (no Xemacs)
+#   # See x/verilog-mode.el for version to install
 ######################################################################
 
 # the directory where the .elc files will be installed
@@ -23,6 +25,7 @@ export XEMACS
 export EMACS
 
 default : e/verilog-mode.elc x/verilog-mode.elc
+emacs : e/verilog-mode.elc
 
 release : .timestamps
 install : .timestamps
