@@ -4971,7 +4971,7 @@ More specifically, point @ in the line foo : @ begin"
 	    (while t
 	      (verilog-re-search-backward
               (concat "\\(\\<module\\>\\)\\|\\(\\<connectmodule\\>\\)\\|\\(\\<randcase\\>\\|\\<case[xz]?\\>[^:]\\)\\|"
-		       "\\(\\<endcase\\>\\)\\>")
+		       "\\(\\<endcase\\>\\)")
 	       nil 'move)
 	      (cond
               ((match-end 4)
@@ -5011,7 +5011,7 @@ More specifically, after a generate and before an endgenerate."
 	(while (and
 		(/= nest 0)
 		(verilog-re-search-backward
-                 "\\<\\(module\\)\\|\\(connectmodule\\)\\|\\(endmodule\\)\\|\\(generate\\)\\|\\(endgenerate\\)\\|\\(if\\)\\|\\(case\\)\\|\\(for\\)\\>" nil 'move)
+                 "\\<\\(?:\\(module\\)\\|\\(connectmodule\\)\\|\\(endmodule\\)\\|\\(generate\\)\\|\\(endgenerate\\)\\|\\(if\\)\\|\\(case\\)\\|\\(for\\)\\)\\>" nil 'move)
 		(cond
 		 ((match-end 1) ; module - we have crawled out
 		  (throw 'done 1))
@@ -5039,7 +5039,7 @@ More specifically, after a generate and before an endgenerate."
     (save-excursion
       (while (and
 	      (/= nest 0)
-	      (verilog-re-search-backward "\\<\\(fork\\)\\|\\(join\\(_any\\|_none\\)?\\)\\>" lim 'move)
+	      (verilog-re-search-backward "\\<\\(?:\\(fork\\)\\|\\(join\\(_any\\|_none\\)?\\)\\)\\>" lim 'move)
 	      (cond
 	       ((match-end 1) ; fork
 		(setq nest (1- nest)))
@@ -5336,7 +5336,7 @@ primitive or interface named NAME."
                                 (match-end 3)
                                 (goto-char there)
                                 (let ((nest 0)
-                                      (reg "\\(\\<begin\\>\\)\\|\\(\\<end\\>\\)\\|\\(\\<if\\>\\)\\|\\(assert\\)"))
+                                      (reg "\\(\\<begin\\>\\)\\|\\(\\<end\\>\\)\\|\\(\\<if\\>\\)\\|\\(\\<assert\\>\\)"))
                                   (catch 'skip
                                     (while (verilog-re-search-backward reg nil 'move)
                                       (cond
@@ -6245,7 +6245,7 @@ Return a list of two elements: (INDENT-TYPE INDENT-LEVEL)."
                   (match-end 22))
               (throw 'continue 'foo))
 
-             ((looking-at "\\<class\\|struct\\|function\\|task\\>")
+             ((looking-at "\\<\\(?:class\\|struct\\|function\\|task\\)\\>")
               ;; *sigh* These words have an optional prefix:
               ;; extern {virtual|protected}? function a();
               ;; and we don't want to confuse this with
@@ -6945,7 +6945,7 @@ Also move point to constraint."
         (let ( (pt (point)) (pass 0))
           (verilog-backward-ws&directives)
           (verilog-backward-token)
-          (if (looking-at (concat "\\<constraint\\|coverpoint\\|cross\\|with\\>\\|" verilog-in-constraint-re))
+          (if (looking-at (concat "\\<\\(?:constraint\\|coverpoint\\|cross\\|with\\)\\>\\|" verilog-in-constraint-re))
               (progn (setq pass 1)
                      (if (looking-at "\\<with\\>")
                          (progn (verilog-backward-ws&directives)
@@ -6986,7 +6986,7 @@ Also move point to constraint."
   (save-excursion
     (if (and (equal (char-after) ?\{)
              (verilog-backward-token))
-        (looking-at "\\<struct\\|union\\|packed\\|\\(un\\)?signed\\>")
+        (looking-at "\\<\\(?:struct\\|union\\|packed\\|\\(un\\)?signed\\)\\>")
       nil)))
 
 (defun verilog-at-struct-mv-p ()
@@ -6994,7 +6994,7 @@ Also move point to constraint."
   (let ((pt (point)))
     (if (and (equal (char-after) ?\{)
              (verilog-backward-token))
-        (if (looking-at "\\<struct\\|union\\|packed\\|\\(un\\)?signed\\>")
+        (if (looking-at "\\<\\(?:struct\\|union\\|packed\\|\\(un\\)?signed\\)\\>")
             (progn (verilog-beg-of-statement) (point))
           (progn (goto-char pt) nil))
       (progn (goto-char pt) nil))))
