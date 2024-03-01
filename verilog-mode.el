@@ -12526,7 +12526,7 @@ Typing \\[verilog-auto] will make this into:
         endmodule
 
 Where the list of inputs and outputs came from the inst module.
-
+
 Exceptions:
 
   Unless you are instantiating a module multiple times, or the module is
@@ -12551,7 +12551,7 @@ Exceptions:
            // Outputs
            .o           (o[31:0]));
 
-
+
 Templates:
 
   For multiple instantiations based upon a single template, create a
@@ -12622,7 +12622,7 @@ Templates:
             .ptl_bus            (ptl_busnew[3:0]),
             ....
 
-
+
 Multiple Module Templates:
 
   The same template lines can be applied to multiple modules with
@@ -12637,7 +12637,7 @@ Multiple Module Templates:
         */
 
   Note there is only one AUTO_TEMPLATE opening parenthesis.
-
+
 @ Templates:
 
   It is common to instantiate a cell multiple times, so templates make it
@@ -12702,7 +12702,7 @@ Multiple Module Templates:
             .ptl_mapvalidx              (BAR_ptl_mapvalid),
             .ptl_mapvalidp1x            (ptl_mapvalid_BAR));
 
-
+
 Regexp Templates:
 
   A template entry of the form
@@ -12726,7 +12726,7 @@ Regexp Templates:
   subscript:
 
             .\\(.*\\)_l         (\\1_[]),
-
+
 Lisp Templates:
 
   First any regular expression template is expanded.
@@ -12771,7 +12771,7 @@ Lisp Templates:
   After the evaluation is completed, @ substitution and [] substitution
   occur.
 
-
+
 Ignoring Hookup:
 
   AUTOWIRE and related AUTOs will read the signals created by a template.
@@ -12780,7 +12780,7 @@ Ignoring Hookup:
 
             .pci_req_l  (pci_req_not_to_wire),  //AUTONOHOOKUP
 
-
+
 For more information see the \\[verilog-faq] and forums at URL
 `https://www.veripool.org'."
   (save-excursion
@@ -12934,7 +12934,7 @@ Typing \\[verilog-auto] will make this into:
         endmodule
 
 Where the list of parameter connections come from the inst module.
-
+
 Templates:
 
   You can customize the parameter connections using AUTO_TEMPLATEs,
