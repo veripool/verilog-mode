@@ -10223,8 +10223,7 @@ Returns REGEXP and list of ( (signal_name connection_name)... )."
                               (goto-char (match-end 0))
                               (cond
 				((looking-at "[^\n]*AUTONOHOOKUP") "AUTONOHOOKUP")
-				((looking-at "[^\n]*AUTOLOCAL") "AUTOLOCAL")
-				(t ""))))
+				((looking-at "[^\n]*AUTOLOCAL") "AUTOLOCAL"))))
 			   tpl-sig-list))
 	       (goto-char (match-end 0)))
               ;; Regexp form??
@@ -10245,8 +10244,7 @@ Returns REGEXP and list of ( (signal_name connection_name)... )."
                               (goto-char (match-end 0))
                               (cond
 				((looking-at "[^\n]*AUTONOHOOKUP") "AUTONOHOOKUP")
-				((looking-at "[^\n]*AUTOLOCAL") "AUTOLOCAL")
-				(t ""))))
+				((looking-at "[^\n]*AUTOLOCAL") "AUTOLOCAL"))))
 			   tpl-wild-list)))
 	      ((looking-at "[ \t\f]+")
 	       (goto-char (match-end 0)))
@@ -12401,7 +12399,7 @@ If PAR-VALUES replace final strings with these parameter values."
                    (t
                     (verilog-insert " // Templated")))
 	     ;; AUTONOHOOKUP
-             (verilog-insert (if (nth 4 tpl-ass) (concat " " (nth 4 tpl-ass))) "\n"))
+             (verilog-insert (if (nth 4 tpl-ass) (concat " " (nth 4 tpl-ass)) "") "\n"))
             (for-star
              (indent-to (+ (if (< verilog-auto-inst-column 48) 24 16)
                            verilog-auto-inst-column))

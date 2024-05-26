@@ -13,7 +13,7 @@ module autoinst_autolocal(
           // Outputs
           .o1                           (o1),                    // Templated AUTOLOCAL
           // Inputs
-          .i1                           (i1));                   // Templated 
+          .i1                           (i1));                   // Templated
 endmodule
 
 module a2 (
