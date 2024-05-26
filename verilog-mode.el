@@ -8730,8 +8730,8 @@ See also `verilog-sk-header' for an alternative format."
 
 ;; Elements of a signal list
 ;; Unfortunately we use 'assoc' on this, so can't be a vector
-(defsubst verilog-sig-new (name bits comment mem enum signed type multidim modport)
-  (list name bits comment mem enum signed type multidim modport))
+(defsubst verilog-sig-new (name bits comment mem enum signed type multidim modport &optional islocal)
+  (list name bits comment mem enum signed type multidim modport islocal))
 (defsubst verilog-sig-new-renamed (name old-sig)
   (cons name (cdr old-sig)))
 (defsubst verilog-sig-name (sig)
@@ -8761,6 +8761,8 @@ See also `verilog-sk-header' for an alternative format."
 	str)))
 (defsubst verilog-sig-modport (sig)
   (nth 8 sig))
+(defsubst verilog-sig-local (sig)
+  (nth 9 sig))
 (defsubst verilog-sig-width (sig)
   (verilog-make-width-expression (verilog-sig-bits sig)))
 
@@ -8996,7 +8998,7 @@ Duplicate signals are also removed.  For example A[2] and A[1] become A[2:1]."
 	sig highbit lowbit		; Temp information about current signal
 	sv-name sv-highbit sv-lowbit	; Details about signal we are forming
 	sv-comment sv-memory sv-enum sv-signed sv-type sv-multidim sv-busstring
-	sv-modport
+	sv-modport sv-local
 	bus)
     ;; Shove signals so duplicated signals will be adjacent
     (setq in-list (sort in-list #'verilog-signals-sort-compare))
@@ -9014,6 +9016,7 @@ Duplicate signals are also removed.  For example A[2] and A[1] become A[2:1]."
 	      sv-type    (verilog-sig-type sig)
 	      sv-multidim (verilog-sig-multidim sig)
 	      sv-modport  (verilog-sig-modport sig)
+	      sv-local (verilog-sig-local sig)
 	      combo ""
 	      buswarn ""))
       ;; Extract bus details
@@ -9066,7 +9069,7 @@ Duplicate signals are also removed.  For example A[2] and A[1] become A[2:1]."
 				  (concat "[" (int-to-string sv-highbit) ":"
 					  (int-to-string sv-lowbit) "]")))
 			  (concat sv-comment combo buswarn)
-			  sv-memory sv-enum sv-signed sv-type sv-multidim sv-modport)
+			  sv-memory sv-enum sv-signed sv-type sv-multidim sv-modport sv-local)
 			 out-list)
 		   sv-name nil))))
     ;;
@@ -9582,7 +9585,7 @@ Return an array of [outputs inouts inputs wire reg assign const gparam intf]."
           (pvassoc (nth 1 pvassoc))
           (t type))))
 
-(defun verilog-read-sub-decls-sig (submoddecls par-values comment port sig vec multidim mem)
+(defun verilog-read-sub-decls-sig (submoddecls par-values comment port sig vec multidim mem &optional islocal)
   "For `verilog-read-sub-decls-line', add a signal."
   ;; sig eq t to indicate .name syntax
   ;;(message "vrsds: %s(%S)" port sig)
@@ -9607,7 +9610,7 @@ Return an array of [outputs inouts inputs wire reg assign const gparam intf]."
 			    nil
 			    (verilog-sig-signed portdata)
                             (verilog-read-sub-decls-type par-values portdata)
-			    multidim nil)
+			    multidim nil nil)
 			   sigs-inout)))
 	      ((or (setq portdata (assoc port (verilog-decls-get-outputs submoddecls)))
 		   (equal "output" verilog-read-sub-decls-gate-ios))
@@ -9624,8 +9627,9 @@ Return an array of [outputs inouts inputs wire reg assign const gparam intf]."
 			    ;; Also for backwards compatibility we don't propagate
 			    ;;  "input wire" upwards.
 			    ;; See also `verilog-signals-edit-wire-reg'.
+			    ;; islocal is only applicable for situation using "output" as local.
                             (verilog-read-sub-decls-type par-values portdata)
-			    multidim nil)
+			    multidim nil islocal)
 			   sigs-out)))
 	      ((or (setq portdata (assoc port (verilog-decls-get-inputs submoddecls)))
 		   (equal "input" verilog-read-sub-decls-gate-ios))
@@ -9638,7 +9642,7 @@ Return an array of [outputs inouts inputs wire reg assign const gparam intf]."
 			    nil
 			    (verilog-sig-signed portdata)
                             (verilog-read-sub-decls-type par-values portdata)
-			    multidim nil)
+			    multidim nil nil)
 			   sigs-in)))
 	      ((setq portdata (assoc port (verilog-decls-get-interfaces submoddecls)))
 	       (setq sigs-intf
@@ -9726,7 +9730,7 @@ Return an array of [outputs inouts inputs wire reg assign const gparam intf]."
 (defun verilog-read-sub-decls-line (submoddecls par-values comment)
   "For `verilog-read-sub-decls', read lines of port defs until none match.
 Inserts the list of signals found, using submodi to look up each port."
-  (let (done port)
+  (let (done port islocal)
     (save-excursion
       (forward-line 1)
       (while (not done)
@@ -9760,6 +9764,7 @@ Inserts the list of signals found, using submodi to look up each port."
 	;; We intentionally ignore (non-escaped) signals with .s in them
 	;; this prevents AUTOWIRE etc from noticing hierarchical sigs.
 	(when port
+	  (if (looking-at "[^\n]*AUTOLOCAL") (setq islocal t) (setq islocal nil))
           (cond ((and verilog-auto-ignore-concat
                       (looking-at "[({]"))
                  nil) ; {...} or (...) historically ignored with auto-ignore-concat
@@ -9768,13 +9773,13 @@ Inserts the list of signals found, using submodi to look up each port."
 		 (verilog-read-sub-decls-sig
                   submoddecls par-values comment port
 		  (verilog-string-remove-spaces (match-string-no-properties 1)) ; sig
-		  nil nil nil)) ; vec multidim mem
+		  nil nil nil islocal)) ; vec multidim mem
 		;;
 		((looking-at "\\([a-zA-Z_][a-zA-Z_0-9]*\\)\\s-*\\(\\[[^][]+\\]\\)\\s-*)")
 		 (verilog-read-sub-decls-sig
                   submoddecls par-values comment port
 		  (verilog-string-remove-spaces (match-string-no-properties 1)) ; sig
-		  (match-string-no-properties 2) nil nil)) ; vec multidim mem
+		  (match-string-no-properties 2) nil nil islocal)) ; vec multidim mem
 		;; Fastpath was above looking-at's.
 		;; For something more complicated invoke a parser
 		((looking-at "[^)]+")
@@ -10216,7 +10221,10 @@ Returns REGEXP and list of ( (signal_name connection_name)... )."
                             templateno lineno
                             (save-excursion
                               (goto-char (match-end 0))
-                              (looking-at "[^\n]*AUTONOHOOKUP")))
+                              (cond
+				((looking-at "[^\n]*AUTONOHOOKUP") "AUTONOHOOKUP")
+				((looking-at "[^\n]*AUTOLOCAL") "AUTOLOCAL")
+				(t ""))))
 			   tpl-sig-list))
 	       (goto-char (match-end 0)))
               ;; Regexp form??
@@ -10235,7 +10243,10 @@ Returns REGEXP and list of ( (signal_name connection_name)... )."
                             templateno lineno
                             (save-excursion
                               (goto-char (match-end 0))
-                              (looking-at "[^\n]*AUTONOHOOKUP")))
+                              (cond
+				((looking-at "[^\n]*AUTONOHOOKUP") "AUTONOHOOKUP")
+				((looking-at "[^\n]*AUTOLOCAL") "AUTOLOCAL")
+				(t ""))))
 			   tpl-wild-list)))
 	      ((looking-at "[ \t\f]+")
 	       (goto-char (match-end 0)))
@@ -11136,6 +11147,14 @@ those clocking block's signals."
       (setq clks (cdr clks)))
     decls))
 
+(defun verilog-signals-matching-local (in-list islocal)
+  "Return all signals in IN-LIST that have the same local value as the given islocal."
+  (let (out-list)
+    (dolist (sig in-list)
+      (if (equal islocal (verilog-sig-local sig))
+          (push sig out-list)))
+    (nreverse out-list)))
+
 (defun verilog-signals-matching-enum (in-list enum)
   "Return all signals in IN-LIST matching the given ENUM."
   (let (out-list)
@@ -11707,7 +11726,7 @@ Intended for internal use inside a
                              'verilog-delete-auto-star-all)
   ;; Remove template comments ... anywhere in case was pasted after AUTOINST removed
   (goto-char (point-min))
-  (while (re-search-forward "\\s-*// \\(Templated\\(\\s-*AUTONOHOOKUP\\)?\\|Implicit \\.\\*\\)\\([ \tLT0-9]*\\| LHS: .*\\)$" nil t)
+  (while (re-search-forward "\\s-*// \\(Templated\\(\\s-*AUTONOHOOKUP\\|\\s-*AUTOLOCAL\\)?\\|Implicit \\.\\*\\)\\([ \tLT0-9]*\\| LHS: .*\\)$" nil t)
     (replace-match ""))
 
   ;; Final customize
@@ -12381,7 +12400,8 @@ If PAR-VALUES replace final strings with these parameter values."
                                     " L" (int-to-string (nth 3 tpl-ass))))
                    (t
                     (verilog-insert " // Templated")))
-             (verilog-insert (if (nth 4 tpl-ass) " AUTONOHOOKUP\n" "\n")))
+	     ;; AUTONOHOOKUP
+             (verilog-insert (if (nth 4 tpl-ass) (concat " " (nth 4 tpl-ass))) "\n"))
             (for-star
              (indent-to (+ (if (< verilog-auto-inst-column 48) 24 16)
                            verilog-auto-inst-column))
@@ -13281,6 +13301,8 @@ same expansion will result from only extracting outputs starting with ov:
 			sig-list regexp)))
       (setq sig-list (verilog-signals-not-matching-regexp
 		      sig-list verilog-auto-output-ignore-regexp))
+      (setq sig-list (verilog-signals-matching-local
+		       sig-list nil))
       (verilog-forward-or-insert-line)
       (when v2k (verilog-repair-open-comma))
       (when sig-list
