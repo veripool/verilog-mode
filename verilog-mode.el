@@ -11547,7 +11547,7 @@ This repairs those mis-inserted by an AUTOARG."
 ;;(verilog-simplify-range-expression "[2*4/(4-2) +2+4 <<4 >>2]")  ; "[8/(2) +2+4 <<4 >>2]"
 ;;(verilog-simplify-range-expression "[WIDTH*2/8-1:0]")  ; "[WIDTH*2/8-1:0]"
 ;;(verilog-simplify-range-expression "[(FOO).size:0]")  ; "[FOO.size:0]"
-;
+
 (defun verilog-clog2 (value)
   "Compute $clog2 - ceiling log2 of VALUE."
   (if (< value 1)
