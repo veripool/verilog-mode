@@ -11380,6 +11380,9 @@ Presumes that any newlines end a list element."
     (when (and (not (save-excursion  ; Not beginning (, or existing ,
 		      (backward-char 1)
 		      (looking-at "[(,]")))
+               (not (save-excursion  ; Not attribute *)
+		      (backward-char 2)
+		      (looking-at "\\*)")))
                (not (save-excursion  ; Not `endif, or user define
 		      (backward-char 1)
 		      (skip-chars-backward "a-zA-Z0-9_`")
