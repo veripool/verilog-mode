@@ -1,4 +1,4 @@
-module  testmux();
+module  testmux
    # (parameter WIDTH = 32)
    (
     input wire [2:0]    /* synopsys enum cur_info */ sel,
