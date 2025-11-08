@@ -4362,12 +4362,16 @@ Key bindings specific to `verilog-mode-map' are:
   (when (and (boundp 'which-func-modes) (listp which-func-modes))
     (add-to-list 'which-func-modes 'verilog-mode))
   ;; hideshow support
-  (when (boundp 'hs-special-modes-alist)
-    (unless (assq 'verilog-mode hs-special-modes-alist)
-      (setq hs-special-modes-alist
-            (cons '(verilog-mode "\\<begin\\>" "\\<end\\>" nil
-                                 verilog-forward-sexp-function)
-                  hs-special-modes-alist))))
+  (cond ((boundp 'hs-forward-sexp-func)  ;; 31.1 and beyond
+         (setq-local hs-block-start-regexp "\\<begin\\>")
+         (setq-local hs-block-end-regexp "\\<end\\>")
+         (setq-local hs-forward-sexp-func #'verilog-forward-sexp-function))
+        ((boundp 'hs-special-modes-alist)  ;; pre 31.1, not XEmacs
+         (unless (assq 'verilog-mode hs-special-modes-alist)
+           (setq hs-special-modes-alist
+                 (cons '(verilog-mode "\\<begin\\>" "\\<end\\>" nil
+                                      verilog-forward-sexp-function)
+                       hs-special-modes-alist)))))
 
   (add-hook 'completion-at-point-functions
             #'verilog-completion-at-point nil 'local)
