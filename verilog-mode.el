@@ -12283,9 +12283,10 @@ If PAR-VALUES replace final strings with these parameter values."
          auto-inst-vector
          auto-inst-vector-tpl
          tpl-net dflt-bits)
-    ;; Replace parameters in bit-width
+    ;; Replace parameters in vl-bits & vl-widths
     (when (and check-values
-	       (not (equal vl-bits "")))
+			   (or (not (equal vl-bits  ""))
+				   (not (equal vl-width ""))))
       (while check-values
 	(setq vl-bits (verilog-string-replace-matches
 		       (concat "\\<" (nth 0 (car check-values)) "\\>")
