@@ -4362,10 +4362,10 @@ Key bindings specific to `verilog-mode-map' are:
   (when (and (boundp 'which-func-modes) (listp which-func-modes))
     (add-to-list 'which-func-modes 'verilog-mode))
   ;; hideshow support
-  (cond ((boundp 'hs-forward-sexp-func)  ;; 31.1 and beyond
+  (cond ((boundp 'hs-forward-sexp-function)  ;; 31.1 and beyond
          (setq-local hs-block-start-regexp "\\<begin\\>")
          (setq-local hs-block-end-regexp "\\<end\\>")
-         (setq-local hs-forward-sexp-func #'verilog-forward-sexp-function))
+         (setq-local hs-forward-sexp-function #'verilog-forward-sexp-function))
         ((boundp 'hs-special-modes-alist)  ;; pre 31.1, not XEmacs
          (unless (assq 'verilog-mode hs-special-modes-alist)
            (setq hs-special-modes-alist
