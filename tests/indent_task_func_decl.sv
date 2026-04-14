@@ -40,19 +40,31 @@ class burst_drv extends vmm_xactor;
    protected virtual task pv_t();
       /**/
    endtask // pv_t
+   local virtual task lv_t();
+      /**/
+   endtask // lv_t
 
    protected task p_t();
       /* ACK*/
    endtask // p_t
+   local task l_t();
+      /* ACK*/
+   endtask // l_t
    virtual task v_t();
       /**/      
    endtask // v_t
    virtual protected task vp_t();
       /**/
    endtask // vp_t
+   virtual local task vl_t();
+      /**/
+   endtask // vl_t
    protected virtual task pv_t();
       /**/
    endtask // pv_t
+   local virtual task lv_t();
+      /**/
+   endtask // lv_t
    extern task e_t();
    extern virtual task ev_t();
    extern protected task ep_t();
