@@ -102,8 +102,8 @@ module tpl_arr_mixed
    /*
     tpl_arr_sub AUTO_TEMPLATE
     (
-    .data (mx[].[@]),       // numeric indexes → merged
-    .addr (mxaddr[].[IDX]), // non-numeric index → kept as-is
+    .data (mx[].[@]),       // numeric indexes -> merged
+    .addr (mxaddr[].[IDX]), // non-numeric index -> kept as-is
     );
     */
    tpl_arr_sub u_0
@@ -114,7 +114,7 @@ endmodule
 
 // ============================================================
 // Test: same signal name mapped to different hard-coded indexes;
-// each port gets its own declaration, not merged.
+// all connected indexes merge into one covering range.
 // ============================================================
 
 module tpl_arr_gap
@@ -138,7 +138,7 @@ module tpl_arr_gap
 endmodule
 
 // ============================================================
-// Test: single instance → single-element unpacked range [N:N]
+// Test: single instance -> single-element unpacked range [N:N]
 // ============================================================
 
 module tpl_arr_single
@@ -156,7 +156,7 @@ endmodule
 
 // ============================================================
 // Test: descending instance-name order still produces ascending
-// unpacked range (e.g. u_3, u_2, u_1 → [1:3])
+// unpacked range (e.g. u_3, u_2, u_1 -> [1:3])
 // ============================================================
 
 module tpl_arr_rev
@@ -178,7 +178,8 @@ endmodule
 
 // ============================================================
 // Test: overlapping unpacked ranges [0:2] and [1:4] merge to
-// [0:4] and warn "Couldn't Merge".
+// [0:4]; overlapping or duplicate ranges merge silently, like
+// packed bits.
 // ============================================================
 
 module tpl_arr_overlap
@@ -299,5 +300,26 @@ module tpl_arr_escaped
     );
     */
    tpl_arr_escaped_sub u_0
+     (/*AUTOINST*/);
+endmodule
+
+// ============================================================
+// Test: an unpacked-array input feeding two instances merges
+// silently in AUTOINPUT (no "Couldn't Merge").
+// ============================================================
+
+module tpl_arr_fanout_sub
+  (
+   input [15:0] fan [0:3]
+   );
+endmodule
+
+module tpl_arr_fanout
+  (
+   /*AUTOINPUT*/
+   );
+   tpl_arr_fanout_sub u_a
+     (/*AUTOINST*/);
+   tpl_arr_fanout_sub u_b
      (/*AUTOINST*/);
 endmodule

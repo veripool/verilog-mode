@@ -9,6 +9,27 @@ module tpl_arr_sub
    );
 endmodule
 
+// Sub modules used to test mixed unpacked-array range handling.
+module tpl_arr_desc_numeric_sub
+  (
+   output [15:0] desc,
+   output [15:0] numeric
+   );
+endmodule
+
+module tpl_arr_symbolic_numeric_sub
+  (
+   output [15:0] symbolic,
+   output [15:0] numeric
+   );
+endmodule
+
+module tpl_arr_escaped_sub
+  (
+   output [15:0] data
+   );
+endmodule
+
 // ============================================================
 // Test: non-consecutive indexes produce one covering range
 // ============================================================
@@ -145,8 +166,8 @@ module tpl_arr_mixed
    /*
     tpl_arr_sub AUTO_TEMPLATE
     (
-    .data (mx[].[@]),       // numeric indexes → merged
-    .addr (mxaddr[].[IDX]), // non-numeric index → kept as-is
+    .data (mx[].[@]),       // numeric indexes -> merged
+    .addr (mxaddr[].[IDX]), // non-numeric index -> kept as-is
     );
     */
    tpl_arr_sub u_0
@@ -167,7 +188,7 @@ endmodule
 
 // ============================================================
 // Test: same signal name mapped to different hard-coded indexes;
-// each port gets its own declaration, not merged.
+// all connected indexes merge into one covering range.
 // ============================================================
 
 module tpl_arr_gap
@@ -175,7 +196,7 @@ module tpl_arr_gap
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
    wire        flag;    // From u_a of tpl_arr_sub.v, ...
-   wire [15:0] g [0:7]; // From u_a of tpl_arr_sub.v, ..., Couldn't Merge
+   wire [15:0] g [0:7]; // From u_a of tpl_arr_sub.v, ...
    // End of automatics
    /*
     tpl_arr_sub AUTO_TEMPLATE
@@ -210,7 +231,7 @@ module tpl_arr_gap
 endmodule
 
 // ============================================================
-// Test: single instance → single-element unpacked range [N:N]
+// Test: single instance -> single-element unpacked range [N:N]
 // ============================================================
 
 module tpl_arr_single
@@ -239,7 +260,7 @@ endmodule
 
 // ============================================================
 // Test: descending instance-name order still produces ascending
-// unpacked range (e.g. u_3, u_2, u_1 → [1:3])
+// unpacked range (e.g. u_3, u_2, u_1 -> [1:3])
 // ============================================================
 
 module tpl_arr_rev
@@ -282,7 +303,8 @@ endmodule
 
 // ============================================================
 // Test: overlapping unpacked ranges [0:2] and [1:4] merge to
-// [0:4] and warn "Couldn't Merge".
+// [0:4]; overlapping or duplicate ranges merge silently, like
+// packed bits.
 // ============================================================
 
 module tpl_arr_overlap
@@ -292,7 +314,7 @@ module tpl_arr_overlap
    wire [7:0]  addr;     // From u_a of tpl_arr_sub.v, ...
    wire [3:0]  ctrl;     // From u_a of tpl_arr_sub.v, ...
    wire        flag;     // From u_a of tpl_arr_sub.v, ...
-   wire [15:0] ov [0:4]; // From u_a of tpl_arr_sub.v, ..., Couldn't Merge
+   wire [15:0] ov [0:4]; // From u_a of tpl_arr_sub.v, ...
    // End of automatics
    /*
     tpl_arr_sub AUTO_TEMPLATE
@@ -412,7 +434,7 @@ module tpl_arr_mixed_symbolic
      (/*AUTOINST*/
       // Outputs
       .symbolic                         (sym[IDX]/*[15:0].[IDX]*/), // Templated
-      .numeric                          (sym[0]/*[15:0].[0]*/)); // Templated
+      .numeric                          (sym[0]/*[15:0].[0]*/));         // Templated
 endmodule
 
 // ============================================================
@@ -423,10 +445,10 @@ module tpl_arr_signed_single
   ();
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire [7:0]  addr;            // From u_0 of tpl_arr_sub.v, ...
-   wire [3:0]  ctrl;            // From u_0 of tpl_arr_sub.v, ...
-   wire        flag;            // From u_0 of tpl_arr_sub.v, ...
-   wire [15:0] neg_one [-2:-2]; // From u_0 of tpl_arr_sub.v, ...
+   wire [7:0]  addr;            // From u_0 of tpl_arr_sub.v
+   wire [3:0]  ctrl;            // From u_0 of tpl_arr_sub.v
+   wire        flag;            // From u_0 of tpl_arr_sub.v
+   wire [15:0] neg_one [-2:-2]; // From u_0 of tpl_arr_sub.v
    // End of automatics
    /*
     tpl_arr_sub AUTO_TEMPLATE
@@ -452,7 +474,7 @@ module tpl_arr_escaped
   ();
    /*AUTOWIRE*/
    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-   wire [15:0] \escaped_data  [0:1]; // From u_0 of tpl_arr_escaped_sub.v, ...
+   wire [15:0] \escaped_data [0:1]; // From u_0 of tpl_arr_escaped_sub.v
    // End of automatics
    /*
     tpl_arr_escaped_sub AUTO_TEMPLATE
@@ -464,4 +486,32 @@ module tpl_arr_escaped
      (/*AUTOINST*/
       // Outputs
       .data                             (\escaped_data [0:1]/*[15:0].[0:1]*/)); // Templated
+endmodule
+
+// ============================================================
+// Test: an unpacked-array input feeding two instances merges
+// silently in AUTOINPUT (no "Couldn't Merge").
+// ============================================================
+
+module tpl_arr_fanout_sub
+  (
+   input [15:0] fan [0:3]
+   );
+endmodule
+
+module tpl_arr_fanout
+  (
+   /*AUTOINPUT*/
+   // Beginning of automatic inputs (from unused autoinst inputs)
+   input [15:0] fan [0:3] // To u_a of tpl_arr_fanout_sub.v, ...
+   // End of automatics
+   );
+   tpl_arr_fanout_sub u_a
+     (/*AUTOINST*/
+      // Inputs
+      .fan                              (fan/*[15:0].[0:3]*/));
+   tpl_arr_fanout_sub u_b
+     (/*AUTOINST*/
+      // Inputs
+      .fan                              (fan/*[15:0].[0:3]*/));
 endmodule
