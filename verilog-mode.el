@@ -9116,8 +9116,7 @@ Duplicate signals are also removed.  For example A[2] and A[1] become A[2:1]."
 			  (concat sv-comment combo buswarn)
 			  (cond
 			   ;; If any range was not safely mergeable, retain that
-			   ;; original unpacked declaration rather than silently
-			   ;; changing its direction or expression.
+			   ;; original unpacked declaration
 			   (sv-memory sv-memory)
 			   (sv-mem-ranges
 			    ;; Combined unpacked index span, ascending.
