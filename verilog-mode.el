@@ -9005,12 +9005,11 @@ Duplicate signals are also removed.  For example A[2] and A[1] become A[2:1]."
   (let (combo
         buswarn
 	out-list
-	sig highbit lowbit mem		; Temp information about current signal
+        sig highbit lowbit mem  ; Temp information about current signal
 	sv-name sv-highbit sv-lowbit	; Details about signal we are forming
 	sv-comment sv-memory sv-enum sv-signed sv-type sv-multidim sv-busstring
 	sv-modport
-	sv-mem-low sv-mem-high	; Bounds of mergeable unpacked numeric ranges
-	sv-mem-ranges		; Unpacked numeric ranges, used to detect overlap
+        sv-mem-low sv-mem-high  ; Bounds of mergeable unpacked numeric ranges
 	bus)
     ;; Shove signals so duplicated signals will be adjacent
     (setq in-list (sort in-list #'verilog-signals-sort-compare))
@@ -9022,10 +9021,9 @@ Duplicate signals are also removed.  For example A[2] and A[1] become A[2:1]."
 	      sv-highbit nil
 	      sv-busstring nil
 	      sv-comment (verilog-sig-comment sig)
-	      sv-memory  nil
-	      sv-mem-low nil
-	      sv-mem-high nil
-	      sv-mem-ranges nil
+              sv-memory nil
+              sv-mem-low nil
+              sv-mem-high nil
 	      sv-enum    (verilog-sig-enum sig)
 	      sv-signed  (verilog-sig-signed sig)
 	      sv-type    (verilog-sig-type sig)
@@ -9056,35 +9054,24 @@ Duplicate signals are also removed.  For example A[2] and A[1] become A[2:1]."
       ;; Extract unpacked-array details
       (setq mem (verilog-sig-memory sig))
       (cond ((and mem
-		  (string-match "^\\[\\([+-]?[0-9]+\\):\\([+-]?[0-9]+\\)\\]$" mem)
-		  (<= (string-to-number (match-string 1 mem))
-		      (string-to-number (match-string 2 mem))))
-	     ;; Merge ascending numeric ranges without expanding every
-	     ;; index.  Preserve the existing warning for overlapping
-	     ;; ranges from different ports or instances.
-	     ;; Descending ranges are left alone so existing declarations
-	     ;; keep their direction.
-	     (let ((lo (string-to-number (match-string 1 mem)))
-		   (hi (string-to-number (match-string 2 mem)))
-		   (ranges sv-mem-ranges)
-		   (overlap nil))
-	       (when sv-memory  ; Mixed with an unmergeable form
-		 (setq buswarn ", Couldn't Merge"))
-	       (while ranges
-		 (let ((range (car ranges)))
-		   (when (and (<= lo (cdr range))
-			      (<= (car range) hi))
-		     (setq overlap t)))
-		 (setq ranges (cdr ranges)))
-	       (when overlap
-		 (setq buswarn ", Couldn't Merge"))
-	       (setq sv-mem-ranges (cons (cons lo hi) sv-mem-ranges)
-		     sv-mem-low (if sv-mem-low (min lo sv-mem-low) lo)
-		     sv-mem-high (if sv-mem-high (max hi sv-mem-high) hi))))
-	    (mem
-	     (when sv-mem-ranges  ; Mixed with a mergeable numeric range
-	       (setq buswarn ", Couldn't Merge"))
-	     (setq sv-memory (or sv-memory mem))))
+                  (string-match "^\\[\\([+-]?[0-9]+\\):\\([+-]?[0-9]+\\)\\]$" mem)
+                  (<= (string-to-number (match-string 1 mem))
+                      (string-to-number (match-string 2 mem))))
+             ;; Merge ascending numeric ranges without expanding every
+             ;; index.  Overlapping or duplicate ranges merge silently,
+             ;; matching the packed-bit merge above.
+             ;; Descending ranges are left alone so existing declarations
+             ;; keep their direction.
+             (let ((lo (string-to-number (match-string 1 mem)))
+                   (hi (string-to-number (match-string 2 mem))))
+               (when sv-memory  ; Mixed with an unmergeable form
+                 (setq buswarn ", Couldn't Merge"))
+               (setq sv-mem-low (if sv-mem-low (min lo sv-mem-low) lo)
+                     sv-mem-high (if sv-mem-high (max hi sv-mem-high) hi))))
+            (mem
+             (when sv-mem-low  ; Mixed with a mergeable numeric range
+               (setq buswarn ", Couldn't Merge"))
+             (setq sv-memory (or sv-memory mem))))
       ;; Peek ahead to next signal
       (setq in-list (cdr in-list))
       (setq sig (car in-list))
@@ -9098,7 +9085,7 @@ Duplicate signals are also removed.  For example A[2] and A[1] become A[2:1]."
 			  sv-name bus))
 	       (setq buswarn ", Couldn't Merge"))
 	     (if (verilog-sig-comment sig) (setq combo ", ..."))
-	     (setq sv-enum   (or sv-enum   (verilog-sig-enum sig))
+             (setq sv-enum   (or sv-enum   (verilog-sig-enum sig))
 		   sv-signed (or sv-signed (verilog-sig-signed sig))
                    sv-type   (or sv-type   (verilog-sig-type sig))
                    sv-multidim (or sv-multidim (verilog-sig-multidim sig))
@@ -9114,18 +9101,18 @@ Duplicate signals are also removed.  For example A[2] and A[1] become A[2:1]."
 				  (concat "[" (int-to-string sv-highbit) ":"
 					  (int-to-string sv-lowbit) "]")))
 			  (concat sv-comment combo buswarn)
-			  (cond
-			   ;; If any range was not safely mergeable, retain that
-			   ;; original unpacked declaration
-			   (sv-memory sv-memory)
-			   (sv-mem-ranges
-			    ;; Combined unpacked index span, ascending.
-			    (concat "["
-				    (int-to-string sv-mem-low)
-				    ":"
-				    (int-to-string sv-mem-high)
-				    "]")))
-			  sv-enum sv-signed sv-type sv-multidim sv-modport)
+                          (cond
+                           ;; If any range was not safely mergeable, retain that
+                           ;; original unpacked declaration
+                           (sv-memory sv-memory)
+                           (sv-mem-low
+                            ;; Combined unpacked index span, ascending.
+                            (concat "["
+                                    (int-to-string sv-mem-low)
+                                    ":"
+                                    (int-to-string sv-mem-high)
+                                    "]")))
+                          sv-enum sv-signed sv-type sv-multidim sv-modport)
 			 out-list)
 		   sv-name nil))))
     ;;
@@ -9736,14 +9723,14 @@ Return an array of [outputs inouts inputs wire reg assign const gparam intf]."
   ;; as an unpacked range below (single-element, mergeable by
   ;; `verilog-signals-combine-bus'); non-numeric indexes keep ".[index]".
   (when (string-match
-	 "^\\s-*\\(\\(?:[a-zA-Z_][a-zA-Z_0-9]*\\|\\\\[^ \t\n\f]+\\s-\\)\\)\\s-*\\[\\([^][]+\\)\\]\\s-*/\\*\\(\\(?:\\[[^][]+\\]\\)*\\)\\.\\[[^][]+\\]\\*/\\s-*$"
-	 expr)
+         "^\\s-*\\(\\(?:[a-zA-Z_][a-zA-Z_0-9]*\\|\\\\[^ \t\n\f]+\\s-\\)\\)\\s-*\\[\\([^][]+\\)\\]\\s-*/\\*\\(\\(?:\\[[^][]+\\]\\)*\\)\\.\\[[^][]+\\]\\*/\\s-*$"
+         expr)
     (let ((idx (match-string 2 expr)))
       (setq expr (concat (match-string 1 expr)
-			 (match-string 3 expr)
-			 ".[" idx
-			 (if (string-match "^[+-]?[0-9]+$" idx) (concat ":" idx) "")
-			 "]"))))
+                         (match-string 3 expr)
+                         ".[" idx
+                         (if (string-match "^[+-]?[0-9]+$" idx) (concat ":" idx) "")
+                         "]"))))
   ;; Replace special /*[....]*/ comments inserted by verilog-auto-inst-port
   (setq expr (verilog-string-replace-matches
               "/\\*\\(\\.?\\[\\([^*]+\\|[*][^/]\\)+\\]\\)\\*/" "\\1" nil nil expr))
@@ -12457,11 +12444,16 @@ If PAR-VALUES replace final strings with these parameter values."
       ;; e.g. "sig[].[2]" becomes "sig[2]/*[6:0].[2]*/".  AUTOWIRE etc
       ;; parse the comment back, see `verilog-read-sub-decls-expr'.
       (while (string-match "\\[\\]\\.\\(\\[[^][]+\\]\\)" tpl-net)
-	(setq tpl-net (replace-match
-		       (concat (match-string 1 tpl-net)
-			       "/*" vl-mbits vl-bits
-			       "." (match-string 1 tpl-net) "*/")
-		       t t tpl-net)))
+        (setq tpl-net (replace-match
+                       (concat (match-string 1 tpl-net)
+                               "/*" vl-mbits vl-bits
+                               "." (match-string 1 tpl-net) "*/")
+                       t t tpl-net)))
+      ;; "[].[]" is left when "[].[@]" is used on an instance whose name
+      ;; gives no @ value; catch it rather than emit a nonsense connection.
+      (when (string-match "\\[\\]\\.\\[\\]" tpl-net)
+        (verilog-warn-error "%s: AUTO_TEMPLATE `%s' expanded to an empty [].[] index; instance name has no value for @"
+                            (verilog-point-text) tpl-net))
       (setq tpl-net (verilog-string-replace-matches "\\[\\]\\[\\]" dflt-bits nil nil tpl-net))
       (setq tpl-net (verilog-string-replace-matches "\\[\\]" auto-inst-vector-tpl nil nil tpl-net)))
     ;; Insert it
@@ -12773,9 +12765,9 @@ Multiple Module Templates:
   For example:
 
         /* InstModule AUTO_TEMPLATE (
-                .ptl_mapvalidx          (ptl_mapvalid[@]),
-                .ptl_mapvalidp1x        (ptl_mapvalid[@\"(% (+ 1 @) 4)\"]),
-                );
+            .ptl_mapvalidx      (ptl_mapvalid[@]),
+            .ptl_mapvalidp1x    (ptl_mapvalid[@\"(% (+ 1 @) 4)\"]),
+            );
         */
         InstModule ms2m (/*AUTOINST*/);
 
@@ -12783,17 +12775,18 @@ Multiple Module Templates:
 
         InstModule ms2m (/*AUTOINST*/
             // Outputs
-            .ptl_mapvalidx              (ptl_mapvalid[2]),
-            .ptl_mapvalidp1x            (ptl_mapvalid[3]));
+            .ptl_mapvalidx      (ptl_mapvalid[2]),
+            .ptl_mapvalidp1x    (ptl_mapvalid[3]));
 
   Note the @ character was replaced with the 2 from \"ms2m\".
 
-  A connection of \"[].[@]\" connects one element of an unpacked array.
-  AUTOWIRE will declare the net as an unpacked array spanning all connected indexes:
+  A connection of \"[].[@]\" connects one element of an unpacked
+  array.  AUTOWIRE will declare the net as an unpacked array
+  spanning all connected indexes:
 
         /* InstModule AUTO_TEMPLATE (
-                .ptl_mapvalidx          (ptl_mapvalid[].[@]),
-                );
+            .ptl_mapvalidx      (ptl_mapvalid[].[@]),
+            );
         */
         InstModule ms2m (/*AUTOINST*/);
         InstModule ms0m (/*AUTOINST*/);
@@ -12802,21 +12795,22 @@ Multiple Module Templates:
 
         InstModule ms2m (/*AUTOINST*/
             // Outputs
-            .ptl_mapvalidx              (ptl_mapvalid[2]/*[3:0].[2]*/));
+            .ptl_mapvalidx      (ptl_mapvalid[2]/*[3:0].[2]*/));
         InstModule ms0m (/*AUTOINST*/
             // Outputs
-            .ptl_mapvalidx              (ptl_mapvalid[0]/*[3:0].[0]*/));
+            .ptl_mapvalidx      (ptl_mapvalid[0]/*[3:0].[0]*/));
 
-  and AUTOWIRE will declare \"wire [3:0] ptl_mapvalid [0:2];\".  The
-  indexes must be numeric for AUTOWIRE to combine them; connecting the
-  same index twice warns \"Couldn't Merge\" in the declaration comment.
+  and AUTOWIRE will declare \"wire [3:0] ptl_mapvalid [0:2];\".
+  The indexes must be numeric for AUTOWIRE to combine them;
+  overlapping or duplicate indexes merge silently into the
+  covering range.
 
   Alternatively, using a regular expression for @:
 
         /* InstModule AUTO_TEMPLATE \"_\\([a-z]+\\)\" (
-                .ptl_mapvalidx          (@_ptl_mapvalid),
-                .ptl_mapvalidp1x        (ptl_mapvalid_@),
-                );
+            .ptl_mapvalidx      (@_ptl_mapvalid),
+            .ptl_mapvalidp1x    (ptl_mapvalid_@),
+            );
         */
         InstModule ms2_FOO (/*AUTOINST*/);
         InstModule ms2_BAR (/*AUTOINST*/);
@@ -12825,12 +12819,12 @@ Multiple Module Templates:
 
         InstModule ms2_FOO (/*AUTOINST*/
             // Outputs
-            .ptl_mapvalidx              (FOO_ptl_mapvalid),
-            .ptl_mapvalidp1x            (ptl_mapvalid_FOO));
+            .ptl_mapvalidx      (FOO_ptl_mapvalid),
+            .ptl_mapvalidp1x    (ptl_mapvalid_FOO));
         InstModule ms2_BAR (/*AUTOINST*/
             // Outputs
-            .ptl_mapvalidx              (BAR_ptl_mapvalid),
-            .ptl_mapvalidp1x            (ptl_mapvalid_BAR));
+            .ptl_mapvalidx      (BAR_ptl_mapvalid),
+            .ptl_mapvalidp1x    (ptl_mapvalid_BAR));
 
 
 Regexp Templates:
@@ -13283,7 +13277,7 @@ Limitations:
   in AUTO_TEMPLATEs.
 
   This does NOT work on memories or SystemVerilog .name connections,
-  declare those yourself.  
+  declare those yourself.
 
   Verilog mode will add \"Couldn't Merge\" comments to signals it cannot
   determine how to bus together.  This occurs when you have ports with
