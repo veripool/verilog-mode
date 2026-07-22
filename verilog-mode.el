@@ -12789,9 +12789,7 @@ Multiple Module Templates:
   Note the @ character was replaced with the 2 from \"ms2m\".
 
   A connection of \"[].[@]\" connects one element of an unpacked array.
-  The \"[]\" port range is placed into a comment so the connection stays
-  legal Verilog, and AUTOWIRE will declare the net as an unpacked array
-  spanning all connected indexes:
+  AUTOWIRE will declare the net as an unpacked array spanning all connected indexes:
 
         /* InstModule AUTO_TEMPLATE (
                 .ptl_mapvalidx          (ptl_mapvalid[].[@]),
