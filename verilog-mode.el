@@ -13286,10 +13286,7 @@ Limitations:
   in AUTO_TEMPLATEs.
 
   This does NOT work on memories or SystemVerilog .name connections,
-  declare those yourself.  However, unpacked arrays connected
-  element-by-element with an AUTO_TEMPLATE \"[].[index]\" connection
-  (see `verilog-auto-inst') are declared, combining the connected
-  indexes into one ascending range.
+  declare those yourself.  
 
   Verilog mode will add \"Couldn't Merge\" comments to signals it cannot
   determine how to bus together.  This occurs when you have ports with
