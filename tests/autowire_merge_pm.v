@@ -18,6 +18,9 @@ endmodule
 
 module A
   (
-   output [DW-1+2:0] SIG_NAMEA
+   output [DW-1+2:0] SIG_NAMEA,
+   output [DW+1-2:0] SIG_NAMEB,
+   output [DW-3+1:0] SIG_NAMEC,
+   output [DW-1+1:0] SIG_NAMED
    );
 endmodule
