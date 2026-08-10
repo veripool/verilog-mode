@@ -11505,23 +11505,36 @@ This repairs those mis-inserted by an AUTOARG."
                   (op (match-string 3 out))
                   (rhs (string-to-number (match-string 4 out)))
                   (post (match-string 5 out))
-                  val)
+                  val prefix)
               (when (equal pre "-")
                 (setq lhs (- lhs)))
               (setq val (if (equal op "-")
                             (- lhs rhs)
-                          (+ lhs rhs))
-                    out (replace-match
-                         (concat (cond ((and (equal pre "-")
-                                             (< val 0))
-                                        "")  ; Not "--20" but just "-20"
-                                       ((and (equal pre "-")
-                                             (> val 0))
-                                        "+")  ; Not "-+20" but just "+20"
-                                       (t pre))
-                                 (int-to-string val)
-                                 post)
-                         nil nil out)) ))
+                          (+ lhs rhs)))
+              ;; Pick the printed prefix so two sign characters never adjoin
+              ;; (no "++", "+-", "--", "-+").  A sign in PRE was already
+              ;; absorbed into LHS above, so VAL carries the whole sum: for a
+              ;; negative result drop a sign PRE (int-to-string supplies the
+              ;; "-"), and for a positive result a PRE of "-" must flip to
+              ;; "+" (FOO-1+2 is FOO+1).  A non-sign PRE (such as "(", "[",
+              ;; ":") is kept verbatim.  For a zero result we keep PRE
+              ;; unchanged to preserve the long-standing "+0"/"-0" residual
+              ;; behaviour documented in the test cases below.
+              (setq prefix
+                    (cond
+                     ((< val 0)
+                      (if (or (equal pre "+") (equal pre "-"))
+                          ""                          ; val carries "-"
+                        pre))
+                     ((> val 0)
+                      (if (equal pre "-")
+                          "+"                       ; FOO-1+2 is FOO+1
+                        pre))
+                     (t                            ; val == 0: keep old "+0"/"-0"
+                      pre)))
+              (setq out (replace-match
+                         (concat prefix (int-to-string val) post)
+                         nil nil out))))
           ;; Next precedence is >>,<<
           (while (string-match
                   (concat "\\([[({:]\\)"  ;; No << as not transitive
@@ -11554,7 +11567,8 @@ This repairs those mis-inserted by an AUTOARG."
 ;;(verilog-simplify-range-expression "[(FOO*4+1-1)]")  ; "[FOO*4+0]"
 ;;(verilog-simplify-range-expression "[(func(BAR))]")  ; "[func(BAR)]"
 ;;(verilog-simplify-range-expression "[FOO-1+1-1+1]")  ; "[FOO-0]"
-;;(verilog-simplify-range-expression "[FOO-1+2:LSB-3+1]")  ; "[FOO+1:LSB-1]"
+;;(verilog-simplify-range-expression "[FOO-1+2:LSB-3+1]")  ; "[FOO+1:LSB-2]"
+;;(verilog-simplify-range-expression "[FOO+1-2:0]")  ; "[FOO-1:0]"
 ;;(verilog-simplify-range-expression "[$clog2(2)]")  ; "[1]"
 ;;(verilog-simplify-range-expression "[$clog2(7)]")  ; "[3]"
 ;;(verilog-simplify-range-expression "[(TEST[1])-1:0]")  ; "[(TEST[1])-1:0]"
