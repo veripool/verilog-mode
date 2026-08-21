@@ -30,3 +30,6 @@ module top
 
 
 endmodule
+// Local Variables:
+// verilog-auto-inst-param-value:t
+// End:
